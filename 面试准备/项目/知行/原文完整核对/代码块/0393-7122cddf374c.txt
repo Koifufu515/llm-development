@@ -1,0 +1,14 @@
+"""_match_leg 演示：子串匹配会把返程段认成去程段，字段相等不会（纯逻辑，无需密钥）"""
+from app.tools.state_transition import _match_leg, _parse_leg_choices
+
+pending = "北京→天津"                      # 当前待确认：去程
+picked, _ = _parse_leg_choices([{"from_city": "天津", "to_city": "北京",   # 模型交的是返程
+                                 "vehicle_no": "G339", "depart_time": "18:00"}])
+print("待确认段：", pending, "｜ 模型提交的是：天津→北京 G339")
+
+hit = _match_leg(picked, pending)
+print("字段相等匹配 →", hit.summary() if hit else None)
+
+frm, to = pending.split("→")               # 对照组：早期的子串匹配
+old = next((g for g in ["天津→北京 G339 18:00"] if frm in g and to in g), None)
+print("旧的子串匹配 →", repr(old))

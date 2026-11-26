@@ -1,0 +1,5 @@
+"""_to_number 演示：从各种写法里抠出数字；抠不到返回 0（纯函数，无需密钥）"""
+from app.capabilities.hotel_multi_segment.hotel_parser import _to_number
+
+for v in ["¥302", "302元", "4.5分", 302, None, "面议"]:
+    print(f"{v!r:8} → {_to_number(v)}")

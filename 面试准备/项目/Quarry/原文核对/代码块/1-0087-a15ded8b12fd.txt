@@ -1,0 +1,2 @@
+ERROR:  duplicate key value violates unique constraint "collections_one_active"
+DETAIL:  Key (tenant_id, slug)=(..., test-coll) already exists.

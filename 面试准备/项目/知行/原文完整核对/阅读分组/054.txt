@@ -1,0 +1,522 @@
+
+
+===== block 633 bc4bc3388d42 lines 1-30 source 知行旅行助手-v2#636 =====
+def build_itinerary_metrics(threshold: float = 0.5, require_budget: bool = True) -> list[GEval]:
+    """构造三维度 GEval（每次新建实例，避免 DeepEval 内部状态串扰）
+
+    require_budget：待判源料是否含预算明细
+    - True（默认）：源料是模型输出的 Markdown 正文，含预算表 → 严格校验预算完整性（离线评测口径不变）
+    - False：源料是 plan_to_text 产出的结构化清单，无预算字段 → 该条判据不适用，不扣分（在线质检）
+    """
+    judge = QwenJudge()  # ★ 每次都新建，避免 DeepEval 内部状态串扰
+    # 时段口径与代码渲染对齐——正文由 _render_itinerary_body 渲染为
+    # **上午/中午/下午/晚上** 四个时段 + 每天"小贴士"（schema 强制），旧判据只写三个时段，
+    # 判官口径与产物不一致；末日晚上允许只有 1 条（返程），不得据此判为不完整
+    completeness = ("判断行程正文是否完整：1) 每天都有『Day X』标题，且当天包含上午/中午/"
+                    "下午/晚上四个时段（末日晚上可只含返程 1 条，不算缺项），"
+                    "天数覆盖需求里的全部出行天数；"
+                    + (_BUDGET_CLAUSE if require_budget else _BUDGET_CLAUSE_NA))  # ★ 一个开关切两版判据
+    return [
+        GEval(name="行程完整性",
+              criteria=completeness,
+              evaluation_params=_PARAMS, model=judge, threshold=threshold),
+        GEval(name="需求匹配度",
+              criteria=("对照需求清单判断行程是否匹配：目的地正确；每天行程数量与出行天数一致；"
+                        "交通方式与需求一致；行程设计体现旅行风格；按人数与预算给出合理的"
+                        "餐饮住宿档次。明显偏离即扣分。"),
+              evaluation_params=_PARAMS, model=judge, threshold=threshold),
+        GEval(name="真实性（无编造）",
+              criteria=("判断行程中的景点、餐厅、门票价格是否真实可信：景点应为目的地真实存在"
+                        "的知名景点；餐厅应为当地真实特色；门票价格应与常识一致（如灵隐寺约"
+                        " 30 元），不应出现明显虚构的名称或离谱价格。发现编造嫌疑即扣分。"),
+              evaluation_params=_PARAMS, model=judge, threshold=threshold),
+    ]
+
+
+===== block 634 4163c836db86 lines 1-11 source 知行旅行助手-v2#637 =====
+"""require_budget 开关：同一条"完整性"判据按源料切成两版，另外两个维度不受影响（只构造 GEval、不调用模型，需 .env 里的 DashScope 密钥）"""
+from app.services.quality_check_service import _BUDGET_CLAUSE, _BUDGET_CLAUSE_NA, build_itinerary_metrics
+
+offline = build_itinerary_metrics(require_budget=True)     # 离线评测：源料是含预算表的 Markdown 正文
+online = build_itinerary_metrics(require_budget=False)     # 在线质检：源料是没有预算字段的结构化清单
+
+print("三个维度 →", [m.name for m in offline])
+print("require_budget=True  完整性判据含预算条款？", _BUDGET_CLAUSE in offline[0].criteria)
+print("require_budget=False 完整性判据含\"本条不适用\"？", _BUDGET_CLAUSE_NA in online[0].criteria)
+print("另外两个维度的判据一模一样？", offline[1].criteria == online[1].criteria and offline[2].criteria == online[2].criteria)
+print("每次 build 都是新实例？", build_itinerary_metrics()[0] is not build_itinerary_metrics()[0])
+
+
+===== block 635 71bb1cb9c9e0 lines 1-5 source 知行旅行助手-v2#638 =====
+三个维度 → ['行程完整性', '需求匹配度', '真实性（无编造）']
+require_budget=True  完整性判据含预算条款？ True
+require_budget=False 完整性判据含"本条不适用"？ True
+另外两个维度的判据一模一样？ True
+每次 build 都是新实例？ True
+
+
+===== block 636 00983880481c lines 1-18 source 知行旅行助手-v2#639 =====
+# ============ 在线质检：落库后异步执行，结果仅日志告警不阻断主流程 ============
+
+# 后台任务引用集合：防止 create_task 的协程被垃圾回收
+_BG_TASKS: set = set()  # ★ 强引用后台任务
+
+def plan_to_text(plan_data: dict) -> str:
+    """结构化行程 JSON → 裁判可读的行程正文（与模型输出形态对齐）"""
+    lines: list[str] = [plan_data.get("title", "行程")]
+    for day in plan_data.get("itinerary_list", []):  # ★ 三层键名：itinerary_list → itinerary → scenic_spots_list
+        lines.append(f"\n{day.get('day', '')}：")
+        for item in day.get("itinerary", []):
+            spots = item.get("scenic_spots_list", [])
+            parts = [
+                f"{s.get('toponym', '')}（{str(s.get('toponym_desc', ''))[:60]}）"
+                for s in spots
+            ]
+            lines.append(f"{item.get('time', '')}：{'、'.join(parts)}")
+    return "\n".join(lines)
+
+
+===== block 637 44ffb6806b9e lines 1-19 source 知行旅行助手-v2#640 =====
+"""落库的结构化清单 → 裁判读得懂的正文；键名层级写错，正文就只剩标题（纯函数，无需密钥）"""
+from app.services.quality_check_service import plan_to_text
+
+plan = {
+    "title": "杭州3日游 上海出发 2人 高铁 文化探索",
+    "itinerary_list": [
+        {"day": "Day 1", "itinerary": [
+            {"time": "上午", "scenic_spots_list": [
+                {"toponym": "西湖", "toponym_desc": "沿白堤走到断桥残雪，打卡平湖秋月与孤山，约1.5小时"}]},
+            {"time": "中午", "scenic_spots_list": [
+                {"toponym": "楼外楼", "toponym_desc": "西湖醋鱼与龙井虾仁，人均约120元"},
+                {"toponym": "孤山公园", "toponym_desc": "饭后散步消食"}]},
+        ]},
+    ],
+}
+print(plan_to_text(plan))
+print("---")
+wrong = {"title": plan["title"], "days": plan["itinerary_list"]}      # 把 itinerary_list 写成了 days
+print("键名写错 →", repr(plan_to_text(wrong)))
+
+
+===== block 638 566eb449cdb4 lines 1-7 source 知行旅行助手-v2#641 =====
+杭州3日游 上海出发 2人 高铁 文化探索
+
+Day 1：
+上午：西湖（沿白堤走到断桥残雪，打卡平湖秋月与孤山，约1.5小时）
+中午：楼外楼（西湖醋鱼与龙井虾仁，人均约120元）、孤山公园（饭后散步消食）
+---
+键名写错 → '杭州3日游 上海出发 2人 高铁 文化探索'
+
+
+===== block 639 af0099fd86a3 lines 1-45 source 知行旅行助手-v2#642 =====
+async def run_quality_check(plan_data: dict, threshold: float = 0.5) -> None:
+    """对单份落库行程做三维度质检：通过打 INFO，不通过打 WARNING + 裁判理由
+
+    设计为"事后告警"：行程已落库发给用户，质检不重生成、不阻断；
+    异常全吞（fail-safe），绝不影响主对话流程。
+    """
+    title = plan_data.get("title", "未命名行程")
+    try:
+        case = LLMTestCase(
+            input=title,  # title 由需求生成，是最忠实的需求快照
+            actual_output=plan_to_text(plan_data),
+        )
+        scores: dict[str, float] = {}
+        reasons: list[str] = []
+        all_reasons: list[str] = []
+        # 在线质检的源料是 plan_to_text 产出的结构化清单（无预算字段），
+        # 故 require_budget=False——否则"完整性"维度会因恒缺预算而系统性扣分、刷出噪音告警
+        for metric in build_itinerary_metrics(threshold=threshold, require_budget=False):  # ★ 在线源料无预算
+            await metric.a_measure(case)
+            scores[metric.name] = metric.score
+            # 所有维度的裁判理由都收集，通过时也记录（便于观察分数波动原因）
+            all_reasons.append(f"{metric.name}: {metric.reason}")
+            if metric.score < threshold:
+                reasons.append(f"{metric.name}: {metric.reason}")
+
+        low = {k: v for k, v in scores.items() if v < threshold}
+        if low:
+            app_logger.warning(
+                f"⚠️ 行程质检未达标: {title} | 分数: {scores} | 问题: {'；'.join(reasons)}"
+            )
+        else:
+            # 通过时同样带裁判理由（截断防日志爆炸），低分维度可追溯
+            brief = "；".join(all_reasons)
+            if len(brief) > 500:
+                brief = brief[:500] + "……"
+            app_logger.info(f"✅ 行程质检通过: {title} | 分数: {scores} | 理由: {brief}")
+    except Exception as e:
+        # 质检自身失败（网络/限流/结构化解析）只记录，不影响业务
+        app_logger.warning(f"行程质检执行异常（已忽略）: {title} | {type(e).__name__}: {e}")
+
+def schedule_quality_check(plan_data: dict) -> None:
+    """落库后调用：创建后台质检任务（不阻塞回复流）"""
+    task = asyncio.create_task(run_quality_check(plan_data))  # ★ 起后台任务，立刻返回
+    _BG_TASKS.add(task)
+    task.add_done_callback(_BG_TASKS.discard)
+
+
+===== block 640 2313d40f6e39 lines 1-1 source 知行旅行助手-v2#643 =====
+schedule_quality_check(plan.model_dump())
+
+
+===== block 641 35bc73992f81 lines 1-37 source 知行旅行助手-v2#644 =====
+"""落库后的那一跳：后台任务强引用、跑完自动移除；质检自己抛异常也只记一条日志（纯逻辑，无需密钥）"""
+import asyncio
+
+from app.services import quality_check_service as qc
+
+PLAN = {"title": "杭州3日游", "itinerary_list": [{"day": "Day 1", "itinerary": []}]}
+
+class FakeMetric:
+    """测试驱动：冒充一个 GEval 维度，按剧本给分或抛异常"""
+    def __init__(self, name, score, boom=False):
+        self.name, self._score, self._boom = name, score, boom
+        self.score, self.reason = None, ""
+
+    async def a_measure(self, case):
+        await asyncio.sleep(0.01)
+        if self._boom:
+            raise TimeoutError("裁判超时")
+        self.score, self.reason = self._score, f"{self.name} 给了 {self._score}"
+
+class PrintLogger:
+    """测试驱动：替换 app_logger，只打印级别和前 30 个字"""
+    def info(self, msg): print("  [INFO]", msg[:30])
+    def warning(self, msg): print("  [WARNING]", msg[:30])
+
+async def main() -> None:
+    qc.app_logger = PrintLogger()
+    for label, metrics in [("三维度都达标", [FakeMetric("完整性", 0.9), FakeMetric("匹配度", 0.8), FakeMetric("真实性", 0.7)]),
+                           ("真实性低分", [FakeMetric("完整性", 0.9), FakeMetric("匹配度", 0.8), FakeMetric("真实性", 0.2)]),
+                           ("裁判超时", [FakeMetric("完整性", 0.9, boom=True)])]:
+        qc.build_itinerary_metrics = lambda threshold=0.5, require_budget=True, ms=metrics: ms
+        print(f"{label}：")
+        qc.schedule_quality_check(PLAN)                       # 立刻返回，不等质检跑完
+        print("  调度后 _BG_TASKS 里有", len(qc._BG_TASKS), "个任务")
+        await asyncio.sleep(0.1)                              # 让后台任务跑完
+        print("  跑完后剩", len(qc._BG_TASKS), "个")
+
+asyncio.run(main())
+
+
+===== block 642 231eb80c21ba lines 1-12 source 知行旅行助手-v2#645 =====
+三维度都达标：
+  调度后 _BG_TASKS 里有 1 个任务
+  [INFO] ✅ 行程质检通过: 杭州3日游 | 分数: {'完整性': 
+  跑完后剩 0 个
+真实性低分：
+  调度后 _BG_TASKS 里有 1 个任务
+  [WARNING] ⚠️ 行程质检未达标: 杭州3日游 | 分数: {'完整性'
+  跑完后剩 0 个
+裁判超时：
+  调度后 _BG_TASKS 里有 1 个任务
+  [WARNING] 行程质检执行异常（已忽略）: 杭州3日游 | Timeout
+  跑完后剩 0 个
+
+
+===== block 643 798cb86b3cec lines 1-11 source 知行旅行助手-v2#646 =====
+evaluation/
+├── conftest.py            # 项目根加入 sys.path + 关遥测
+├── qwen_judge.py          # 薄转发 → quality_check_service.QwenJudge
+├── itinerary_metric.py    # 薄转发 → build_itinerary_metrics
+├── router_metric.py       # 路由确定性指标（不上 LLM 裁判）
+├── router_cases.py        # 路由回归用例（踩过的 bug 沉淀下来）
+├── test_router.py         # 路由评测入口：真实调 chat_route → 确定性断言
+├── itinerary_cases.py     # 行程正 / 反样本
+├── test_itinerary.py      # 行程评测入口：样本 × 三维度 × 正反双模式
+├── itinerary_db.py        # 线上数据源：从 ItineraryPlans 表拉真实行程
+└── test_itinerary_db.py   # 线上门禁：真实行程逐份跑三维度
+
+
+===== block 644 f13ffed0d62b lines 1-23 source 知行旅行助手-v2#647 =====
+"""评测公共配置
+
+作用：
+1. 把项目根目录加入 sys.path，使 evaluation/ 下的测试能直接 `from app.xxx import ...`；
+2. 统一导入 app.config.settings（pydantic-settings 会自动读取项目根 .env，
+   评测调用真实 LLM 路由器所需的 DASHSCOPE_API_KEY 等由此注入）。
+
+评测目录独立于业务代码（app/），跑法：`uv run pytest evaluation/ -v`
+或 deepeval 集成跑法：`deepeval test run evaluation/test_router.py`。
+"""
+import os
+import sys
+from pathlib import Path
+
+# 关闭 DeepEval 遥测上报（posthog 外网不可达时刷错误噪音）
+os.environ.setdefault("DEEPEVAL_TELEMETRY_OPT_OUT", "YES")  # ★ 关遥测
+
+# 项目根目录 = evaluation/ 的上一级
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+# 确保项目根在 sys.path 首位（优先导入本项目 app 包，避免同名包冲突）
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+
+===== block 645 7804dc298860 lines 1-9 source 知行旅行助手-v2#648 =====
+"""Qwen 评测裁判模型适配器
+
+实现已收编至业务服务 app/services/quality_check_service.py（在线质检与
+离线评测共用同一裁判，避免双份维护）。本文件保留为薄转发，维持
+evaluation/ 既有 import 路径不破坏。
+"""
+from app.services.quality_check_service import QwenJudge
+
+__all__ = ["QwenJudge"]
+
+
+===== block 646 3cc5db5680be lines 1-11 source 知行旅行助手-v2#649 =====
+"""行程质量三维度 GEval 指标
+
+实现已收编至业务服务 app/services/quality_check_service.py（在线质检与
+离线评测共用同一套标准，避免双份维护、口径漂移）。本文件保留为薄转发，
+维持 evaluation/ 既有 import 路径不破坏。
+"""
+from deepeval.metrics import GEval
+
+from app.services.quality_check_service import build_itinerary_metrics
+
+__all__ = ["build_itinerary_metrics"]
+
+
+===== block 647 a809015d67f6 lines 1-7 source 知行旅行助手-v2#650 =====
+"""薄转发：evaluation/ 里的裁判和标尺，就是业务服务里的同一个对象（导入真实模块，需 .env 里的 DashScope 密钥，不发起调用）"""
+from app.services.quality_check_service import QwenJudge, build_itinerary_metrics
+from evaluation.itinerary_metric import build_itinerary_metrics as fwd_build
+from evaluation.qwen_judge import QwenJudge as FwdJudge
+
+print("QwenJudge 是同一个类？", FwdJudge is QwenJudge)
+print("build_itinerary_metrics 是同一个函数？", fwd_build is build_itinerary_metrics)
+
+
+===== block 648 0b99d6a11883 lines 1-2 source 知行旅行助手-v2#651 =====
+QwenJudge 是同一个类？ True
+build_itinerary_metrics 是同一个函数？ True
+
+
+===== block 649 9fdafc798df8 lines 1-90 source 知行旅行助手-v2#652 =====
+"""
+意图路由正确性指标，基于DeepEval自定义Metric
+路由输出是强类型RouterResult，包含planning布尔值和skills列表，属于分类任务
+直接用断言打分：对得1分，错得0分，不需要调用LLM做裁判
+- planning是核心开关，必须和预期完全一致
+- skills分3种校验逻辑：
+  expect_empty_skills=True → skills必须是空
+  expected_skills_any不为空 → 实际skills只要包含里面任意一个就算通过
+  两个参数都不传 → 不校验skills
+"""
+import json
+from deepeval.metrics import BaseMetric
+from deepeval.test_case import LLMTestCase
+
+class RouterCorrectnessMetric(BaseMetric):
+    """意图路由正确性校验：planning精确匹配 + skills多模式校验"""
+    def __init__(
+        self,
+        expected_planning: bool,
+        expected_skills_any: list[str] | None = None,
+        expect_empty_skills: bool = False,
+    ):
+        # 两个skills参数不能同时开启，逻辑冲突，直接抛异常，不静默忽略配置错误
+        if expect_empty_skills and expected_skills_any:
+            raise ValueError("expect_empty_skills=True 和 expected_skills_any 非空不能同时设置，二选一")
+
+        # 预期的规划分流结果，这个是必校验项
+        self.expected_planning = expected_planning
+        # 期望匹配的技能列表，None/空代表不校验skills
+        self.expected_skills_any = expected_skills_any or []
+        # 标记：是否要求skills必须为空，用来校验闲聊场景
+        self.expect_empty_skills = expect_empty_skills
+
+        # 阈值固定1.0，必须在构造函数赋值，防止外部赋值时机不对导致is_successful异常
+        self.threshold = 1.0
+        self.score = 0.0
+        self.reason = ""
+
+    def measure(self, test_case: LLMTestCase) -> float:
+        # actual_output是测试用例传过来的RouterResult序列化后的json字符串
+        try:
+            actual = json.loads(test_case.actual_output)
+        except (json.JSONDecodeError, TypeError):
+            self.score, self.reason = 0.0, "路由返回不是合法JSON，结构化输出失败"
+            return self.score
+
+        # 取出planning标记，转布尔
+        actual_planning = bool(actual.get("is_itinerary_planning"))
+        # 提取所有技能名称，组装成列表
+        actual_skills = [s.get("skill_name") for s in (actual.get("skills") or [])]
+
+        # 第一步校验：planning必须完全匹配，这是最容易出bug的地方
+        if actual_planning != self.expected_planning:
+            self.score = 0.0
+            self.reason = f"planning期望 {self.expected_planning}，实际 {actual_planning}"
+            return self.score
+
+        # 第二步校验skills，分三种情况
+        # 场景1：闲聊类，要求技能列表必须是空
+        if self.expect_empty_skills:
+            if actual_skills:
+                self.score = 0.0
+                self.reason = f"期望技能为空，实际拿到 {actual_skills}"
+                return self.score
+            self.score, self.reason = 1.0, "planning正确，技能列表为空"
+            return self.score
+
+        # 场景2：技能宽松匹配，只要命中任意一个目标技能就通过
+        if self.expected_skills_any:
+            hit = [s for s in actual_skills if s in self.expected_skills_any]
+            if not hit:
+                self.score = 0.0
+                self.reason = (
+                    f"skills需要命中 {self.expected_skills_any} 其中一个，实际 {actual_skills}"
+                )
+                return self.score
+            self.score, self.reason = 1.0, f"planning正确，命中技能 {hit}"
+            return self.score
+
+        # 场景3：不校验skills，planning正确就直接满分
+        self.score, self.reason = 1.0, f"planning正确（skills={actual_skills}）"
+        return self.score
+
+    async def a_measure(self, test_case: LLMTestCase) -> float:
+        # 异步版本直接复用同步逻辑，不用单独写
+        return self.measure(test_case)
+
+    def is_successful(self) -> bool:
+        # 判断指标是否达标：分数大于等于阈值
+        return self.score >= self.threshold
+
+
+===== block 650 db2fbdca22e2 lines 1-74 source 知行旅行助手-v2#653 =====
+"""意图路由评测数据集
+
+每条用例：(消息, 最近对话历史, 期望 planning, 期望命中的技能任一, 用例说明)
+额外可选字段：expect_empty_skills=True 表示"技能必须为空"（仅闲聊用）；
+        skills 给空列表只表示"不检查技能命中"，两者语义不同。
+history 采用**线上真实格式**（"role: content"，role 为 user/assistant、半角冒号），
+        与 chat_contract_service 拼接口径一致，避免评测输入失真。
+用例为强类型 RouterCase（extra="forbid"）：字段写错在导入期即报错，杜绝断言静默失效。
+来源：把开发期踩过的路由 bug 沉淀为回归用例（对照 app/agents/routers/chat_router.py）：
+- 需求收集中的短回答（"杭州"/"2人"）曾被误判闲聊 → history 上下文续接规则（③ 组）
+- 纯问候/闲聊误入规划通道 → planning 必须为 False、技能必须为空（① 组）
+- 明确规划/查询请求 → planning=True 且预选对应技能（② 组）
+"""
+from pydantic import BaseModel, ConfigDict, Field
+
+class RouterCase(BaseModel):
+    """单条路由评测用例（强类型；字段拼错/类型不符在导入期即报错）"""
+
+    model_config = ConfigDict(extra="forbid")
+
+    msg: str
+    history: list[str] = Field(default_factory=list)     # 线上格式 "role: content"
+    planning: bool
+    skills: list[str] = Field(default_factory=list)      # 期望命中的技能任一；空=不检查
+    expect_empty_skills: bool = False                    # True=技能必须为空
+    note: str
+
+CASES: list[RouterCase] = [
+    # ===== ① 闲聊/问候：planning 必须为 False，技能必须为空（expect_empty_skills）=====
+    RouterCase(msg="你好呀", planning=False, expect_empty_skills=True, note="纯问候"),
+    RouterCase(msg="今天天气不错啊", planning=False, expect_empty_skills=True, note="日常闲聊"),
+    RouterCase(msg="你会做什么？", planning=False, expect_empty_skills=True, note="询问能力"),
+    # ===== ②a 明确规划：planning=True 且预选规划技能 =====
+    RouterCase(msg="帮我规划一次杭州3日游，2个大人", planning=True,
+               skills=["itinerary_planning"], note="明确规划请求"),
+    # ===== ② 单项查询：技能照常执行，但不进入规划流程（实测路由器语义：planning=False）=====
+    RouterCase(msg="查一下明天杭州的天气", planning=False,
+               skills=["weather_query"], note="天气单项查询"),
+    RouterCase(msg="帮我查上海到杭州的高铁票", planning=False,
+               skills=["train_query"], note="高铁单项查询"),
+    RouterCase(msg="杭州有哪些酒店推荐", planning=False,
+               skills=["hotel_query"], note="酒店单项查询"),
+    RouterCase(msg="帮我查上海到北京的航班", planning=False,
+               skills=["flight_query"], note="航班单项查询"),
+    RouterCase(msg="杭州有什么好吃的推荐", planning=False,
+               skills=["food_recommendation"], note="美食单项查询"),
+    RouterCase(msg="从杭州东站怎么到西湖", planning=False,
+               skills=["map_navigation"], note="导航单项查询"),
+    RouterCase(msg="杭州有什么值得去的景点", planning=False,
+               skills=["search_destination_guide"], note="攻略单项查询"),
+    # ===== ③ 需求收集中的回答（历史 bug 高发区）：有 history 续接必须 planning=True =====
+    RouterCase(msg="杭州", history=["assistant: 请问您想去哪里旅游？"],
+               planning=True, note="答目的地（曾误判闲聊）"),
+    RouterCase(msg="2个大人1个小孩", history=["assistant: 请问几个人出行？"],
+               planning=True, note="答人数"),
+    RouterCase(msg="预算3000左右", history=["assistant: 请问您的预算是多少？"],
+               planning=True, note="答预算"),
+    RouterCase(msg="高铁吧", history=["assistant: 您想坐什么交通？", "user: 高铁或自驾犹豫"],
+               planning=True, note="选交通方式"),
+    RouterCase(msg="特色美食", history=["assistant: 您对哪种餐饮类型感兴趣？"],
+               planning=True, note="选餐饮类型"),
+    RouterCase(msg="可以，就这样", history=["assistant: 已为您生成杭州3日游行程，是否确认？"],
+               planning=True, note="确认行程"),
+    RouterCase(msg="把第三天换成西湖", history=["assistant: 已为您生成杭州3日游行程"],
+               planning=True, skills=["itinerary_planning"], note="修改行程"),
+    # ===== ③负例：有 history 但仍是非规划（防"见 history 就判 planning"过拟合）=====
+    RouterCase(msg="哈哈你真有意思", history=["assistant: 你好呀，我是您的旅行助手"],
+               planning=False, expect_empty_skills=True, note="有历史仍闲聊"),
+    RouterCase(msg="谢谢你", history=["assistant: 祝您旅途愉快！"],
+               planning=False, expect_empty_skills=True, note="致谢非规划"),
+    # ===== ④ 表单清单场景：一次性完整需求 → planning=True + 规划技能 =====
+    RouterCase(msg="我想去苏州旅行，出发地福州，9月20日出发，3天2人，预算人均3000，坐高铁，喜欢文化探索",
+               planning=True, skills=["itinerary_planning"], note="表单式完整需求"),
+]
+
+
+===== block 651 655e8efe7bac lines 1-49 source 知行旅行助手-v2#654 =====
+"""
+意图路由评测入口
+两种运行方式任选：
+- uv run pytest evaluation/test_router.py -v        # 原生pytest执行
+- deepeval test run evaluation/test_router.py      # DeepEval CLI，结果可以上传Confident平台
+
+逻辑：遍历所有测试用例，调用真实的 chat_route 路由函数。
+把返回的强类型RouterResult转成JSON字符串，交给自定义指标做固定规则校验。
+"""
+import asyncio
+import json
+import os
+
+# Windows环境下异步客户端需要Selector事件循环，和项目app/run.py保持一致
+if os.name == "nt":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+from deepeval import assert_test
+from deepeval.test_case import LLMTestCase
+import pytest
+from app.agents.routers.chat_router import chat_route
+from evaluation.router_cases import CASES, RouterCase
+from evaluation.router_metric import RouterCorrectnessMetric
+
+@pytest.mark.parametrize("case", CASES, ids=[c.note for c in CASES])
+def test_chat_router(case: RouterCase):
+    """单条路由测试：调用真实路由，校验planning和skills结果"""
+    # 执行路由函数，async方法用asyncio.run转为同步调用；history用于对话上下文接续
+    result = asyncio.run(chat_route(case.msg, history=case.history or None))
+
+    # 将路由返回对象序列化JSON，作为deepeval测试的实际输出
+    actual_output = json.dumps({
+        "is_itinerary_planning": result.is_itinerary_planning,
+        "skills": [s.model_dump() for s in result.skills],
+    }, ensure_ascii=False)
+
+    test_case = LLMTestCase(
+        input=case.msg,
+        actual_output=actual_output,
+    )
+
+    # 初始化自定义校验指标，必须全部匹配才能通过
+    metric = RouterCorrectnessMetric(
+        expected_planning=case.planning,
+        expected_skills_any=case.skills,
+        expect_empty_skills=case.expect_empty_skills,
+    )
+    metric.threshold = 1.0
+    assert_test(test_case, [metric])
+
+
+===== block 652 5c179c6887ce lines 1-1 source 知行旅行助手-v2#655 =====
+uv run pytest evaluation/test_router.py -v

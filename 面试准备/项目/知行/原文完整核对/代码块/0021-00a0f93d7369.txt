@@ -1,0 +1,1 @@
+uv run python scripts/Chapter_One/1_test_llm.py

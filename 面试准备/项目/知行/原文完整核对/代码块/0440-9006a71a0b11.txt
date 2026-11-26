@@ -1,0 +1,17 @@
+"""快捷回退演示：go_back_to_destination 有守卫、go_back_to_food 没有——防御力度匹配风险等级（直接调真实工具，纯逻辑，无需密钥）"""
+from langchain.tools import ToolRuntime
+from langchain_core.messages import HumanMessage
+
+from app.tools.state_transition import go_back_to_destination, go_back_to_food
+
+def runtime(user_text):
+    state = {"messages": [HumanMessage(content=user_text)], "current_step": "transport_planning",
+             "selected_destination": "杭州", "leg_cursor": 0, "selected_food_types": ["local"]}
+    return ToolRuntime(state=state, context=None, config={}, stream_writer=None, tool_call_id="call_1", store=None)
+
+up = go_back_to_destination.func(runtime=runtime("第一段坐 G35")).update           # 用户没说要换，模型自作主张
+print("没说要换 → go_back_to_destination：", up.get("current_step", "原地不动"), "|", up["messages"][0].content[:24], "…")
+up = go_back_to_destination.func(runtime=runtime("换个目的地吧")).update
+print("说了要换 → go_back_to_destination：", up["current_step"], "| 清空：", sorted(k for k, v in up.items() if v is None)[:4], "…")
+up = go_back_to_food.func(runtime=runtime("第一段坐 G35")).update
+print("没有守卫 → go_back_to_food        ：", up["current_step"])

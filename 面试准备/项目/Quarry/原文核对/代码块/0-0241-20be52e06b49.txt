@@ -1,0 +1,1 @@
+uv run python -c "from quarry.retrieval.query import build_tsquery; print(build_tsquery('兵马俑的门票多少钱')); print(build_tsquery('的了吗'))"

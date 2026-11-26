@@ -1,0 +1,46 @@
+quarry-rag/
+├── docker-compose.yml
+├── Dockerfile                    # 第 8 章
+├── docker/
+│   └── init-db.sql
+├── pyproject.toml
+├── uv.lock
+├── alembic.ini
+├── .env / .env.example / .gitignore / .dockerignore
+├── verify_env.py                 # 环境自检脚本（本章）
+│
+├── migrations/                   # Alembic 目录，DDL 写在同名 .sql 里
+│   ├── env.py
+│   ├── script.py.mako
+│   └── versions/
+│       ├── 0001_core_tables.sql  # 本章
+│       ├── 0001_core_tables.py   # 本章
+│       └── ...                   # 0002～0006，第 2、5、6、7、8 章各一个
+│
+├── quarry/                       # 主包
+│   ├── __init__.py
+│   ├── common/                   # 第 2 章起：最底层的纯函数（归一化、块标识、计时）
+│   ├── infra/                    # 本章：配置、日志、连接池、向量化客户端
+│   │   ├── settings.py
+│   │   ├── logging.py
+│   │   ├── db.py
+│   │   └── embed.py
+│   ├── ingest/                   # 第 3 章：解析、切分、幂等索引、接入队列
+│   ├── retrieval/                # 第 4 章：混合召回
+│   ├── rerank/                   # 第 5 章：重排
+│   ├── context/                  # 第 5、6 章：上下文、引用、拒答信号
+│   ├── facts/                    # 第 6 章：事实层
+│   ├── pipeline.py               # 第 5 章：检索链路总装 search_evidence()
+│   ├── eval/                     # 第 7 章：评测
+│   ├── api/                      # 本章只有 /healthz；第 8 章补全对外接口
+│   │   └── app.py
+│   ├── web/                      # 第 4 章：检索调试台
+│   └── scripts/                  # 各章试跑、校验、评测脚本
+│       └── hello_retrieval.py    # 本章第 5 节
+│
+├── sdk/                          # 第 8 章：交给上游的单文件客户端
+├── tests/                        # 第 4 章起：unit / contract / redlines
+├── corpus/                       # 第 3 章：语料
+├── official/                     # 第 6 章：官方数据
+├── eval/                         # 第 7 章：标注集与评测报告
+└── snapshots/                    # 第 3 章：索引快照

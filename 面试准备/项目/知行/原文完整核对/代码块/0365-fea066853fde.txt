@@ -1,0 +1,56 @@
+"""会话接口：最小 app 挂 users + conversations 路由，走一遍增、查、改、软删和越权（需 PG）"""
+import asyncio
+import sys
+import uuid
+
+import httpx
+from fastapi import FastAPI
+from sqlalchemy import delete
+
+from app.api.v1 import conversations, users
+from app.models import User
+from app.models.base import async_session_maker, engine
+
+if sys.platform.startswith("win"):
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+app = FastAPI()
+app.include_router(users.router, prefix="/api/v1")
+app.include_router(conversations.router, prefix="/api/v1")
+SFX = uuid.uuid4().hex[:6]
+
+async def register(c: httpx.AsyncClient, tag: str) -> dict:
+    r = await c.post("/api/v1/users/register",
+                     json={"username": f"demo_{tag}_{SFX}", "email": f"demo_{tag}_{SFX}@example.com", "password": "secret123"})
+    return {"Authorization": f"Bearer {r.json()['access_token']}"}
+
+async def main() -> None:
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as c:
+        alice, bob = await register(c, "a"), await register(c, "b")
+        first = (await c.post("/api/v1/conversations", json={}, headers=alice)).json()
+        second = (await c.post("/api/v1/conversations", json={"title": "五一去杭州"}, headers=alice)).json()
+        print("建会话 → 默认标题", first["title"], "| 状态", first["status"], "| 字段", sorted(first))
+        listed = (await c.get("/api/v1/conversations", headers=alice)).json()
+        print("列表 →", [x["title"] for x in listed], "（按更新时间倒序）")
+        cid = first["id"]
+        r = await c.patch(f"/api/v1/conversations/{cid}", json={"title": "国庆去成都"}, headers=alice)
+        print("改标题 →", r.status_code, r.json()["title"], "| 状态没传就不动:", r.json()["status"])
+        r = await c.get(f"/api/v1/conversations/{cid}", headers=bob)
+        print("bob 查 alice 的会话 →", r.status_code, r.json())
+        r = await c.delete(f"/api/v1/conversations/{cid}", headers=bob)
+        print("bob 删 alice 的会话 →", r.status_code, r.json())
+        r = await c.get(f"/api/v1/conversations/{uuid.uuid4()}", headers=alice)
+        print("不存在的 id →", r.status_code, r.json())
+        r = await c.delete(f"/api/v1/conversations/{cid}", headers=alice)
+        print("alice 软删 →", r.status_code, r.json())
+        listed = (await c.get("/api/v1/conversations", headers=alice)).json()
+        print("软删后列表 →", [x["title"] for x in listed])
+        r = await c.get(f"/api/v1/conversations/{cid}", headers=alice)
+        print("按 id 还能查到 →", r.status_code, r.json()["status"])
+        assert second["title"] == "五一去杭州"
+    async with async_session_maker() as db:
+        await db.execute(delete(User).where(User.username.like(f"%{SFX}")))
+        await db.commit()
+    await engine.dispose()
+
+asyncio.run(main())

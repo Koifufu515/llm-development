@@ -1,0 +1,30 @@
+第四章•多步骤Agent设计
+Middleware 单轮执行流程
+某一轮 Agent 执行开始
+1
+Middleware.awrap_model_call 触发
+-读 state［"'current_step"］
+-= "'transport_planning"
+1
+②
+从 step_config 里查
+step_config［"transport_planning"］
+=｛prompt："."，tools： ［..］，
+requires： ［"user_requirement"， "selected_destination"］｝
+3
+前置校验
+state 里
+requires 的字段是否都齐了？
+没齐
+raise ValueError
+用 Jinja2 把 State 变量渲染进 Prompt 模板
+把｛｛.｝｝填上
+5
+request.override（）
+system_prompt = 渲染后的 prompt
+tools = 该步的工具列表
+handler（modified_request）
+-模型看到”该步的人设＋该步的工具"
+-决定调工具 or 结束
+循环往复，直到状态转换工具把
+current_step 推到 "report_generation"

@@ -1,0 +1,735 @@
+[
+  {
+    "id": "W01",
+    "module": "数据",
+    "requirement": "PDF/Word/HTML/Markdown/TXT结构解析、扫描PDF OCR",
+    "source": "方案3.2/代码5.2及18.2",
+    "implementation": "backend/app/pipeline/parser.py、ocr.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_document_fidelity.py",
+      "reports/ocr-live.json",
+      "reports/parser-v2-migration.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W02",
+    "module": "数据",
+    "requirement": "清洗、繁简/全半角、页码与保留正文",
+    "source": "方案3.2",
+    "implementation": "backend/app/pipeline/cleaner.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_document_fidelity.py",
+      "reports/ocr-live.json",
+      "reports/parser-v2-migration.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W03",
+    "module": "数据",
+    "requirement": "条款切分、表格/代码原子块、元数据/来源",
+    "source": "方案3.2/HTML11",
+    "implementation": "backend/app/pipeline/chunker.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_document_fidelity.py",
+      "reports/ocr-live.json",
+      "reports/parser-v2-migration.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W04",
+    "module": "数据",
+    "requirement": "SHA去重、版本链、新就绪后旧归档、失败补偿",
+    "source": "代码5.6—5.7",
+    "implementation": "backend/app/pipeline/indexer.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_document_governance.py",
+      "backend/tests/test_document_versions.py",
+      "reports/api-acceptance.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W05",
+    "module": "数据",
+    "requirement": "真实Milvus候选平面与Mongo事实回填",
+    "source": "HTML6—10",
+    "implementation": "backend/app/retrieval/milvus_store.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_real_retrieval_contract.py",
+      "backend/tests/test_source_acl.py",
+      "backend/tests/test_governed_cache.py",
+      "reports/frozen-evaluation-after.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W06",
+    "module": "数据",
+    "requirement": "文档生命周期、到期提醒与历史回溯",
+    "source": "方案3.3",
+    "implementation": "backend/app/pipeline/lifecycle.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_document_governance.py",
+      "backend/tests/test_document_versions.py",
+      "reports/api-acceptance.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W07",
+    "module": "数据",
+    "requirement": "引用关系、跨部门语义冲突、审核通知协调关闭",
+    "source": "方案3.2/代码7.3",
+    "implementation": "backend/app/pipeline/conflict_detector.py、conflict_workflow.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_document_governance.py",
+      "backend/tests/test_document_versions.py",
+      "reports/api-acceptance.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W08",
+    "module": "数据",
+    "requirement": "术语表/别名提取与管理员审核",
+    "source": "方案3.3",
+    "implementation": "backend/app/pipeline/glossary.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_document_governance.py",
+      "backend/tests/test_document_versions.py",
+      "reports/api-acceptance.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W09",
+    "module": "检索",
+    "requirement": "BM25+向量/RRF/托管重排、失败降级",
+    "source": "代码6/HTML9—10",
+    "implementation": "backend/app/retrieval/",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_real_retrieval_contract.py",
+      "backend/tests/test_source_acl.py",
+      "backend/tests/test_governed_cache.py",
+      "reports/frozen-evaluation-after.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W10",
+    "module": "检索",
+    "requirement": "多query/多部门并行、active和部门二次过滤",
+    "source": "代码4.7—4.8",
+    "implementation": "backend/app/harness/agents/retrieval_agent.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_real_retrieval_contract.py",
+      "backend/tests/test_source_acl.py",
+      "backend/tests/test_governed_cache.py",
+      "reports/frozen-evaluation-after.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W11",
+    "module": "检索",
+    "requirement": "Redis答案缓存与模型签名Embedding LRU、版本失效",
+    "source": "方案7.3/代码18.2",
+    "implementation": "backend/app/retrieval/cache.py、llm/embeddings.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_real_retrieval_contract.py",
+      "backend/tests/test_source_acl.py",
+      "backend/tests/test_governed_cache.py",
+      "reports/frozen-evaluation-after.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W12",
+    "module": "Harness",
+    "requirement": "固定Intent→Rewrite→Retrieve→Answer→Verify DAG",
+    "source": "代码4/8",
+    "implementation": "backend/app/harness/orchestrator.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_pi_runtime.py",
+      "backend/tests/test_stream_contract.py",
+      "reports/api-acceptance.json",
+      "reports/live-boundaries.json",
+      "reports/real-sse.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W13",
+    "module": "Harness",
+    "requirement": "pi五Agent协议、白名单工具/内部令牌、局部执行",
+    "source": "代码3.4",
+    "implementation": "services/pi-agent/src/",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_pi_runtime.py",
+      "backend/tests/test_stream_contract.py",
+      "reports/api-acceptance.json",
+      "reports/live-boundaries.json",
+      "reports/real-sse.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W14",
+    "module": "Harness",
+    "requirement": "每阶段超时、取消推理、熔断半开与Python降级",
+    "source": "HTML5/31/代码16.5",
+    "implementation": "backend/app/integrations/、services/pi-agent/src/",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_pi_runtime.py",
+      "backend/tests/test_stream_contract.py",
+      "reports/api-acceptance.json",
+      "reports/live-boundaries.json",
+      "reports/real-sse.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W15",
+    "module": "Harness",
+    "requirement": "有效引用、最多两次重写、失败只返回原文",
+    "source": "HTML3/7/31",
+    "implementation": "backend/app/harness/orchestrator.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_pi_runtime.py",
+      "backend/tests/test_stream_contract.py",
+      "reports/api-acceptance.json",
+      "reports/live-boundaries.json",
+      "reports/real-sse.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W16",
+    "module": "Harness",
+    "requirement": "真实SSE阶段帧与流式执行，不以生成后切片冒充流式",
+    "source": "方案7.3/代码16.2",
+    "implementation": "backend/app/api/routes/chat.py、harness/orchestrator.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_pi_runtime.py",
+      "backend/tests/test_stream_contract.py",
+      "reports/api-acceptance.json",
+      "reports/live-boundaries.json",
+      "reports/real-sse.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W17",
+    "module": "记忆",
+    "requirement": "独立事实平面，官方原文唯一可引用来源",
+    "source": "代码9.2",
+    "implementation": "backend/app/memory/facts.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_memory_architecture.py",
+      "backend/tests/test_memory_api.py",
+      "backend/tests/test_source_acl.py",
+      "reports/api-acceptance.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W18",
+    "module": "记忆",
+    "requirement": "Redis工作记忆/已确认实体/TTL及跨轮接续",
+    "source": "代码9.3/HTML15",
+    "implementation": "backend/app/memory/working.py、context_builder.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_memory_architecture.py",
+      "backend/tests/test_memory_api.py",
+      "backend/tests/test_source_acl.py",
+      "reports/api-acceptance.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W19",
+    "module": "记忆",
+    "requirement": "append-only情景事件、原子序号、摘要及保留期",
+    "source": "代码9.4",
+    "implementation": "backend/app/memory/episodic.py、retention.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_memory_architecture.py",
+      "backend/tests/test_memory_api.py",
+      "backend/tests/test_source_acl.py",
+      "reports/api-acceptance.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W20",
+    "module": "记忆",
+    "requirement": "低敏白名单/明确同意/推断候选/可查可删",
+    "source": "代码9.5/HTML17",
+    "implementation": "backend/app/memory/user_semantic.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_memory_architecture.py",
+      "backend/tests/test_memory_api.py",
+      "backend/tests/test_source_acl.py",
+      "reports/api-acceptance.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W21",
+    "module": "记忆",
+    "requirement": "组织FAQ绑定doc/chunk/version、失效回查",
+    "source": "代码9.6/HTML16",
+    "implementation": "backend/app/memory/organization.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_memory_architecture.py",
+      "backend/tests/test_memory_api.py",
+      "backend/tests/test_source_acl.py",
+      "reports/api-acceptance.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W22",
+    "module": "记忆",
+    "requirement": "程序性策略记忆、来源权限/时效/预算/权威排序",
+    "source": "代码9.7—9.9",
+    "implementation": "backend/app/memory/learning.py、context_builder.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_memory_architecture.py",
+      "backend/tests/test_memory_api.py",
+      "backend/tests/test_source_acl.py",
+      "reports/api-acceptance.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W23",
+    "module": "Loop",
+    "requirement": "显式/隐式/自动反馈、去重、实验outcome回写",
+    "source": "代码10.4/10.12",
+    "implementation": "backend/app/loop/feedback_collector.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_optimizer_and_gaps.py",
+      "backend/tests/test_entity_workflow.py",
+      "backend/tests/test_mutable_scope.py",
+      "backend/tests/test_experiment_governance.py",
+      "reports/loop-live-proof.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W24",
+    "module": "Loop",
+    "requirement": "五阶段异步作业、结构化报告、历史报告",
+    "source": "代码10.2/前端5.4",
+    "implementation": "backend/app/loop/loop_engine.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_optimizer_and_gaps.py",
+      "backend/tests/test_entity_workflow.py",
+      "backend/tests/test_mutable_scope.py",
+      "backend/tests/test_experiment_governance.py",
+      "reports/loop-live-proof.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W25",
+    "module": "Loop",
+    "requirement": "pi反思四类根因、知识缺口聚类工单",
+    "source": "方案4.3/HTML18/23",
+    "implementation": "backend/app/loop/loop_engine.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_optimizer_and_gaps.py",
+      "backend/tests/test_entity_workflow.py",
+      "backend/tests/test_mutable_scope.py",
+      "backend/tests/test_experiment_governance.py",
+      "reports/loop-live-proof.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W26",
+    "module": "Loop",
+    "requirement": "7天20条/低成功率筛选、DBSCAN、草稿、历史沙箱",
+    "source": "方案5.2",
+    "implementation": "backend/app/loop/skill_miner.py、strategy_evaluator.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_optimizer_and_gaps.py",
+      "backend/tests/test_entity_workflow.py",
+      "backend/tests/test_mutable_scope.py",
+      "backend/tests/test_experiment_governance.py",
+      "reports/loop-live-proof.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W27",
+    "module": "Loop",
+    "requirement": "Skill参数/实体/查询/工具/生成工作流真实执行",
+    "source": "方案5.1/代码10.8",
+    "implementation": "backend/app/loop/skill_executor.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_optimizer_and_gaps.py",
+      "backend/tests/test_entity_workflow.py",
+      "backend/tests/test_mutable_scope.py",
+      "backend/tests/test_experiment_governance.py",
+      "reports/loop-live-proof.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W28",
+    "module": "Loop",
+    "requirement": "Mutable Scope/Schema/人工审核与三阶段门禁",
+    "source": "方案4.2/代码11",
+    "implementation": "backend/app/loop/governance.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_optimizer_and_gaps.py",
+      "backend/tests/test_entity_workflow.py",
+      "backend/tests/test_mutable_scope.py",
+      "backend/tests/test_experiment_governance.py",
+      "reports/loop-live-proof.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W29",
+    "module": "Loop",
+    "requirement": "稳定分桶、版本/实验隔离、对照效果/延迟/成本",
+    "source": "方案5.2/HTML21",
+    "implementation": "backend/app/loop/experiments.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_optimizer_and_gaps.py",
+      "backend/tests/test_entity_workflow.py",
+      "backend/tests/test_mutable_scope.py",
+      "backend/tests/test_experiment_governance.py",
+      "reports/loop-live-proof.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W30",
+    "module": "Loop",
+    "requirement": "统计显著性、分阶段升流和劣化回滚",
+    "source": "方案5.2/代码10.12",
+    "implementation": "backend/app/loop/experiments.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_optimizer_and_gaps.py",
+      "backend/tests/test_entity_workflow.py",
+      "backend/tests/test_mutable_scope.py",
+      "backend/tests/test_experiment_governance.py",
+      "reports/loop-live-proof.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W31",
+    "module": "Loop",
+    "requirement": "Thompson Sampling参数试验、合并拆分与淘汰",
+    "source": "方案5.3",
+    "implementation": "backend/app/loop/optimizer.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_optimizer_and_gaps.py",
+      "backend/tests/test_entity_workflow.py",
+      "backend/tests/test_mutable_scope.py",
+      "backend/tests/test_experiment_governance.py",
+      "reports/loop-live-proof.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W32",
+    "module": "审核",
+    "requirement": "真实生成审核题/自答/逐题判定与部门阶段推进",
+    "source": "代码11/前端4.4",
+    "implementation": "backend/app/review/review_engine.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_review.py",
+      "reports/api-acceptance.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W33",
+    "module": "审核",
+    "requirement": "环外抽检、错误退回环上",
+    "source": "代码11.2",
+    "implementation": "backend/app/review/review_engine.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_review.py",
+      "reports/api-acceptance.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W34",
+    "module": "后端",
+    "requirement": "Token iat/exp、资源所有权、部门角色与内部fail-closed",
+    "source": "代码4.2/HTML30",
+    "implementation": "backend/app/auth.py、api/",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_session_boundaries.py",
+      "backend/tests/test_distributed_budget.py",
+      "reports/queue-live.json",
+      "reports/live-boundaries.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W35",
+    "module": "后端",
+    "requirement": "Redis按用户/部门限流与并发连接池",
+    "source": "方案7.3",
+    "implementation": "backend/app/utils/ratelimit.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_session_boundaries.py",
+      "backend/tests/test_distributed_budget.py",
+      "reports/queue-live.json",
+      "reports/live-boundaries.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W36",
+    "module": "后端",
+    "requirement": "队列持久作业、幂等、租约/CAS、接管/退避/DLQ",
+    "source": "代码16.5/HTML29",
+    "implementation": "backend/app/storage/job_queue.py、scripts/async_worker.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_session_boundaries.py",
+      "backend/tests/test_distributed_budget.py",
+      "reports/queue-live.json",
+      "reports/live-boundaries.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W37",
+    "module": "部署",
+    "requirement": "独立部门Agent、DEPT_ID隔离、部分成功与明示降级",
+    "source": "代码4.7/13/HTML25—26",
+    "implementation": "backend/app/integrations/dept_agent_client.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/tests/test_department_agents.py",
+      "reports/departments-live-failure.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W38",
+    "module": "部署",
+    "requirement": "Docker全栈/依赖健康/共享上传/备份恢复",
+    "source": "代码2/交付说明",
+    "implementation": "docker-compose.yml、scripts/",
+    "status": "implemented_tested",
+    "evidence": [
+      "reports/compose-restore.json",
+      "reports/independent-restore.json",
+      "docs/delivery/独立部署与恢复.md"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W39",
+    "module": "部署",
+    "requirement": "Helm模板、部门HPA、inflight与Prometheus Adapter",
+    "source": "代码13.1—13.2",
+    "implementation": "deploy/helm/、deploy/k8s/",
+    "status": "implemented_tested",
+    "evidence": [
+      "reports/hpa-scale-proof.json",
+      "reports/ha-failover.json",
+      "reports/observability-live.json",
+      "reports/alert-live.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W40",
+    "module": "部署",
+    "requirement": "Mongo/Redis高可用、连接池、预热与部门资源隔离",
+    "source": "方案7.3/代码18.2",
+    "implementation": "deploy/、backend/app/storage/",
+    "status": "implemented_tested",
+    "evidence": [
+      "reports/hpa-scale-proof.json",
+      "reports/ha-failover.json",
+      "reports/observability-live.json",
+      "reports/alert-live.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W41",
+    "module": "部署",
+    "requirement": "Prometheus/Grafana/Loki/OTel/Dashboard/告警",
+    "source": "方案8.1/代码13.4",
+    "implementation": "deploy/monitoring/",
+    "status": "implemented_tested",
+    "evidence": [
+      "reports/hpa-scale-proof.json",
+      "reports/ha-failover.json",
+      "reports/observability-live.json",
+      "reports/alert-live.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W42",
+    "module": "前端",
+    "requirement": "学生登录/问答/引用/历史/反馈/记忆",
+    "source": "前端3",
+    "implementation": "web/src/components/Chat.tsx",
+    "status": "implemented_tested",
+    "evidence": [
+      "reports/browser-acceptance.json",
+      "reports/api-acceptance.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W43",
+    "module": "前端",
+    "requirement": "部门管理文档/审核/Loop/记忆/Agent视角隔离",
+    "source": "前端4",
+    "implementation": "web/src/components/admin/",
+    "status": "implemented_tested",
+    "evidence": [
+      "reports/browser-acceptance.json",
+      "reports/api-acceptance.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W44",
+    "module": "前端",
+    "requirement": "超级管理员创建部门/策略审核/全局阶段与实验",
+    "source": "前端5",
+    "implementation": "web/src/components/admin/",
+    "status": "implemented_tested",
+    "evidence": [
+      "reports/browser-acceptance.json",
+      "reports/api-acceptance.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W45",
+    "module": "评测",
+    "requirement": "真实数据来源与分层题集、迭代/冻结划分",
+    "source": "HTML13/39",
+    "implementation": "backend/evaluation/、backend/scripts/",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/evaluation/dataset_manifest.json",
+      "reports/frozen-evaluation.json",
+      "reports/frozen-evaluation-after.json",
+      "reports/judge-calibration.json",
+      "reports/loop-live-proof.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W46",
+    "module": "评测",
+    "requirement": "Recall/Hit/MRR/引用/关键点/路由/拒答及失败明细",
+    "source": "代码6.4/HTML13",
+    "implementation": "backend/scripts/evaluate_rag.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/evaluation/dataset_manifest.json",
+      "reports/frozen-evaluation.json",
+      "reports/frozen-evaluation-after.json",
+      "reports/judge-calibration.json",
+      "reports/loop-live-proof.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W47",
+    "module": "评测",
+    "requirement": "同输入基线/检索治理/两轮Loop对照，裁判校准",
+    "source": "HTML18—24/39",
+    "implementation": "backend/scripts/evaluate_full.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "backend/evaluation/dataset_manifest.json",
+      "reports/frozen-evaluation.json",
+      "reports/frozen-evaluation-after.json",
+      "reports/judge-calibration.json",
+      "reports/loop-live-proof.json"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  },
+  {
+    "id": "W48",
+    "module": "评测",
+    "requirement": "1→20Pod与并发测试，明确mock/真实模型边界",
+    "source": "代码13.5/HTML28",
+    "implementation": "loadtest/",
+    "status": "capacity_limit_observed",
+    "evidence": [
+      "reports/hpa-scale-proof-first-failed.json",
+      "reports/hpa-scale-proof-v2-partial.json",
+      "reports/hpa-scale-proof.json"
+    ],
+    "verification_scope": "实现HPA与真实负载，最多19Ready，未达到20稳定容量；失败保留"
+  },
+  {
+    "id": "W49",
+    "module": "交付",
+    "requirement": "逐项验收、无凭证包、独立解包/恢复与复盘",
+    "source": "用户当前要求",
+    "implementation": "reports/、scripts/build_release.py",
+    "status": "implemented_tested",
+    "evidence": [
+      "scripts/build_release.py",
+      "reports/independent-restore.json",
+      "reports/package-verification.json",
+      "reports/independent-package-tests.txt",
+      "reports/package-verification.json",
+      "reports/independent-package-tests.txt"
+    ],
+    "verification_scope": "自动测试及对应真实专项；不把单测当真实用户效果"
+  }
+]

@@ -1,0 +1,415 @@
+{
+  "scope": "原0655固定六样本，三正三反，两次独立评分；原三维GEval阈值0.5。模型裁判识别率不是事实准确率。",
+  "model": "qwen-plus",
+  "stable_steps": true,
+  "records": [
+    {
+      "case_index": 0,
+      "note": "正样本1：单城完整+匹配+真实",
+      "positive": true,
+      "repeat": 1,
+      "metrics": [
+        {
+          "name": "行程完整性",
+          "score": 1.0,
+          "threshold": 0.5,
+          "passed": true,
+          "reason": "Step 1: Correctly extracts 3 days and Hangzhou as destination; Day titles match (Day 1–3 Hangzhou), no extra destinations or days. Step 2: Each day has full AM/PM/noon/evening slots; Day 3 evening correctly shows only return高铁 — no景点 added during transit time. Step 3: Budget is required (input states '预算人均3000元'), and output provides full breakdown (transport, accommodation, food, tickets, other), totals 3140 for 2 people (1570/person), explicitly confirms under budget — all required elements present and accurate.",
+          "seconds": 4.078596207778901
+        },
+        {
+          "name": "需求匹配度",
+          "score": 1.0,
+          "threshold": 0.5,
+          "passed": true,
+          "reason": "The response correctly matches the user's stated destination (Hangzhou), duration (3 days), number of people (2 adults), transportation (high-speed rail), and interest in cultural exploration. Budget is properly calculated per person (1570 < 3000), not as a total, satisfying step 2. Activities like West Lake, Lingyin Temple, Silk Museum, Longjing Village, and Xixi Wetland align with cultural exploration; dining and accommodation are varied and reasonable—not overly restrictive or subjective. No invented constraints (e.g., no arbitrary exclusions or unsupported assumptions). All evaluation steps are fully satisfied.",
+          "seconds": 3.634496500249952
+        },
+        {
+          "name": "真实性（无编造）",
+          "score": 1.0,
+          "threshold": 0.5,
+          "passed": true,
+          "reason": "The response correctly lists real, verifiable attractions (e.g., Lingyin Temple, Leifeng Pagoda, Xixi Wetland) and associated official or widely reported prices (e.g., Feilai Peak 45 yuan, Lingyin Temple incense ticket 30 yuan, Leifeng Pagoda 40 yuan, Xixi Wetland 80 yuan). All cited restaurants — Louwailou, Zhiweiguan, and蒋村集市 — are authentic establishments with plausible price points (120, 50, 70 yuan). No fictional venues or wildly inaccurate prices appear; 'nearby dining' suggestions (e.g., 'eat at local farm restaurant in Xixi') are contextually grounded and not treated as named entities. The budget total (3140 for two) aligns with stated constraints (3 days, 2 adults, ~3000/person), and all factual claims match publicly available data.",
+          "seconds": 5.17187837511301
+        }
+      ],
+      "classified_positive": true,
+      "correct": true
+    },
+    {
+      "case_index": 1,
+      "note": "正样本2：多城（重庆+北京）完整+匹配+真实",
+      "positive": true,
+      "repeat": 1,
+      "metrics": [
+        {
+          "name": "行程完整性",
+          "score": 1.0,
+          "threshold": 0.5,
+          "passed": true,
+          "reason": "Step 1 violated: user requested travel to both Chongqing AND Beijing, but Day 1–3 cover only Chongqing, Day 4–5 only Beijing — correctly covers 5 days and two destinations, no extraneous fields added. Step 2 mostly satisfied: each day has AM/PM/noon/evening slots; Day 5 evening includes return to Tianjin (complete), and transit time isn’t overloaded with景点 — though Day 4 afternoon/evening is light (only hotel check-in + dinner), it’s justified as arrival day. Step 3 satisfied: budget is required (user specified '预算人均4000元'), and output provides full breakdown (transport, accommodation, food, tickets, other), confirms人均3752.67 ≤ 4000, and justifies 'within budget'. All key requirements addressed precisely.",
+          "seconds": 5.113286042120308
+        },
+        {
+          "name": "需求匹配度",
+          "score": 0.3,
+          "threshold": 0.5,
+          "passed": false,
+          "reason": "The response fails step 1: the user specified traveling to *both* Chongqing and Beijing, but the itinerary treats them as sequential destinations *within the same 5-day trip*, requiring two long-haul high-speed rail legs (Tianjin→Chongqing, Chongqing→Beijing, Beijing→Tianjin) — which is logistically infeasible in 5 days and contradicts the implied intent of a multi-city trip with realistic pacing. Step 2 is misapplied: while the final人均 (3752.67) is under 4000, the budget breakdown hides that transport alone is 5358 (1786/person), exceeding the *entire* per-person budget — yet the conclusion incorrectly states '人均未超预算' without flagging this critical inconsistency. Step 3 is partially satisfied: cultural and food activities align with user preferences, and economic hotels are used; however, the武隆 day trip is overly ambitious and physically unrealistic for a traveler arriving from Tianjin the prior day, indicating poor feasibility judgment beyond style.",
+          "seconds": 6.260206874925643
+        },
+        {
+          "name": "真实性（无编造）",
+          "score": 1.0,
+          "threshold": 0.5,
+          "passed": true,
+          "reason": "All named attractions (e.g., Hongyadong, Ciqikou, Wulong TianSheng Three Bridges, Forbidden City, Temple of Heaven) are real and correctly located in重庆/北京. All listed ticket prices match official or widely verified rates (e.g., Forbidden City 60 RMB, Temple of Heaven 34 RMB combo, Wulong 125 RMB, Yangtze River Cable Car 20 RMB). No fictional venues or implausible prices appear. 'Nearby' dining suggestions (e.g., 'hotpot on Nanbin Road', 'roast fish near Jiefangbei') are generic but grounded in real districts — not treated as fabricated restaurants per Step 2. Step 1 is satisfied: only actual named entities are checked, and灵隐寺 is irrelevant here. No hallucinated names or prices found.",
+          "seconds": 5.558834125287831
+        }
+      ],
+      "classified_positive": false,
+      "correct": false
+    },
+    {
+      "case_index": 2,
+      "note": "反样本A：多城只渲染首城、缺在北京的 Day4-5",
+      "positive": false,
+      "repeat": 1,
+      "metrics": [
+        {
+          "name": "行程完整性",
+          "score": 0.2,
+          "threshold": 0.5,
+          "passed": false,
+          "reason": "Step 1 fails: user requested travel to both Chongqing AND Beijing, but the itinerary covers only Chongqing across all 5 days — Beijing is entirely omitted, violating explicit destination requirement. Step 2 is partially met (daily AM/PM/night slots filled), but Day 5 is missing entirely — no return or final day coverage, contradicting '5 days' and 'return trip' expectation. Step 3 is misapplied: budget is provided despite require_budget=False not being stated, but more critically, the budget table includes 'Other' without justification and omits breakdown per person/day; also, total (8058) ≠ 3 × 4000 = 12000, yet 'budget conclusion' incorrectly claims 'not exceeded' without clarifying if it's per-person or total — inconsistent with '人均4000元'.",
+          "seconds": 5.603409708011895
+        },
+        {
+          "name": "需求匹配度",
+          "score": 0.2,
+          "threshold": 0.5,
+          "passed": false,
+          "reason": "The response fails step 1: the user explicitly requested travel to *both* Chongqing *and* Beijing, but the itinerary covers only Chongqing — Beijing is entirely omitted. This is a critical omission, not an inference or style choice. Step 2 is satisfied (budget correctly calculated per person: 8058 ÷ 3 = 2686 < 4000). Step 3 is also satisfied: economic hotel is used, and food choices (noodle, hotpot, tea) align with cultural exploration and food discovery without unjustified restrictions. However, the complete absence of Beijing invalidates core intent.",
+          "seconds": 3.644039375241846
+        },
+        {
+          "name": "真实性（无编造）",
+          "score": 1.0,
+          "threshold": 0.5,
+          "passed": true,
+          "reason": "The response correctly lists real, verifiable locations (e.g., Hongyadong, Ciqikou, Ci Qi Kou's Baolun Temple, Zhazidong, Bai Gongguan, Yangtze River Cable Car) and accurate pricing: Hongyadong is indeed free; Yangtze River Cable Car is 20 yuan single trip; local meal prices (40–100 yuan) align with typical重庆 street food and hotpot costs. No fictional venues or implausible prices appear. 'Nearby dining' suggestions (e.g., 'eat hotpot on Nanbin Road') are generic but grounded in real geography and cuisine — not treated as fabricated entities per Step 2. All cited attractions match actual重庆 cultural and historical sites, satisfying Step 1’s focus on factual entities. Step 3 is satisfied — no invented names or absurd prices (e.g., no 'made-up temple' or '5000-yuan hotpot').",
+          "seconds": 5.922106666024774
+        }
+      ],
+      "classified_positive": false,
+      "correct": true
+    },
+    {
+      "case_index": 3,
+      "note": "反样本C：经济型/1500 元预算却排五星奢华、人均超 17 倍",
+      "positive": false,
+      "repeat": 1,
+      "metrics": [
+        {
+          "name": "行程完整性",
+          "score": 0.0,
+          "threshold": 0.5,
+          "passed": false,
+          "reason": "严重偏离需求：用户明确要求2天、经济型住宿、人均1500元预算、文化探索与美食探店，但行程安排五星级酒店、米其林法餐、直升机、头等舱等奢侈项目，人均达26000元，远超预算；Day1/Day2标题虽正确，但内容完全未体现文化探索（如博物馆、青羊宫）和本地美食探店（仅高端定制餐），反而虚构大量用户未要求的高消费字段（私人管家、香槟鱼子酱、SPA等）；交通写'高铁'却安排'专车+包机+头等舱'，违反出发地西安→成都坐高铁的明确指令；预算构成虽完整，但整体方案彻底无视用户核心约束条件。",
+          "seconds": 4.936615374870598
+        },
+        {
+          "name": "需求匹配度",
+          "score": 0.0,
+          "threshold": 0.5,
+          "passed": false,
+          "reason": "The response fails all three evaluation steps: (1) It ignores the user's explicit request for 'economic accommodation' and 'cultural exploration & food hunting', instead prescribing luxury hotels, Michelin dining, private helicopters, and first-class flights; (2) It reports人均 26000 yuan against a 1500 yuan/person budget — a 1633% overage — yet only vaguely suggests 'downgrading accommodation' without addressing the gross mismatch in transportation, dining, or activities; (3) It conflates 'economic accommodation' with overall austerity, banning reasonable cultural/food activities by replacing them with elitist, non-cultural alternatives (e.g., luxury brand shopping, champagne tea), violating the principle that unprohibited activities shouldn't be excluded by subjective preference.",
+          "seconds": 4.929295166861266
+        },
+        {
+          "name": "真实性（无编造）",
+          "score": 0.0,
+          "threshold": 0.5,
+          "passed": false,
+          "reason": "The response contains numerous clearly fictional entities and wildly inflated prices (e.g., '米其林三星餐厅 in a hotel in Chengdu', 'private helicopter over Dujiangyan at 12000 yuan/hour', '2600 yuan 12-course dinner', '6800 yuan/night executive suite', '4200 yuan first-class airfare from Chengdu to Xi'an') — all contradicting the user’s stated constraints: 2-day trip, budget of 1500 yuan/person, economic accommodation, and high-speed rail (not flights or helicopters). No real Chengdu attractions (e.g., Wenshu Monastery, Jinli, Kuanzhai Alley as actual sites) are correctly named with accurate admission fees; instead, generic or invented venues dominate. Step 3 explicitly penalizes 'obviously fabricated entities or absurd prices' — this output fails severely on that.",
+          "seconds": 5.438114458229393
+        }
+      ],
+      "classified_positive": false,
+      "correct": true
+    },
+    {
+      "case_index": 4,
+      "note": "反样本B：无Day结构 + 编造假景点/离谱票价",
+      "positive": false,
+      "repeat": 1,
+      "metrics": [
+        {
+          "name": "行程完整性",
+          "score": 0.2,
+          "threshold": 0.5,
+          "passed": false,
+          "reason": "Step 1 fails: output does not extract or reflect explicit inputs — no mention of '福州出发' or '9月24日出发', nor does it label Day 1/Day 2 headings. Step 2 fails: no daily breakdown (no morning/afternoon/evening slots), no itinerary structure, and no return transport on Day 2. Step 3 fails: budget is provided (2200元), but includes an implausible, fabricated '紫禁城秘密花园' ticket at 2000元/人 — violates realism and misrepresents Beijing attractions; also omits required budget categories (transport, accommodation, meals) and misallocates cost. No justification for omitting高铁 or福州-to-北京 travel.",
+          "seconds": 4.641650875099003
+        },
+        {
+          "name": "需求匹配度",
+          "score": 0.2,
+          "threshold": 0.5,
+          "passed": false,
+          "reason": "The response fails step 1 by omitting explicit confirmation of key constraints: departure city (Fuzhou), exact dates (Sep 24), and travel mode (high-speed rail) are unmentioned. Step 2 is violated because the '2000 yuan/person' ticket price is implausibly high and unverifiable—no real-world Forbidden City 'Secret Garden' ticket costs that much, making the per-person budget claim (2200 yuan) misleading and significantly deviating from realistic pricing. Step 3 is partially respected (food focus acknowledged), but the fabricated attraction undermines credibility and introduces an invented condition not in the user's request.",
+          "seconds": 3.896845083683729
+        },
+        {
+          "name": "真实性（无编造）",
+          "score": 0.2,
+          "threshold": 0.5,
+          "passed": false,
+          "reason": "The output includes '紫禁城秘密花园' as a ticketed attraction with a price of 2000 yuan/person, but this is a fictional entity — there is no officially recognized site by that name in Beijing; the Forbidden City does have some lesser-known courtyards, but 'Secret Garden' is not a standard or verified attraction. The price is also wildly inflated and inconsistent with actual Forbidden City admission (≈60 yuan). This violates evaluation step 3: using an obviously fabricated entity and an absurd price. No real景点 or餐厅 names appear — only this invented attraction — so steps 1 and 2 are also undermined.",
+          "seconds": 3.9423320842906833
+        }
+      ],
+      "classified_positive": false,
+      "correct": true
+    },
+    {
+      "case_index": 5,
+      "note": "边界样本：末日晚上仅返程 1 条，字段齐全",
+      "positive": true,
+      "repeat": 1,
+      "metrics": [
+        {
+          "name": "行程完整性",
+          "score": 1.0,
+          "threshold": 0.5,
+          "passed": true,
+          "reason": "Step 1: Correctly extracts 2 days and destination '厦门'; Day titles match (Day 1/Day 2), no extra fields. Step 2: Each day has morning/noon/afternoon/evening slots; Day 2 evening includes only return高铁 — no extraneous景点 added during transit time. Step 3: Budget is required (input states '预算人均1800元'), and output provides full breakdown (transport, accommodation, food, tickets, other) with total and per-capita calculation — all categories present and logically assigned. No critical omissions or misalignments.",
+          "seconds": 3.489290290977806
+        },
+        {
+          "name": "需求匹配度",
+          "score": 1.0,
+          "threshold": 0.5,
+          "passed": true,
+          "reason": "The response fully aligns with evaluation step 1: it correctly uses厦门 as destination, 2 days, 1 adult, and高铁 (high-speed rail) — no extraneous conditions added. Step 2 is satisfied: budget is explicitly stated as '人均1800元', and the output calculates '人均965.00元', correctly comparing per-person cost (not total) against the per-person cap; 965 is well within 1800, with no significant deviation. Step 3 is honored: '文化探索与美食' is addressed via鼓浪屿 architecture,南普陀寺, 厦大, and multiple local dishes (沙茶面, 海蛎煎, etc.); economic accommodation (220/night) coexists with reasonable food spending — no unjustified restrictions or subjective style impositions. All test case parameters are accurately reflected without omission or invention.",
+          "seconds": 5.070920499972999
+        },
+        {
+          "name": "真实性（无编造）",
+          "score": 1.0,
+          "threshold": 0.5,
+          "passed": true,
+          "reason": "All named attractions (Gulangyu Island, Sunlight Rock, Shuzhuang Garden, Piano Museum, Nanputuo Temple, Xiamen University, Huandao Road, Zengcuoan) are real and correctly located in Xiamen. Ticket prices (35 yuan ferry, 50 yuan Sunlight Rock) match publicly available official rates. No fictional venues or implausible pricing appear; generic suggestions like 'eat satay noodles' are permissible per step 2. Budget total (965 yuan) is realistic and well below the 1800 yuan cap, with transparent itemization. No violations of steps 1–3.",
+          "seconds": 4.469031374901533
+        }
+      ],
+      "classified_positive": true,
+      "correct": true
+    },
+    {
+      "case_index": 0,
+      "note": "正样本1：单城完整+匹配+真实",
+      "positive": true,
+      "repeat": 2,
+      "metrics": [
+        {
+          "name": "行程完整性",
+          "score": 1.0,
+          "threshold": 0.5,
+          "passed": true,
+          "reason": "Step 1: Correctly extracts 3 days and destination杭州; Day titles match (Day 1–3), no extra fields added. Step 2: Each day has full AM/PM/noon/evening slots; Day 3 evening correctly shows only return高铁—no景点 inserted during transit time. Step 3: Budget is required (input states '预算人均3000元'), and output provides full breakdown (transport, accommodation, food, tickets, other) with clear totals and per-person comparison—accurately notes '人均未超预算'. All cultural elements (West Lake, Lingyin, Silk Museum, Longjing, Xixi) align with '文化探索' preference. No factual errors or omissions in timing/logistics.",
+          "seconds": 4.848788916133344
+        },
+        {
+          "name": "需求匹配度",
+          "score": 1.0,
+          "threshold": 0.5,
+          "passed": true,
+          "reason": "The response correctly matches the destination (Hangzhou), duration (3 days), number of people (2 adults), and transportation (high-speed rail). It correctly calculates人均 cost (1570 < 3000) and avoids conflating total with per-person budget. Cultural exploration is well addressed via West Lake, Lingyin Temple, Silk Museum, Longjing Village, and Xixi Wetland — all aligned with user’s interest. No prohibited activities are included, and economic accommodation is paired with reasonable dining options (e.g., Louwailou, Zhiweiguan), satisfying Step 3. All key constraints are respected without fabrication or subjective disapproval.",
+          "seconds": 4.137105165980756
+        },
+        {
+          "name": "真实性（无编造）",
+          "score": 1.0,
+          "threshold": 0.5,
+          "passed": true,
+          "reason": "所有提到的景点（灵隐寺、飞来峰、雷峰塔、西溪湿地等）和餐厅（楼外楼、知味观）均为真实存在的杭州知名实体；所列票价（如三潭印月船票55元、灵隐寺香花券30元、雷峰塔40元、西溪湿地80元）均符合2023–2024年公开票价信息；'楼外楼孤山店''知味观湖滨店'等具体分店名真实存在且位置合理；泛化建议如'就近用餐''夜宵可在湖滨步行街解决' are correctly treated as non-factual guidance and not penalized; no invented venues or wildly inaccurate prices appear.",
+          "seconds": 4.211872708052397
+        }
+      ],
+      "classified_positive": true,
+      "correct": true
+    },
+    {
+      "case_index": 1,
+      "note": "正样本2：多城（重庆+北京）完整+匹配+真实",
+      "positive": true,
+      "repeat": 2,
+      "metrics": [
+        {
+          "name": "行程完整性",
+          "score": 1.0,
+          "threshold": 0.5,
+          "passed": true,
+          "reason": "Step 1 violated: user requested travel to both Chongqing AND Beijing, but Day 1–3 cover only Chongqing, Day 4–5 only Beijing — correctly covers 5 days and two destinations, no extraneous fields added. Step 2 mostly satisfied: each day has AM/PM/noon/evening slots; Day 5 evening includes return to Tianjin (complete), and transit time isn’t overloaded with景点 — though Day 4 afternoon/evening is light (only hotel check-in + dinner), it’s justified as arrival day. Step 3 satisfied: budget is required (user specified '预算人均4000元'), and output provides full breakdown (transport, accommodation, food, tickets, other), confirms人均3752.67 ≤ 4000, and justifies 'within budget'. All key requirements addressed precisely.",
+          "seconds": 5.186682042200118
+        },
+        {
+          "name": "需求匹配度",
+          "score": 0.3,
+          "threshold": 0.5,
+          "passed": false,
+          "reason": "The response fails step 1: the user specified traveling to *both* Chongqing and Beijing, but the itinerary treats them as sequential destinations *within the same 5-day trip*, requiring two long-haul high-speed rail legs (Tianjin→Chongqing, Chongqing→Beijing, Beijing→Tianjin) — which is logistically infeasible in 5 days and contradicts the implied intent of a multi-city trip with realistic pacing. Step 2 is misapplied: while the final人均 (3752.67) is under 4000, the budget breakdown hides that transport alone is 5358 (1786/person), exceeding the *entire* per-person budget — yet the conclusion incorrectly states '人均未超预算' without flagging this critical inconsistency. Step 3 is partially satisfied: cultural and food activities align with user preferences, and economic hotels are used; however, the武隆 day trip is overly ambitious and physically unrealistic for a traveler arriving from Tianjin the prior day, indicating poor feasibility judgment beyond style.",
+          "seconds": 6.399164000060409
+        },
+        {
+          "name": "真实性（无编造）",
+          "score": 1.0,
+          "threshold": 0.5,
+          "passed": true,
+          "reason": "The response correctly lists real, verifiable attractions (e.g., Hongyadong, Ciqikou, Wulong TianSheng Three Bridges, Forbidden City, Temple of Heaven) and uses accurate, publicly listed prices (e.g., Forbidden City 60 RMB, Temple of Heaven 34 RMB combo ticket, Yangtze River Cable Car 20 RMB). All mentioned restaurants/food are generic local dishes (e.g., Chongqing Xiao Mian, Beijing roast duck) — not fabricated named establishments — satisfying step 2. No fictional venues or wildly implausible prices appear; even武隆’s 125 RMB ticket aligns with official 2023–2024 pricing. Step 1 is satisfied as only actual named entities in output are checked — no requirement to include Lingyin Temple. Step 3 is upheld: all cited prices and sites are factual and widely documented.",
+          "seconds": 5.434599000029266
+        }
+      ],
+      "classified_positive": false,
+      "correct": false
+    },
+    {
+      "case_index": 2,
+      "note": "反样本A：多城只渲染首城、缺在北京的 Day4-5",
+      "positive": false,
+      "repeat": 2,
+      "metrics": [
+        {
+          "name": "行程完整性",
+          "score": 0.4,
+          "threshold": 0.5,
+          "passed": false,
+          "reason": "Step 1 fails: user requested travel to both Chongqing AND Beijing, but itinerary covers only Chongqing (5 days in one city), missing Beijing entirely; Day titles are present but destination coverage is incomplete. Step 2 is mostly satisfied: all days have AM/PM/night slots filled, and no extraneous景点 added during transit. Step 3 is satisfied: budget breakdown includes transport, accommodation, food, tickets, and 'other', aligns with require_budget=True (implied by user stating 'budget人均4000元'), and correctly computes total and per-person cost under limit.",
+          "seconds": 4.591548125259578
+        },
+        {
+          "name": "需求匹配度",
+          "score": 0.2,
+          "threshold": 0.5,
+          "passed": false,
+          "reason": "The response fails step 1: the user explicitly requested travel to *both* Chongqing and Beijing, but the itinerary covers only Chongqing — Beijing is entirely omitted. This is a critical omission of a stated destination. Step 2 is satisfied (budget is correctly calculated per person: 8058 ÷ 3 ≈ 2686 < 4000). Step 3 is reasonably met: economic hotel is used, food costs align with local norms, and cultural/food activities match the user’s stated interests. However, the complete absence of Beijing invalidates the core trip structure.",
+          "seconds": 3.7144409166648984
+        },
+        {
+          "name": "真实性（无编造）",
+          "score": 1.0,
+          "threshold": 0.5,
+          "passed": true,
+          "reason": "The response correctly lists real attractions (e.g., Hongyadong, Ciqikou, Ci Qi Kou's Baolun Temple, Zhazidong, Bai Gongguan, Yangtze River Cable Car) and accurate free/low-cost admission (Hongyadong free, Zhazidong/Bai Gongguan free with reservation, Cable Car 20 yuan). Prices for food (Chongqing noodles ~40 yuan, hotpot ~100 yuan) are realistic and consistent with local standards. No fictional venues or implausible prices appear; 'Jiangbian teahouse' is generic but not treated as a specific named restaurant, satisfying step 2. All cited entities are verifiable and geographically appropriate for Chongqing — no Beijing itinerary is provided, but the input asked for both cities and the output only covers重庆; however, evaluation step 1 says to only check *what actually appears*, and all appearing names are valid. No factual errors detected.",
+          "seconds": 5.668295708019286
+        }
+      ],
+      "classified_positive": false,
+      "correct": true
+    },
+    {
+      "case_index": 3,
+      "note": "反样本C：经济型/1500 元预算却排五星奢华、人均超 17 倍",
+      "positive": false,
+      "repeat": 2,
+      "metrics": [
+        {
+          "name": "行程完整性",
+          "score": 0.0,
+          "threshold": 0.5,
+          "passed": false,
+          "reason": "严重偏离需求：用户明确要求2天、经济型住宿、人均1500元预算、文化探索与美食探店，但行程安排五星级酒店、米其林法餐、直升机、头等舱等奢侈项目，人均26000元远超预算；Day1/Day2标题虽正确，但内容完全未体现成都文化景点（如宽窄巷子仅作为包车路过点，未安排游览）、美食探店流于私房菜宴而非本地市井体验；交通写'高铁'却安排专车+头等舱+包机，违反出发地西安→成都高铁前提；预算构成虽完整，但整体方案无视用户核心约束条件，三项评估步骤均严重失准。",
+          "seconds": 4.570088749751449
+        },
+        {
+          "name": "需求匹配度",
+          "score": 0.0,
+          "threshold": 0.5,
+          "passed": false,
+          "reason": "The response completely ignores the user's explicit constraints: '经济型住宿' is violated by booking a five-star hotel with 6800 yuan/night suites; '人均1500元' budget is exceeded 17x (26000 vs 1500); '高铁' travel is contradicted by adding private helicopter, head-of-line airport transfers, and first-class flights. It also invents unsupported luxuries (Michelin dining, private helicopters, champagne afternoon tea) not aligned with '文化探索与美食探店'. All three evaluation steps are violated.",
+          "seconds": 3.343462042044848
+        },
+        {
+          "name": "真实性（无编造）",
+          "score": 0.0,
+          "threshold": 0.5,
+          "passed": false,
+          "reason": "The response contains numerous clearly fictional entities and wildly inflated prices (e.g., '米其林三星餐厅' in a hotel in Chengdu with 1800 RMB/person lunch, 'private helicopter over Dujiangyan' at 12000 RMB/hour, '6800 RMB/night executive suite', 'headfirst class airfare 4200 RMB/person') — all far exceeding the user’s stated budget of 1500 RMB/person and contradicting the 'economy accommodation' and 'high-speed rail' constraints. These are not generic suggestions but presented as concrete, named services with specific, implausible prices — violating evaluation steps 1 and 3. No real景点/restaurant names are verified or aligned with actual Chengdu offerings; all are fabricated or misrepresented.",
+          "seconds": 4.659337624907494
+        }
+      ],
+      "classified_positive": false,
+      "correct": true
+    },
+    {
+      "case_index": 4,
+      "note": "反样本B：无Day结构 + 编造假景点/离谱票价",
+      "positive": false,
+      "repeat": 2,
+      "metrics": [
+        {
+          "name": "行程完整性",
+          "score": 0.0,
+          "threshold": 0.5,
+          "passed": false,
+          "reason": "Step 1 fails: output does not extract or reflect explicit inputs — no mention of '福州出发' or '9月24日出发', nor does it label Day 1/Day 2 headings. Step 2 fails: no daily breakdown (no morning/afternoon/evening slots), and no itinerary structure at all — just a vague promise and an implausible, inflated ticket price. Step 3 fails: budget is provided despite require_budget=False (not specified in input, but per evaluation step logic, budget inclusion is only valid when explicitly required; here it's added unsolicited and contains a fabricated, wildly unrealistic '紫禁城秘密花园' ticket costing 2000元/人 — violating factual accuracy and relevance).",
+          "seconds": 4.567570582963526
+        },
+        {
+          "name": "需求匹配度",
+          "score": 0.2,
+          "threshold": 0.5,
+          "passed": false,
+          "reason": "The response violates evaluation step 1 by omitting explicit confirmation of key constraints: departure city (Fuzhou), exact dates (Sep 24, 2-day duration), and transportation (high-speed rail). It also fails step 2: quoting '2200 yuan per person' while including a 2000 yuan/person Forbidden City 'secret garden' ticket — which is implausible (no such official ticket exists at that price) and consumes nearly the entire budget, leaving ~200 yuan for all other costs (transport, meals, lodging), indicating a significant, unacknowledged deviation from realistic spending. Step 3 is partially met by referencing food interest, but the fabricated, extreme-cost attraction undermines credibility and reflects poor constraint adherence.",
+          "seconds": 4.003651417326182
+        },
+        {
+          "name": "真实性（无编造）",
+          "score": 0.2,
+          "threshold": 0.5,
+          "passed": false,
+          "reason": "The output invents a fictional attraction '紫禁城秘密花园' (Forbidden City Secret Garden), which does not exist as a real, ticketed site in Beijing. Additionally, the listed price of 2000 yuan per person for this non-existent attraction is wildly inflated and inconsistent with actual Forbidden City admission (≈60 yuan). This violates evaluation steps 1 and 3: it introduces a clearly fictional entity and an absurd price, not supported by any real-world evidence. No real景点 or餐厅 names appear—only fabrication.",
+          "seconds": 3.240100166760385
+        }
+      ],
+      "classified_positive": false,
+      "correct": true
+    },
+    {
+      "case_index": 5,
+      "note": "边界样本：末日晚上仅返程 1 条，字段齐全",
+      "positive": true,
+      "repeat": 2,
+      "metrics": [
+        {
+          "name": "行程完整性",
+          "score": 1.0,
+          "threshold": 0.5,
+          "passed": true,
+          "reason": "Step 1: Correctly extracts 2 days and destination '厦门'; Day 1 and Day 2 headers match, no extra fields. Step 2: Each day has morning/noon/afternoon/evening slots; Day 2 evening correctly shows only return高铁 (no added景点); transit time not overloaded with activities. Step 3: Budget is required (input states '预算人均1800元'), and output provides full breakdown (transport, accommodation, food, tickets, other) with total and per-person calculation — all aligned. No factual errors (e.g.,鼓浪屿船票 ~35,日光岩50, etc. are realistic), and '其他' is justified (e.g., luggage storage, snacks).",
+          "seconds": 4.196392750367522
+        },
+        {
+          "name": "需求匹配度",
+          "score": 1.0,
+          "threshold": 0.5,
+          "passed": true,
+          "reason": "The response fully aligns with evaluation step 1: it correctly uses厦门 as destination, 2 days, 1 adult, and高铁 (high-speed rail) — no extraneous conditions added. Step 2 is satisfied: budget is explicitly stated as '人均1800元', and the output calculates '人均965.00元' (not total vs. per-person), clearly stating '人均未超预算'. Step 3 is upheld: cultural exploration (鼓浪屿 architecture, South Putuo Temple, Xiamen University, piano museum) and food (沙茶面, 海蛎煎, 土笋冻, etc.) are both emphasized; economic accommodation (220/night) coexists with reasonable dining costs — no unjustified restrictions or subjective disapproval of activities. All test case parameters (Shenzhen departure, Oct 1 start, culture + food preference) are accurately reflected.",
+          "seconds": 5.080565750133246
+        },
+        {
+          "name": "真实性（无编造）",
+          "score": 1.0,
+          "threshold": 0.5,
+          "passed": true,
+          "reason": "All named attractions (Gulangyu Island, Sunlight Rock, Shuzhuang Garden, Piano Museum, Nanputuo Temple, Xiamen University, Huandao Road, Zengcuoan) are real and correctly located in Xiamen. Ticket prices (35 yuan ferry, 50 yuan Sunlight Rock) match publicly available official rates. No fictional venues or implausible pricing appear; generic suggestions like 'eat satay noodles' are permissible per step 2. Budget breakdown is internally consistent and well below the 1800 yuan/person limit, with no invented costs.",
+          "seconds": 3.8194474996998906
+        }
+      ],
+      "classified_positive": true,
+      "correct": true
+    }
+  ]
+}

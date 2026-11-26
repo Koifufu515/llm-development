@@ -1,0 +1,21 @@
+{
+  "city": "北京",
+  "title": "北京景点资料 · Beijing/Western and Southern Suburbs",
+  "source_url": "https://en.wikivoyage.org/wiki/Beijing/Western%20and%20Southern%20Suburbs",
+  "text": "资料城市：北京。本文是历史开放景点资料，不提供实时开放时间或价格；出行前需要核实。\n\nTanzhe Temple\nBuddhist temple dating back as far as the Western Jin Dynasty (more than 1600 years ago). It is one of the oldest and largest temples in Beijing. The site is especially beautiful to visit in April when the surrounding Magnolia trees are in full bloom.\n\nJietai Temple\nThough not as popular and well-visited as Tanzhe Temple, this smaller Buddhist temple is definitely worth a visit. It was originally built about 1400 years ago, but its most famous features have been added later during Ming and Qing dynasties. A special attraction of this site are the huge pine trees, some of them being hundreds of years old.\n\nMt. Lingshan Scenic Resort\nWith 2300 meters in height, Mt.Lingshan is the highest mountain in Beijing.\n\nCuandixia\nA beautiful ancient mountain village. It is very small, only around 70 traditional court yards.  It is renovated nicely and seems rather authentic.  Go in the weekdays if you want peace and quiet, as many Chinese tourist from Beijing are said to go there in the weekends. In the summer months the climate is nicer than in Beijing because of the cooler mountain air.  In the winter it could be cold, but the beds are heated, so it is still possible to go.  Do at least an overnight trip or you will spend most of your time in the bus and not have time to enjoy the peace in the beautiful village.  You can easily spend one day in the village walking around on the mountain paths.  Day 2 can be spend on visiting the nearby village Baiyu, and seeing the sights around Cuandixia.  Day 3 can be spend on visiting more ancient villages and scenic spots a little further away.  You can also jump from one village to the next and stay one night in each.  Almost every home has a restaurant and the quality is generally good and prices low. In summer 2009 a meal for two with 3-5 dishes was &yen;20-40.Almost every home in the village is a guesthouse, so it is no problem finding a place to sleep.  Prices are &yen;30-50 for a room for 2 people.\n\nBaiyu\nA village  with 100-200 traditional court yards, which are in the process of being renovated in a nice and authentic way (June 2009).  Baiyu is still rather unexplored, but it has plenty of guesthouses to sleep and eat in. Quality is good, prices low, the scenery is beautiful and the people friendly. Baiyu is about 6 km from the more well known ancient mountain village Cuandixia, so combining a visit to both places is a good idea. It costs ¥30 for tourists to enter the Cuandixia area.\n\nThe Cave of Peking Man\nA UNESCO World Heritage Site. This is the former residence of the Peking Man dating back 200,000-500,000 years.  The caves and some exhibition halls can be seen here.  Most of the remains of the Peking Man disappear during World War II and have never been found again.\n\nMt. Shangfang National Forest Park\nWith an area covering more than 300 hectares,  this is the biggest National Forest Park in North China. There are nine caves, 12 peaks and 72 temples to discover in this park. The most famous are:\n\nCloud and Water Cave\nBeautiful 613 meters long carst cave, featuring the highest (37 meters) stalagmite in China.",
+  "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+  "license": "CC BY-SA 3.0",
+  "attribution": "Wikivoyage contributors; https://en.wikivoyage.org/wiki/Beijing/Western%20and%20Southern%20Suburbs",
+  "sha256": "01c44347faff3d96638424f9efcc1392a45dc4c5c2a8cb11e79652777e16f91b",
+  "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+  "poi_count": 8,
+  "source_dataset": "https://github.com/wikivoyage/wikivoyage.github.io",
+  "excluded_fields": [
+    "price",
+    "hours",
+    "phone",
+    "email",
+    "hotel",
+    "restaurant"
+  ]
+}

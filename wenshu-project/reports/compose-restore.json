@@ -1,0 +1,26 @@
+{
+  "departments": {
+    "source": 7,
+    "restored": 7
+  },
+  "documents": {
+    "source": 14,
+    "restored": 14
+  },
+  "chunks": {
+    "source": 67,
+    "restored": 67
+  },
+  "doc_relations": {
+    "source": 0,
+    "restored": 0
+  },
+  "glossary": {
+    "source": 5,
+    "restored": 5
+  },
+  "active_documents_reindexed": 7,
+  "original_database_untouched": true,
+  "model_egress": "redacted only",
+  "source_user_accounts_copied": false
+}

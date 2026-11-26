@@ -1,0 +1,2 @@
+uv run python tmp_json.py
+Remove-Item tmp_json.py

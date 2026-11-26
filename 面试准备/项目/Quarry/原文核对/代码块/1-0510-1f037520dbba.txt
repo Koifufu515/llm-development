@@ -1,0 +1,5 @@
+SELECT request_id, query, (timings->>'total_ms')::float AS total_ms, timings
+FROM query_logs
+WHERE status = 200
+ORDER BY total_ms DESC NULLS LAST
+LIMIT 10;

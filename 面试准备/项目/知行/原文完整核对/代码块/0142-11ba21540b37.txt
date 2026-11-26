@@ -1,0 +1,10 @@
+"""_leg_query_date 演示：每一段查哪一天，由代码按行程时序算（纯函数，无需密钥）"""
+from app.core.middleware import _leg_query_date
+
+req = {"departure_city": "北京", "departure_date": "2026-10-01", "travel_days": 5}
+for dest, legs in [("天津、上海", ["北京→天津", "天津→上海", "上海→北京"]), ("北京、天津", ["北京→天津", "天津→北京"])]:
+    state = {"user_requirement": req, "selected_destination": dest}
+    for i, leg in enumerate(legs):
+        print(f"目的地 {dest}：第 {i + 1} 段 {leg} → 查 {_leg_query_date(state, legs, i)}")
+state = {"user_requirement": {"departure_city": "北京", "travel_days": 5}, "selected_destination": "上海"}
+print("没有出发日期：", repr(_leg_query_date(state, ["北京→上海"], 0)))

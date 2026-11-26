@@ -1,0 +1,68 @@
+New
+tv modeIscope
+首页
+模型库
+数据集
+创空间
+开发者实践
+智能工坊•
+实验场
+4AIGC 专区
+⑦
+MCPs 详情⋯
+12306-MCP车票查询工具
+.0p: Hosted
+C） 2026.10.13 167.9m
+◎ 427.3k
+⑦ 715
+十合集
+⑤ GitHub
+@Joooook/12306-mcp 口 服务翠提供一个简单的API接口，允许用户搜索12306的车票。
+搜索工具 开源协议：MIT License
+• 开发者：Joooook
+服务详情
+工具测试
+交流反馈 61
+可部署
+服务配置
+12306-mcp
+Remote
+Stdio
+© Jo00ook
+西 Joo00ok
+Ts
+typescript
+stars 2.4k
+last commit july
+license MIT
+npx
+A 12306 ticket search server based on the Model Context Protocol （MCP）. The server provides a simple APl interface that allows users to search for 12306 tickets.
+口
+基于 Model Context Protocol（MCP）的12306购票搜索服务器。提供了简单的API接口，允许大模型利用接口搜索12306购票信息。
+"mcpServers"：｛
+"12386-mcp"：｛
+“args"：［
+Features
+"-y"，
+"12306-mcp"
+功能描述
+状态
+］，
+"command"："npx"
+查询12306购票信息
+已完成
+过滤列车信息
+已完成
+舀 试用
+过站查询
+已完成
+中转查询
+已完成
+使用个人专属云资源部署MCP服务
+立即部署
+其余接口，欢迎提feature
+计划内
+V API Request
+收录本MCP服务的合集
+144＞
+Cline wants to use a tool on the 12306-mcp MCP server：

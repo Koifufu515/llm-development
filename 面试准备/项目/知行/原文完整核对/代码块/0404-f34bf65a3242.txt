@@ -1,0 +1,12 @@
+"""select_accommodation_food_tool 演示：手动模式被工具内守卫拦下；自动模式一个 Command 写完住宿 + 餐饮（纯逻辑，无需密钥）"""
+from langchain.tools import ToolRuntime
+
+from app.tools.state_transition import select_accommodation_food_tool
+
+for auto in (False, True):
+    state = {"messages": [], "current_step": "accommodation_planning", "auto_confirm": auto,
+             "user_requirement": {"departure_city": "北京", "travel_days": 3}, "selected_destination": "杭州"}
+    rt = ToolRuntime(state=state, context=None, config={}, stream_writer=None, tool_call_id="call_1", store=None)
+    up = select_accommodation_food_tool.func(accommodation_types=["economy_hotel"], food_types=["local"], runtime=rt).update
+    written = {k: v for k, v in up.items() if k != "messages"}
+    print(f"auto_confirm={auto!s:5} → {written or '不写任何字段'} | {up['messages'][0].content[:46]}…")

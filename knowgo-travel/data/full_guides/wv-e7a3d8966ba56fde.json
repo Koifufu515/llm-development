@@ -1,0 +1,21 @@
+{
+  "city": "长沙",
+  "title": "长沙景点资料 · Changsha",
+  "source_url": "https://en.wikivoyage.org/wiki/Changsha",
+  "text": "资料城市：长沙。本文是历史开放景点资料，不提供实时开放时间或价格；出行前需要核实。\n\nJuZiZhou\nThis beautifully landscaped park contains a large number of rose bushes, a bamboo garden, and a gigantic sculpture of the head of Mao in his youth.\n\nHunan University\nYou will find lots of great places to eat in and around the studious atmosphere of the various campus' south of Yuelushan. Mao Zedong attended Hunan University and there is a statue in honour of this most famous of their alumni.\n\nYuelu Mountain\nNorth of Hunan University, is the national renowned scenic spot, located on the west bank of Xiang River. Many foreigners and locals alike frequently climb this 300m tall mountain. At the foot of Yuelu Mountain is Yuelu Academy. You can also get up/down by shuttle bus or cable car.\n\nTianxin Pavilion\nThis pavilion is next to the ancient city wall. Cannons that have been used to defend the city are perched in the wall.\n\nBamboo Slips Museum\nThis museum contains a both ancient carved bamboo slips and a series of pottery artifacts. The building is architecturally-interesting, as bamboo grows out of one side of it.\n\nBaixia Well Park\nThis is a local park that contains a well. Although the well is nearly dry, you can still see people filling up containers with the little water that is left.\n\nHunan Embroidery Museum\nThis museum is on the second floor of a store that sells high-quality embroidery. Visit and learn about the history of embroidery in Hunan. Special techniques have been locally-developed to achieve finer detail. At the end of the tour, you can visit the workshop where new items are being embroidered. The tour is free, and there is no pressure to buy.\n\nJia Yi's Former Residence\nThis courtyard contains a number of carved slate tablets and is worth a quick visit. It is located off of Taiping Street, a pedestrian street which sells traditional crafts, clothes and refreshments.\n\nMawangdui Tombs\nWhile this may sound like a tourist attraction, it is simply the ditch in which the tombs were uncovered. There are no artifacts present as everything is now in the Hunan Provincial Museum (which is under renovation until 2015).\n\nHunan Provincial Museum\nSee the Han era tomb of Xin Zui, the Marquess of Dai, and her 2,100 year old preserved body. Its extraordinary and looks more real than Ho Chi Minh. Her body was still moist and flexible when they found her, complete elastic skin. Also at the museum are many exhibits on all kinds of Han Dynasty artifacts, including pottery, lacquerware and an impressive collection of silk.\n\nTheaters\nWatch traditional folk art, eg lion dance, drum opera, clam dance and Xiang Opera.\n\nYuelu Academy\nThe ''Thousand Year Old'' center of culture and learning of southern China. Established in 976, it is the spiritual predecessor to what is now Hunan University. Rich in history and beautiful period architecture, a visit to the academy will put you in touch with the ancient elites of southern China. You can find all the history on the website and then visit the academy yourself, wandering through its courtyards and open classrooms, admiring the curved eaves and bamboo gardens to get the real experience.",
+  "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+  "license": "CC BY-SA 3.0",
+  "attribution": "Wikivoyage contributors; https://en.wikivoyage.org/wiki/Changsha",
+  "sha256": "1ace7dcb32d9d762d2d311207c45f02a122a7cb16e3399dc31587869fc41ba63",
+  "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+  "poi_count": 12,
+  "source_dataset": "https://github.com/wikivoyage/wikivoyage.github.io",
+  "excluded_fields": [
+    "price",
+    "hours",
+    "phone",
+    "email",
+    "hotel",
+    "restaurant"
+  ]
+}

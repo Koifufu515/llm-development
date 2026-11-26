@@ -1,0 +1,1 @@
+uv run python -m quarry.scripts.try_pipeline "大唐不夜城有什么特色？"

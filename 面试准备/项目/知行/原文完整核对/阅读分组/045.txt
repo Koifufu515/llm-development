@@ -1,0 +1,473 @@
+
+
+===== block 516 21303d8d07b6 lines 1-11 source 知行旅行助手-v2#518 =====
+"""_pick_flight 演示：JSON / 文本两种返回都能抠出"航班号 + 价格"，取最便宜（纯函数，无需密钥）"""
+import json
+
+from app.services.express_planning_service import _pick_flight
+
+as_json = json.dumps([{"flightNo": "MF8101", "price": 820}, {"flightNo": "ZH9502", "price": "¥650"}])
+as_text = "CA1829 福州→深圳 经济舱 760元\nMU5301 福州→深圳 经济舱 590元"
+
+print("JSON 形态 →", _pick_flight(as_json))    # 字符串价格 "¥650" 也能抠出数字
+print("文本形态 →", _pick_flight(as_text))     # JSON 解析失败 → 兜底正则抓"航班号…价格"
+print("没有数据 →", _pick_flight("暂无数据"))  # None → 这一段走降级
+
+
+===== block 517 5af9ae7d25fb lines 1-3 source 知行旅行助手-v2#519 =====
+JSON 形态 → {'flight_no': 'ZH9502', 'price': 650.0}
+文本形态 → {'flight_no': 'MU5301', 'price': 590.0}
+没有数据 → None
+
+
+===== block 518 47d4a7767d04 lines 1-36 source 知行旅行助手-v2#520 =====
+def _pick_hotel(text: str) -> dict | None:
+    """从酒店 JSON 选最优：与状态机自动代选同源（hotel_agent_tool.hotel_rank）——
+    剔除异常低价（<25 元/晚）后：评分≥4.5 取最低价，否则取评分最高（同分取便宜）"""
+    # 就近 import 避免顶层循环依赖（本模块其它择优函数也按需从 capabilities 导入）
+    from app.capabilities.hotel_multi_segment.hotel_agent_tool import _MIN_HOTEL_PRICE, hotel_rank
+    try:
+        data = json.loads(text)
+    except Exception:
+        return None
+    if not isinstance(data, dict):
+        return None
+
+    hotels = []
+    for h in data.get("hotelInformationList") or []:
+        if not isinstance(h, dict) or not h.get("name"):
+            continue
+        price_info = h.get("price")
+        message = price_info.get("message", "") if isinstance(price_info, dict) else ""
+        price = _number_before(message, "CNY/晚")
+        if price:
+            hotels.append({"name": h["name"], "price": price,
+                           "score": _to_float(h.get("starRating")), "address": h.get("address", "")})
+
+    valid = [h for h in hotels if h["price"] >= _MIN_HOTEL_PRICE]  # 接口偶发返回"14元/晚"这类失真价格
+    if not valid:
+        return None
+    return min(valid, key=lambda h: hotel_rank(h["price"], h["score"]))
+
+def _pick_weather(text: str, date: str) -> str:
+    """从高德预报 JSON 截取出发日期当天摘要，取不到就退第一条"""
+    try:
+        casts = json.loads(text).get("casts", [])
+        c = next((x for x in casts if x.get("date") == date), casts[0] if casts else None)
+        return f"{c['dayweather']} {c.get('daytemp')}~{c.get('nighttemp')}°C" if c else ""
+    except Exception:
+        return ""
+
+
+===== block 519 3e9e53e8c04c lines 1-14 source 知行旅行助手-v2#521 =====
+"""_pick_hotel 演示：评分≥4.5 里挑最低价；低于 25 元的异常价先剔掉（纯函数，无需密钥）"""
+import json
+
+from app.services.express_planning_service import _pick_hotel
+
+raw = json.dumps({"hotelInformationList": [
+    {"name": "西湖景观酒店", "price": {"message": "688CNY/晚"}, "starRating": 4.8, "address": "西湖区"},
+    {"name": "湖滨精选酒店", "price": {"message": "358CNY/晚"}, "starRating": 4.6, "address": "上城区"},
+    {"name": "车站快捷酒店", "price": {"message": "199CNY/晚"}, "starRating": 4.1, "address": "拱墅区"},
+    {"name": "离谱低价房", "price": {"message": "14CNY/晚"}, "starRating": 4.9, "address": "未知"},
+]}, ensure_ascii=False)
+
+print(_pick_hotel(raw))            # 湖滨精选酒店 358：4.5 分以上里最便宜；14 元那条当异常剔掉
+print(_pick_hotel("不是JSON"))      # None → 该城按"经济型估算"降级
+
+
+===== block 520 9074f625d0bd lines 1-2 source 知行旅行助手-v2#522 =====
+{'name': '湖滨精选酒店', 'price': 358.0, 'score': 4.6, 'address': '上城区'}
+None
+
+
+===== block 521 623611220371 lines 1-12 source 知行旅行助手-v2#523 =====
+"""_pick_weather 演示：取出发日当天的预报，取不到退第一条，解析失败返回空串（纯函数，无需密钥）"""
+import json
+
+from app.services.express_planning_service import _pick_weather
+
+raw = json.dumps({"casts": [
+    {"date": "2026-10-01", "dayweather": "晴", "daytemp": "27", "nighttemp": "18"},
+    {"date": "2026-10-02", "dayweather": "多云", "daytemp": "25", "nighttemp": "17"},
+]}, ensure_ascii=False)
+print(_pick_weather(raw, "2026-10-02"))         # 命中出发日
+print(_pick_weather(raw, "2026-12-31"))         # 不在预报范围 → 退第一条
+print(repr(_pick_weather("", "2026-10-01")))    # 解析失败 → 空串，不编造
+
+
+===== block 522 fd74f72ee382 lines 1-3 source 知行旅行助手-v2#524 =====
+多云 25~17°C
+晴 27~18°C
+''
+
+
+===== block 523 47040477dcb7 lines 1-98 source 知行旅行助手-v2#525 =====
+def _fallback_hotel_brands(hotel_preferences: list[str] | None) -> str:
+    """酒店报价不可用时的品牌兜底文案，延迟导入防止模块循环依赖"""
+    _COMMON_HOTELS: dict[str, list[str]] = {
+        "economy_hotel": ["如家", "汉庭", "7 天", "锦江之星", "格林豪泰", "莫泰"],
+        "star_hotel": ["希尔顿", "万豪", "洲际", "香格里拉", "凯悦", "雅高"],
+        "hostel": ["花间堂", "途家民宿", "小猪民宿", "美团民宿"],
+        "youth_hostel": ["国际青年旅舍（YHA）", "万里路青年旅舍", "如家青旅"],
+    }
+
+    types = [t for t in (hotel_preferences or []) if t in _COMMON_HOTELS] or ["economy_hotel"]
+    return "、".join(_COMMON_HOTELS[types[0]][:3])
+
+def _select_choices(req: ExpressRequirement, ctx: dict) -> dict:
+    """规则选定：逐段交通、逐城酒店、餐饮一次性选定，返回结果与用户摘要文本"""
+    cities = ctx.get("_cities") or _split_cities(req.destination)
+    legs = ctx.get("_legs") or _build_legs(req.departure_city, cities)
+    food = req.food_preferences or (["specialty", "local"] if "food" in req.travel_styles else ["local", "specialty"])
+
+    transports = []          # 成功获取的交通，用于预算计算
+    leg_results = []         # 全部路段记录，包含查询失败路段
+    for i, (src, dst) in enumerate(legs):
+        # ★ 按用户勾选顺序挑交通（req.transport_types 即偏好序），不硬编码 train 优先：
+        #   逐个模式试，取首个有有效结果的；查询侧只对该模式建了 job，无候选自然跳过
+        picked = None
+        for mode in req.transport_types:
+            if mode == "train":
+                t = _pick_train(ctx.get(f"train_{i}", ""))
+                if t:
+                    picked = {"type": "train", **t}
+            elif mode == "flight":
+                f = _pick_flight(ctx.get(f"flight_{i}", ""), ctx.get(f"flightprice_{i}", ""))
+                if f:
+                    picked = {"type": "flight", **f}
+            if picked:
+                break
+        if picked:
+            picks = dict(picked)
+            picks["src"], picks["dst"] = src, dst
+            transports.append(picks)
+            leg_results.append(("ok", src, dst, picks))
+        else:
+            leg_results.append(("miss", src, dst, None))
+
+    hotels = []
+    hotel_results = []       # 全部城市酒店记录，包含兜底 fallback
+    for i, city in enumerate(cities):
+        h = _pick_hotel(ctx.get(f"hotel_{i}", ""))
+        if h:
+            buildings = dict(h)
+            buildings["city"] = city
+            hotels.append(buildings)
+            hotel_results.append(("ok", city, buildings))
+        else:
+            hotel_results.append(("fallback", city, None))
+
+    weathers = {}
+    for i, city in enumerate(cities):
+        w = _pick_weather(ctx.get(f"weather_{i}", ""), req.departure_date)
+        if w:
+            weathers[city] = w
+
+    sel = {
+        "transports": transports,
+        "hotels": hotels,
+        "food": food,
+        "weathers": weathers,
+        "cities": cities,
+        "total_legs": len(legs),
+        "leg_results": leg_results,
+        "hotel_results": hotel_results
+    }
+
+    lines = []
+    # 交通摘要，按路段序号输出，失败路段保留提示
+    for i, (kind, src, dst, pk) in enumerate(leg_results):
+        if kind == "ok" and pk["type"] == "train":
+            lines.append(f"🚄 交通{i+1}（{src}→{dst}）：{pk['no']} 次 {pk['dep']}出发（历时{pk['mins']//60}小时{pk['mins']%60:02d}分，二等座{pk['price']:.0f}元）")
+        elif kind == "ok":
+            price_txt = f"{pk['price']:.0f}元" if pk["price"] else "价格待定"
+            dep_txt = f"{pk['dep']}出发，" if pk.get("dep") else ""
+            lines.append(f"✈️ 交通{i+1}（{src}→{dst}）：{pk.get('flight_no','航班')} {dep_txt}{price_txt}")
+        else:
+            lines.append(f"🚄 交通{i+1}（{src}→{dst}）：未查询到实时班次（可到站现买或改期，费用按估算计入）")
+
+    # 酒店摘要，无真实报价使用品牌兜底文案
+    for kind, city, h in hotel_results:
+        if kind == "ok":
+            lines.append(f"🏨 {city}酒店：{h['name']}（{h['price']:.0f}元/晚，评分{h['score']}）")
+        else:
+            lines.append(f"🏨 {city}住宿：经济连锁（{_fallback_hotel_brands(req.accommodation_types)}等，到店择优选同档位）")
+
+    lines.append("🍽️ 餐饮偏好：" + "、".join({"specialty": "特色美食", "chain": "连锁快餐", "local": "本地小吃"}[f] for f in food))
+    for city, w in weathers.items():
+        lines.append(f"🌤️ {city}出发日天气：{w}")
+
+    sel["summary"] = "\n".join(lines) if lines else "未查询到实时数据，正在按常识安排…"
+    app_logger.info(f"[express] 规则选定完成: {sel['summary'][:100]}...")
+    return sel
+
+
+===== block 524 28d206d70dfb lines 1-23 source 知行旅行助手-v2#526 =====
+"""_select_choices 演示：把并行收集回来的原始文本，一次选定成"每段交通 + 每城酒店 + 天气"（纯函数，无需密钥）"""
+import json
+
+from app.services.express_planning_service import ExpressRequirement, _select_choices
+
+req = ExpressRequirement(departure_city="福州", destination="杭州", departure_date="2026-10-01",
+                         travel_days=3, auto_confirm=True, transport_types=["train"],
+                         food_preferences=["local"])
+ctx = {   # 形如 _collect_context 的返回：key 自带"哪段/哪城"
+    # ★ train_0 用守卫压缩后的紧凑行——这才是线上 get_train_tools() 交给选定器的真实形态
+    #   （旧演示用的是 12306 原始多行格式，掩盖了"紧凑行选不出"的线上 bug）
+    "train_0": "实时班次（共 1 趟，按发车时间排序，仅列前 1 趟）：\n"
+               "格式：车次|区间|出发→到达|历时|票价\n"
+               "G1650|福州→杭州东|08:12→12:30|04:18|二等座 有票 356元",
+    "hotel_0": json.dumps({"hotelInformationList": [
+        {"name": "湖滨精选酒店", "price": {"message": "358CNY/晚"}, "starRating": 4.6}]}, ensure_ascii=False),
+    "weather_0": json.dumps({"casts": [{"date": "2026-10-01", "dayweather": "晴",
+                                        "daytemp": "27", "nighttemp": "18"}]}, ensure_ascii=False),
+    "_cities": ["杭州"], "_legs": [("福州", "杭州")],
+}
+sel = _select_choices(req, ctx)
+print(sel["summary"])                                # 推给用户看的摘要：每段一行、每城一行
+print("选定结果：", sel["transports"][0]["no"], "|", sel["hotels"][0]["name"], "|", sel["weathers"])
+
+
+===== block 525 415238415ad0 lines 1-5 source 知行旅行助手-v2#527 =====
+🚄 交通1（福州→杭州）：G1650 次 08:12出发（历时4小时18分，二等座356元）
+🏨 杭州酒店：湖滨精选酒店（358元/晚，评分4.6）
+🍽️ 餐饮偏好：本地小吃
+🌤️ 杭州出发日天气：晴 27~18°C
+选定结果： G1650 | 湖滨精选酒店 | {'杭州': '晴 27~18°C'}
+
+
+===== block 526 af025f844781 lines 1-147 source 知行旅行助手-v2#528 =====
+# 步骤4：单次LLM生成结构化行程，拼接预算模板
+# 快速通道只调用一次大模型输出完整行程，不再多轮交互；生成后交给代码渲染页面
+
+_ITIN_PROMPT = (
+    "你是行程规划专家。根据已锁定的信息生成逐日行程，这是全流程唯一的长输出。\n"
+    "已锁定信息：\n{info}\n\n"
+    "硬规则：\n"
+    "1. 全程正好 {days} 天，day 字段从 1 连续编号到 {days}，不重不漏\n"
+    "2. 每天四个时段 morning / noon / afternoon / evening 都要有内容，每段 1~2 条，"
+    "每条 50~80 字：时间/地点 + 怎么玩或看点 + 价格或耗时 + 交通接驳\n"
+    "3. 每天至少 1 条 tips（预约/门票/交通接驳/避坑），每条同样 50~60 字\n"
+    "4. 最后一天的 evening 必须包含返程安排\n"
+    "5. 餐饮遵循偏好：{food}；多类型每类都体现，特色美食给具体店名\n"
+    "6. [多目的地] 若 {cities} 有多个城市，city 字段写当天所在城市，"
+    "按已锁定的交通路段在对应日期标明转场；不得漏掉任一城市\n"
+    "7. 严禁散文描写、历史科普、客套话\n"
+    "8. **只按 schema 提交结构化数据**：正文由系统按你提交的结构渲染，"
+    "不要自己写 Markdown 正文、不要写预算表、不要写开场白"
+)
+
+def _day_cities(req: ExpressRequirement) -> list[str]:
+    # 生成逐日对应的城市列表，和住宿分配、路段日期使用同一套逻辑
+    nodes = _plan_cities(req)
+    # 空城市或者天数非法，直接返回空数组
+    if not nodes or req.travel_days <= 0:
+        return []
+    out: list[str] = []
+    # 按每个城市住宿晚数，重复填充城市到每日列表
+    for node, night in zip(nodes, _stay_nights(req.travel_days, len(nodes))):
+        out.extend([node] * night)
+    return out
+
+from pydantic import ValidationError
+
+async def _generate_itinerary(req: ExpressRequirement, sel: dict, stream) -> list[dict] | None:
+    # 快速通道唯一一次LLM长调用，输出结构化逐日行程
+    # 输出会经过模型校验；结构不合规返回None，上层逻辑切回旧状态机
+    # 游玩城市以计划城市为主，同时合并酒店里的城市，防止酒店查询失败丢城市信息
+    plan_cities = _plan_cities(req)
+    if not sel["hotels"]:
+        cities = _plan_cities(req)
+    else:
+        # dict.fromkeys用来去重，合并酒店所在城市和原始计划城市
+        cities = list(dict.fromkeys([h["city"] for h in sel["hotels"]] + plan_cities))
+
+    # 拼接交通信息：使用全部路段（包含查询失败的路段）
+    # 旧版本只拼查询成功的路段，缺失路段会让AI脑补班次，造成路线错乱
+    leg_results = sel.get("leg_results")
+    if leg_results:
+        parts = []
+        for kind, src, dst, pk in leg_results:
+            if kind == "ok":
+                # 火车取车次，航班取航班号
+                code = pk["no"] if pk["type"] == "train" else pk.get("flight_no", "")
+                parts.append(f"{src}→{dst}{code}")
+            else:
+                # 该路段实时数据没查到，标记出来让模型按常识规划
+                parts.append(f"{src}→{dst}(实时班次未查到，按常识安排该段)")
+        transport_line = "；".join(parts)
+    elif sel["transports"]:
+        # 兜底：使用已经筛选好的交通列表拼接
+        transport_line = "；".join(
+            f"{tr['src']}→{tr['dst']}{tr['no'] if tr['type']=='train' else tr.get('flight_no','')}"
+            for tr in sel["transports"])
+    else:
+        transport_line = "未查询到实时班次，按常识安排往返交通"
+
+    # 拼接酒店信息：城市、酒店名称、每晚价格
+    if sel["hotels"]:
+        hotel_line = "；".join(
+            f"{h['city']}:{h['name']}({h['price']:.0f}元/晚)" for h in sel["hotels"])
+    else:
+        hotel_line = "未查询到实时酒店，按经济型预算合理安排（到店再定）"
+
+    # 拼接天气信息
+    weather_line = "；".join(f"{c}:{w}" for c, w in sel["weathers"].items()) or "未知"
+
+    # 组装传给大模型的基础信息文本
+    info = (
+        f"- 目的地：{req.destination}｜出发：{req.departure_date}｜{req.travel_days}天｜"
+        f"{req.adult_count}成人{req.children_count}儿童｜预算人均≤{req.budget_max or '不限'}元\n"
+        f"- 交通：{transport_line}\n"
+        f"- 酒店：{hotel_line}\n"
+        f"- 天气：{weather_line}｜风格：{req.travel_styles}"
+    )
+    city_seq = "、".join(cities) if len(cities) > 1 else "无（单一目的地）"
+
+    # 转换餐饮偏好中文，填充prompt
+    food_map = {"specialty": "特色美食", "chain": "连锁快餐", "local": "本地小吃"}
+    food_text = "、".join(food_map[f] for f in sel["food"])
+    prompt = _ITIN_PROMPT.format(
+        info=info, days=req.travel_days, cities=city_seq, food=food_text
+    )
+
+    # 初始化通义大模型
+    llm = ChatTongyi(
+        model=settings.qwen_model_name,
+        api_key=settings.dashscope_api_key,
+        temperature=settings.qwen_temperature,
+    )
+    # 向前端推送消息，告知用户正在生成行程
+    stream.push(make_event(ROLE_ASSISTANT, "\n📝 正在生成逐日行程…\n"))
+
+    # 导入行程Schema和归一函数
+    # 快速通道和老状态机共用同一套ItineraryBody结构，保证两边输出格式统一
+    from app.tools.state_transition import ItineraryBody, _normalize_itinerary_days
+
+    # 绑定工具调用，强制模型输出ItineraryBody结构
+    bound = llm.bind_tools(
+        [ItineraryBody],
+        tool_choice={"type": "function", "function": {"name": "ItineraryBody"}},
+    )
+    try:
+        res = await bound.ainvoke(prompt)
+        # 取出tool_call里的days数组
+        raw_days = list((res.tool_calls[0]["args"] if res.tool_calls else {}).get("days") or [])
+    except Exception:
+        app_logger.warning("[express] 逐日行程结构化调用失败", exc_info=True)
+        return None
+
+    # 模型没返回days数据，直接降级
+    if not raw_days:
+        app_logger.warning("[express] 模型未返回逐日行程结构（无 tool_calls）")
+        return None
+
+    # 调用归一函数：自动修复天数、补最后一天返程文案，校正每日所属城市
+    back_text = f"傍晚按已确认的交通班次返程回到{req.departure_city}"
+    fixed, fixes = _normalize_itinerary_days(
+        raw_days, req.travel_days, back_text=back, cities=_day_cities(req))
+
+    # Pydantic二次校验，归一修复后依然不满足规则，就切回状态机
+    try:
+        body = ItineraryBody.model_validate(
+            {"days": fixed}, context={"travel_days": req.travel_days})
+    except ValidationError as exc:
+        app_logger.warning(f"[express] 逐日行程归一后仍未通过校验：{exc.errors()[:2]}")
+        return None
+
+    # 记录本次自动修复了多少处问题
+    if fixes:
+        app_logger.warning(
+            f"[express] 已按 {req.travel_days} 天规范化 {len(fixes)} 处：{'；'.join(fixes[:6])}")
+
+    # 转为字典列表返回给上层
+    days_out = [d.model_dump() for d in body.days]
+    app_logger.info(f"[express] 逐日行程结构就绪：{len(days_out)} 天（末日含返程）")
+    return days_out
+
+
+===== block 527 e74cbf613c8f lines 1-68 source 知行旅行助手-v2#529 =====
+def _build_budget(req: ExpressRequirement, sel: dict) -> tuple[str, dict]:
+    """纯代码预算计算与明细拼接，口径与 summarize_budget_tool 保持一致，不经过LLM复述。
+    返回 (展示文本, 结构化明细)——后者与 state.BudgetBreakdown 同构，供同步进状态机 budget 字段"""
+    import math
+    people = req.adult_count + req.children_count
+    days, nights = req.travel_days, max(req.travel_days - 1, 1)
+    rooms = max(math.ceil(people / 2), 1)
+
+    cities = sel.get("cities") or _split_cities(req.destination)
+    total_legs = sel.get("total_legs") or len(_build_legs(req.departure_city, cities))
+
+    # 交通费用：真实票价求和，缺失路段按已获取路段均价估算
+    leg_prices = [tr["price"] for tr in sel["transports"] if tr["price"] > 0]
+    if leg_prices:
+        avg_leg = sum(leg_prices) / len(leg_prices)
+        transport_price = sum(leg_prices) + avg_leg * max(total_legs - len(leg_prices), 0)
+    else:
+        transport_price = 500 * max(total_legs, 1)
+    transport_cost = transport_price * people
+
+    # 住宿费用：取各城酒店均价，无数据时使用300元/晚估算
+    city_prices = [h["price"] for h in sel["hotels"]]
+    hotel_price = (sum(city_prices) / len(city_prices)) if city_prices else 300
+    accommodation_cost = hotel_price * nights * rooms
+
+    food_cost = 150 * days * people
+    attractions_cost = 200 * days * people
+    misc_cost = 100 * days * people
+
+    total = transport_cost + accommodation_cost + food_cost + attractions_cost + misc_cost
+    per_person = total / people if people else total
+
+    if req.budget_max > 0:
+        verdict = "人均未超预算" if per_person <= req.budget_max else "人均超预算（建议下调住宿档位或减天数）"
+    else:
+        verdict = "未提供预算上限，仅作参考"
+
+    missing_legs = max(total_legs - len(leg_prices), 0)
+    if not leg_prices:
+        transport_detail = f"（{total_legs} 段按常识估算）"
+    elif missing_legs:
+        transport_detail = f"（{len(leg_prices)}/{total_legs} 段实时票价，{missing_legs} 段按均价估算）"
+    else:
+        transport_detail = f"（{total_legs} 段 × 各段票价）"
+
+    hotel_detail = (f"各城均价 {hotel_price:.0f} 元"
+                    if city_prices else f"各城估算 {hotel_price:.0f} 元/晚（实时房价不可用）")
+
+    text = (
+        f"### 预算明细（{people} 人 / {nights} 晚 / {rooms} 间房 / {len(cities) or 1} 城）\n"
+        f"- **交通费用**：{transport_cost:.2f} 元（人均 {transport_price:.0f} 元，{transport_detail}）\n"
+        f"- **住宿费用**：{accommodation_cost:.2f} 元（{rooms} 间 × {nights} 晚 × {hotel_detail}）\n"
+        f"- **餐饮费用**：{food_cost:.2f} 元（150元/人/天）\n"
+        f"- **景点门票**：{attractions_cost:.2f} 元（按 200元/人/天 估算）\n"
+        f"- **其他杂费**：{misc_cost:.2f} 元\n"
+        f"**总计：{total:.2f} 元（{people} 人总价）｜人均：{per_person:.2f} 元**\n"
+        f"预算结论：{verdict}"
+    )
+    # ★ 结构化明细（字段与 state.BudgetBreakdown 同构），供 sync_express_state 写入状态机
+    breakdown = {
+        "transport": transport_cost,
+        "accommodation": accommodation_cost,
+        "food": food_cost,
+        "attractions": attractions_cost,
+        "misc": misc_cost,
+        "total": total,
+    }
+    return text, breakdown
+
+
+===== block 528 db699fbc5a34 lines 1-1 source 知行旅行助手-v2#530 =====
+('### 预算明细（2 人 / 2 晚 / 1 间房 / 1 城）\n- **交通费用**：712.00 元（人均 356 元，（1 段 × 各段票价））\n- **住宿费用**：716.00 元（1 间 × 2 晚 × 各城均价 358 元）\n- **餐饮费用**：900.00 元（150元/人/天）\n- **景点门票**：1200.00 元（按 200元/人/天 估算）\n- **其他杂费**：600.00 元\n**总计：4128.00 元（2 人总价）｜人均：2064.00 元**\n预算结论：人均未超预算', {'transport': 712.0, 'accommodation': 716.0, 'food': 900, 'attractions': 1200, 'misc': 600, 'total': 4128.0})
+
+
+===== block 529 5f295d84646b lines 1-8 source 知行旅行助手-v2#531 =====
+### 预算明细（2 人 / 2 晚 / 1 间房 / 1 城）
+- **交通费用**：712.00 元（人均 356 元，（1 段 × 各段票价））
+- **住宿费用**：716.00 元（1 间 × 2 晚 × 各城均价 358 元）
+- **餐饮费用**：900.00 元（150元/人/天）
+- **景点门票**：1200.00 元（按 200元/人/天 估算）
+- **其他杂费**：600.00 元
+**总计：4128.00 元（2 人总价）｜人均：2064.00 元**
+预算结论：人均未超预算

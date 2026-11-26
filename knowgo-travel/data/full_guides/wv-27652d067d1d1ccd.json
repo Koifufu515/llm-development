@@ -1,0 +1,21 @@
+{
+  "city": "北京",
+  "title": "北京景点资料 · Beijing/Xuanwu",
+  "source_url": "https://en.wikivoyage.org/wiki/Beijing/Xuanwu",
+  "text": "资料城市：北京。本文是历史开放景点资料，不提供实时开放时间或价格；出行前需要核实。\n\nGrand View Garden\nGarden established in the 1980s based on the novel 'The Dream of the Red Mansions'.  125,000 m2 with temples, pavilions and other buildings as well as miniature gardens.  Traditional ceremonies performed now and then.  The park also has a restaurant.\n\nTaoranting Park\nA former hangout for literati, while most other Beijing parks were for imperial families only.  The park has a total area of 240,000 m2 with water area accounting for 69,000 m2. The park is a mixture of ancient construction styles and modern park design.  It was built in 1952. Taoran Pavilion (one of the four most important in Beijing) build in 1695 and some tombs are located in the park.  The park has a lake with pavilions on the bank. The park also has a Mini Golf Center, a Water Wonder Land as well as Peacock, China Rose, and Deer Gardens.\n\nNiu Street Mosque\nFamous Mosque build in 996 and the oldest and largest of the mosques in Beijing.  Structured as a traditional Chinese palace, but also uses typical Arabic decoration with a lot of red colour. A must see if staying for more than a few days.  The Muslim presence in the area is obvious with many Muslim shops and Arabic signs around.\n\nFayuan Temple\nThis Buddhist temple was built in 645 and rebuilt in 1436-1449, which makes it the oldest existing in Beijing.  Now, it is the site of the Chinese Buddhist Academy and the exhibition center for Buddhist cultural relics, and is also an important institution training young monks and Buddhism research.  The temple covers 6,700 square meters.  The main buildings are Gate of Temple, Heavenly King Hall, Main Hall, Hall of Great Compassion, Sutra Hall, and Bell and Drum Towers.\n\nBaoguo Temple\nFounded in 1103, various uses during the next centuries, almost forgotten after 1949, but now renovated and open to public.  There is also an antique market specialised in picture books and calligraphies, including writing tools and paper.\n\nMuseum of Ancient Architecture\nMuseum with a model of Beijing ancient city as well as exhibits of Beijing's ancient architecture.\n\nSong Tang Zhai Museum of Traditional Chinese Folk Carving\nThis is a small privately owned museum showing carvings in doors, furniture, other wood and stone.\n\nMuseum of Ancient Pottery Civilization\nShows the Chinese history of pottery from Neolithic Age to now.\n\nHuguang Huiguan Theatre\nTheatre primarily performing excerpts of traditional Chinese opera. The theatre has been working since the 1830s. The theatre building from 1830 is the oldest and best preserved indoor theatre in Beijing. It is in area with other traditional buildings. Next to the theatre is an opera museum.\n\nLi Yuan Theatre\nPlays from the Beijing Opera repertoire. Also exhibitions of opera costumes and other. Tea and snacks available.\n\nTianqiao Theatre\nTheater with a seating capacity of 1,200 with performance of local folk music and dance, talk shows, and international ballet and musicals.\n\nTsinghua Chi\nA spa experience from the famous Qinghua Chi, established in 1905. Great service. Affordable TCM treatments. Try the Ba Guan (Cupping) or acupuncture or opt for simpler manicure and pedicure and Massage.",
+  "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+  "license": "CC BY-SA 3.0",
+  "attribution": "Wikivoyage contributors; https://en.wikivoyage.org/wiki/Beijing/Xuanwu",
+  "sha256": "49fe6bb9b43160d40f5fb3bd4adea97950149d8fcd5f1f5121089c536a8f840e",
+  "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+  "poi_count": 12,
+  "source_dataset": "https://github.com/wikivoyage/wikivoyage.github.io",
+  "excluded_fields": [
+    "price",
+    "hours",
+    "phone",
+    "email",
+    "hotel",
+    "restaurant"
+  ]
+}

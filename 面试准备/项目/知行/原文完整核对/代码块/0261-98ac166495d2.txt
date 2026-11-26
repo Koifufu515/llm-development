@@ -1,0 +1,37 @@
+async def auto_select_driving(conversation_id: str, state: dict) -> list[str]:
+    """自动确认模式：无需选择，路线全部查到即直接落库推进到住宿步
+
+    返回已确认段的展示文本（空列表 = 未推进，调用方跳过即可）
+    """
+    legs = _legs_with_dates(state)
+    if not legs:
+        return []
+    payload = await _payload_for(conversation_id, legs)
+    selections: dict[str, str] = {}
+    texts: list[str] = []
+    for index, leg in enumerate(legs):
+        seg = payload.segments[index] if index < len(payload.segments) else None
+        # ★ 自驾不用选：每段都查到了才推进，任何一段失败就不推进
+        if seg is None or not seg.ok:
+            continue                          # 该段无路线：不硬推进，交回原流程如实告知
+        key = f"{leg.from_}→{leg.to}"
+        selections[key] = _fmt_route(seg)
+        texts.append(f"{key} {_fmt_route(seg)}")
+    if len(selections) != len(legs):
+        app_logger.warning(
+            f"⚠️ 自动模式自驾路线不完整（{len(selections)}/{len(legs)} 段可查），本轮不推进"
+        )
+        return []
+    agent, config, _ = await get_agent_and_state(conversation_id)
+    await agent.aupdate_state(config, {
+        "leg_selections": selections,
+        # ★ 自驾没有票价可记，但必须把数字账本**显式清空**：用户如果是从高铁/航班
+        #   回退过来改成自驾的，上一次的票价还留在状态里，预算会算出一笔不存在的车票钱
+        "leg_prices": {},
+        "leg_cursor": len(legs),
+        "selected_transport": "driving",
+        "selected_transport_legs": texts,
+        "current_step": "accommodation_planning",
+    })
+    app_logger.info(f"✅ 自动模式已确认 {len(selections)} 段自驾路线（默认策略），推进到住宿步")
+    return texts

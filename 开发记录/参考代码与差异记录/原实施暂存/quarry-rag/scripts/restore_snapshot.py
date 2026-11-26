@@ -1,0 +1,1 @@
+../../../../../quarry-rag/scripts/restore_snapshot.py

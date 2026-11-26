@@ -1,0 +1,10 @@
+"""_looks_like_itinerary 演示：清单源料"像不像行程"的判定（纯函数，无需密钥）"""
+from app.services.chat_contract_service import _looks_like_itinerary
+
+multi = "为您规划如下：\n" + "\n".join(f"第{d}天：上午逛景点，下午喝茶，晚上夜市。" * 3 for d in (1, 2, 3))
+single = "一日游安排：上午西湖漫步、断桥拍照；中午知味观；下午灵隐寺祈福；晚上河坊街夜市小吃。" * 4
+ask = "请问您从哪里出发？计划几号出发、玩几天？人均预算大概多少？偏好高铁还是飞机？" * 5
+short = "第1天：西湖。"
+
+for name, text in [("多日行程", multi), ("单日行程", single), ("需求追问", ask), ("太短", short)]:
+    print(f"{name}（{len(text)} 字）→ {_looks_like_itinerary(text)}")

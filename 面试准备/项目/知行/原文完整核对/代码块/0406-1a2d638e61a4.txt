@@ -1,0 +1,79 @@
+# ============== 6️.行程生成工具 ==============
+@tool
+def generate_itinerary_tool(
+        runtime: ToolRuntime[None, TravelState] = None
+) -> Command:
+    """
+    生成完整行程安排，并转换到预算汇总步骤。
+
+    此工具会综合：
+    - 用户需求（天数、人数、风格）
+    - 目的地信息
+    - 交通信息
+    - 住宿信息
+    - 餐饮信息
+
+    生成详细的每日行程。
+    """
+
+    app_logger.info("开始生成行程...")
+
+    state = runtime.state
+
+    # 检查必要信息是否完整
+    required_fields = [
+        # 用户的基本需求
+        "user_requirement",
+        # 目的地选择
+        "selected_destination",
+        # 交通选择
+        "selected_transport",
+        # 住宿选择
+        "selected_accommodation_types",
+        # 食物选择
+        "selected_food_types"
+    ]
+
+    missing = [f for f in required_fields if f not in state or state[f] is None]
+    if missing:
+        return Command(update={
+            "messages": [
+                ToolMessage(
+                    content=f"❌ 信息不完整，缺少：{', '.join(missing)}",
+                    tool_call_id=runtime.tool_call_id
+                )
+            ]
+        })
+
+    # 多目的地天数硬约束（代码层，非提示词）：不推进 current_step，下游清单门禁随之失效，
+    # 即使用户坚持也只停在状态机里、不产出报告——必须补足天数或减少目的地才放行
+    # 下限公式与 submit_itinerary_body_tool 共用同一实现，避免两份口径漂移
+    _floor_err = _multi_city_day_floor_error(state)
+    if _floor_err:
+        app_logger.info(f"[guard] 多目的地天数不足，拒绝生成行程：{_floor_err}")
+        return Command(update={
+            "messages": [ToolMessage(content=_floor_err, tool_call_id=runtime.tool_call_id)]
+        })
+
+    # 生成行程（简化版，实际应调用 LLM）
+    travel_days = state["user_requirement"]["travel_days"]
+    itinerary = []
+
+    for day in range(1, travel_days + 1):
+        itinerary.append({
+            "day_number": day,
+            "activities": [f"第{day}天活动1", f"第{day}天活动2"],
+            "meals": ["早餐", "午餐", "晚餐"],
+            "accommodation": "酒店名称"
+        })
+
+    return Command(update={
+        "messages": [
+            ToolMessage(
+                content=f"已生成 {travel_days} 天详细行程！",
+                tool_call_id=runtime.tool_call_id
+            )
+        ],
+        "itinerary": itinerary,
+        "current_step": "budget_summarization"  # 跳转到步骤7
+    })

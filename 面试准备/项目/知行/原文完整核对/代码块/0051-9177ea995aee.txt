@@ -1,0 +1,97 @@
+"""
+StepConfigMiddleware
+根据 State.current_step 动态注入 Prompt 和 Tools。
+"""
+from typing import Callable
+from jinja2 import Template
+
+from langchain.agents.middleware import AgentMiddleware, ModelRequest, ModelResponse
+
+from app.core.state import TravelState
+from app.utils.logger import app_logger
+
+class StepConfigMiddleware(AgentMiddleware):
+    """
+    步骤配置中间件
+
+    职责：
+      每一次 LLM 调用之前：
+        1. 读 State.current_step
+        2. 从 step_config 中查该步的 Prompt / Tools / Requires
+        3. 前置依赖校验（Requires 的字段必须都在 State 中）
+        4. 用 Jinja2 渲染 Prompt 里的 {{ var }} 占位符
+        5. request.override(...) 注入 system_prompt + tools
+    """
+
+    def __init__(self, step_config: dict):
+        """
+        Args:
+            step_config: 预加载的 StepConfig（见 app/agents/handoffs/step_config.py）
+        """
+        self._step_config = step_config
+
+    async def awrap_model_call(
+            self,
+            request: ModelRequest,
+            handler: Callable[[ModelRequest], ModelResponse]
+    ) -> ModelResponse:
+        # ---------- 1. 读当前步骤 ----------
+        state: TravelState = request.state
+        # State 支持 .get() 但为了给 Jinja2 用，转成普通 dict 更保险
+        state_dict = dict(state) if hasattr(state, "items") else {}
+        current_step = state.get("current_step", "requirement_collection")
+        user_id = state.get("user_id")
+
+        app_logger.info(f"📋 用户 ID: {user_id}")
+        app_logger.info(f"📍 当前步骤: {current_step}")
+
+        # ---------- 2. 查 step_config ----------
+        if current_step not in self._step_config:
+            app_logger.error(f"❌ 未知步骤: {current_step}")
+            raise ValueError(f"未知步骤: {current_step}")
+
+        step_config = self._step_config[current_step]
+
+        # ---------- 3. 前置依赖校验 ----------
+        for required_field in step_config["requires"]:
+            if required_field not in state or state[required_field] is None:
+                error_msg = (
+                    f"步骤 {current_step} 需要 State 里已存在字段: {required_field}, "
+                    f"但当前 State 中该字段为空"
+                )
+                app_logger.error(f"❌ {error_msg}")
+                app_logger.error(f"   当前 State keys = {list(state.keys())}")
+                raise ValueError(error_msg)
+
+        # ---------- 4. Jinja2 渲染 Prompt ----------
+        try:
+            template = Template(step_config["prompt"])
+            system_prompt = template.render(**state_dict)
+            # ** 解包：把 dict 里每个 key 当变量名传给模板
+        except Exception as e:
+            app_logger.warning(f"⚠️ 提示词渲染失败: {e}，回退到原始模板")
+            system_prompt = step_config["prompt"]
+
+        # ---------- 5. 注入 request ----------
+        tools = step_config["tools"]
+        modified_request = request.override(
+            system_prompt=system_prompt,
+            tools=tools,
+        )
+
+        app_logger.info(f"✅ 已注入配置: {len(tools)} 个工具")
+
+        # ---------- 6. 交给下一环（真的调 LLM）----------
+        return await handler(modified_request)
+
+# ============== 工厂函数 ==============
+
+async def create_step_config_middleware() -> StepConfigMiddleware:
+    """
+    工厂：从 step_config 模块加载配置并构造 Middleware。
+    异步，因为 get_step_config() 是异步（后续章节要往里加 await get_mcp_tools() 之类）
+    """
+    from app.agents.handoffs.step_config import get_step_config
+
+    step_config = await get_step_config()
+    return StepConfigMiddleware(step_config)

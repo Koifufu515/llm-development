@@ -1,0 +1,5 @@
+"""brand_fallback 演示：实时报价不可用时，按档位给出常见连锁品牌，不编门店、不编价格（纯函数，无需密钥）"""
+from app.capabilities.hotel_multi_segment.hotel_parser import brand_fallback
+
+for level in ["经济型", "星级酒店", "民宿", "青年旅社", "随便"]:
+    print(f"{level:6} → {[b.brandName for b in brand_fallback(level)]}")

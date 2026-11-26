@@ -1,0 +1,6 @@
+{
+  "injected_failure_observed": true,
+  "receipt_committed_before_checkpoint": true,
+  "retry_restores_checkpoint": true,
+  "scope": "真实PostgreSQL+Checkpoint故障注入；候选为明确标记的测试夹具，不是真实交通查询，测试会话已软删。"
+}

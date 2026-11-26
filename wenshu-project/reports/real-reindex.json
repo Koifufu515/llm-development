@@ -1,0 +1,45 @@
+{
+  "model": "text-embedding-v4",
+  "dimension": 1024,
+  "backend": "milvus",
+  "documents": [
+    {
+      "doc_id": "dddf02256d7847bfb4fb9718ddf58868",
+      "title": "关于防御第9号超强台风“巴威”的安全提示(1)(1)",
+      "chunks": 8
+    },
+    {
+      "doc_id": "adaba33dc9b54861ae2b85a1798ff96a",
+      "title": "暴雨天气致全体师生的温馨提醒",
+      "chunks": 1
+    },
+    {
+      "doc_id": "ff0863dfca9e429d9e38d61506248842",
+      "title": "关于校园防汛应急响应措施的通知",
+      "chunks": 11
+    },
+    {
+      "doc_id": "4cf38aab40084c47b387be1643623e43",
+      "title": "开题答辩分组安排",
+      "chunks": 4
+    },
+    {
+      "doc_id": "262de3bad120410d9bc2cef070dda9bb",
+      "title": "研究生开题报告通知-中法未来",
+      "chunks": 3
+    },
+    {
+      "doc_id": "164b9f3d991a4a74920587bf14d6b02c",
+      "title": "中法宿舍行李寄存承诺书",
+      "chunks": 1
+    },
+    {
+      "doc_id": "d2fbcf0149bc4fba9b11217806a68177",
+      "title": "心理测评操作说明",
+      "chunks": 6
+    }
+  ],
+  "vectors": 35,
+  "outbound": "经过已授权的脱敏边界",
+  "old_hash_collection_preserved": true
+}

@@ -1,0 +1,11 @@
+State 里的存量：
+    user_requirement:   {days: 4, ...}           ← 过时了
+    selected_destination: "武汉"                  ← 过时了
+    selected_transport: "train"                   ← 过时了（杭州要重选）
+    selected_accommodation_types: ["economy"]     ← 过时了
+    selected_food_types: ["specialty"]            ← 可能还想要
+    itinerary: [{"day 1": ["黄鹤楼"], ...}]        ← 过时了
+    current_step: "itinerary_generation"          ← 还得推回去
+
+不清空就重新规划：模型看到已经有 destination="武汉" 和 itinerary=[武汉景点]，
+会把杭州行程和武汉景点混着往下写——用户拿到的行程是**混乱的错版**。

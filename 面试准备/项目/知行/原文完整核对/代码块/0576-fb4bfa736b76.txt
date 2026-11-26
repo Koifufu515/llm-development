@@ -1,0 +1,8 @@
+"""_parse_city_pair 演示：全国城市清单优先，"X到Y"正则兜底（纯函数，无需密钥）"""
+from app.services.chat_stream_executor import _parse_city_pair
+
+for text in ["查一下明天福州到深圳的高铁票",
+             "从深圳出发去福州的动车还有票吗",     # 纯正则会把"出发"当城市；清单只认真城市
+             "义乌到横店的车次",                  # 两地都不在地级市清单里 → 正则兜底（看它把什么也吞进来了）
+             "帮我查查高铁票"]:
+    print(f"{text:20s} → {_parse_city_pair(text)}")

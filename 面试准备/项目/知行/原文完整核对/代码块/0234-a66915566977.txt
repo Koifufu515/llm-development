@@ -1,0 +1,43 @@
+"""_query_one_leg（航班）演示：时刻表用机场码、票价用城市码，两个接口并发查；没有机场码的城市直接跳过（纯逻辑，无需密钥）"""
+import asyncio
+import json
+
+from app.capabilities.flight_multi_segment.flight_agent_tool import _query_one_leg
+from app.capabilities.flight_multi_segment.flight_skill_schema import FlightLeg
+
+RAW = str([
+    {"fcategory": "0", "FlightNo": "MU5104", "FlightCompany": "中国东方航空股份有限公司", "FlightDepAirport": "首都国际机场",
+     "FlightArrAirport": "虹桥国际机场", "FlightDeptimePlanDate": "2026-10-01 10:00:00", "FlightArrtimePlanDate": "2026-10-01 12:15:00"},
+    {"fcategory": "0", "FlightNo": "CA1501", "FlightCompany": "中国国际航空股份有限公司", "FlightDepAirport": "首都国际机场",
+     "FlightArrAirport": "虹桥国际机场", "FlightDeptimePlanDate": "2026-10-01 08:00:00", "FlightArrtimePlanDate": "2026-10-01 10:10:00"},
+])
+PRICES = json.dumps({"data": [{"flightNo": "CA1501", "price": 1280},
+                              {"flightNo": "MU5104", "price": 860}]}, ensure_ascii=False)
+
+class FakeFlightTool:        # 测试驱动：假装是航班时刻表工具，打印真正收到的入参
+    async def ainvoke(self, args: dict):
+        print("   时刻表收到：", args)
+        return RAW
+
+class FakePriceTool:         # 测试驱动：假装是票价工具，schema 决定入参名
+    name = "getFlightPriceByCities"
+    args_schema = {"type": "object",
+                   "properties": {"depCityCode": {}, "arrCityCode": {}, "depDate": {}},
+                   "required": ["depCityCode", "arrCityCode", "depDate"]}
+
+    async def ainvoke(self, args: dict):
+        print("   票价收到  ：", args)
+        return PRICES
+
+async def main():
+    seg = await _query_one_leg(FakeFlightTool(), FakePriceTool(), "s1",
+                               FlightLeg(from_="北京", to="上海", travel_date="2026-10-01"), 5)
+    print("北京→上海：", [(o.flight_no, o.price) for o in seg.flight_list], "段最低", seg.low_price)
+    seg = await _query_one_leg(FakeFlightTool(), FakePriceTool(), "s2",
+                               FlightLeg(from_="北京", to="某小城", travel_date="2026-10-02"), 5)
+    print("北京→某小城：", seg.flight_list, "（没有机场码，没去查）")
+    seg = await _query_one_leg(FakeFlightTool(), None, "s3",
+                               FlightLeg(from_="北京", to="上海", travel_date="2026-10-01"), 5)
+    print("票价工具不可用：", [(o.flight_no, o.price) for o in seg.flight_list], "段最低", seg.low_price)
+
+asyncio.run(main())

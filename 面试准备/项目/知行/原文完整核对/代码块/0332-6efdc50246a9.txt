@@ -1,0 +1,12 @@
+┌──────────────────────┐        ┌──────────────────────────┐        ┌──────────────────────────┐
+│ users                │        │ conversation             │        │ message                  │
+├──────────────────────┤        ├──────────────────────────┤        ├──────────────────────────┤
+│ id          UUID  PK │◄───┐   │ id          UUID  PK      │◄───┐   │ id              UUID  PK │
+│ username    唯一+索引 │    └───│ user_id     UUID  FK 索引 │    └───│ conversation_id UUID FK  │
+│ email       唯一+索引 │        │ title       varchar(200)  │        │ role        user/assistant│
+│ password_hash        │        │ status      active/deleted│        │ content     text         │
+│ preferences JSON     │        │ extra_info  JSON          │        │ extra_info  JSON         │
+│ created_at / updated │        │ created_at / updated_at   │        │ created_at  索引         │
+└──────────────────────┘        └──────────────────────────┘        └──────────────────────────┘
+        1 : N（删用户 → 级联删会话）          1 : N（删会话 → 级联删消息）
+                                 id == LangGraph thread_id

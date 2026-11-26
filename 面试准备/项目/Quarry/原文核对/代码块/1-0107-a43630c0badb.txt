@@ -1,0 +1,6 @@
+SELECT level,
+       LEFT(chunk_id, 8)  AS id,
+       LEFT(parent_id, 8) AS parent,
+       LEFT(content, 12)  AS preview
+FROM chunks
+ORDER BY heading_path, level;

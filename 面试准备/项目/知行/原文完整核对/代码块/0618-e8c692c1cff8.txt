@@ -1,0 +1,17 @@
+def flight_unreachable_cities(state: dict) -> list[str]:
+    """航班结构性不可查时返回拖累的城市（按出现顺序去重）；只要有一段可查就返回空列表
+    判据：每一段都至少有一端不在 _CITY_AIRPORT（如苏州本身无民用机场），此时 _query_one_leg
+    会逐段"无机场码，跳过查询"，payload必然全空，重试不会生效。
+    区分结构性不可查与数据源瞬时失败：前者直接降级说明，后者提示稍后重试。
+    只要存在一段两端都有机场码，仍走卡片流程，不可查段在卡片置灰占位放行。
+    """
+    from app.tools.mcp_tools import _CITY_AIRPORT
+    legs = _legs_with_dates(state)
+    if not legs or any(leg.from_ in _CITY_AIRPORT and leg.to in _CITY_AIRPORT for leg in legs):
+        return []
+    out: list[str] = []
+    for leg in legs:
+        for city in (leg.from_, leg.to):
+            if city not in _CITY_AIRPORT and city not in out:
+                out.append(city)
+    return out

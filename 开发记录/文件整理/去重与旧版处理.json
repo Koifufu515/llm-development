@@ -1,0 +1,43 @@
+[
+  {
+    "action": "download_duplicate_linked",
+    "from": "/Users/jarvis/Downloads/MCP & A2A 高频面试八股.html",
+    "to": "/Users/jarvis/Desktop/大模型开发/原始资料/面试题库/MCP & A2A 高频面试八股.html"
+  },
+  {
+    "action": "download_duplicate_linked",
+    "from": "/Users/jarvis/Downloads/大厂面经 - Rag.html",
+    "to": "/Users/jarvis/Desktop/大模型开发/原始资料/面试题库/大厂面经 - Rag.html"
+  },
+  {
+    "action": "download_duplicate_linked",
+    "from": "/Users/jarvis/Downloads/Agent & RAG 面试场景题八股.html",
+    "to": "/Users/jarvis/Desktop/大模型开发/原始资料/面试题库/Agent & RAG 面试场景题八股.html"
+  },
+  {
+    "action": "download_duplicate_linked",
+    "from": "/Users/jarvis/Downloads/大厂面经 - SKILLS专题.html",
+    "to": "/Users/jarvis/Desktop/大模型开发/原始资料/面试题库/大厂面经 - SKILLS专题.html"
+  },
+  {
+    "action": "superseded_release_to_trash",
+    "from": "/Users/jarvis/Desktop/大模型开发/knowgo-travel/交付/知行旅行助手-完整业务复现-20261030.zip",
+    "to": "/Users/jarvis/.Trash/知行旅行助手-完整业务复现-20261030.zip",
+    "current": "/Users/jarvis/Desktop/大模型开发/knowgo-travel/交付/知行旅行助手_原方案复现_2026-10-31.zip",
+    "sha256": "f3a31f34ea92e60a4dea21ab10e13fbdf3018cd703c71f3fadfc04b7ad081fab"
+  },
+  {
+    "action": "superseded_release_to_trash",
+    "from": "/Users/jarvis/Desktop/大模型开发/knowgo-travel/交付/知行旅行助手-完整业务复现-20261030.zip.sha256",
+    "to": "/Users/jarvis/.Trash/知行旅行助手-完整业务复现-20261030.zip.sha256",
+    "current": "/Users/jarvis/Desktop/大模型开发/knowgo-travel/交付/知行旅行助手_原方案复现_2026-10-31.zip",
+    "sha256": "8f2a2200a67beaa283c316eb531687c37af7df080327b83c4a137cc2fe746051"
+  },
+  {
+    "action": "superseded_release_to_trash",
+    "from": "/Users/jarvis/Desktop/大模型开发/quarry-rag/交付/Quarry-RAG-完整复现-20261107.zip",
+    "to": "/Users/jarvis/.Trash/Quarry-RAG-完整复现-20261107.zip",
+    "current": "/Users/jarvis/Desktop/大模型开发/quarry-rag/交付/Quarry-RAG-完整复现-20261109.zip",
+    "sha256": "9cf7412aa5be8247bcc8b9380f5704183e72157b527e270c48cf46ae80b6562d"
+  }
+]

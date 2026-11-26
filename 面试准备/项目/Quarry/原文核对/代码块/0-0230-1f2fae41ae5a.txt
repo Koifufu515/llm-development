@@ -1,0 +1,1 @@
+SET hnsw.ef_search = 100;

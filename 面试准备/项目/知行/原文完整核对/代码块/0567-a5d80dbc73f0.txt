@@ -1,0 +1,53 @@
+def _render_ticket_table(segs: dict, only_leg: str = "", header: str = "", tail: str = "") -> str:
+    """把「段 → 班次」渲染成 Markdown 表，经过普速过滤和段筛选；无数据返回空串。
+    header/tail 可自定义表头与结尾文案。直查通道面向用户时，可替换原本给模型的约束提示，避免内部提示展示在前端。
+    """
+    segs = {k: _hs_only(v) for k, v in segs.items()}
+    if only_leg and "→" in only_leg:
+        a, b = only_leg.split("→")
+        segs = {
+            (f, t): v for (f, t), v in segs.items()
+            if (a in f or f in a) and (b in t or b in t)
+        }
+    if not segs:
+        return ""
+    lines = [
+        "\n\n---\n",
+        header or "**以下为系统直出的 12306 真实班次（每段以本表为准，表外车次为无效信息，请勿采纳）**\n",
+    ]
+    total = 0
+    for (frm, to), seg in segs.items():
+        items = sorted(seg.values())[:_TICKET_SEG_LIMIT]
+        lines.append(f"\n### {frm} → {to}\n\n")
+        lines.append("| 车次 | 出发→到达 | 历时 | 票价 |\n|---|---|---|---|\n")
+        for dep, code, arr, dur, seat in items:
+            lines.append(f"| {code} | {dep}→{arr} | {dur} | {seat} |\n")
+        total += len(items)
+    if tail:
+        lines.append(tail)
+    elif only_leg:
+        lines.append(f"\n请从以上**真实班次**中选择「{only_leg}」这一段的班次。\n")
+    else:
+        lines.append("\n请从以上**真实班次**中选择各段班次。\n")
+    app_logger.info(f"✅ 直出真实班次清单：{len(segs)} 段 / {total} 趟（表外车次均视为编造）")
+    return "".join(lines)
+
+def _ticket_table_from_tail(tail: list, only_leg: str = "") -> str:
+    """将本轮查询得到的真实班次按路段分组生成Markdown表格，查询几段就输出几张表。
+    兼容12306原始返回格式，起到双保险作用。
+    无真实数据返回空字符串，不编造车次。
+    only_leg不为空时，仅渲染当前待确认路段；城市名采用宽容匹配，支持站名带有北站/西站等后缀场景。
+    """
+    from app.tools.mcp_tools import parse_compact_rows, parse_ticket_rows
+
+    segs: dict[tuple, dict] = {}
+    for m in tail:
+        if getattr(m, "type", None) != "tool":
+            continue
+        content = getattr(m, "content", "")
+        rows = parse_compact_rows(content) or parse_ticket_rows(content)
+        if not rows:
+            continue
+        # 一次工具调用对应一个路段，按首趟车次起讫站分组；同路段多次查询自动合并去重
+        _rows_to_seg(rows, segs.setdefault((rows[0]["from"], rows[0]["to"]), {}))
+    return _render_ticket_table(segs, only_leg)

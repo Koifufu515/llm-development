@@ -1,0 +1,3 @@
+# macOS / Linux
+mkdir -p quarry/ingest/parsers
+touch quarry/ingest/__init__.py

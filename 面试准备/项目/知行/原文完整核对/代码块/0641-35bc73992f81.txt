@@ -1,0 +1,37 @@
+"""落库后的那一跳：后台任务强引用、跑完自动移除；质检自己抛异常也只记一条日志（纯逻辑，无需密钥）"""
+import asyncio
+
+from app.services import quality_check_service as qc
+
+PLAN = {"title": "杭州3日游", "itinerary_list": [{"day": "Day 1", "itinerary": []}]}
+
+class FakeMetric:
+    """测试驱动：冒充一个 GEval 维度，按剧本给分或抛异常"""
+    def __init__(self, name, score, boom=False):
+        self.name, self._score, self._boom = name, score, boom
+        self.score, self.reason = None, ""
+
+    async def a_measure(self, case):
+        await asyncio.sleep(0.01)
+        if self._boom:
+            raise TimeoutError("裁判超时")
+        self.score, self.reason = self._score, f"{self.name} 给了 {self._score}"
+
+class PrintLogger:
+    """测试驱动：替换 app_logger，只打印级别和前 30 个字"""
+    def info(self, msg): print("  [INFO]", msg[:30])
+    def warning(self, msg): print("  [WARNING]", msg[:30])
+
+async def main() -> None:
+    qc.app_logger = PrintLogger()
+    for label, metrics in [("三维度都达标", [FakeMetric("完整性", 0.9), FakeMetric("匹配度", 0.8), FakeMetric("真实性", 0.7)]),
+                           ("真实性低分", [FakeMetric("完整性", 0.9), FakeMetric("匹配度", 0.8), FakeMetric("真实性", 0.2)]),
+                           ("裁判超时", [FakeMetric("完整性", 0.9, boom=True)])]:
+        qc.build_itinerary_metrics = lambda threshold=0.5, require_budget=True, ms=metrics: ms
+        print(f"{label}：")
+        qc.schedule_quality_check(PLAN)                       # 立刻返回，不等质检跑完
+        print("  调度后 _BG_TASKS 里有", len(qc._BG_TASKS), "个任务")
+        await asyncio.sleep(0.1)                              # 让后台任务跑完
+        print("  跑完后剩", len(qc._BG_TASKS), "个")
+
+asyncio.run(main())

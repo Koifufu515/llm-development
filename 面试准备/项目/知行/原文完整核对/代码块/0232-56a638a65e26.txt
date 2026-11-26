@@ -1,0 +1,17 @@
+"""_rows_to_options 演示：航班行 → FlightOption；票价来自票价接口，对不上号的留 0（纯函数，无需密钥）"""
+from app.capabilities.flight_multi_segment.flight_agent_tool import _rows_to_options
+from app.tools.mcp_tools import parse_flight_rows
+
+RAW = str([
+    {"fcategory": "0", "FlightNo": "MU5104", "FlightCompany": "中国东方航空股份有限公司", "FlightDepAirport": "首都国际机场",
+     "FlightArrAirport": "虹桥国际机场", "FlightDeptimePlanDate": "2026-10-01 10:00:00", "FlightArrtimePlanDate": "2026-10-01 12:15:00"},
+    {"fcategory": "0", "FlightNo": "CA1501", "FlightCompany": "中国国际航空股份有限公司", "FlightDepAirport": "首都国际机场",
+     "FlightArrAirport": "虹桥国际机场", "FlightDeptimePlanDate": "2026-10-01 08:00:00", "FlightArrtimePlanDate": "2026-10-01 10:10:00"},
+])
+rows = parse_flight_rows(RAW)
+print("没有票价表：")
+for opt in _rows_to_options(rows, limit=5):
+    print("  ", opt.option_id, "| 历时", opt.duration, "| 票价", opt.price)
+print("票价表只对上 CA1501：")
+for opt in _rows_to_options(rows, limit=5, prices={"CA1501": 1280}):
+    print("  ", opt.option_id, "| 历时", opt.duration, "| 票价", opt.price)

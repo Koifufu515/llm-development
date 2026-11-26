@@ -1,0 +1,5 @@
+# 本机学习部署；只发布127.0.0.1端口，不作为公网无鉴权服务。
+common:
+  storageType: local
+mq:
+  type: rocksmq

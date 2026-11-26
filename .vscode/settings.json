@@ -1,0 +1,7 @@
+{
+  "tinymist.exportPdf": "onSave",
+  "tinymist.outputPath": "$dir/$name",
+  "editor.wordWrap": "on",
+  "editor.formatOnSave": false,
+  "files.autoSave": "off"
+}

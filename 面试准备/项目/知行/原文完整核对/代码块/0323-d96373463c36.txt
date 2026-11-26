@@ -1,0 +1,2 @@
+New-Item -ItemType Directory -Path "app\api\v1" -Force | Out-Null
+if (-not (Test-Path "app\api\v1\__init__.py")) { New-Item -ItemType File -Path "app\api\v1\__init__.py" | Out-Null }

@@ -1,0 +1,62 @@
+{
+  "scope": "同一闲聊输入，新会话，各3轮；客户端首文本块不是规划进度事件。",
+  "results": [
+    {
+      "round": 1,
+      "first_text_seconds": 0.9712,
+      "elapsed_seconds": 2.5359,
+      "assistant_chunks": 18,
+      "done": 200,
+      "metrics": {
+        "status": "ok",
+        "llm_calls": 2,
+        "llm_errors": 0,
+        "request_id": "c223fe53-32ba-4b91-8300-f4fbabc7a0ad",
+        "input_tokens": 128,
+        "output_tokens": 6,
+        "usage_complete": false,
+        "elapsed_seconds": 2.4697,
+        "first_token_seconds": 0.9603,
+        "usage_reported_calls": 1
+      }
+    },
+    {
+      "round": 2,
+      "first_text_seconds": 0.9751,
+      "elapsed_seconds": 2.5282,
+      "assistant_chunks": 18,
+      "done": 200,
+      "metrics": {
+        "status": "ok",
+        "llm_calls": 2,
+        "llm_errors": 0,
+        "request_id": "c7165d11-b7f5-40f8-95a6-ad41ae267936",
+        "input_tokens": 128,
+        "output_tokens": 6,
+        "usage_complete": false,
+        "elapsed_seconds": 2.4869,
+        "first_token_seconds": 0.9628,
+        "usage_reported_calls": 1
+      }
+    },
+    {
+      "round": 3,
+      "first_text_seconds": 1.1558,
+      "elapsed_seconds": 2.716,
+      "assistant_chunks": 18,
+      "done": 200,
+      "metrics": {
+        "status": "ok",
+        "llm_calls": 2,
+        "llm_errors": 0,
+        "request_id": "b4cd5a52-51fc-4710-8391-8e31b50a79c0",
+        "input_tokens": 128,
+        "output_tokens": 6,
+        "usage_complete": false,
+        "elapsed_seconds": 2.674,
+        "first_token_seconds": 1.1451,
+        "usage_reported_calls": 1
+      }
+    }
+  ]
+}

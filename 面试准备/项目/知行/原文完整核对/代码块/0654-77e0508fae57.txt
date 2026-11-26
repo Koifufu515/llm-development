@@ -1,0 +1,6 @@
+规划请求判对     → 1.0 通过=True | planning 正确，技能命中 ['itinerary_planning']
+闲聊误判成规划    → 0.0 通过=False | planning 期望 False，实际 True
+查天气却命中高铁   → 0.0 通过=False | skills 期望命中 ['weather_query'] 之一，实际 ['train_query']
+命中期望之一就算对  → 1.0 通过=True | planning 正确，技能命中 ['hotel_query']
+没要求 skills 就不查 → 1.0 通过=True | planning 正确（skills=['train_query']）
+输出不是 JSON → 0.0 | 路由输出不是合法 JSON（结构化输出失败）

@@ -1,0 +1,600 @@
+
+
+===== block 33 c7c4badd3d4e lines 1-261 source 知行旅行助手-v2#33 =====
+"""
+State 持久化冒烟测试
+验证：Checkpointer / Store 是否真的把数据写进了 PostgreSQL
+
+用法：
+    uv run python scripts/Chapter_One/2_test_state_persistence.py
+
+设计要点：
+- Checkpointer 是**给 LangGraph 图用的**，不是我们直接调它的 aput——
+  aput 期望一个 LangGraph 内部构造的完整 checkpoint 结构
+  （含 channel_versions / versions_seen / checkpoint_ns 等内部字段），
+  手工构造几乎必然缺东西（会报 KeyError: 'checkpoint_ns'）。
+- 正确做法：造一个**最简 StateGraph**，用 graph.ainvoke() 触发写入。
+  LangGraph 会自动写正确的 checkpoint；跨"进程重启"后用 graph.aget_state() 读回。
+"""
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ⚠️ 关键：以下 5 行必须放在最顶部！
+# 必须在 import 任何 psycopg / langgraph.checkpoint.postgres 相关模块之前
+# 完成事件循环策略切换，否则 Windows 会报 ProactorEventLoop 不兼容错误。
+# macOS / Linux 上 sys.platform 判断会自动跳过。
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+import sys
+import asyncio
+import selectors
+
+if sys.platform == "win32":
+    # 创建 Selector
+    selector = selectors.SelectSelector()
+    # 创建基于 Selector 的事件循环
+    loop = asyncio.SelectorEventLoop(selector)
+    # 设置为当前事件循环
+    asyncio.set_event_loop(loop)
+    # 设置策略（防止后续代码创建 ProactorEventLoop）
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+# 现在可以安全地 import 依赖 psycopg 的模块了
+from typing import Annotated
+from typing_extensions import TypedDict
+from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
+from langgraph.graph import StateGraph, START, END
+from langgraph.graph.message import add_messages
+
+from app.core.checkpointer import (
+    CheckpointerManager,
+    get_checkpointer,
+)
+from app.core.store import (
+    StoreManager,
+    get_user_memory_service,
+)
+from app.core.memory_models import UserProfile
+
+TEST_USER_ID = "smoke_test_user_001"
+TEST_THREAD_ID = "smoke_test_thread_001"
+
+# ============ 造一个最简单的 StateGraph 用来触发 Checkpointer ============
+# 这里我们不引入完整的 TravelState（那会依赖后续章节的中间件等），
+# 只用一个"够用就好"的最小 State：messages + current_step
+
+class SimpleChatState(TypedDict):
+    """演示用 State，只含 messages 和一个流程标记"""
+    messages: Annotated[list[BaseMessage], add_messages]
+    current_step: str
+
+async def echo_node(state: SimpleChatState) -> dict:
+    """回声节点：把用户最后一条消息复读回去，并写一个 current_step 标记"""
+    last = state["messages"][-1]
+    return {
+        "messages": [AIMessage(content=f"好的！请问预算大概是多少？（针对：{last.content}）")],
+        "current_step": "requirement_collection",
+    }
+
+async def build_test_graph(checkpointer):
+    """把一个最简 Graph 编译出来，Checkpointer 挂在编译参数上"""
+    builder = StateGraph(SimpleChatState)
+    builder.add_node("echo", echo_node)
+    builder.add_edge(START, "echo")
+    builder.add_edge("echo", END)
+    return builder.compile(checkpointer=checkpointer)
+
+async def _cleanup_test_thread(thread_id: str):
+    """
+    清掉某 thread_id 的历史 checkpoint —— 让本测试脚本可反复跑
+
+    为什么需要这个：
+    ─────────────────────────────────────────────────────────
+    LangGraph 的 Checkpointer 会把每一步的 checkpoint 存进 PostgreSQL。
+    如果 PostgreSQL 里之前留了同 thread_id 的残缺记录（比如上一次运行崩在半路），
+    这次 graph.ainvoke() 会尝试从残缺 checkpoint 恢复 state 而报 KeyError:
+        - KeyError: 'checkpoint_ns'（读旧数据时缺 checkpoint_ns 字段）
+        - KeyError: 'step'（metadata 里缺 step 字段）
+    统一在 stage_1_write 开头清一次，测试脚本就能反复跑，行为一致
+    """
+    checkpointer = await get_checkpointer()
+
+    # 方案 A：优先用高层 API（LangGraph 1.x 推荐做法）
+    if hasattr(checkpointer, "adelete_thread"):
+        try:
+            await checkpointer.adelete_thread(thread_id)
+            print(f"  🧹 已清理旧 checkpoint（via adelete_thread）：{thread_id}")
+            return
+        except Exception as e:
+            print(f"  ⚠️ adelete_thread 失败，降级用 SQL：{e}")
+
+    # 方案 B：直接 SQL 清理（不依赖 API 版本）
+    mgr = await CheckpointerManager.get_instance()
+    if mgr.pool is None:
+        return
+    async with mgr.pool.connection() as conn:
+        for table in ("checkpoint_writes", "checkpoint_blobs", "checkpoints"):
+            try:
+                await conn.execute(
+                    f"DELETE FROM {table} WHERE thread_id = %s",
+                    (thread_id,),
+                )
+            except Exception:
+                pass  # 表可能不存在（首次跑），忽略即可
+    print(f"  🧹 已清理旧 checkpoint（via SQL）：{thread_id}")
+
+async def stage_1_write():
+    """阶段 1：写入 Store 和 Checkpointer"""
+    print("\n" + "=" * 60)
+    print(" 阶段 1  写入数据")
+    print("=" * 60)
+
+    # 关键：先清历史 checkpoint，防止上次残留导致 KeyError
+    await _cleanup_test_thread(TEST_THREAD_ID)
+
+    # ---- 写 Store：用户画像 ----
+    service = await get_user_memory_service()
+    profile = UserProfile(
+        travel_styles=["culture", "food"],
+        dietary_restrictions=["海鲜过敏"],
+        food_preferences=["辣"],
+    )
+    await service.save_user_profile(TEST_USER_ID, profile)
+    print(f"  ✅ Store 写入完成：user_id={TEST_USER_ID}")
+
+    # ---- 写 Checkpointer：让 LangGraph 图跑一次，自动写入 checkpoint ----
+    # Checkpointer 是给 Graph 用的——不要自己调 aput 手工构造 checkpoint 结构，
+    # 那些内部字段（channel_versions / versions_seen / checkpoint_ns 等）
+    # 由 LangGraph 自己维护，缺一个就会 KeyError。
+    checkpointer = await get_checkpointer()
+    graph = await build_test_graph(checkpointer)
+
+    config = {"configurable": {"thread_id": TEST_THREAD_ID}}
+    result = await graph.ainvoke(
+        {"messages": [HumanMessage(content="我想去云南玩7天")]},
+        config=config,
+    )
+    print(f"  ✅ Checkpointer 写入完成：thread_id={TEST_THREAD_ID}")
+    print(f"     此时 messages 条数 = {len(result['messages'])}，"
+          f"current_step = {result.get('current_step')}")
+
+async def stage_2_reset():
+    """阶段 2：重置单例，模拟"进程重启"""
+    print("\n" + "=" * 60)
+    print(" 阶段 2  重置单例（模拟进程重启）")
+    print("=" * 60)
+
+    # 关掉现有池
+    if CheckpointerManager._instance:
+        await CheckpointerManager._instance.close()
+    if StoreManager._instance:
+        await StoreManager._instance.close()
+
+    # 清空单例引用
+    CheckpointerManager._instance = None
+    StoreManager._instance = None
+    print("  ✅ Checkpointer 单例已清空")
+    print("  ✅ Store 单例已清空")
+    print("  ℹ️ 相当于你重启了 Python 进程；数据应仍在 PostgreSQL 里")
+
+async def stage_3_read_back():
+    """阶段 3：从全新的单例读回数据"""
+    print("\n" + "=" * 60)
+    print(" 阶段 3  读回验证")
+    print("=" * 60)
+
+    # ---- 读 Store：用户画像 ----
+    service = await get_user_memory_service()
+    profile = await service.get_user_profile(TEST_USER_ID)
+
+    print(f"  📖 读回用户画像：")
+    print(f"      travel_styles       = {profile.travel_styles}")
+    print(f"      dietary_restrictions = {profile.dietary_restrictions}")
+    print(f"      food_preferences    = {profile.food_preferences}")
+
+    assert "culture" in profile.travel_styles, "❌ travel_styles 丢失"
+    assert "海鲜过敏" in profile.dietary_restrictions, "❌ dietary_restrictions 丢失"
+    assert "辣" in profile.food_preferences, "❌ food_preferences 丢失"
+    print("  ✅ 用户画像跨重启读回一致")
+
+    # ---- 读 Checkpointer：用同 thread_id 重新编译 Graph 读回 State ----
+    # 关键：新的 checkpointer 单例 + 新的 graph 对象，但 thread_id 相同——
+    # 如果能读回上一次的 messages，就证明数据真的从 PostgreSQL 走了一遭
+    checkpointer = await get_checkpointer()
+    graph = await build_test_graph(checkpointer)
+    config = {"configurable": {"thread_id": TEST_THREAD_ID}}
+
+    state = await graph.aget_state(config)
+    assert state is not None, "❌ checkpoint 丢失"
+
+    values = state.values
+    messages = values.get("messages", [])
+    current_step = values.get("current_step")
+
+    print(f"  📖 读回会话状态：")
+    print(f"      thread_id     = {TEST_THREAD_ID}")
+    print(f"      current_step  = {current_step}")
+    print(f"      messages 条数 = {len(messages)}")
+    for m in messages:
+        preview = m.content if len(m.content) <= 60 else m.content[:60] + "..."
+        print(f"        - [{m.type}] {preview}")
+
+    assert len(messages) >= 2, "❌ messages 条数不对（至少 human + ai 各一条）"
+    assert current_step == "requirement_collection", "❌ current_step 不对"
+    print("  ✅ 会话状态跨\"重启\"读回一致")
+
+async def cleanup():
+    """清理测试数据（可选）"""
+    print("\n" + "=" * 60)
+    print(" 阶段 4  清理测试数据")
+    print("=" * 60)
+
+    service = await get_user_memory_service()
+    await service.store.adelete(
+        namespace=("user_profiles", TEST_USER_ID),
+        key="profile",
+    )
+    print(f"  🧹 已删除测试用户画像：{TEST_USER_ID}")
+
+async def main():
+    print("╔" + "═" * 58 + "╗")
+    print("║" + " State 持久化冒烟测试".center(58) + "║")
+    print("╚" + "═" * 58 + "╝")
+
+    # 打印当前事件循环，确认 Windows 修复生效
+    loop = asyncio.get_running_loop()
+    print(f"\n  当前事件循环：{type(loop).__name__}")
+    if sys.platform == "win32":
+        assert "Selector" in type(loop).__name__, "❌ Windows 事件循环未切换成 Selector"
+        print("  ✅ Windows 已成功切到 SelectorEventLoop")
+
+    try:
+        await stage_1_write()
+        await stage_2_reset()
+        await stage_3_read_back()
+        await cleanup()
+        print("\n" + "🎉" * 20)
+        print("  全部测试通过！Checkpointer 和 Store 都正常工作。")
+        print("🎉" * 20 + "\n")
+    except AssertionError as e:
+        print(f"\n❌ 测试失败：{e}\n")
+        sys.exit(1)
+    except Exception as e:
+        print(f"\n❌ 测试出错：{type(e).__name__}: {e}\n")
+        raise
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+
+===== block 34 75f44a83b899 lines 1-43 source 知行旅行助手-v2#34 =====
+╔══════════════════════════════════════════════════════════╗
+║                State 持久化冒烟测试                        ║
+╚══════════════════════════════════════════════════════════╝
+
+  当前事件循环：_UnixSelectorEventLoop      ← Linux/Mac
+  # 或                    SelectorEventLoop  ← Windows 切换成功
+  ✅ Windows 已成功切到 SelectorEventLoop   ← 仅 Windows 打印
+
+============================================================
+ 阶段 1  写入数据
+============================================================
+  ✅ Store 写入完成：user_id=smoke_test_user_001
+  ✅ Checkpointer 写入完成：thread_id=smoke_test_thread_001
+
+============================================================
+ 阶段 2  重置单例（模拟进程重启）
+============================================================
+  ✅ Checkpointer 单例已清空
+  ✅ Store 单例已清空
+  ℹ️ 相当于你重启了 Python 进程；数据应仍在 PostgreSQL 里
+
+============================================================
+ 阶段 3  读回验证
+============================================================
+  📖 读回用户画像：
+      travel_styles       = ['culture', 'food']
+      dietary_restrictions = ['海鲜过敏']
+      food_preferences    = ['辣']
+  ✅ 用户画像跨"重启"读回一致
+  📖 读回会话状态：
+      thread_id     = smoke_test_thread_001
+      current_step  = requirement_collection
+      messages 条数 = 2
+  ✅ 会话状态跨"重启"读回一致
+
+============================================================
+ 阶段 4  清理测试数据
+============================================================
+  🧹 已删除测试用户画像：smoke_test_user_001
+
+🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉
+  全部测试通过！Checkpointer 和 Store 都正常工作。
+🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉
+
+
+===== block 35 aef812cac071 lines 1-10 source 知行旅行助手-v2#35 =====
+# 朴素方案（勿模仿）
+resp = client.chat.completions.create(
+    model="qwen-max",
+    messages=[
+        {"role": "system", "content": "你是旅行顾问，请把用户需求整理成 JSON 返回。"},
+        {"role": "user", "content": user_message},
+    ],
+)
+requirement_json = json.loads(resp.choices[0].message.content)  # 🤞 但愿它真返回了 JSON
+save_to_db(requirement_json)
+
+
+===== block 36 e252772f80f0 lines 1-9 source 知行旅行助手-v2#36 =====
+from langchain.agents import create_agent
+
+agent = create_agent(
+    model=llm,               # 大脑：一个 ChatModel 实例
+    tools=[tool_a, tool_b],  # 手脚：一组带 @tool 装饰器的函数
+    prompt="你是...",         # 人设：System Prompt
+    state_schema=TravelState,# 记忆的形状：第 02 章定义的 State
+    checkpointer=cp,         # 持久化：第 02 章的 Checkpointer
+)
+
+
+===== block 37 486eee1b1e84 lines 1-12 source 知行旅行助手-v2#37 =====
+class UserRequirement(TypedDict):
+    departure_city: str             # 出发地点
+    destination: str                # 目的地（这一步可有可无）
+    departure_date: str             # 出发日期（YYYY-MM-DD）
+    travel_days: int                # 出行天数
+    adult_count: int                # 成人数量
+    children_count: int             # 儿童数量
+    budget_min: Optional[float]     # 预算下限
+    budget_max: Optional[float]     # 预算上限
+    budget_level: BudgetLevel       # 预算等级（工具内推断，不用户填）
+    travel_styles: list[TravelStyle]# 旅行风格（多选）
+    special_needs: Optional[str]    # 特殊需求
+
+
+===== block 38 aaaaf2a2173b lines 1-40 source 知行旅行助手-v2#38 =====
+"""
+LLM 工厂
+项目里所有需要 ChatModel 的地方都从这里拿。
+- get_qwen_llm(): 主对话模型（千问）
+- get_deepseek_llm(): 辅助模型（后续章节：行程压缩、JSON 提炼）
+"""
+from langchain_openai import ChatOpenAI
+from app.config import settings
+
+def get_qwen_llm(streaming: bool = True) -> ChatOpenAI:
+    """
+    获取千问模型（兼容 OpenAI 接口协议）
+
+    参数：
+    - streaming: 是否启用流式输出。对话 Agent 建议开；离线 JSON 提炼建议关。
+
+    返回：
+    - 已配置好 base_url / api_key / temperature 的 ChatOpenAI 实例
+    """
+    return ChatOpenAI(
+        model=settings.qwen_model_name,           # qwen-max
+        base_url=settings.qwen_base_url,          # dashscope 兼容端点
+        api_key=settings.dashscope_api_key,       # DASHSCOPE_API_KEY
+        temperature=settings.qwen_temperature,    # 0.7
+        max_tokens=settings.qwen_max_tokens,      # 8000
+        streaming=streaming,
+    )
+
+def get_deepseek_llm() -> ChatOpenAI:
+    """
+    获取 DeepSeek 模型（用于后续章节的行程压缩 / 离线 JSON 提炼）
+    温度设 0.3，追求稳定输出而非创造性。
+    """
+    return ChatOpenAI(
+        model=settings.deepseek_model_name,
+        base_url=settings.deepseek_base_url,
+        api_key=settings.deepseek_api_key,
+        temperature=0.3,
+        streaming=False,
+    )
+
+
+===== block 39 115a777dae8a lines 1-1 source 知行旅行助手-v2#39 =====
+# 工具模块占位，后续会导出所有工具
+
+
+===== block 40 1ff9e871435e lines 1-148 source 知行旅行助手-v2#40 =====
+"""
+状态转换工具（Handoffs 中的状态跳转 & 数据记录工具）
+
+本文件目前只有 record_requirement_tool（需求收集）。
+后续章节会陆续加入：
+- select_destination_tool     （第 04 章）
+- select_transport_tool       （第 04 章）
+- select_accommodation_tool   （第 04 章）
+- select_food_tool            （第 04 章）
+- generate_itinerary_tool     （第 04 章）
+- summarize_budget_tool       （第 04 章）
+- ALL_ROLLBACK_TOOLS          （第 05 章）
+"""
+from datetime import datetime
+from typing import Optional
+
+from langchain.tools import tool, ToolRuntime
+from langchain_core.messages import ToolMessage
+from langgraph.types import Command
+
+from app.core.state import TravelState, UserRequirement
+from app.utils.logger import app_logger
+
+# ============== 1️⃣ 需求收集工具 ==============
+
+@tool
+def record_requirement_tool(
+        # 出发城市
+        departure_city: str,
+        # 出发日期（YYYY-MM-DD）
+        departure_date: str,
+        # 旅行天数
+        travel_days: int,
+        # 预算下限（元/人）
+        budget_min: float,
+        # 预算上限（元/人）
+        budget_max: float,
+        # 旅行风格偏好，可多选
+        travel_styles: list[str],
+        # 特殊需求（可选）
+        special_needs: str = "",
+        # 成人数量（默认 1）
+        adult_count: Optional[int] = 1,
+        # 儿童数量（<12 岁，默认 0）
+        children_count: Optional[int] = 0,
+        # 目的地（可选，未指定时此步不填，交给下一步"目的地推荐"）
+        destination: Optional[str] = None,
+
+        runtime: ToolRuntime[None, TravelState] = None
+) -> Command:
+    """
+    记录用户旅行需求，并标记进入下一步"目的地推荐"。
+
+    参数说明：
+    - departure_city: 出发城市，如 "北京"
+    - destination: 目的地（可选），如 "云南"；未指定则交给推荐步骤
+    - departure_date: 出发日期，格式 YYYY-MM-DD，如 "2026-10-01"
+    - travel_days: 出行天数，如 5
+    - adult_count: 成人数量
+    - children_count: 儿童数量（<12 岁）
+    - budget_min: 预算下限（元/人）
+    - budget_max: 预算上限（元/人）
+    - travel_styles: 旅行风格列表，可选值：
+        * "relaxation"（休闲度假）
+        * "culture"   （文化探索）
+        * "adventure" （户外冒险）
+        * "food"      （美食之旅）
+    - special_needs: 特殊需求文本（可选），如 "需要无障碍设施"
+
+    调用时机：
+    - 当且仅当用户已经把上述必填信息都给齐时才调用
+    - 若信息不全，继续用自然语言追问，不要调用本工具
+    """
+
+    app_logger.info(
+        f"记录用户需求: 出发={departure_city}, 日期={departure_date}, "
+        f"{travel_days}天, 预算 {budget_min}-{budget_max}"
+    )
+
+    # ---------- 校验 1：日期格式 ----------
+    try:
+        datetime.strptime(departure_date, "%Y-%m-%d")
+    except ValueError:
+        return Command(update={
+            "messages": [
+                ToolMessage(
+                    content="❌ 日期格式错误，请使用 YYYY-MM-DD 格式，如 2026-10-01",
+                    tool_call_id=runtime.tool_call_id
+                )
+            ]
+        })
+
+    # ---------- 校验 2：预算区间 ----------
+    if budget_min < 0 or budget_max < 0 or budget_max < budget_min:
+        return Command(update={
+            "messages": [
+                ToolMessage(
+                    content="❌ 预算填写不正确：应满足 0 ≤ budget_min ≤ budget_max",
+                    tool_call_id=runtime.tool_call_id
+                )
+            ]
+        })
+
+    # ---------- 派生值：推断预算等级 ----------
+    # 交给工具算而不是让模型算：模型算错就一步错步步错
+    avg_budget = (budget_min + budget_max) / 2
+    if avg_budget < 3000:
+        budget_level = "economy"
+    elif avg_budget < 8000:
+        budget_level = "comfort"
+    else:
+        budget_level = "luxury"
+
+    # ---------- 组装 UserRequirement ----------
+    requirement = UserRequirement(
+        departure_city=departure_city,
+        destination=destination,
+        departure_date=departure_date,
+        travel_days=travel_days,
+        adult_count=adult_count,
+        children_count=children_count,
+        budget_min=budget_min,
+        budget_max=budget_max,
+        budget_level=budget_level,
+        travel_styles=travel_styles,
+        special_needs=special_needs if special_needs else None,
+    )
+
+    # ---------- 返回 Command：更新 State，标记推进 ----------
+    return Command(update={
+        "messages": [
+            ToolMessage(
+                content=(
+                    f"✅ 需求已记录！\n"
+                    f"出发地：{departure_city}\n"
+                    f"出发日期：{departure_date}\n"
+                    f"{travel_days} 天 | {adult_count + children_count} 人\n"
+                    f"预算：{budget_min}-{budget_max} 元/人（{budget_level} 级）\n"
+                    f"风格：{', '.join(travel_styles)}"
+                ),
+                tool_call_id=runtime.tool_call_id
+            )
+        ],
+        "user_requirement": requirement,
+        # 标记推进到下一步（本章还没有中间件真正做步骤切换，
+        # 但字段先写上，第 04 章的中间件会读它做决策）
+        "current_step": "destination_recommendation",
+    })
+
+
+===== block 41 a92239afb9fa lines 1-1 source 知行旅行助手-v2#41 =====
+# agents 包占位
+
+
+===== block 42 f06e140802aa lines 1-1 source 知行旅行助手-v2#42 =====
+# handoffs 包占位
+
+
+===== block 43 192bd281a0ef lines 1-41 source 知行旅行助手-v2#43 =====
+"""
+各步骤的 System Prompt 集中管理
+
+本章先只放 requirement_collection。
+后续章节（第 04 章中间件）会把这里补全为 8 步 × 8 份。
+"""
+
+REQUIREMENT_COLLECTION_PROMPT = """你是专业的旅行规划顾问，负责收集用户的旅行需求。
+
+**当前阶段**：需求收集
+
+**任务**：
+1. 友好地询问用户以下信息：
+   - 🏠 出发地点或城市
+   - 📅 出发日期
+   - 🗓️ 出行天数
+   - 👨‍👩‍👧‍👦 成人和儿童数量
+   - 💰 预算范围（每人，单位：元）
+   - 🎨 旅行风格（可多选）：
+     * relaxation（休闲度假）
+     * culture（文化探索）
+     * adventure（户外冒险）
+     * food（美食之旅）
+   - 📝 特殊需求（可选）：如无障碍设施、儿童友好、宠物友好
+
+2. 当用户提供完整信息后，先做一次简短的总体确认，
+   用户认可后立刻使用 `record_requirement_tool` 工具记录。
+
+3. 如果信息不完整，继续用自然语言追问缺失的部分——**不要**贸然调用工具。
+
+**对话风格**：
+- 一次只询问 1-2 个问题，避免信息过载
+- 使用友好的对话方式，不要像填表格
+- 如果用户给出模糊答案（如"下个月"），帮助转换为具体日期
+- 用户没有指定明确的日期（今天/明天/后天/下周...），先按提问方式明确到 YYYY-MM-DD
+
+**边界**：
+- 你**不知道**用户去过哪里、有什么偏好——那是长期记忆的事（后续章节接入）
+- 你**不能**回答目的地推荐、交通、酒店等问题——那是后续步骤的事
+- 用户若追问这些，回一句"我们会在后面的规划里帮您安排"，然后继续把当前信息问齐
+"""

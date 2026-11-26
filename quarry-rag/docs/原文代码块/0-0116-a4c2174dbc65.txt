@@ -1,0 +1,14 @@
+SET enable_seqscan = off;   -- 数据量很小时，数据库倾向于直接全表扫；这里强制它尽量用索引
+
+-- A：带 level = 1
+EXPLAIN
+SELECT chunk_id FROM chunks
+WHERE level = 1
+ORDER BY embedding <=> (SELECT embedding FROM chunks WHERE level = 1 LIMIT 1)
+LIMIT 3;
+
+-- B：不带 level = 1
+EXPLAIN
+SELECT chunk_id FROM chunks
+ORDER BY embedding <=> (SELECT embedding FROM chunks WHERE level = 1 LIMIT 1)
+LIMIT 3;

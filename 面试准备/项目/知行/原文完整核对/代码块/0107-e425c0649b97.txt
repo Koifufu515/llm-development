@@ -1,0 +1,19 @@
+from langgraph.graph import StateGraph, START, END
+from app.agents.routers.destination_router import DestinationRouterState  # 导入真实 State
+
+# 两个 trivial stub 节点：各往 agent_results 交一条，模拟 explore / weather 并行返回
+def branch_explore(state): return {"agent_results": [{"agent_name": "explore", "result": "攻略…"}]}
+def branch_weather(state): return {"agent_results": [{"agent_name": "weather", "result": "天气…"}]}
+
+g = StateGraph(DestinationRouterState)
+g.add_node("explore", branch_explore)
+g.add_node("weather", branch_weather)
+g.add_edge(START, "explore")        # 两个分支从 START 并行出发
+g.add_edge(START, "weather")
+g.add_edge("explore", END)
+g.add_edge("weather", END)
+app = g.compile()
+
+result = app.invoke({"original_query": "", "destination": "", "classifications": [],
+                     "agent_results": [], "final_report": ""})
+print(result["agent_results"])   # 两条都在！因为真实 State 的 agent_results 用了 Annotated[list, add] reducer

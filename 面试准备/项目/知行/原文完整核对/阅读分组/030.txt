@@ -1,0 +1,446 @@
+
+
+===== block 318 31ebf0476d19 lines 298-442 source 知行旅行助手-v2#318 =====
+                    # 强推的工具若已被摘掉（确认轮原本会强推 select_transport_tool），必须取消强推，
+                    # 否则模型调用一个不在工具表里的工具 → 请求直接报错
+                    if forced_tool_choice and forced_tool_choice not in {
+                        getattr(t, "name", "") for t in tools
+                    }:
+                        forced_tool_choice = None
+                    if len(tools) != _before:
+                        app_logger.info(
+                            f"✈️ 交通步：屏蔽模型自带查询/推进工具 {_before - len(tools)} 个"
+                            f"（多段航班：航班由代码并行查询供给）"
+                        )
+                else:
+                    # ========== 多段自驾：模型不再自查，路线改由代码并行供给 ==========
+                    # 交通步走"自驾确认卡片"路线时（手动模式前端拿到只读确认卡片、自动模式由代码
+                    # 直接落库推进），从工具表里摘掉驾车查询工具与 select_transport_tool：否则模型
+                    # 仍会照旧规则逐段查路线，既重复请求，又把自编里程/耗时写进正文（两套矛盾数据）。
+                    # 用 elif 语义（放在高铁、航班之后）：优先级 高铁 > 航班 > 自驾，此处不越位接管
+                    from app.capabilities.driving_multi_segment.driving_flow import driving_card_mode
+                    if driving_card_mode(state):
+                        _before = len(tools)
+                        _driving_marks = ("driving", "drivingroute")
+                        tools = [
+                            t for t in tools
+                            if getattr(t, "name", "") != "select_transport_tool"
+                            and not any(k in getattr(t, "name", "").lower()
+                                        for k in _driving_marks)
+                        ]
+                        # 强推的工具若已被摘掉（确认轮原本会强推 select_transport_tool），必须取消强推，
+                        # 否则模型调用一个不在工具表里的工具 → 请求直接报错
+                        if forced_tool_choice and forced_tool_choice not in {
+                            getattr(t, "name", "") for t in tools
+                        }:
+                            forced_tool_choice = None
+                        if len(tools) != _before:
+                            app_logger.info(
+                                f"🚗 交通步：屏蔽模型自带查询/推进工具 {_before - len(tools)} 个"
+                                f"（多段自驾：路线由代码并行查询供给）"
+                            )
+
+        # ========== 多段住宿：酒店候选改由代码并行供给 ==========
+        # 住宿步走"卡片一次性选择"路线时（手动模式前端拿到选择卡片、自动模式由代码代选），
+        # 从工具表里摘掉酒店查询工具与逐城推进工具：否则模型仍会照旧规则"逐城串行查"，
+        # 既重复打酒店 MCP，又把自编酒店清单写进正文（同一屏出现两套互相矛盾的酒店/价格）
+        # ★ 看点⑩：住宿步接管——hotel_card_mode 时摘掉酒店查询与推进工具
+        if current_step == "accommodation_planning":
+            from app.capabilities.hotel_multi_segment.hotel_flow import hotel_card_mode
+            if hotel_card_mode(state):
+                _before = len(tools)
+                tools = [
+                    t for t in tools
+                    if getattr(t, "name", "") not in {
+                        "select_accommodation_tool", "select_accommodation_food_tool",
+                    }
+                    and not any(k in getattr(t, "name", "").lower()
+                                for k in ("hotel", "hotels"))
+                ]
+                # 强推的工具若已被摘掉（确认轮原本会强推 select_accommodation_tool），必须取消强推，
+                # 否则模型调用一个不在工具表里的工具 → 请求直接报错
+                if forced_tool_choice and forced_tool_choice not in {
+                    getattr(t, "name", "") for t in tools
+                }:
+                    forced_tool_choice = None
+                if len(tools) != _before:
+                    app_logger.info(
+                        f"🏨 多段住宿：屏蔽模型自带酒店查询/逐城推进工具 {_before - len(tools)} 个"
+                        f"（候选由代码并行查询供给，前端卡片一次选完提交）"
+                    )
+
+        # ========== 残缺工具调用历史自愈（避免 400 卡死整个会话） ==========
+        # ========== 上下文窗口兜底（按用户轮边界裁掉最旧历史轮） ==========
+        # 只在检出残缺/需要裁窗口时才重建请求（正常路径零拷贝，不进 override）
+        # ★ 看点⑪：历史自愈——补悬空工具调用 + 整轮裁窗口，只改本次请求、不动 checkpoint
+        req_messages = list(getattr(request, "messages", None) or [])
+        rebuilt = False
+        if req_messages:
+            req_messages, patched_in, patched_out = _repair_dangling_tool_calls(req_messages)
+            if patched_in or patched_out:
+                app_logger.warning(
+                    f"🩹 检测到残缺工具调用历史：补入 {patched_in} 条 ToolMessage、"
+                    f"丢弃 {patched_out} 条孤立 ToolMessage（仅修本次请求，不改 checkpoint）"
+                )
+                rebuilt = True
+            windowed = _trim_window(req_messages)
+            if len(windowed) != len(req_messages):
+                app_logger.info(
+                    f"🪟 上下文窗口裁剪：丢弃最旧 {len(req_messages) - len(windowed)} 条消息"
+                    f"（按用户轮边界对齐，保留 {len(windowed)} 条；仅改本次请求，checkpoint 不动）"
+                )
+                req_messages = windowed
+                rebuilt = True
+            if rebuilt:
+                request = request.override(messages=req_messages)
+
+        # ========== 注入配置 ==========
+        # ★ 看点⑫：一次性覆盖 system_prompt + tools +（可选）tool_choice
+        modified_request = request.override(
+            system_prompt=system_prompt,
+            tools=tools,
+            **({"tool_choice": forced_tool_choice} if forced_tool_choice else {})
+        )
+
+        app_logger.info(f"✅ 已注入步骤配置: {len(tools)} 个工具")
+
+        # 写入本轮工具入参兜底上下文（出发地/目的地/出发日期/是否多段），
+        # 供工具层在模型漏传必填参数时确定性回填——提示词约束不可靠，改由代码层保证
+        # ★ 看点⑬：把本轮出发地 / 目的地 / 段日期 / 当前段写进 contextvar，车票守卫据此回填入参
+        from app.tools.mcp_tools import set_turn_context
+        from app.tools.state_transition import _expected_legs as _legs_of
+        _treq = state.get("user_requirement") or {}
+        _dest = str(state.get("selected_destination") or "")
+        # 交通步的查询目标 = 段游标指向的当前段（而非目的地首城），
+        # 保证模型漏传/写错参数时确定性回填到"正在确认的那一段"，一次只查一段
+        _leg_from = _leg_to = ""
+        _all_legs = _legs_of(state)
+        if current_step == "transport_planning" and _all_legs:
+            _leg_cur = max(0, min(int(state.get("leg_cursor") or 0), len(_all_legs) - 1))
+            _leg_from, _leg_to = _all_legs[_leg_cur].split("→")
+        try:
+            set_turn_context(
+                departure_city=str(_treq.get("departure_city") or ""),
+                destination=_dest.split("、")[0].split(",")[0].strip(),
+                # 交通步的查询日期按"段"给，而非一律出发日（多段时序分配）
+                date=(_leg_query_date(state, _all_legs, state.get("leg_cursor") or 0)
+                      if current_step == "transport_planning" else "")
+                or str(_treq.get("departure_date") or ""),
+                multi_leg=len(_all_legs) > 1,  # 改为按段数判定——单城亦有 2 段（去程+返程），返程查询同样须按段游标回填起讫站
+                leg_from=_leg_from,
+                leg_to=_leg_to,
+            )
+        except Exception as _e:
+            app_logger.warning(f"⚠️ 写入工具入参上下文失败（不影响主流程）: {_e}")
+
+        return await handler(modified_request)
+
+async def create_step_config_middleware() -> StepConfigMiddleware:
+    """
+    工厂函数：创建步骤配置中间件
+
+    Returns:
+        预加载配置的 StepConfigMiddleware 实例
+    """
+    from app.agents.handoffs.step_config import get_step_config
+
+    step_config = await get_step_config()
+    return StepConfigMiddleware(step_config)
+
+
+===== block 319 f882e33f4152 lines 1-73 source 知行旅行助手-v2#319 =====
+"""第 9 章冒烟：四类 capability 的"查询 → 下发 → 提交校验"全链路，离线跑一遍（纯逻辑，无需密钥）"""
+import asyncio
+import json
+
+from app.capabilities.driving_multi_segment import driving_agent_tool
+from app.capabilities.driving_multi_segment.driving_agent_tool import build_driving_multi_segment_payload, validate_driving_submission
+from app.capabilities.driving_multi_segment.driving_skill_schema import DrivingSubmitPayload
+from app.capabilities.flight_multi_segment import flight_agent_tool
+from app.capabilities.flight_multi_segment.flight_agent_tool import build_flight_multi_segment_payload, validate_flight_submission
+from app.capabilities.flight_multi_segment.flight_skill_schema import FlightSubmitPayload
+from app.capabilities.hotel_multi_segment import hotel_parser
+from app.capabilities.hotel_multi_segment.hotel_agent_tool import build_hotel_multi_segment_payload, validate_hotel_multi_submission
+from app.capabilities.hotel_multi_segment.hotel_skill_schema import HotelMultiSegmentSubmitPayload
+from app.capabilities.train_multi_segment import train_agent_tool
+from app.capabilities.train_multi_segment.train_agent_tool import build_train_multi_segment_payload, validate_train_submission
+from app.capabilities.train_multi_segment.train_flow import _legs_with_dates, multi_leg_train
+from app.capabilities.train_multi_segment.train_skill_schema import TrainSubmitPayload
+
+TRAIN = {"北京": "G1 北京南(telecode:VNP) -> 天津(telecode:TJP) 08:30 -> 09:05 历时：00:35\n- 二等座: 有票 54.5元",
+         "天津": "G101 天津西(telecode:TXP) -> 上海虹桥(telecode:AOH) 09:10 -> 14:02 历时：04:52\n- 二等座: 有 509.0元",
+         "上海": "G2 上海虹桥(telecode:AOH) -> 北京南(telecode:VNP) 19:00 -> 23:18 历时：04:18\n- 二等座: 有 553.0元"}
+FLIGHT = json.dumps([{"fcategory": "0", "FlightNo": "CA1501", "FlightCompany": "中国国际航空股份有限公司", "FlightDepAirport": "首都国际机场",
+               "FlightArrAirport": "虹桥国际机场", "FlightDeptimePlanDate": "2026-10-03 08:00:00", "FlightArrtimePlanDate": "2026-10-03 10:10:00"}])
+AMAP = json.dumps({"route": {"paths": [{"distance": "137000", "duration": "6120", "tolls": "65", "traffic_lights": "12"}]}})
+HOTEL = json.dumps({"hotelInformationList": [{"name": "如家酒店(西湖店)", "price": {"message": "716CNY 共2晚 358CNY/晚", "lowestPrice": 358.0}, "starRating": 4.6}]})
+
+class Fake:                  # 测试驱动：一个假工具顶四类数据源，按入参返回对应的原始文本
+    name = "searchHotels"
+    args_schema = {"properties": {"checkInParam": {}}}
+
+    async def ainvoke(self, args: dict):
+        if "fromStation" in args:
+            return TRAIN[args["fromStation"]]
+        if "dep" in args:
+            return FLIGHT
+        if "origin" in args:
+            return AMAP
+        return HOTEL
+
+def check(name: str, ok: bool):
+    print(("✅" if ok else "❌"), name)
+    assert ok, name
+
+async def main():
+    fake = Fake()          # 测试驱动：四类查询工具都换成假的，其余全是真实代码
+    train_agent_tool._QUERY_TOOL = flight_agent_tool._QUERY_TOOL = driving_agent_tool._QUERY_TOOL = hotel_parser._QUERY_TOOL = fake
+    st = {"user_requirement": {"departure_city": "北京", "departure_date": "2026-10-01", "travel_days": 5, "transport_types": ["高铁"]},
+          "selected_destination": "天津、上海"}
+    legs = _legs_with_dates(st)
+    check("1 路段与段日期：北京→天津 10-01、天津→上海 10-02、上海→北京 10-05",
+          [(l.from_, l.to, l.travel_date) for l in legs] == [("北京", "天津", "2026-10-01"), ("天津", "上海", "2026-10-02"),
+                                                             ("上海", "北京", "2026-10-05")])
+    check("2 高铁路线判定：勾了高铁 + 三段 → 走代码卡片", multi_leg_train(st))
+    p = await build_train_multi_segment_payload(legs, cache_key="c")
+    picks = [{"segment_id": s.segment_id, "option_id": s.train_list[0].option_id} for s in p.segments]
+    check("3 高铁：三段并行查到、提交校验通过", validate_train_submission(TrainSubmitPayload.model_validate({"segments": picks}), "c").ok)
+    check("4 高铁：漏选一段 → INCOMPLETE",
+          validate_train_submission(TrainSubmitPayload.model_validate({"segments": picks[:1]}), "c").code == "INCOMPLETE")
+    p = await build_flight_multi_segment_payload([{"from": "北京", "to": "上海", "date": "2026-10-01"}], cache_key="c")
+    pick = [{"segment_id": "s1", "option_id": p.segments[0].flight_list[0].option_id}]
+    check("5 航班：机场码转换 + 提交校验通过", validate_flight_submission(FlightSubmitPayload.model_validate({"segments": pick}), "c").ok)
+    p = await build_driving_multi_segment_payload([{"from": "北京", "to": "天津"}], cache_key="c")
+    check("6 自驾：路线解析为 137km / 01:42", (p.segments[0].ok, p.segments[0].distance_km, p.segments[0].duration_text) == (True, 137.0, "01:42"))
+    check("7 自驾：只读确认通过", validate_driving_submission(DrivingSubmitPayload.model_validate({"segments": [{"segment_id": "s1"}]}), "c").ok)
+    p = await build_hotel_multi_segment_payload([{"city": "杭州", "checkInDate": "2026-10-01", "checkOutDate": "2026-10-03"}], cache_key="c")
+    seg = p.segments[0]
+    check("8 住宿：门店模式、每晚 358 / 总价 716", (seg.mode, seg.hotel_list[0].pricePerNight, seg.hotel_list[0].totalPrice) == ("hotel", 358, 716))
+    bad = validate_hotel_multi_submission(HotelMultiSegmentSubmitPayload.model_validate(
+        {"segments": [{"segment_id": seg.segment_id, "mode": "brand", "brand_id": "x"}]}), "c")
+    check("9 住宿：提交模式与下发不一致 → MODE_MISMATCH", bad.code == "MODE_MISMATCH")
+    print("🎉 第 9 章冒烟全部通过")
+
+asyncio.run(main())
+
+
+===== block 320 206819ffa2fc lines 1-10 source 知行旅行助手-v2#320 =====
+✅ 1 路段与段日期：北京→天津 10-01、天津→上海 10-02
+✅ 2 高铁路线判定：勾了高铁 + 两段 → 走代码卡片
+✅ 3 高铁：两段并行查到、提交校验通过
+✅ 4 高铁：漏选一段 → INCOMPLETE
+✅ 5 航班：机场码转换 + 提交校验通过
+✅ 6 自驾：路线解析为 137km / 01:42
+✅ 7 自驾：只读确认通过
+✅ 8 住宿：门店模式、每晚 358 / 总价 716
+✅ 9 住宿：提交模式与下发不一致 → MODE_MISMATCH
+🎉 第 9 章冒烟全部通过
+
+
+===== block 321 9204bb69d568 lines 1-1 source 知行旅行助手-v2#321 =====
+uv add asyncpg email-validator
+
+
+===== block 322 fea2d174eaec lines 1-1 source 知行旅行助手-v2#322 =====
+mkdir -p app/api/v1 && touch app/api/v1/__init__.py
+
+
+===== block 323 d96373463c36 lines 1-2 source 知行旅行助手-v2#323 =====
+New-Item -ItemType Directory -Path "app\api\v1" -Force | Out-Null
+if (-not (Test-Path "app\api\v1\__init__.py")) { New-Item -ItemType File -Path "app\api\v1\__init__.py" | Out-Null }
+
+
+===== block 324 75e53c0423d6 lines 1-64 source 知行旅行助手-v2#324 =====
+"""
+SQLAlchemy 基础配置
+"""
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from sqlalchemy.orm import DeclarativeBase, declared_attr
+from datetime import datetime
+from app.config import settings
+
+"""
+作用：这是所有具体数据库模型（如 User, Order 等）的父类
+自动生成表名：通过 __tablename__，当你定义一个名为 UserInfo 的类时，它在数据库里的表名会自动变成 userinfo。
+转换为字典：提供了一个 to_dict() 实例方法，方便后续将数据库查询出来的对象直接转换成 JSON 字典返回给前端。
+"""
+
+class Base(DeclarativeBase):
+    """基础模型类"""
+
+    @declared_attr
+    def __tablename__(cls) -> str:
+        """自动生成表名（类名转小写）"""
+        return cls.__name__.lower()
+
+    def to_dict(self):
+        """转换为字典"""
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+# 创建异步引擎
+engine = create_async_engine(
+    settings.database_url.replace("postgresql://", "postgresql+asyncpg://"),  # ★ 换成 asyncpg 异步驱动（环节 1 装的包）
+    echo=settings.debug,  # SQL 日志：echo=True 时会在控制台打印所有执行的 SQL 语句，方便在 Debug 模式下排错
+    pool_size=10,  # pool_size=10 表示常驻 10 个数据库连接
+    max_overflow=20  # 表示在高峰期最多可以额外创建 20 个连接，防止连接数耗尽导致程序崩溃。
+)
+
+# 创建异步会话工厂
+async_session_maker = async_sessionmaker(
+    engine,
+    class_=AsyncSession,
+    expire_on_commit=False
+    # 在同步 SQLAlchemy 中，提交事务后对象会失效（再次访问属性会触发重新查询）；
+    # 但在异步环境中，重新查询非常麻烦且容易报错，设为 False 可以保证提交后依然能读取对象里的数据。
+)
+
+# 作用：相当于一个“生产数据库会话的流水线”。
+
+# 作用：这是一个非常标准且安全的数据库会话生命周期管理器，
+# 主要用于 FastAPI 的依赖注入（Depends(get_db)）。
+async def get_db() -> AsyncSession:
+    """获取数据库会话（依赖注入）"""
+    async with async_session_maker() as session:
+        try:
+            yield session  # ★ 端点跑完才回到这里：成功 commit，异常 rollback
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()
+
+async def init_db():
+    """初始化数据库表"""
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    # 作用：通常在项目启动时调用。它会检查所有继承自 Base 的模型，如果数据库里没有对应的表，就自动创建出来。
+
+
+===== block 325 5d22c93c3da6 lines 1-21 source 知行旅行助手-v2#325 =====
+"""连库自检：asyncpg 驱动装好了没有、.env 里的 PG 连不连得上（需 PG）"""
+import asyncio
+import sys
+
+from sqlalchemy import text
+
+from app.models.base import async_session_maker, engine
+
+if sys.platform.startswith("win"):
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+async def main() -> None:
+    print("连接串里的驱动：", engine.url.drivername)
+    async with async_session_maker() as db:
+        one = (await db.execute(text("SELECT 1"))).scalar()
+        version = (await db.execute(text("SHOW server_version"))).scalar()
+    print("SELECT 1 →", one)
+    print("PG 主版本 ≥ 12：", int(version.split(".")[0]) >= 12)
+    await engine.dispose()           # 脚本退出前把连接池关掉，免得退出时报"事件循环已关闭"
+
+asyncio.run(main())
+
+
+===== block 326 f11e7c812142 lines 1-3 source 知行旅行助手-v2#326 =====
+连接串里的驱动： postgresql+asyncpg
+SELECT 1 → 1
+PG 主版本 ≥ 12： True
+
+
+===== block 327 dc8932f76c81 lines 1-49 source 知行旅行助手-v2#327 =====
+"""
+用户模型
+"""
+import uuid
+from typing import Optional
+from datetime import datetime, timezone
+from sqlalchemy import String, DateTime, JSON, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.dialects.postgresql import UUID
+from app.models.base import Base
+
+class User(Base):
+    """用户表"""
+    __tablename__ = "users"  # ★ user 是 PG 保留字，改用复数
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4  # ★ 主键在 Python 端生成，写库前就有 id
+    )
+
+    # ========== 通用账密登录（H5/管理后台用）转 nullable ==========
+    username: Mapped[Optional[str]] = mapped_column(String(50), unique=True, index=True, nullable=True)
+    email: Mapped[Optional[str]] = mapped_column(String(100), unique=True, index=True, nullable=True)
+    password_hash: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+
+    # 用户偏好（JSON 格式）
+    preferences: Mapped[dict] = mapped_column(JSON, default=dict,nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=func.now(),
+        onupdate=func.now()
+    )
+
+    # 关系
+    conversations: Mapped[list["Conversation"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    #back_populates:双向绑定
+    #back_populates="user" 的作用是告诉 SQLAlchemy：“在另一个模型里，有一个叫 user 的属性，它和我是互为反向引用的。”
+    '''
+    cascade="all, delete-orphan" 是最常用、最严格的级联设置，它包含两个部分：
+    all:代表开启所有标准的级联操作,你创建了一个新用户，同时给他创建了一个新对话
+    delete-orphan:删除父对象，他对应的Conversations会被自动删除'''
+
+
+===== block 328 d5edb21a0071 lines 1-44 source 知行旅行助手-v2#328 =====
+"""
+会话模型
+"""
+import uuid
+from datetime import datetime, timezone
+from sqlalchemy import String, DateTime, JSON, ForeignKey, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.dialects.postgresql import UUID
+from app.models.base import Base
+
+class Conversation(Base):
+    """会话表"""
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4
+    ) #主键
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),  # ★ 外键指向 users（复数）
+        index=True
+    ) #外键
+
+    title: Mapped[str] = mapped_column(String(200), default="新对话")
+
+    # 状态：active, archived, deleted
+    status: Mapped[str] = mapped_column(String(20), default="active", index=True)  # ★ 软删只改这一列
+
+    # 元数据（JSON 格式）
+    extra_info: Mapped[dict] = mapped_column(JSON, default=dict)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now())
+
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now(), onupdate=func.now())
+
+    # 关系
+    user: Mapped["User"] = relationship(back_populates="conversations")
+    messages: Mapped[list["Message"]] = relationship(
+        back_populates="conversation",
+        cascade="all, delete-orphan",
+        order_by="Message.created_at"  # ★ 字符串懒引用：访问 conv.messages 自动按时间排
+    )

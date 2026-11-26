@@ -1,0 +1,25 @@
+"""密码哈希与 JWT：随机加盐、校验、签发、解码；篡改、伪造、过期一律返回 None（纯函数，无需密钥）"""
+from datetime import timedelta
+
+import jwt
+
+from app.utils.security import (
+    ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, decode_access_token, hash_password, verify_password,
+)
+
+h1, h2 = hash_password("secret123"), hash_password("secret123")
+print("哈希开头：", h1[:7], "| 长度：", len(h1))
+print("同一个密码哈希两次，结果一样吗？", h1 == h2)
+print("正确密码 →", verify_password("secret123", h1), "| 错误密码 →", verify_password("wrong-pass", h1))
+
+token = create_access_token({"sub": "3f2c9a4e-0000-4000-8000-000000000001"})
+payload = decode_access_token(token)
+print("令牌段数：", len(token.split(".")), "| 解出的 sub：", payload["sub"], "| 带 exp：", "exp" in payload)
+print("默认有效期：", ACCESS_TOKEN_EXPIRE_MINUTES // (60 * 24), "天")
+
+head, body, sig = token.split(".")
+flipped = ("A" if sig[0] != "A" else "B") + sig[1:]
+print("改动签名 →", decode_access_token(f"{head}.{body}.{flipped}"))
+print("拿别的密钥伪造 →", decode_access_token(jwt.encode({"sub": "admin"}, "attacker-guessed-key-0123456789abcdef", algorithm="HS256")))
+print("已过期 →", decode_access_token(create_access_token({"sub": "x"}, expires_delta=timedelta(seconds=-1))))
+print("乱码 →", decode_access_token("not.a.jwt"))

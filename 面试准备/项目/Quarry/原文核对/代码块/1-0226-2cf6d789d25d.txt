@@ -1,0 +1,6 @@
+snapshots/travel-guide/
+├── collection.json         集合元信息
+├── documents.jsonl.gz      文档表
+├── chunks.jsonl.gz         块表
+├── manifest.json           前三个文件的 sha256
+└── build-info.json         导出时间，不进清单

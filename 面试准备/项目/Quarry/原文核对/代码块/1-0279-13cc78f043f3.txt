@@ -1,0 +1,1 @@
+tsq = build_tsquery(query)      # 里面是 jieba 分词

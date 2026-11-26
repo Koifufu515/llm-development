@@ -1,0 +1,12 @@
+-- ❌ 这个写法在教学数据上跑得很好，上了量会塌
+WITH filtered AS (
+  SELECT chunk_id, embedding, tokens FROM chunks
+  WHERE collection_id = $1 AND level = 1 AND acl_labels && $2::text[]
+),
+dense AS (
+  SELECT chunk_id FROM filtered ORDER BY embedding <=> $3::halfvec(1024) LIMIT 50
+),
+sparse AS (
+  SELECT chunk_id FROM filtered WHERE tokens @@ to_tsquery('simple', $4) LIMIT 50
+)
+...

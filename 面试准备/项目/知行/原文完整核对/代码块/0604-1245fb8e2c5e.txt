@@ -1,0 +1,7 @@
+"""_leg_context 演示：多段行程一次只问"当前待确认段"（纯函数，无需密钥）"""
+from app.services.chat_stream_executor import _leg_context
+
+trip = {"user_requirement": {"departure_city": "北京"}, "selected_destination": "天津、上海"}
+for cursor in (0, 1, 5):                    # leg_cursor 越界会被夹回合法范围
+    print(f"leg_cursor={cursor} →", _leg_context({**trip, "leg_cursor": cursor}))
+print("出发地缺失 →", _leg_context({"selected_destination": "杭州"}))

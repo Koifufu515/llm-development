@@ -1,0 +1,43 @@
+{
+  "initial": {
+    "total_children": 3,
+    "reused": 0,
+    "vectorized": 3,
+    "orphans_removed": 0,
+    "retired_chunks": 0
+  },
+  "repeat": {
+    "skipped": true
+  },
+  "one_change": {
+    "total_children": 3,
+    "reused": 2,
+    "vectorized": 1,
+    "orphans_removed": 0,
+    "retired_chunks": 2
+  },
+  "delete_section": {
+    "total_children": 2,
+    "reused": 2,
+    "vectorized": 0,
+    "orphans_removed": 0,
+    "retired_chunks": 2
+  },
+  "versions": [
+    {
+      "version": 1,
+      "status": "superseded"
+    },
+    {
+      "version": 2,
+      "status": "superseded"
+    },
+    {
+      "version": 3,
+      "status": "ready"
+    }
+  ],
+  "blue_green_switch_and_rollback": true,
+  "fact_verified_expired_unverified_conflict_mask_acl": true,
+  "withdrawal_and_fact_cascade": true
+}

@@ -1,0 +1,1 @@
+../../../../../../wenshu-project/backend/scripts/prepare_privacy.py

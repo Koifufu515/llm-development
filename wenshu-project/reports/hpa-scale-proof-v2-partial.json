@@ -1,0 +1,207 @@
+{
+  "scope": "真实HTTP、Harness、Mongo、Sentinel、Prometheus/HPA；合成模型固定1.5秒延时，外部模型调用=0，不代表Qwen吞吐",
+  "samples": [
+    {
+      "phase": "load-baseline-1pod-v2",
+      "seconds": 0.1,
+      "replicas": 1,
+      "ready": 1
+    },
+    {
+      "phase": "load-baseline-1pod-v2",
+      "seconds": 10.3,
+      "replicas": 1,
+      "ready": 1
+    },
+    {
+      "phase": "load-baseline-1pod-v2",
+      "seconds": 20.5,
+      "replicas": 1,
+      "ready": 1
+    },
+    {
+      "phase": "load-baseline-1pod-v2",
+      "seconds": 30.7,
+      "replicas": 4,
+      "ready": 1
+    },
+    {
+      "phase": "load-baseline-1pod-v2",
+      "seconds": 40.9,
+      "replicas": 4,
+      "ready": 4
+    },
+    {
+      "phase": "load-scale-to-20-v2",
+      "seconds": 0.1,
+      "replicas": 4,
+      "ready": 4
+    },
+    {
+      "phase": "load-scale-to-20-v2",
+      "seconds": 10.4,
+      "replicas": 4,
+      "ready": 4
+    },
+    {
+      "phase": "load-scale-to-20-v2",
+      "seconds": 20.7,
+      "replicas": 4,
+      "ready": 4
+    },
+    {
+      "phase": "load-scale-to-20-v2",
+      "seconds": 31.1,
+      "replicas": 7,
+      "ready": 4
+    },
+    {
+      "phase": "load-scale-to-20-v2",
+      "seconds": 41.4,
+      "replicas": 7,
+      "ready": 4
+    },
+    {
+      "phase": "load-scale-to-20-v2",
+      "seconds": 51.6,
+      "replicas": 7,
+      "ready": 6
+    },
+    {
+      "phase": "load-scale-to-20-v2",
+      "seconds": 62.1,
+      "replicas": 10,
+      "ready": 7
+    },
+    {
+      "phase": "load-scale-to-20-v2",
+      "seconds": 72.4,
+      "replicas": 10,
+      "ready": 7
+    },
+    {
+      "phase": "load-scale-to-20-v2",
+      "seconds": 82.7,
+      "replicas": 10,
+      "ready": 7
+    },
+    {
+      "phase": "load-scale-to-20-v2",
+      "seconds": 92.9,
+      "replicas": 13,
+      "ready": 10
+    },
+    {
+      "phase": "load-scale-to-20-v2",
+      "seconds": 104.3,
+      "replicas": 13,
+      "ready": 10
+    },
+    {
+      "phase": "load-scale-to-20-v2",
+      "seconds": 114.7,
+      "replicas": 13,
+      "ready": 10
+    },
+    {
+      "phase": "load-scale-to-20-v2",
+      "seconds": 125.0,
+      "replicas": 16,
+      "ready": 10
+    },
+    {
+      "phase": "load-scale-to-20-v2",
+      "seconds": 136.4,
+      "replicas": 16,
+      "ready": 10
+    },
+    {
+      "phase": "load-scale-to-20-v2",
+      "seconds": 161.8,
+      "replicas": 16,
+      "ready": 10
+    },
+    {
+      "phase": "load-scale-to-20-v2",
+      "seconds": 172.0,
+      "replicas": 16,
+      "ready": 0
+    },
+    {
+      "phase": "load-scale-to-20-v2",
+      "seconds": 182.8,
+      "replicas": 16,
+      "ready": 10
+    },
+    {
+      "phase": "load-scale-to-20-v2",
+      "seconds": 195.3,
+      "replicas": 16,
+      "ready": 13
+    },
+    {
+      "phase": "load-scale-to-20-v2",
+      "seconds": 218.8,
+      "replicas": 16,
+      "ready": 13
+    },
+    {
+      "phase": "load-scale-to-20-v2",
+      "seconds": 229.2,
+      "replicas": 16,
+      "ready": 7
+    },
+    {
+      "phase": "load-scale-to-20-v2",
+      "seconds": 255.4,
+      "replicas": 16,
+      "ready": 5
+    },
+    {
+      "phase": "load-scale-to-20-v2",
+      "seconds": 265.8,
+      "replicas": 16,
+      "ready": 5
+    },
+    {
+      "phase": "load-scale-to-20-v2",
+      "seconds": 301.4,
+      "replicas": 16,
+      "ready": 15
+    },
+    {
+      "phase": "load-scale-to-20-v2",
+      "seconds": 316.4,
+      "replicas": 19,
+      "ready": 15
+    },
+    {
+      "phase": "load-scale-to-20-v2",
+      "seconds": 327.6,
+      "replicas": 19,
+      "ready": 15
+    },
+    {
+      "phase": "load-scale-to-20-v2",
+      "seconds": 385.5,
+      "replicas": 19,
+      "ready": 13
+    }
+  ],
+  "baseline": {
+    "tag": "load-baseline-1pod-v2",
+    "model": "synthetic fixture 1.5s answer delay, zero external model calls",
+    "concurrency": 180,
+    "seconds": 33.094150307000746,
+    "requests": 1677,
+    "successful": 1677,
+    "throughput_rps": 50.673608007553135,
+    "statuses": {
+      "200": 1677
+    },
+    "errors": {},
+    "p50_seconds": 3.1966435850008565,
+    "p95_seconds": 6.20669941900087
+  },
+  "control_poll_retries": 8
+}

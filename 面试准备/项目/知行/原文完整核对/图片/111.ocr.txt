@@ -1,0 +1,71 @@
+函数说明卡（二）•四个判定助手，全部只为_produce 服务
+四个助手都是纯判断：不调模型，只有_recent_itinerary_text 会读一次库。两个回答「这句话是什么意思」，两个回答「哪段文字能当清单源料」。
+判意图 读用户原话 content，在路由和执行分支里用
+-hit_auto_confirm （fn
+L32-34
+_manual_multi_city_day_warning
+fn
+L106-123
+看用户这句话里有没有「全程交给 AI 自动确认 /无需逐步询问」，比对前先去掉所有空白。
+从表单里读出目的地和天数；选了多个目的地、天数却不到「城市数×2」时，先给一句提
+醒。
+何时调用 每轮都跑，在读完历史之后、路由之前。
+谁来调用 _produce L211，本文件。
+何时调用 三路执行走到状态机分支时。直查和快速通道不跑它；快速通道遇到同样情况，会直接把天
+结果交给 返回布尔。为真时立刻推「>正在为您规划行程」（L213），并跳过普通等待提示（L228）；
+数调高。
+同时让清单门禁按自动模式判就绪（L273）。
+谁来调用 _produce L262，本文件。
+结果交给 返回告警文案或 None。有文案时 _produce 推一帧 assistant （L264），并把文案拼到
+本身只是转调 core/intent.detect_intent（.•）.auto_confirm跨模块）。
+express_planning_service L43 有一份同名、同实现的副本。
+full_text 前面（L269），随 assistant消息落库。
+只提醒、不拦截，真正拒绝生成的是 state_transition.generate_itinerary_tool。读表单用
+state_transition 的 _between /_value_after /_leading_int，拆城市用
+express_planning_service._split_cities（跨模块
+找清单源原料 只在清单门禁里用（L278-279），详见图3
+_looks_like_itinerary Ifn
+L126-133
+_recent_itinerary_text lasync
+L136-155
+粗判一段文字像不像行程：超过150字，并且有「第X天/Day N」，或者上午、中午、下
+本轮回复不像行程时，往回翻最近8条助手消息，找最近一条像行程的全文当源料。
+午、晚上至少出现3次。
+何时调用
+本轮正文不像行程，并且本轮确实调用过 generate_itinerary_tool（committed 为真）
+何时调用 清单门禁挑源料时；翻历史找源料时，逐条判断。
+时。
+谁来调用 _produce L278；_recent_itinerary_text L153，均在本文件。
+谁来调用 _produce L279，本文件。
+结果交给 返回布尔：决定本轮正文能否直接当清单源料，以及哪条历史消息会被选中。
+结果交给 返回文本或 None，作为 _source 传给 itinerary_plan_service.generate_pLan
+（L291）（跨模块。
+用到模块常量_DAY_MARK （L26）； core/middleware 里有一份相同的正则。
+优先取 extra_info.original：超过2000字的消息，content里只存了摘要，拿摘要去提炼会缺天。
+模块级常量 不单独出卡，这里列出各自被谁用
+常量
+行号
+内容
+谁在用
+_DAY_MARK
+L26
+正则：「第X天」（阿拉伯或中文数字）或「Day N」
+_looks_like_itinerary
+_ITINERARY_READY_STEPS
+L29
+自动模式下的清单就绪步骤：行程生成、预算汇总、报告生成
+_produce L274
+_HEAD_DEST_PREFIX /_HEAD_DEST_SUFFIX
+L38-39
+表单目的地行的前后缀：「我想去」⋯「旅行」
+_manual_multi_city_day_warning
+_HEAD_DAYS_LABEL
+L40
+表单天数标签：「旅行天数」
+_manual_multi_city_day_warning
+_RESUME_PENDING_TEXT
+L178
+resume_stage 一等待提示文案，共5条
+_Produce L229（核对结果见图2）
+核对结果：本文件共有7个函数+1个类的4个方法=11个，图4七张卡、本图四张卡，全部覆盖。只有_SkillUiRecorder.aiter_没有调用方；其余10个的调用方都已用 grep和AST 逐一
+核实。对外暴露的只有 run_chat_turn 和mark_skill_ui_submitted，调用方都在 api/v1。

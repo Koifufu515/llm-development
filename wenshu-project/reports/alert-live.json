@@ -1,0 +1,129 @@
+{
+  "scope": "受控合成500计数器触发真实Prometheus规则，不伪造业务故障或外部通知送达",
+  "samples": [
+    {
+      "elapsed_seconds": 0,
+      "alerts": []
+    },
+    {
+      "elapsed_seconds": 10,
+      "alerts": [
+        {
+          "labels": {
+            "alertname": "WenshuHighErrorRate",
+            "severity": "warning"
+          },
+          "annotations": {
+            "summary": "文枢服务5xx比例超过5%"
+          },
+          "state": "pending",
+          "activeAt": "2026-11-09T09:06:14.536393746Z",
+          "value": "9.859067164797858e-01"
+        }
+      ]
+    },
+    {
+      "elapsed_seconds": 20,
+      "alerts": [
+        {
+          "labels": {
+            "alertname": "WenshuHighErrorRate",
+            "severity": "warning"
+          },
+          "annotations": {
+            "summary": "文枢服务5xx比例超过5%"
+          },
+          "state": "pending",
+          "activeAt": "2026-11-09T09:06:14.536393746Z",
+          "value": "9.941371163745703e-01"
+        }
+      ]
+    },
+    {
+      "elapsed_seconds": 30,
+      "alerts": [
+        {
+          "labels": {
+            "alertname": "WenshuHighErrorRate",
+            "severity": "warning"
+          },
+          "annotations": {
+            "summary": "文枢服务5xx比例超过5%"
+          },
+          "state": "pending",
+          "activeAt": "2026-11-09T09:06:14.536393746Z",
+          "value": "9.962993533199704e-01"
+        }
+      ]
+    },
+    {
+      "elapsed_seconds": 40,
+      "alerts": [
+        {
+          "labels": {
+            "alertname": "WenshuHighErrorRate",
+            "severity": "warning"
+          },
+          "annotations": {
+            "summary": "文枢服务5xx比例超过5%"
+          },
+          "state": "pending",
+          "activeAt": "2026-11-09T09:06:14.536393746Z",
+          "value": "9.97296095396588e-01"
+        }
+      ]
+    },
+    {
+      "elapsed_seconds": 50,
+      "alerts": [
+        {
+          "labels": {
+            "alertname": "WenshuHighErrorRate",
+            "severity": "warning"
+          },
+          "annotations": {
+            "summary": "文枢服务5xx比例超过5%"
+          },
+          "state": "pending",
+          "activeAt": "2026-11-09T09:06:14.536393746Z",
+          "value": "9.978700632182023e-01"
+        }
+      ]
+    },
+    {
+      "elapsed_seconds": 60,
+      "alerts": [
+        {
+          "labels": {
+            "alertname": "WenshuHighErrorRate",
+            "severity": "warning"
+          },
+          "annotations": {
+            "summary": "文枢服务5xx比例超过5%"
+          },
+          "state": "pending",
+          "activeAt": "2026-11-09T09:06:14.536393746Z",
+          "value": "9.982429792746228e-01"
+        }
+      ]
+    },
+    {
+      "elapsed_seconds": 70,
+      "alerts": [
+        {
+          "labels": {
+            "alertname": "WenshuHighErrorRate",
+            "severity": "warning"
+          },
+          "annotations": {
+            "summary": "文枢服务5xx比例超过5%"
+          },
+          "state": "firing",
+          "activeAt": "2026-11-09T09:06:14.536393746Z",
+          "value": "9.98329853862213e-01"
+        }
+      ]
+    }
+  ],
+  "firing_observed": true
+}

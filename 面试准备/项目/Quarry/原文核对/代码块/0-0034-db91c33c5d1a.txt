@@ -1,0 +1,7 @@
+Creating directory ...\migrations ...  done
+Creating directory ...\migrations\versions ...  done
+Generating ...\alembic.ini ...  done
+Generating ...\migrations\env.py ...  done
+Generating ...\migrations\README ...  done
+Generating ...\migrations\script.py.mako ...  done
+Please edit configuration/connection/logging settings in ...\alembic.ini before proceeding.

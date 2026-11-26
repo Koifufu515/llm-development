@@ -1,0 +1,45 @@
+# ===== 清单承诺话术清洗：清单状态由代码事实控制，禁止模型自行宣称 =====
+# 移除模型擅自输出的清单生成类承诺文案，保证前端清单UI状态和文本描述保持一致
+_CLAIM_SENTENCE_RE = re.compile(
+    r"行程清单(已生成|生成完毕|已为您生成|已上传)"
+    r"|(已|已经)(按此方案|为您)?生成.{0,8}行程清单"
+    r"|(您)?(可以|可在|请)在下方(查看|查看详情|点击查看)"
+)
+
+def _strip_claim_sentences(text: str) -> str:
+    """剔除模型自行宣称「清单已生成、可在下方查看」类话术，清单状态以清单帧为准"""
+    if not text:
+        return text
+    sentences = re.split(r"(?<=[。！？!?\n])", text)
+    kept = [s for s in sentences if not _CLAIM_SENTENCE_RE.search(s)]
+    return "".join(kept) if len(kept) != len(sentences) else text
+
+# ===== 收尾句去阻塞改写 =====
+# 将确认类收尾问句替换为引导调整的友好文案，避免重复确认造成用户困惑
+_INVITE_BLOCK_RE = re.compile(
+    r"请确认(以上|上述|此)[^。！？!?\n]{0,14}(是否符合您的需求|是否满足(您的)?(需求|要求)|是否合适|是否满意|是否需要调整)[。！!？]?"
+    r"|(以上|上述)(的)?(行程|方案|安排)[^。！？!?\n]{0,10}是否符合您的需求[。！!？]?"
+    r"|是否(需要|要)(进一步)?调整(一下)?[吗呢]?[？?](?=$|\n)"
+)
+_INVITE_TEXT = "如需调整（天数/预算/目的地等），直接告诉我即可。"
+
+def _rewrite_closing_invite(text: str) -> str:
+    """将阻塞式确认问句改写为无阻塞邀请语句"""
+    return _INVITE_BLOCK_RE.sub(_INVITE_TEXT, text) if text else text
+
+def _scrub_leak_text(text: str) -> str:
+    """清洗回复文本：移除系统指令、工具参数泄漏、虚假清单承诺，改写确认类收尾句。
+    执行顺序：块级清洗 → 清单承诺句子剔除 → 收尾句改写 → 单句泄漏过滤。
+    无泄漏内容时原样返回；调用方可通过返回值对比判断是否需要重置推送。
+    """
+    if not text:
+        return text
+    stripped = _strip_leak_blocks(text)
+    # 剔除清单相关虚假承诺话术
+    stripped = _strip_claim_sentences(stripped)
+    # 改写确认类结尾句子
+    stripped = _rewrite_closing_invite(stripped)
+    # 分句过滤单句泄漏
+    sentences = re.split(r"(?<=[。！？!?\n])", stripped)
+    kept = [s for s in sentences if not _is_leak_sentence(s)]
+    return "".join(kept) if len(kept) != len(sentences) else stripped

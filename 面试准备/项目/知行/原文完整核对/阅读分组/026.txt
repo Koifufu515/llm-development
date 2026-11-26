@@ -1,0 +1,420 @@
+
+
+===== block 277 4f1efb324a67 lines 1-8 source 知行旅行助手-v2#277 =====
+"""_price_pair 演示：取（总价, 每晚单价）——嵌套 price 对象 → 扁平键 → 文本换算，缺一方按晚数互补（纯函数，无需密钥）"""
+from app.capabilities.hotel_multi_segment.hotel_parser import _price_pair
+
+for name, rec in {"嵌套对象里只有文案": {"price": {"message": "716CNY 共2晚 358CNY/晚"}},
+                  "只给总价          ": {"totalPrice": 716},
+                  "只给每晚          ": {"pricePerNight": "358"},
+                  "什么都没有        ": {"name": "如家"}}.items():
+    print(f"{name} → {_price_pair(rec, nights=2)}")
+
+
+===== block 278 ae34c974b5db lines 1-4 source 知行旅行助手-v2#278 =====
+嵌套对象里只有文案 → (716.0, 358.0)
+只给总价           → (716.0, 358.0)
+只给每晚           → (716.0, 358.0)
+什么都没有         → (0.0, 0.0)
+
+
+===== block 279 e2ab5831d67e lines 1-59 source 知行旅行助手-v2#279 =====
+def _record_score(record: dict) -> int:
+    """判断一个 dict 有多像"酒店记录"：命中名称 + 价格 + 评分 + 地址的键越多越像"""
+    return sum(1 for keys in (_NAME_KEYS, _NIGHT_KEYS, _RATING_KEYS, _ADDR_KEYS)
+               if _pick(record, keys) not in (None, "", [], {}))
+
+def _best_record_list(node: Any, depth: int = 0) -> list[dict]:
+    """递归找"最像酒店列表"的字典数组（按平均像度打分取最高，避免误选城市/分页等数组）"""
+    best: list[dict] = []
+    best_score = 0
+    if depth > 6:
+        return best
+    if isinstance(node, dict):
+        for value in node.values():
+            found = _best_record_list(value, depth + 1)
+            score = sum(_record_score(item) for item in found) / len(found) if found else 0
+            if found and score > best_score:
+                best, best_score = found, score
+    elif isinstance(node, list):
+        dicts = [item for item in node if isinstance(item, dict)]
+        if dicts:
+            avg = sum(_record_score(item) for item in dicts) / len(dicts)
+            # ★ 平均命中名称 / 价格 / 评分 / 地址中的两类以上，才算"酒店列表"
+            if avg >= 2:                          # 至少像"名称 + 一项数值"，才算候选列表
+                return dicts
+        for item in node:
+            found = _best_record_list(item, depth + 1)
+            score = sum(_record_score(r) for r in found) / len(found) if found else 0
+            if found and score > best_score:
+                best, best_score = found, score
+    return best
+
+# ==================== 原始行 → HotelOption（统一定价口径） ====================
+
+def _normalize_hotel(record: dict, index: int, nights: int) -> Optional[HotelOption]:
+    """统一记录 → HotelOption：门店名必须有；价格按 _price_pair 归一（不做业务校验）"""
+    name = _as_text(_pick(record, _NAME_KEYS))
+    if not name:
+        return None
+    total, night = _price_pair(record, nights)
+    return HotelOption(
+        hotel_id=f"h{index}",
+        hotelName=name,
+        totalPrice=total,
+        pricePerNight=night,
+        starRating=_to_number(_pick(record, _RATING_KEYS)),
+        address=_as_text(_pick(record, _ADDR_KEYS)),
+    )
+
+def hotels_from_raw(raw: Any, nights: int, limit: int) -> list[HotelOption]:
+    """原始返回 → 门店候选（两级解析；解析不出返回空列表，由调用方降级 brand 模式）"""
+    text = _raw_text(raw)
+    structured = _load_structured(text)
+    records = _best_record_list(structured) if structured is not None else []
+    options = [opt for i, rec in enumerate(records, 1)
+               if (opt := _normalize_hotel(rec, i, nights)) is not None]
+    app_logger.info(
+        f"🏨 酒店解析：原始 {len(text)} 字 → 门店候选 {len(options)} 个（取前 {limit} 个）"
+    )
+    return options[:limit]
+
+
+===== block 280 ce118d75e4b7 lines 1-10 source 知行旅行助手-v2#280 =====
+"""_best_record_list 演示：递归找"最像酒店列表"的那个数组，不会误选城市列表、分页信息（纯函数，无需密钥）"""
+from app.capabilities.hotel_multi_segment.hotel_parser import _best_record_list, _record_score
+
+data = {"code": 0, "data": {
+    "cities": [{"name": "杭州", "id": 1}, {"name": "苏州", "id": 2}],
+    "page": {"total": 2, "size": 10},
+    "hotelInformationList": [{"name": "如家酒店", "price": 358, "starRating": 4.6, "address": "西湖区"},
+                             {"name": "汉庭酒店", "price": 280, "starRating": 4.3}]}}
+print("城市条目像度：", _record_score(data["data"]["cities"][0]), "| 酒店条目像度：", _record_score(data["data"]["hotelInformationList"][0]))
+print("选中：", [r["name"] for r in _best_record_list(data)])
+
+
+===== block 281 98232f4ed0f5 lines 1-2 source 知行旅行助手-v2#281 =====
+城市条目像度： 1 | 酒店条目像度： 4
+选中： ['如家酒店', '汉庭酒店']
+
+
+===== block 282 12f9da056232 lines 1-12 source 知行旅行助手-v2#282 =====
+"""hotels_from_raw 演示：三级解析出门店候选；什么都解析不出就返回空列表，由调用方降级成品牌模式（纯函数，无需密钥）"""
+import json
+
+from app.capabilities.hotel_multi_segment.hotel_parser import hotels_from_raw
+
+RAW = json.dumps({"hotelInformationList": [
+    {"name": "如家酒店(西湖北山街店)", "price": {"message": "716CNY 共2晚 358CNY/晚"}, "starRating": 4.6, "address": "西湖区北山街 12 号"},
+    {"name": "锦江之星(Jinjiang Inn)", "price": {"message": "560CNY 共2晚 280CNY/晚"}, "starRating": 4.3, "address": "拱墅区体育场路 8 号"},
+]}, ensure_ascii=False)
+for opt in hotels_from_raw([{"type": "text", "text": RAW}], nights=2, limit=5):
+    print(opt.hotel_id, opt.hotelName, opt.pricePerNight, "元/晚 · 总价", opt.totalPrice, "·", opt.starRating, "分")
+print("解析不出：", hotels_from_raw("酒店服务繁忙，请稍后再试", nights=2, limit=5))
+
+
+===== block 283 7b249786417a lines 1-3 source 知行旅行助手-v2#283 =====
+h1 如家酒店(西湖北山街店) 358.0 元/晚 · 总价 716.0 · 4.6 分
+h2 锦江之星 280.0 元/晚 · 总价 560.0 · 4.3 分
+解析不出： []
+
+
+===== block 284 35f4c5a92323 lines 1-53 source 知行旅行助手-v2#284 =====
+def brand_fallback(price_level: str) -> list[HotelBrand]:
+    """实时报价不可用时的品牌兜底：按档位给出常见连锁品牌（不编造门店与价格）"""
+    level = _level_of(price_level)
+    return [HotelBrand(brand_id=f"b{i}", brandName=name)
+            for i, name in enumerate(_BRANDS[level], 1)]
+
+# ==================== 查询工具定位与入参适配 ====================
+
+async def resolve_hotel_tool() -> Optional[BaseTool]:
+    """定位酒店查询工具：按名含 searchhotels / find-hotels 判定（与 get_hotel_tools 同口径）
+
+    注意取 get_all_mcp_tools() 的**原始工具**：本 Skill 需要解析原始返回文本的完整结构，
+    不用被裁剪/包装过的工具版本。
+    """
+    global _QUERY_TOOL
+    if _QUERY_TOOL is not None:
+        return _QUERY_TOOL
+    for item in await get_all_mcp_tools():
+        name = getattr(item, "name", "").lower()
+        if any(hint in name for hint in _HOTEL_TOOL_HINTS):
+            _QUERY_TOOL = item
+            app_logger.info(f" 复用酒店查询工具：{item.name}")
+            return _QUERY_TOOL
+    app_logger.warning("⚠️ 未找到酒店查询工具（searchHotels / find-hotels），将走品牌兜底")
+    return None
+
+def build_args(
+    tool: BaseTool, city: str, check_in_date: str, nights: int,
+    guest_count: int, price_level: str, max_options: int,
+) -> dict:
+    """组装酒店工具入参：aigohotel searchHotels 的嵌套形态
+
+    实测 aigohotel 的 searchHotels：必填 originQuery / place / placeType（取值「城市」等中文），
+    日期-晚数-人数在 checkInParam 里，星级筛选在 filterOptions 里，条数在 size 里。
+    """
+    stars = _STAR_RATINGS[_level_of(price_level)]
+    return {
+        "originQuery": f"{city} {price_level}酒店 {nights}晚 {guest_count}人",
+        "place": city, "placeType": "城市",
+        "checkInParam": {
+            "checkInDate": check_in_date, "stayNights": nights, "adultCount": guest_count,
+        },
+        "filterOptions": {"starRatings": stars},
+        "size": max_options,
+    }
+
+__all__ = [
+    "hotels_from_raw",
+    "brand_fallback",
+    "resolve_hotel_tool",
+    "build_args",
+    "stay_nights",
+]
+
+
+===== block 285 17827155716e lines 1-5 source 知行旅行助手-v2#285 =====
+"""brand_fallback 演示：实时报价不可用时，按档位给出常见连锁品牌，不编门店、不编价格（纯函数，无需密钥）"""
+from app.capabilities.hotel_multi_segment.hotel_parser import brand_fallback
+
+for level in ["经济型", "星级酒店", "民宿", "青年旅社", "随便"]:
+    print(f"{level:6} → {[b.brandName for b in brand_fallback(level)]}")
+
+
+===== block 286 c15fd21f8c54 lines 1-5 source 知行旅行助手-v2#286 =====
+经济型    → ['如家', '汉庭', '7 天', '锦江之星', '格林豪泰', '莫泰']
+星级酒店   → ['希尔顿', '万豪', '洲际', '香格里拉', '凯悦', '雅高']
+民宿     → ['花间堂', '途家民宿', '小猪民宿', '美团民宿']
+青年旅社   → ['国际青年旅舍（YHA）', '万里路青年旅舍', '如家青旅']
+随便     → ['如家', '汉庭', '7 天', '锦江之星', '格林豪泰', '莫泰']
+
+
+===== block 287 c5c5da8a16cb lines 1-11 source 知行旅行助手-v2#287 =====
+"""build_args 演示：看工具真实 schema 选嵌套形态还是扁平形态，档位折算成星级区间（纯逻辑，无需密钥）"""
+from app.capabilities.hotel_multi_segment.hotel_parser import build_args
+
+class NestedTool:            # 测试驱动：只带 args_schema 的假工具（嵌套形态）
+    args_schema = {"properties": {"originQuery": {}, "place": {}, "checkInParam": {}, "filterOptions": {}}}
+
+class FlatTool:              # 测试驱动：只带 args_schema 的假工具（扁平形态）
+    args_schema = {"properties": {"place": {}, "checkIn": {}, "stayNights": {}}}
+
+print("嵌套：", build_args(NestedTool(), "杭州", "2026-10-01", 2, 2, "经济型", 5))
+print("扁平：", build_args(FlatTool(), "杭州", "2026-10-01", 2, 2, "星级酒店", 5))
+
+
+===== block 288 670d3fd79e13 lines 1-2 source 知行旅行助手-v2#288 =====
+嵌套： {'originQuery': '杭州 经济型酒店 2晚 2人', 'place': '杭州', 'placeType': '城市', 'checkInParam': {'checkInDate': '2026-10-01', 'stayNights': 2, 'adultCount': 2}, 'filterOptions': {'starRatings': [0.0, 3.0]}, 'size': 5}
+扁平： {'place': '杭州', 'placeType': '城市', 'checkIn': '2026-10-01', 'stayNights': 2, 'starRatings': [4.5, 5.0], 'adultCount': 2, 'size': 5}
+
+
+===== block 289 9ca2b2b0a1c1 lines 1-85 source 知行旅行助手-v2#289 =====
+"""
+多段住宿选择 Agent Skill —— Agent 工具实现（skill_name = hotel_multi_segment）
+
+设计要点（与 train_multi_segment 完全同构）：
+  1. 【真实数据】不内置 mock，复用项目已有酒店 MCP 工具（searchHotels / find-hotels 系）；
+  2. 【并行】段与段用 asyncio.gather 并发查询（段数动态 2/3/多段，总耗时≈最慢一段）；
+  3. 【分段解析】每段独立解析原始返回文本、**独立判定 mode**——同一份 payload 里
+     h1 可以是门店模式、h2 可以是品牌模式，互不影响；
+  4. 【身份唯一】候选 id 段内唯一：`{segment_id}-{序号}`（h1-1 / b2-3），多段不共号，防止串段；
+  5. 【不阻断】某段工具失败/解析不出门店 → **该段**降级品牌模式，其它段照常，绝不让对话卡死；
+  6. 【提交侧】只做基础合法性校验（段存在、mode 匹配、id 在候选内、每段都选了），
+     **不做任何日期/时间校验**。
+
+解析核心（三级兜底：JSON → 结构化取值 → 文本行解析）在同包 **hotel_parser.py**，
+全项目只维护一份解析口径；本模块只负责「按段并行调度 + 段内 id 前缀化 + 多段校验」。
+"""
+import asyncio
+from typing import Any, Optional
+
+from langchain.tools import tool
+from langchain_core.tools import BaseTool
+
+# 解析核心（MCP 工具定位 / 入参形态 / 三级解析 / 品牌兜底）在同包的 hotel_parser.py，
+# 全项目只维护一份口径；本模块只负责「按段并行调度 + 段内 id 前缀化 + 多段校验」
+from app.capabilities.base import PayloadCache
+from app.capabilities.hotel_multi_segment.hotel_parser import (
+    brand_fallback,
+    build_args,
+    hotels_from_raw,
+    resolve_hotel_tool,
+    stay_nights,
+)
+from app.capabilities.hotel_multi_segment.hotel_skill_schema import (
+    HOTEL_MULTI_SEGMENT_SKILL,
+    HotelMultiSegmentItem,
+    HotelMultiSegmentPayload,
+    HotelMultiSegmentSubmitPayload,
+    HotelMultiSegmentSubmitResult,
+    HotelSegmentInput,
+    HotelSubmitSelection,
+)
+from app.utils.logger import app_logger
+
+# 最近一次下发给前端的 payload：提交侧校验的权威真源（前端展示的就是这一份）
+# 按 cache_key 分桶（调用方传 conversation_id），避免多会话并发互相覆盖
+_PAYLOAD_CACHE: PayloadCache[HotelMultiSegmentPayload] = PayloadCache("hotel")
+
+def get_cached_payload(cache_key: Optional[str] = None) -> Optional[HotelMultiSegmentPayload]:
+    """取某会话最近下发的候选 payload（提交校验用）；不存在返回 None"""
+    return _PAYLOAD_CACHE.get(cache_key)
+
+# 异常低价阈值：接口偶发返回"14元/晚"这类失真价格，低于此视为不可用
+_MIN_HOTEL_PRICE = 25.0
+
+def hotel_rank(price: float, score: float) -> tuple:
+    """门店择优排序键（越小越优，供 min 代选）：异常低价排最后；评分≥4.5 按价格升序；
+    评分<4.5 按评分降序、同分取更便宜（用负分折算成升序键）。
+
+    状态机自动代选（hotel_flow.auto_select_hotels）与快速通道（express._pick_hotel）共用本函数，
+    保证同一批候选在两通道选出同一家门店——此前状态机取首条、快速通道择优选，会漂移。
+    """
+    if float(price) < _MIN_HOTEL_PRICE:
+        return (2, float("inf"), 0.0)
+    if float(score) >= 4.5:
+        return (0, float(price), 0.0)
+    return (1, -float(score), float(price))
+
+def pick_best_hotel(options: list[Any]) -> Optional[Any]:
+    """门店候选择优；全部为异常低价时返回 None（不硬选，交回调用方如实告知）
+
+    「异常低价」阈值与 hotel_rank 同源（_MIN_HOTEL_PRICE），避免两处各写一个数。
+    """
+    if not options:
+        return None
+    best = min(options, key=lambda o: hotel_rank(o.pricePerNight, o.starRating))
+    return None if float(best.pricePerNight) < _MIN_HOTEL_PRICE else best
+
+def _reid(segment_id: str, items: list[Any], field: str) -> list[Any]:
+    """给候选加**段内唯一**前缀 id：h1-1 / h1-2（门店 hotel_id）、b2-1（品牌 brand_id）
+
+    单段解析产出的 id 是 h1/h2 与 b1/b2，多段拼在一起会串号（第 2 段的 h1 与第 1 段同名），
+    故按 `{segment_id}-{序号}` 重写 id，作为提交与校验的唯一身份。
+    """
+    return [item.model_copy(update={field: f"{segment_id}-{index}"})
+            for index, item in enumerate(items, 1)]
+
+
+===== block 290 a279a461307f lines 1-6 source 知行旅行助手-v2#290 =====
+"""_reid 演示：候选 id 加上段号前缀，保证跨段唯一（纯函数，无需密钥）"""
+from app.capabilities.hotel_multi_segment.hotel_agent_tool import _reid
+from app.capabilities.hotel_multi_segment.hotel_parser import brand_fallback
+
+print([b.brand_id + ":" + b.brandName for b in brand_fallback("经济型")[:3]], "（重编号之前）")
+print([b.brand_id + ":" + b.brandName for b in _reid("h2", brand_fallback("经济型")[:3], "brand_id")], "（第 2 段重编号之后）")
+
+
+===== block 291 552a46b1c4aa lines 1-2 source 知行旅行助手-v2#291 =====
+['b1:如家', 'b2:汉庭', 'b3:7 天'] （重编号之前）
+['h2-1:如家', 'h2-2:汉庭', 'h2-3:7 天'] （第 2 段重编号之后）
+
+
+===== block 292 e7c5f5e1acac lines 1-67 source 知行旅行助手-v2#292 =====
+async def _query_one_segment(
+    tool: Optional[BaseTool], segment_id: str, segment: HotelSegmentInput, limit: int
+) -> HotelMultiSegmentItem:
+    """查询单段住宿（由 asyncio.gather 并行调度）
+
+    任何异常/解析不出门店都**只影响本段**：该段降级为品牌模式，其它段照常返回。
+    """
+    nights = stay_nights(segment.checkInDate, segment.checkOutDate)
+    options: list[Any] = []
+    if tool is not None:
+        args = build_args(
+            tool, segment.city, segment.checkInDate, nights,
+            segment.guestCount, segment.priceLevel, limit,
+        )
+        try:
+            raw = await tool.ainvoke(args)
+            options = hotels_from_raw(raw, nights, limit)
+        except Exception as exc:                  # 单段服务抖动/超时/配额：本段降级，不影响其它段
+            app_logger.warning(f"⚠️ hotel_multi_segment {segment_id}（{segment.city}）查询失败，本段降级品牌模式：{exc}")
+    base = {
+        "segment_id": segment_id, "city": segment.city, "checkInDate": segment.checkInDate,
+        "checkOutDate": segment.checkOutDate, "guestCount": segment.guestCount,
+        "priceLevel": segment.priceLevel,
+    }
+    if options:                                   # 场景 A：真实门店可用 → mode="hotel"
+        return HotelMultiSegmentItem(
+            **base, mode="hotel", hotel_list=_reid(segment_id, options, "hotel_id"), brand_list=[],
+        )
+    # 场景 B：实时报价不可用 → mode="brand"（按档位给常见连锁品牌，不编造门店与价格）
+    return HotelMultiSegmentItem(
+        # ★ 查不到门店就降级品牌模式：只给品牌，不编门店和价格
+        **base, mode="brand", hotel_list=[],
+        brand_list=_reid(segment_id, brand_fallback(segment.priceLevel), "brand_id"),
+    )
+
+async def build_hotel_multi_segment_payload(
+    segments: list[Any],
+    max_options_per_segment: int = 5,
+    cache_key: Optional[str] = None,
+) -> HotelMultiSegmentPayload:
+    """核心函数（非工具）：并行查询全部住宿段 → 组装 payload，并缓存供提交侧校验
+
+    段数由入参长度决定（2/3/多段均支持，不写死）；每段模式独立判定，可混合（h1 门店 + h2 品牌）。
+    cache_key：隔离键（调用方传 conversation_id），保证提交侧校验到的是**本会话**的候选表。
+    """
+    try:
+        parsed = [seg if isinstance(seg, HotelSegmentInput) else HotelSegmentInput.model_validate(seg)
+                  for seg in segments]
+    except Exception as exc:
+        app_logger.warning(f"⚠️ hotel_multi_segment 入参不合法，已降级为空 payload：{exc}")
+        return HotelMultiSegmentPayload(segments=[])
+    if not parsed:
+        return HotelMultiSegmentPayload(segments=[])
+    tool = await resolve_hotel_tool()             # 工具缺席时每段都会自动走品牌兜底
+    items = await asyncio.gather(*[                # ← 并行并发，非串行逐段查
+        _query_one_segment(tool, f"h{index}", segment, max_options_per_segment)
+        for index, segment in enumerate(parsed, 1)
+    ])
+    payload = HotelMultiSegmentPayload(segments=list(items))
+    _PAYLOAD_CACHE.store(payload, cache_key)   # 供提交工具做「是否存在」校验
+    app_logger.info(
+        f"🏨 hotel_multi_segment 出参：{len(payload.segments)} 段 / "
+        f"模式 {'、'.join(f'{s.segment_id}={s.mode}' for s in payload.segments)}"
+    )
+    return payload
+
+# ==================== 提交侧：只做基础合法性校验（不做任何日期/时间校验） ====================
+
+
+===== block 293 bcbd2094a47c lines 1-29 source 知行旅行助手-v2#293 =====
+"""_query_one_segment 演示：查到门店走 hotel 模式；查不到、查询失败、没有工具，一律降级 brand 模式（纯逻辑，无需密钥）"""
+import asyncio
+import json
+
+from app.capabilities.hotel_multi_segment.hotel_agent_tool import _query_one_segment
+from app.capabilities.hotel_multi_segment.hotel_skill_schema import HotelSegmentInput
+
+HOTELS = {"杭州": json.dumps({"code": 0, "hotelInformationList": [
+    {"name": "如家酒店(西湖北山街店)", "price": {"message": "716CNY 共2晚 358CNY/晚"}, "starRating": 4.6, "address": "杭州市西湖区北山街 12 号"},
+    {"name": "锦江之星(Jinjiang Inn)", "price": {"message": "560CNY 共2晚 280CNY/晚"}, "starRating": 4.3, "address": "杭州市拱墅区体育场路 8 号"},
+]}, ensure_ascii=False)}
+
+class FakeHotelTool:         # 测试驱动：假装是酒店查询工具（带真实工具那种嵌套 schema），按城市返回结果
+    name = "searchHotels"
+    args_schema = {"type": "object", "properties": {"originQuery": {}, "place": {}, "checkInParam": {}, "filterOptions": {}, "size": {}}}
+
+    async def ainvoke(self, args: dict):
+        if args["place"] == "故障城":
+            raise RuntimeError("酒店服务超时")
+        return HOTELS.get(args["place"], "")
+
+async def main():
+    for i, (tool, city) in enumerate([(FakeHotelTool(), "杭州"), (FakeHotelTool(), "故障城"), (None, "苏州")], 1):
+        seg = await _query_one_segment(tool, f"h{i}", HotelSegmentInput(city=city, checkInDate="2026-10-01", checkOutDate="2026-10-03",
+                                                                        guestCount=2, priceLevel="经济型"), 5)
+        picks = [h.hotel_id + " " + h.hotelName for h in seg.hotel_list] or [b.brand_id + " " + b.brandName for b in seg.brand_list[:3]]
+        print(f"{seg.segment_id} {city:3} mode={seg.mode:5} {picks}")
+
+asyncio.run(main())
+
+
+===== block 294 b33415b3fb43 lines 1-3 source 知行旅行助手-v2#294 =====
+h1 杭州  mode=hotel ['h1-1 如家酒店(西湖北山街店)', 'h1-2 锦江之星']
+h2 故障城 mode=brand ['h2-1 如家', 'h2-2 汉庭', 'h2-3 7 天']
+h3 苏州  mode=brand ['h3-1 如家', 'h3-2 汉庭', 'h3-3 7 天']

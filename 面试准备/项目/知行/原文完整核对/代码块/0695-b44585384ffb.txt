@@ -1,0 +1,73 @@
+# ============== 步骤 2：并行数据收集 ==============
+
+def _iata(city: str) -> str:
+    """城市名 → 机场三字码（searchFlightsByDepArr 的 depcity/arrcity 必需）；
+    查不到返回空串。码表统一取自 mcp_tools._CITY_AIRPORT（与票价用的城市码分开维护）"""
+    from app.tools.mcp_tools import _CITY_AIRPORT
+    name = (city or "").strip()
+    if not name:
+        return ""
+    for suffix in ("市", "地区", "自治州"):
+        if name.endswith(suffix) and len(name) > len(suffix):
+            name = name[: -len(suffix)]
+            break
+    return _CITY_AIRPORT.get(name, "")
+
+# ============== 多目的地路段构造 ==============
+
+_CITY_DELIMS = "，,、"
+
+def _split_cities(destination: str) -> list[str]:
+    """把 destination 按中/英逗号、顿号切分为城市列表（去空去重保序）"""
+    if not destination:
+        return []
+    flat = destination
+    for ch in _CITY_DELIMS:
+        flat = flat.replace(ch, " ")
+    out: list[str] = []
+    for city in flat.split():
+        if city not in out:
+            out.append(city)
+    return out
+
+def ordered_play_cities(departure: str, destination: str) -> list[str]:
+    """游玩/住宿节点城市序列（去重保序）：出发地仅当本身也在目的地串里才计入，且置于最前。
+    住宿站点 = 目的地城市序列。
+    示例：北京→上海 = [上海]；北京→天津/上海 = [天津,上海]；北京→北京 = [北京]；
+    目的地含出发地（北京→北京/天津）时：[北京,天津]
+    """
+    cities = _split_cities(destination)
+    dep = (departure or "").strip()
+    ordered = (([dep] if dep and dep in cities else []) + cities)
+    out: list[str] = []
+    for c in ordered:
+        if c and c not in out:
+            out.append(c)
+    return out
+
+def _plan_cities(req: ExpressRequirement) -> list[str]:
+    """规划用游玩城市序列（快速通道）——口径与住宿站点完全同源"""
+    return ordered_play_cities(req.departure_city, req.destination)
+
+def _build_legs(departure: str, cities: list[str]) -> list[tuple[str, str]]:
+    """构造交通路段序列：出发→首城、城际转场、末城→出发地返程。
+    剔除自身段：出发地与目的地相同，跳过"北京→北京"无效路段，保留本地游玩。
+    route = [出发地] + [目的地列表] + [出发地(返程)]；仅相邻城市不同才生成路段。
+    示例：北京→上海 = 2段；北京→天津→上海 =3段；北京→北京 =0段；出发地缺失不补返程。
+    """
+    if not cities:
+        return []
+    route = [departure] + cities + ([departure] if departure else [])
+    return [(a, b) for a, b in zip(route[:-1], route[1:]) if a != b]
+
+def _stay_nights(days: int, stations: int) -> list[int]:
+    """住宿晚数分配：出发地固定1晚，剩余天数在其后城市均分，前面城市多分配余数天数。
+    酒店段覆盖全部节点城市（含出发地）。天数不足时每站至少1晚，不自动删除城市。
+    """
+    if stations <= 0 or days <= 0:
+        return []
+    if stations == 1:
+        return [days]
+    rest = max(1, days - 1)
+    per, rem = divmod(rest, stations - 1)
+    return [1] + [per + (1 if i < rem else 0) for i in range(stations - 1)]

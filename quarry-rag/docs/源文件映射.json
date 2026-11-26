@@ -1,0 +1,785 @@
+[
+  {
+    "file": "pyproject.toml",
+    "block": 8,
+    "sha256": "09591f8259d288bfe16ae7bbf9bd0b12f7d940f9d0f40e4157285c4ade37951e",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "pyproject.toml",
+    "current_sha256": "e01c9d0055e90db30bbbc10930b2f5ae06741f1029dee742d71b7fe796c31bf8"
+  },
+  {
+    "file": "docker-compose.yml",
+    "block": 13,
+    "sha256": "914c34de308375c87fd3945cc742f264344acf1db4372b9b9ac2a0ccbb31433f",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "docker-compose.yml",
+    "current_sha256": "5f8398f2c47f73b6db4bcf270341df9ceed7966d809ae0072917551a8aad185f"
+  },
+  {
+    "file": "docker/init-db.sql",
+    "block": 14,
+    "sha256": "01b8a38124fc83d29c953001e60a0fa9a59809c648c08a34b917a4533175b295",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "docker/init-db.sql",
+    "current_sha256": "01b8a38124fc83d29c953001e60a0fa9a59809c648c08a34b917a4533175b295"
+  },
+  {
+    "file": ".gitignore",
+    "block": 16,
+    "sha256": "b69385b95d2d26c18068cf2a5965badccd1d1c61bc9c8cb10e0a3810b96301a2",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": ".gitignore",
+    "current_sha256": "3be32a478fd99b9d6cce4143b7f094597891fae2a3654cbb8a83ad29d483f0ba"
+  },
+  {
+    "file": ".env.example",
+    "block": 17,
+    "sha256": "7c801b9cf27c2f53ac298f0e70a553aaa9164e2c21a75de0fe0ed8311b67722e",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": ".env.example",
+    "current_sha256": "a9bc4832393ac43ddf14375053a32317e1c3dd12d2c33c5e13cb96723ab1a381"
+  },
+  {
+    "file": "migrations/env.py",
+    "block": 38,
+    "sha256": "8223444044aa18f39d71f5f5179e7ee905ed6cce29fcb4a5deae3b5cdc1aa631",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "migrations/env.py",
+    "current_sha256": "8223444044aa18f39d71f5f5179e7ee905ed6cce29fcb4a5deae3b5cdc1aa631"
+  },
+  {
+    "file": "migrations/versions/0001_core_tables.sql",
+    "block": 40,
+    "sha256": "00e10b8387978db7e2604e81da38abfcb923320ec9748fdc5d3a83c3451dc2f9",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "migrations/versions/0001_core_tables.sql",
+    "current_sha256": "00e10b8387978db7e2604e81da38abfcb923320ec9748fdc5d3a83c3451dc2f9"
+  },
+  {
+    "file": "quarry/infra/settings.py",
+    "block": 58,
+    "sha256": "d0b9980581a3a8d743f2be3934407db062feee3f72e155be4f10f37b20873265",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/infra/settings.py",
+    "current_sha256": "ba1104eb8782768f1507ed357364ca1d8e47abbe0b15762bb38440a0e623759d"
+  },
+  {
+    "file": "quarry/infra/logging.py",
+    "block": 60,
+    "sha256": "3a236ab956ff2cfbca96925f212c9480e3da43ef98ff698bfd679f8dffec91a1",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/infra/logging.py",
+    "current_sha256": "00be3e6d8a13a03832f690d6b3971553997da38f5b3fa096e3474db146085cff"
+  },
+  {
+    "file": "quarry/infra/db.py",
+    "block": 62,
+    "sha256": "05c6d812cab3cc8255e0f014f746eceffae0d3c50e0f7205bda8aca797d5c97b",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/infra/db.py",
+    "current_sha256": "05c6d812cab3cc8255e0f014f746eceffae0d3c50e0f7205bda8aca797d5c97b"
+  },
+  {
+    "file": "quarry/infra/embed.py",
+    "block": 63,
+    "sha256": "6b18b67c29805d04e4e393eb94b30d247810bf058af25fbc7fd5b59154d56b2e",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/infra/embed.py",
+    "current_sha256": "6b18b67c29805d04e4e393eb94b30d247810bf058af25fbc7fd5b59154d56b2e"
+  },
+  {
+    "file": "verify_env.py",
+    "block": 64,
+    "sha256": "457c3df23d44090640a71701e8dd0be89fa518cf1cfe43f4a9c91322d7157e6b",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "verify_env.py",
+    "current_sha256": "457c3df23d44090640a71701e8dd0be89fa518cf1cfe43f4a9c91322d7157e6b"
+  },
+  {
+    "file": "quarry/scripts/hello_retrieval.py",
+    "block": 74,
+    "sha256": "bf381a22478e993eb5bfca3849c99a0f6d457e45f6442d2c0079ee858c04e719",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/scripts/hello_retrieval.py",
+    "current_sha256": "bf381a22478e993eb5bfca3849c99a0f6d457e45f6442d2c0079ee858c04e719"
+  },
+  {
+    "file": "quarry/common/text.py",
+    "block": 122,
+    "sha256": "f7b4cf4dc3980802b6fcbeef1fb4a2e689eb3d329ddeac13a55f2e2bd0b7490e",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/common/text.py",
+    "current_sha256": "f7b4cf4dc3980802b6fcbeef1fb4a2e689eb3d329ddeac13a55f2e2bd0b7490e"
+  },
+  {
+    "file": "quarry/common/ids.py",
+    "block": 125,
+    "sha256": "361d3a4aa3ef9b41ee2a78287e81e36caad666cfdfd4c494e953326251bc96e2",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/common/ids.py",
+    "current_sha256": "361d3a4aa3ef9b41ee2a78287e81e36caad666cfdfd4c494e953326251bc96e2"
+  },
+  {
+    "file": "quarry/scripts/verify_ids.py",
+    "block": 126,
+    "sha256": "6f22492ffc0033ddeeaf3ba2892da326dd9b0ab8e30c49d5f25164179d69035c",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/scripts/verify_ids.py",
+    "current_sha256": "6f22492ffc0033ddeeaf3ba2892da326dd9b0ab8e30c49d5f25164179d69035c"
+  },
+  {
+    "file": "migrations/versions/0002_chunk_pk.sql",
+    "block": 134,
+    "sha256": "60fe627b983bfe2fb4b0f8b23c6bb37591fa05879444fcb4353fd4bd30078315",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "migrations/versions/0002_chunk_pk.sql",
+    "current_sha256": "60fe627b983bfe2fb4b0f8b23c6bb37591fa05879444fcb4353fd4bd30078315"
+  },
+  {
+    "file": "quarry/scripts/fetch_wikivoyage.py",
+    "block": 150,
+    "sha256": "734b137c033a689209c81fda604ad8f1b9a20d0a94491cbff891a70d7787b9cb",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/scripts/fetch_corpus.py",
+    "current_sha256": "734b137c033a689209c81fda604ad8f1b9a20d0a94491cbff891a70d7787b9cb"
+  },
+  {
+    "file": "quarry/ingest/parsers/base.py",
+    "block": 164,
+    "sha256": "a353532300ffc65ca3a32ad388cbd049e6cd606623297ec68b6a93c2cad8689c",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/ingest/parsers/base.py",
+    "current_sha256": "a353532300ffc65ca3a32ad388cbd049e6cd606623297ec68b6a93c2cad8689c"
+  },
+  {
+    "file": "quarry/ingest/parsers/markdown.py",
+    "block": 165,
+    "sha256": "7eae725b5f6ea76934fcd579ad2cf39816d4778c04b4f6cbd14e60fc6b58dd78",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/ingest/parsers/markdown.py",
+    "current_sha256": "8231ea87b080ac319190448b981e39cf83e9f28c4d9c39606c7e1ae232ddb03a"
+  },
+  {
+    "file": "quarry/ingest/parsers/docx.py",
+    "block": 168,
+    "sha256": "7d55eba58b31f1f30cd8276737a62b96dd9417a6b5f27e587a899f0787b8e485",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/ingest/parsers/docx.py",
+    "current_sha256": "dc9c3dd4d14e5858dbcd74519f42c5c6d776bd9d149943dad9d9890fc0213c5f"
+  },
+  {
+    "file": "quarry/ingest/parsers/__init__.py",
+    "block": 169,
+    "sha256": "507b03d7e908dfc49c45dfb84ce3cab1e9b7667025f37ccb310c005c928a2c40",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/ingest/parsers/__init__.py",
+    "current_sha256": "507b03d7e908dfc49c45dfb84ce3cab1e9b7667025f37ccb310c005c928a2c40"
+  },
+  {
+    "file": "quarry/scripts/try_parser.py",
+    "block": 170,
+    "sha256": "d00ce880158c9ff743e06064be6efd097a0362695c7e201f858793bb5a167dae",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/scripts/try_parser.py",
+    "current_sha256": "d00ce880158c9ff743e06064be6efd097a0362695c7e201f858793bb5a167dae"
+  },
+  {
+    "file": "quarry/ingest/splitter.py",
+    "block": 174,
+    "sha256": "2d02910865744ad881ce93358844b47df873388447be1c34c581d5de911bb490",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/ingest/splitter.py",
+    "current_sha256": "fb074fcebfb51d42cdf5741c26f5f296202663968c826cb9de6e9e1fb27a14a1"
+  },
+  {
+    "file": "quarry/scripts/try_splitter.py",
+    "block": 175,
+    "sha256": "d2c07f61897a9f24129d93aed5a6d1562d0ba64e42e0261dff235e835e9ce0fb",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/scripts/try_splitter.py",
+    "current_sha256": "d2c07f61897a9f24129d93aed5a6d1562d0ba64e42e0261dff235e835e9ce0fb"
+  },
+  {
+    "file": "quarry/common/vectors.py",
+    "block": 181,
+    "sha256": "921b8f9fa10c830b91a4c75d4c4083145f637f117b639b24f20eeb345780ca66",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/common/vectors.py",
+    "current_sha256": "921b8f9fa10c830b91a4c75d4c4083145f637f117b639b24f20eeb345780ca66"
+  },
+  {
+    "file": "quarry/ingest/indexer.py",
+    "block": 182,
+    "sha256": "ee938797bf96c1f0ec0620d5cba249f3772b8ddfa789d75bae54c62e072b45da",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/ingest/indexer.py",
+    "current_sha256": "022f381190eef1895930ff1ddac6786fa0bf03ae26accfe6777b34cae166f9f0"
+  },
+  {
+    "file": "quarry/scripts/ingest.py",
+    "block": 186,
+    "sha256": "793a60ba87243d915537a043b4ba5057f9edf1bfb27d1d1aa13eae0f72395d2b",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/scripts/ingest_corpus.py",
+    "current_sha256": "44568cf29b18eb47466607f484578367b78b6f2759d5a25d26e90feb5c03db01"
+  },
+  {
+    "file": "quarry/ingest/queue.py",
+    "block": 200,
+    "sha256": "3b20524b1874de81ee1c98cd5149801231e0d33c92f064103dad945c5d305acb",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/ingest/queue.py",
+    "current_sha256": "3b20524b1874de81ee1c98cd5149801231e0d33c92f064103dad945c5d305acb"
+  },
+  {
+    "file": "quarry/ingest/worker.py",
+    "block": 201,
+    "sha256": "08f3fb0c9814b27508e636389ceec276c868539903951346cb9a448e178a4080",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/ingest/worker.py",
+    "current_sha256": "08f3fb0c9814b27508e636389ceec276c868539903951346cb9a448e178a4080"
+  },
+  {
+    "file": "quarry/api/routers/documents.py",
+    "block": 206,
+    "sha256": "084730864569ea50b7b774f12e836bd5021f6d1ec1544028daa9f5ad20071790",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/api/routers/ingest.py",
+    "current_sha256": "330179afdc7610e14c820dcb3218bfaef86f10f297a945f87d1b35791e080282"
+  },
+  {
+    "file": "quarry/scripts/enqueue_doc.py",
+    "block": 210,
+    "sha256": "43cdc9482fe51b69bc18c4c619d4d01b3aea07977ffa1d431f15c5d113797fdf",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/scripts/enqueue_doc.py",
+    "current_sha256": "43cdc9482fe51b69bc18c4c619d4d01b3aea07977ffa1d431f15c5d113797fdf"
+  },
+  {
+    "file": "quarry/scripts/export_snapshot.py",
+    "block": 223,
+    "sha256": "52a0f851060be3ef82283b025b66f934ca4cdd7b026c4004762d7b1d80b54589",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/scripts/export_snapshot.py",
+    "current_sha256": "52a0f851060be3ef82283b025b66f934ca4cdd7b026c4004762d7b1d80b54589"
+  },
+  {
+    "file": "quarry/retrieval/query.py",
+    "block": 240,
+    "sha256": "6b8adf3f6603019c0cdf5127306808f1aedd61d93c300554e88f90656acbd10f",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/retrieval/query.py",
+    "current_sha256": "6b8adf3f6603019c0cdf5127306808f1aedd61d93c300554e88f90656acbd10f"
+  },
+  {
+    "file": "quarry/retrieval/base.py",
+    "block": 251,
+    "sha256": "32664050a2534c9f0f62e42c41daa3c84873783cd77b0dfe68a57dcf42c6ff56",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/retrieval/base.py",
+    "current_sha256": "f0ef0a11403d2de98e788a2e5063d0247556c9e3bb54c2cdaef682ba9b5d7708"
+  },
+  {
+    "file": "quarry/infra/executor.py",
+    "block": 252,
+    "sha256": "3f3da183eff48106b41afa414ee4485012af0a83e68ba7af26ba99089d7456f5",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/infra/executor.py",
+    "current_sha256": "3f3da183eff48106b41afa414ee4485012af0a83e68ba7af26ba99089d7456f5"
+  },
+  {
+    "file": "quarry/retrieval/pg/searcher.py",
+    "block": 253,
+    "sha256": "64e1fa1efdf1bde2d3dc0a999e4d7565e1f78896daa21c9981755f1115773095",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/retrieval/pg/searcher.py",
+    "current_sha256": "64e1fa1efdf1bde2d3dc0a999e4d7565e1f78896daa21c9981755f1115773095"
+  },
+  {
+    "file": "quarry/scripts/try_retrieval.py",
+    "block": 254,
+    "sha256": "46de5d6160cafb28b7505bcbd70f3c06bb35e0253780fe33a08e8f3abc624e8c",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/scripts/try_retrieval.py",
+    "current_sha256": "46de5d6160cafb28b7505bcbd70f3c06bb35e0253780fe33a08e8f3abc624e8c"
+  },
+  {
+    "file": "tests/redlines/test_acl.py",
+    "block": 265,
+    "sha256": "4ab2055f15df03f10efb5f2b1437d7c392d2089f62c1394c858aeda97c0a88af",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "tests/redlines/test_acl.py",
+    "current_sha256": "4ab2055f15df03f10efb5f2b1437d7c392d2089f62c1394c858aeda97c0a88af"
+  },
+  {
+    "file": "quarry/scripts/bench_filter.py",
+    "block": 268,
+    "sha256": "8b8586c82eadb625c9d75d5a47c428bfc2bbadf363a0fc2c1bab2bfc74665557",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/scripts/bench_filter.py",
+    "current_sha256": "8b8586c82eadb625c9d75d5a47c428bfc2bbadf363a0fc2c1bab2bfc74665557"
+  },
+  {
+    "file": "quarry/retrieval/fake.py",
+    "block": 276,
+    "sha256": "6b754f5a7afadf432bede7e8e3c55a9a4336889d27e83eb9c220442ba971e2ac",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/retrieval/fake.py",
+    "current_sha256": "6b754f5a7afadf432bede7e8e3c55a9a4336889d27e83eb9c220442ba971e2ac"
+  },
+  {
+    "file": "tests/contract/test_retriever.py",
+    "block": 277,
+    "sha256": "4a182ce15c5d0afe44bb53b3622d2a4847e81c101b94f9fdf9bf344a1ac6f22e",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "tests/contract/test_retriever.py",
+    "current_sha256": "4a182ce15c5d0afe44bb53b3622d2a4847e81c101b94f9fdf9bf344a1ac6f22e"
+  },
+  {
+    "file": "quarry/scripts/bench_async.py",
+    "block": 281,
+    "sha256": "771e9f2639015f32a6d60ddf9fae208f10508eab30700bb8a57d5155205fb4e2",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/scripts/bench_async.py",
+    "current_sha256": "771e9f2639015f32a6d60ddf9fae208f10508eab30700bb8a57d5155205fb4e2"
+  },
+  {
+    "file": "quarry/api/routers/debug.py",
+    "block": 286,
+    "sha256": "a184d31d8ac4284299f4793d9191db639a47886857e92fb8bbf47cf9b0f637c9",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/api/routers/debug.py",
+    "current_sha256": "46c982ee04122da096972c66db0bb788844a40a90a48b3388b2c725d86222ebc"
+  },
+  {
+    "file": "quarry/web/debug.html",
+    "block": 289,
+    "sha256": "c4c80556f19848d7b600339d9b0c150a5f02b083c8151225e0ed7e6695008229",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/web/debug.html",
+    "current_sha256": "1fb0e4ea7a9bd85008beddad1e57db1cf35068b32c54ef61a21b0dc4aa91de9b"
+  },
+  {
+    "file": "quarry/common/timing.py",
+    "block": 292,
+    "sha256": "a78ea93be40522cb615e403009df56f52abbcd09d24291bf1ffa27331ab68227",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/common/timing.py",
+    "current_sha256": "a78ea93be40522cb615e403009df56f52abbcd09d24291bf1ffa27331ab68227"
+  },
+  {
+    "file": "quarry/rerank/base.py",
+    "block": 303,
+    "sha256": "4c78a8ba5d4852d6653a114ed711ece56b887e45ad0b15d2a5cd1ce4c460c071",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/rerank/base.py",
+    "current_sha256": "4c78a8ba5d4852d6653a114ed711ece56b887e45ad0b15d2a5cd1ce4c460c071"
+  },
+  {
+    "file": "quarry/rerank/noop.py",
+    "block": 304,
+    "sha256": "3c54345c2fd2ca17b11e9715d35b35200a49991e16682075b81578faca7e22a8",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/rerank/noop.py",
+    "current_sha256": "3c54345c2fd2ca17b11e9715d35b35200a49991e16682075b81578faca7e22a8"
+  },
+  {
+    "file": "quarry/rerank/api.py",
+    "block": 309,
+    "sha256": "36bb5a1e8417bc0ae255ab5072f961a4e888b82406cf85e0eca3a3fc6fb661df",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/rerank/api.py",
+    "current_sha256": "36bb5a1e8417bc0ae255ab5072f961a4e888b82406cf85e0eca3a3fc6fb661df"
+  },
+  {
+    "file": "quarry/rerank/factory.py",
+    "block": 310,
+    "sha256": "5b19850062423fd7693a2c761886dc99f2954fa68fcbf94382db64e11c337f2e",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/rerank/factory.py",
+    "current_sha256": "5b19850062423fd7693a2c761886dc99f2954fa68fcbf94382db64e11c337f2e"
+  },
+  {
+    "file": "quarry/scripts/smoke_rerank.py",
+    "block": 311,
+    "sha256": "eaaf5b745e9dcdd2e3969a71605c7b6d6b40ee908fff7aca1a7cd87af56282ef",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/scripts/smoke_rerank.py",
+    "current_sha256": "eaaf5b745e9dcdd2e3969a71605c7b6d6b40ee908fff7aca1a7cd87af56282ef"
+  },
+  {
+    "file": "quarry/scripts/compare_rerank.py",
+    "block": 315,
+    "sha256": "b3ea0026fec1b1804e718620334c04a1e22bbaf409686798078ce50684cba4a0",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/scripts/compare_rerank.py",
+    "current_sha256": "b3ea0026fec1b1804e718620334c04a1e22bbaf409686798078ce50684cba4a0"
+  },
+  {
+    "file": "quarry/context/expand.py",
+    "block": 329,
+    "sha256": "88f3e2aac480a7dbc7250c21d65a0d27be6771eccda7ea6a1c93d31f0dfc26d3",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/context/expand.py",
+    "current_sha256": "88f3e2aac480a7dbc7250c21d65a0d27be6771eccda7ea6a1c93d31f0dfc26d3"
+  },
+  {
+    "file": "quarry/context/citation.py",
+    "block": 330,
+    "sha256": "337f446c5f6f77b4d0dbb0943353bfb3f9c1a5f788c6cbd057157a78a15b2f77",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/context/citation.py",
+    "current_sha256": "337f446c5f6f77b4d0dbb0943353bfb3f9c1a5f788c6cbd057157a78a15b2f77"
+  },
+  {
+    "file": "quarry/scripts/verify_citations.py",
+    "block": 331,
+    "sha256": "3323afd7bd2c2cfde56f22a0c1286715f3c9133dbcccf6f75c6c5dc968942b13",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/scripts/verify_citations.py",
+    "current_sha256": "3323afd7bd2c2cfde56f22a0c1286715f3c9133dbcccf6f75c6c5dc968942b13"
+  },
+  {
+    "file": "quarry/context/abstain.py",
+    "block": 335,
+    "sha256": "b4afcb8490fcb2f511b66f42e4db8460d2eae4cfe939ad104b60eb5e04759582",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/context/abstain.py",
+    "current_sha256": "b4afcb8490fcb2f511b66f42e4db8460d2eae4cfe939ad104b60eb5e04759582"
+  },
+  {
+    "file": "quarry/scripts/calibrate_abstain.py",
+    "block": 336,
+    "sha256": "47feb24d9ed2c478b86890dd1d73b5c52b2d711bc1f8f788a82b3db85df92cb5",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/scripts/calibrate_abstain.py",
+    "current_sha256": "47feb24d9ed2c478b86890dd1d73b5c52b2d711bc1f8f788a82b3db85df92cb5"
+  },
+  {
+    "file": "tests/redlines/test_evidence_acl.py",
+    "block": 346,
+    "sha256": "2a2366ba0deed7c028a8ff1925835a2ea977cf106c77767c1e8176519a7faf15",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "tests/redlines/test_evidence_acl.py",
+    "current_sha256": "2a2366ba0deed7c028a8ff1925835a2ea977cf106c77767c1e8176519a7faf15"
+  },
+  {
+    "file": "migrations/versions/0004_facts.sql",
+    "block": 356,
+    "sha256": "e5326f77efcf7121ffde1cd4bdf03cfe7241fb08f4de63b4fc334aef2367910a",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "migrations/versions/0004_facts.sql",
+    "current_sha256": "e5326f77efcf7121ffde1cd4bdf03cfe7241fb08f4de63b4fc334aef2367910a"
+  },
+  {
+    "file": "quarry/facts/contract.py",
+    "block": 367,
+    "sha256": "9600f977a09ac080ef4c04f4922cb515aa1cf277ce3d34fe64eb073f8a92da29",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/facts/contract.py",
+    "current_sha256": "9600f977a09ac080ef4c04f4922cb515aa1cf277ce3d34fe64eb073f8a92da29"
+  },
+  {
+    "file": "quarry/facts/extract.py",
+    "block": 368,
+    "sha256": "6365320d51b057f511fefed428a49b69e1002dbf995d482bc7d183177b5caca4",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/facts/extract.py",
+    "current_sha256": "522bda661d9e5774806984aed501debb71080399b3ef456f7368c2ecef45b0ac"
+  },
+  {
+    "file": "quarry/scripts/extract_facts.py",
+    "block": 369,
+    "sha256": "7712f5f2e99020b02e2d87ad118dfed7af682570469659ea75c9115cf761edda",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/scripts/extract_facts.py",
+    "current_sha256": "7712f5f2e99020b02e2d87ad118dfed7af682570469659ea75c9115cf761edda"
+  },
+  {
+    "file": "quarry/scripts/audit_facts.py",
+    "block": 376,
+    "sha256": "c3714c8aa86d42191e2e098bbf4aba6e1c6a271ae544b7298f00eafce671db63",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/scripts/audit_facts.py",
+    "current_sha256": "c3714c8aa86d42191e2e098bbf4aba6e1c6a271ae544b7298f00eafce671db63"
+  },
+  {
+    "file": "quarry/facts/official.py",
+    "block": 381,
+    "sha256": "124323e7e410a2785917c68b5a84cbe7f62f54a0b45fdde391ff2bc07d653c4f",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/facts/official.py",
+    "current_sha256": "124323e7e410a2785917c68b5a84cbe7f62f54a0b45fdde391ff2bc07d653c4f"
+  },
+  {
+    "file": "quarry/scripts/import_official.py",
+    "block": 382,
+    "sha256": "af64054f2a1ff09c72b54fa9b254038b2c4494495ffd94ffb3104df0f89e2e25",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/scripts/import_official.py",
+    "current_sha256": "af64054f2a1ff09c72b54fa9b254038b2c4494495ffd94ffb3104df0f89e2e25"
+  },
+  {
+    "file": "quarry/context/models.py",
+    "block": 386,
+    "sha256": "902e714a3d75d049d1beeea85d3a227d11271ce28d1ef679b9d0faeb3bc03c1a",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/context/models.py",
+    "current_sha256": "902e714a3d75d049d1beeea85d3a227d11271ce28d1ef679b9d0faeb3bc03c1a"
+  },
+  {
+    "file": "quarry/facts/attach.py",
+    "block": 388,
+    "sha256": "6873ea5805c38ea1f70971e4c764a292fed410eb90d693c96ca714b5027d5a5e",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/facts/attach.py",
+    "current_sha256": "6873ea5805c38ea1f70971e4c764a292fed410eb90d693c96ca714b5027d5a5e"
+  },
+  {
+    "file": "quarry/pipeline.py",
+    "block": 389,
+    "sha256": "47d80b2abce47e89870a42cafbd8173adb3a8f30e5635dc4bac1bcf0b4a13edc",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/pipeline.py",
+    "current_sha256": "f95018f521f8b3ae5b1925ffffb7e8239d2ba1031264b10a5c409563e47b6ac9"
+  },
+  {
+    "file": "quarry/scripts/try_pipeline.py",
+    "block": 390,
+    "sha256": "cf005fafb9b13d5733895613ec643bb6ba7e8d00b52134e5758bea8d59d23061",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/scripts/try_pipeline.py",
+    "current_sha256": "cf005fafb9b13d5733895613ec643bb6ba7e8d00b52134e5758bea8d59d23061"
+  },
+  {
+    "file": "tests/unit/test_facts.py",
+    "block": 397,
+    "sha256": "ca475877668aa30c9950f0b5d5b785da215a91eea26967b6b68fcbe98c7e75bd",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "tests/unit/test_facts.py",
+    "current_sha256": "ca475877668aa30c9950f0b5d5b785da215a91eea26967b6b68fcbe98c7e75bd"
+  },
+  {
+    "file": "tests/redlines/test_facts_acl.py",
+    "block": 399,
+    "sha256": "88b19f12072a728a1a55663228cefa09e45bfcb1e5dd686e3cd68f7f484d85fe",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "tests/redlines/test_facts_acl.py",
+    "current_sha256": "619f8c6a1c339ecba2d26d05116067bd066bf80517b79a9db6d04a7d2ae244ff"
+  },
+  {
+    "file": "migrations/versions/0005_eval.sql",
+    "block": 409,
+    "sha256": "ff40a4ed30c078122dfb1dc971e2b57f9c40fa113219db5cd7e35edc05146d46",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "migrations/versions/0005_eval.sql",
+    "current_sha256": "ff40a4ed30c078122dfb1dc971e2b57f9c40fa113219db5cd7e35edc05146d46"
+  },
+  {
+    "file": "quarry/scripts/draft_queries.py",
+    "block": 413,
+    "sha256": "0bd3d773ed830fcc376a9d7397aab3fbde0f00e5f72a70ab98210dc715bbfb57",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/scripts/draft_queries.py",
+    "current_sha256": "0bd3d773ed830fcc376a9d7397aab3fbde0f00e5f72a70ab98210dc715bbfb57"
+  },
+  {
+    "file": "quarry/eval/dataset.py",
+    "block": 418,
+    "sha256": "47298ff87f8e025849001cc00c5bd90b5273d85d174c73828679f97ada6086db",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/eval/dataset.py",
+    "current_sha256": "47298ff87f8e025849001cc00c5bd90b5273d85d174c73828679f97ada6086db"
+  },
+  {
+    "file": "quarry/scripts/import_eval.py",
+    "block": 419,
+    "sha256": "9e88571c0f8fdfc31c9af83edc595f17141b0503f774b27f2e79afc2353cba45",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/scripts/import_eval.py",
+    "current_sha256": "9e88571c0f8fdfc31c9af83edc595f17141b0503f774b27f2e79afc2353cba45"
+  },
+  {
+    "file": "quarry/eval/metrics.py",
+    "block": 422,
+    "sha256": "703f56b2c29fd788f42fa5a612aedfd18c0aea38a89999efcbb82a5325bd28f5",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/eval/metrics.py",
+    "current_sha256": "703f56b2c29fd788f42fa5a612aedfd18c0aea38a89999efcbb82a5325bd28f5"
+  },
+  {
+    "file": "quarry/eval/runner.py",
+    "block": 423,
+    "sha256": "afd68849d0098d17dc421c414738b83adebf4ac0e8a6931697681c70284f8f5a",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/eval/runner.py",
+    "current_sha256": "afd68849d0098d17dc421c414738b83adebf4ac0e8a6931697681c70284f8f5a"
+  },
+  {
+    "file": "quarry/scripts/run_eval.py",
+    "block": 424,
+    "sha256": "fa42a91f8e5e948b933970fe09938e2f04d757ddfc84fc5950605ed99e4264ca",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/scripts/run_eval.py",
+    "current_sha256": "fa42a91f8e5e948b933970fe09938e2f04d757ddfc84fc5950605ed99e4264ca"
+  },
+  {
+    "file": "quarry/eval/judge.py",
+    "block": 427,
+    "sha256": "be79542bd1ff7706bc5c07f277eb35c1b1348d3fd79e89798ce9a7ecef0b8084",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/eval/judge.py",
+    "current_sha256": "be79542bd1ff7706bc5c07f277eb35c1b1348d3fd79e89798ce9a7ecef0b8084"
+  },
+  {
+    "file": "quarry/scripts/compare_eval.py",
+    "block": 431,
+    "sha256": "64ad8ca560ea952b70247b2d5faaa782240e9960a258948da0a69719222ce1b4",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/scripts/compare_eval.py",
+    "current_sha256": "64ad8ca560ea952b70247b2d5faaa782240e9960a258948da0a69719222ce1b4"
+  },
+  {
+    "file": "quarry/scripts/bench.py",
+    "block": 436,
+    "sha256": "b57b173fdd6e99d1933e1a5d1eccc257adb4b713b16c0c350e81f7fab82a85ca",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/scripts/bench.py",
+    "current_sha256": "b57b173fdd6e99d1933e1a5d1eccc257adb4b713b16c0c350e81f7fab82a85ca"
+  },
+  {
+    "file": "tests/unit/test_eval.py",
+    "block": 445,
+    "sha256": "a9357a217b76105c76fc136bbf3c18d65655d01f60a7d77bfff03208f4524731",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "tests/unit/test_eval.py",
+    "current_sha256": "a9357a217b76105c76fc136bbf3c18d65655d01f60a7d77bfff03208f4524731"
+  },
+  {
+    "file": "quarry/eval/report.html",
+    "block": 448,
+    "sha256": "cb474bab04e85cd4aaae64dc92918740e8ef6704e3942b274570371278f108ae",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/eval/report.html",
+    "current_sha256": "cb474bab04e85cd4aaae64dc92918740e8ef6704e3942b274570371278f108ae"
+  },
+  {
+    "file": "quarry/eval/report.py",
+    "block": 449,
+    "sha256": "284c2a0738c778a094c8acaf3a858d5b8cefec237256936e0f5093a9d25de3e4",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/eval/report.py",
+    "current_sha256": "284c2a0738c778a094c8acaf3a858d5b8cefec237256936e0f5093a9d25de3e4"
+  },
+  {
+    "file": "quarry/scripts/render_report.py",
+    "block": 450,
+    "sha256": "823c8d0da4db46fe715853be575ba9599b84d7c87f025d8b835c400446aec62c",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/scripts/render_report.py",
+    "current_sha256": "823c8d0da4db46fe715853be575ba9599b84d7c87f025d8b835c400446aec62c"
+  },
+  {
+    "file": "migrations/versions/0006_api.sql",
+    "block": 462,
+    "sha256": "ee2a500f18775e3fb6810d094b115bda3d2fcb74fd3ebf235995f9b2f5a54551",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "migrations/versions/0006_api.sql",
+    "current_sha256": "ee2a500f18775e3fb6810d094b115bda3d2fcb74fd3ebf235995f9b2f5a54551"
+  },
+  {
+    "file": "quarry/api/security.py",
+    "block": 466,
+    "sha256": "29edc8edeeada8457039e6fab43496587a9746178012bd73a6664ea1eb880fb9",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/api/security.py",
+    "current_sha256": "417166b3fb5ea5a882124617d29a2a2080c237eb04fe9029a30ac466c6a1605b"
+  },
+  {
+    "file": "quarry/scripts/create_key.py",
+    "block": 467,
+    "sha256": "81a5be4e575bad7576353b699bf23ff1f4f99080aabb3e42b06c0ee61a9edfd3",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/scripts/create_key.py",
+    "current_sha256": "4e3ef91c3bd6926b7241776d27894ca52b7d77ea7c1733084eb347591a3b4161"
+  },
+  {
+    "file": "quarry/api/models.py",
+    "block": 473,
+    "sha256": "200d3bd801c4bd44a3d07e4a3eb045441d20d9daecc21333a7ce01da2ce8bd95",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/api/models.py",
+    "current_sha256": "200d3bd801c4bd44a3d07e4a3eb045441d20d9daecc21333a7ce01da2ce8bd95"
+  },
+  {
+    "file": "quarry/api/logs.py",
+    "block": 475,
+    "sha256": "a108430796b761daadb929138955ea284b4dae70dacf613d8eff25f991cdd4dd",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/api/logs.py",
+    "current_sha256": "8c2e53f4a8747861d279e6919af1400438b8ce4a3f1c3304dac8fb73e1d3067a"
+  },
+  {
+    "file": "quarry/api/routes.py",
+    "block": 476,
+    "sha256": "4de8b733d2c3e2824547be0c78568c53c00e2b5d445c5b759f42937de440cbc8",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/api/routes.py",
+    "current_sha256": "8e09eaedf115c0bfedb7b6b0cde540c1e0e65c1aefb07b8ee6d3f8ef073fd037"
+  },
+  {
+    "file": "quarry/api/app.py",
+    "block": 477,
+    "sha256": "ec208114dc8f591fa657296a306bcdaa7ef89f24c555e365783467f1901851e9",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "quarry/api/app.py",
+    "current_sha256": "38f813b96a58f62062816506de0dcf2aaf0016e1a0d37944348850d937dfcf98"
+  },
+  {
+    "file": "sdk/quarry_client.py",
+    "block": 495,
+    "sha256": "e84ab964ef6effb4a258bea364b647479035e071bfc1203daf3d9e1d62817403",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "sdk/quarry_client.py",
+    "current_sha256": "e84ab964ef6effb4a258bea364b647479035e071bfc1203daf3d9e1d62817403"
+  },
+  {
+    "file": "sdk/example.py",
+    "block": 496,
+    "sha256": "de1aa08bcd4fd0b459d00bb9a18ef6c1e185f1d3b57c4ca07f6e7e5be88d215b",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "sdk/example.py",
+    "current_sha256": "de1aa08bcd4fd0b459d00bb9a18ef6c1e185f1d3b57c4ca07f6e7e5be88d215b"
+  },
+  {
+    "file": "tests/unit/test_api_contract.py",
+    "block": 500,
+    "sha256": "905019237659c4ac341a70267e5dd405a33201b0aeb9a3a3b0fe22231579362e",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "tests/unit/test_api_contract.py",
+    "current_sha256": "905019237659c4ac341a70267e5dd405a33201b0aeb9a3a3b0fe22231579362e"
+  },
+  {
+    "file": "tests/redlines/test_api_acl.py",
+    "block": 502,
+    "sha256": "a889bf95dec6aa129192d639b617502c47639d170451a89767fc9663905d9307",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "tests/redlines/test_api_acl.py",
+    "current_sha256": "a889bf95dec6aa129192d639b617502c47639d170451a89767fc9663905d9307"
+  },
+  {
+    "file": "Dockerfile",
+    "block": 504,
+    "sha256": "375d410f8e2b3ea39c620bc22b18769e8c790718fca9c8d7f44c4fcdc3914170",
+    "status": "implemented; verification is listed in 原文逐项验收.md",
+    "implementation": "Dockerfile",
+    "current_sha256": "d24d7fdf690992a0eb1e045db7d82de6e3173a4a349bad3767b827add8fa25c1"
+  },
+  {
+    "file": ".dockerignore",
+    "block": 15,
+    "implementation": ".dockerignore",
+    "status": "implemented with all .env/private exclusions",
+    "current_sha256": "d9b85524be568d4ee18f130fc6b675b739a231e07d6168dfa8871d0b984dda46"
+  }
+]

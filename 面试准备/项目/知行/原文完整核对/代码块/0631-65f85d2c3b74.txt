@@ -1,0 +1,3 @@
+裁判名字 → qwen-judge(qwen-max)
+底层客户端 → ChatTongyi | 由基类 __init__ 调 load_model() 赋值
+重写 model 属性 → 构造时就报 AttributeError

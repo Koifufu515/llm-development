@@ -1,0 +1,11 @@
+"""_rows_to_options 演示：原始行 → 前端候选 TrainOption，按发车时间升序取前几趟（纯函数，无需密钥）"""
+from app.capabilities.train_multi_segment.train_agent_tool import _rows_to_options
+from app.tools.mcp_tools import parse_ticket_rows
+
+RAW = """G101 天津西(telecode:TXP) -> 上海虹桥(telecode:AOH) 09:10 -> 14:02 历时：04:52
+- 二等座: 有 509.0元
+G103 天津南(telecode:TIP) -> 上海虹桥(telecode:AOH) 07:48 -> 12:31 历时：04:43
+- 二等座: 候补 509.0元
+- 一等座: 3 816.0元"""
+for opt in _rows_to_options(parse_ticket_rows(RAW), prefer_seat="二等座", limit=5):
+    print(opt.option_id, "|", opt.startStation, opt.startTime, "→", opt.endTime, "|", opt.seatType, opt.ticketStatus, opt.price)

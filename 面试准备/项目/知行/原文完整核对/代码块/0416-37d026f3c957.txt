@@ -1,0 +1,10 @@
+"""_back_hint 演示：末日晚上的返程兜底——有返程班次写班次、本地游不写返程、再不行写出发城市（纯函数，无需密钥）"""
+from app.tools.state_transition import _back_hint
+
+REQ = {"user_requirement": {"departure_city": "北京"}}
+print("有返程班次   →", _back_hint({**REQ, "leg_selections": {"北京→天津": "G1 08:00", "天津→上海": "G7512 09:05",
+                                                          "上海→北京": "G2 19:00"}}))
+print("没有返程段   →", _back_hint({**REQ, "leg_selections": {"北京→天津": "G1 08:00", "天津→上海": "G7512 09:05"}}))
+print("本地游       →", _back_hint({"selected_transport": "local"}))
+print("只有出发城市 →", _back_hint(REQ))
+print("什么都没有   →", repr(_back_hint({})))

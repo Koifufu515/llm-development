@@ -1,0 +1,2 @@
+$env:QUARRY_URL = "http://127.0.0.1:8100"
+uv run python sdk/example.py "兵马俑门票多少钱"

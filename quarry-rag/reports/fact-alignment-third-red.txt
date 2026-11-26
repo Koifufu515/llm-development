@@ -1,0 +1,38 @@
+...FFF                                                                   [100%]
+=================================== FAILURES ===================================
+_____ test_entity_mentioned_in_other_entry_address_does_not_own_its_price ______
+
+    def test_entity_mentioned_in_other_entry_address_does_not_own_its_price():
+     text='12 都江堰，地址四川省成都市都江堰景区，联系电话12345678，开放时间全天。门票¥80。\n13 青城山，地址四川都江堰市。门票¥80。'
+     raw=dict(entity='都江堰',attribute='ticket_price',qualifier='全年',value='80',quote='¥80')
+>    assert to_mentions([raw],text,Stats())[0]['span_start']==text.index('¥80')
+E    AssertionError: assert 66 == 43
+E     +  where 43 = <built-in method index of str object at 0x1468cc450>('¥80')
+E     +    where <built-in method index of str object at 0x1468cc450> = '12 都江堰，地址四川省成都市都江堰景区，联系电话12345678，开放时间全天。门票¥80。\n13 青城山，地址四川都江堰市。门票¥80。'.index
+
+tests/unit/test_fact_alignment.py:24: AssertionError
+___________ test_transport_bundle_not_accepted_as_attraction_ticket ____________
+
+    def test_transport_bundle_not_accepted_as_attraction_ticket():
+     raw=dict(entity='通江街—湿地公园',attribute='ticket_price',qualifier='全年',value='98',quote='票价98元（包含湿地公园的门票）')
+>    assert not to_mentions([raw],'通江街—湿地公园\n票价98元（包含湿地公园的门票）',Stats())
+E    AssertionError: assert not [{'entity': '通江街—湿地公园', 'attribute': 'ticket_price', 'qualifier': '全年', 'value': '98', ...}]
+E     +  where [{'entity': '通江街—湿地公园', 'attribute': 'ticket_price', 'qualifier': '全年', 'value': '98', ...}] = to_mentions([{'entity': '通江街—湿地公园', 'attribute': 'ticket_price', 'qualifier': '全年', 'value': '98', ...}], '通江街—湿地公园\n票价98元（包含湿地公园的门票）', Stats(todo=0, skipped=0, called=0, failed=0, mentions=0, dropped={}))
+E     +    where Stats(todo=0, skipped=0, called=0, failed=0, mentions=0, dropped={}) = Stats()
+
+tests/unit/test_fact_alignment.py:28: AssertionError
+_________ test_named_subattraction_price_cannot_be_assigned_to_parent __________
+
+    def test_named_subattraction_price_cannot_be_assigned_to_parent():
+     raw=dict(entity='西山',attribute='ticket_price',qualifier='全年',value='6',quote='华亭寺门票￥6')
+>    assert not to_mentions([raw],'西山。华亭寺门票￥6。',Stats())
+E    AssertionError: assert not [{'entity': '西山', 'attribute': 'ticket_price', 'qualifier': '全年', 'value': '6', ...}]
+E     +  where [{'entity': '西山', 'attribute': 'ticket_price', 'qualifier': '全年', 'value': '6', ...}] = to_mentions([{'entity': '西山', 'attribute': 'ticket_price', 'qualifier': '全年', 'value': '6', ...}], '西山。华亭寺门票￥6。', Stats(todo=0, skipped=0, called=0, failed=0, mentions=0, dropped={}))
+E     +    where Stats(todo=0, skipped=0, called=0, failed=0, mentions=0, dropped={}) = Stats()
+
+tests/unit/test_fact_alignment.py:32: AssertionError
+=========================== short test summary info ============================
+FAILED tests/unit/test_fact_alignment.py::test_entity_mentioned_in_other_entry_address_does_not_own_its_price
+FAILED tests/unit/test_fact_alignment.py::test_transport_bundle_not_accepted_as_attraction_ticket
+FAILED tests/unit/test_fact_alignment.py::test_named_subattraction_price_cannot_be_assigned_to_parent
+3 failed, 3 passed in 0.27s

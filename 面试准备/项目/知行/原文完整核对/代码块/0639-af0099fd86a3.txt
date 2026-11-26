@@ -1,0 +1,45 @@
+async def run_quality_check(plan_data: dict, threshold: float = 0.5) -> None:
+    """对单份落库行程做三维度质检：通过打 INFO，不通过打 WARNING + 裁判理由
+
+    设计为"事后告警"：行程已落库发给用户，质检不重生成、不阻断；
+    异常全吞（fail-safe），绝不影响主对话流程。
+    """
+    title = plan_data.get("title", "未命名行程")
+    try:
+        case = LLMTestCase(
+            input=title,  # title 由需求生成，是最忠实的需求快照
+            actual_output=plan_to_text(plan_data),
+        )
+        scores: dict[str, float] = {}
+        reasons: list[str] = []
+        all_reasons: list[str] = []
+        # 在线质检的源料是 plan_to_text 产出的结构化清单（无预算字段），
+        # 故 require_budget=False——否则"完整性"维度会因恒缺预算而系统性扣分、刷出噪音告警
+        for metric in build_itinerary_metrics(threshold=threshold, require_budget=False):  # ★ 在线源料无预算
+            await metric.a_measure(case)
+            scores[metric.name] = metric.score
+            # 所有维度的裁判理由都收集，通过时也记录（便于观察分数波动原因）
+            all_reasons.append(f"{metric.name}: {metric.reason}")
+            if metric.score < threshold:
+                reasons.append(f"{metric.name}: {metric.reason}")
+
+        low = {k: v for k, v in scores.items() if v < threshold}
+        if low:
+            app_logger.warning(
+                f"⚠️ 行程质检未达标: {title} | 分数: {scores} | 问题: {'；'.join(reasons)}"
+            )
+        else:
+            # 通过时同样带裁判理由（截断防日志爆炸），低分维度可追溯
+            brief = "；".join(all_reasons)
+            if len(brief) > 500:
+                brief = brief[:500] + "……"
+            app_logger.info(f"✅ 行程质检通过: {title} | 分数: {scores} | 理由: {brief}")
+    except Exception as e:
+        # 质检自身失败（网络/限流/结构化解析）只记录，不影响业务
+        app_logger.warning(f"行程质检执行异常（已忽略）: {title} | {type(e).__name__}: {e}")
+
+def schedule_quality_check(plan_data: dict) -> None:
+    """落库后调用：创建后台质检任务（不阻塞回复流）"""
+    task = asyncio.create_task(run_quality_check(plan_data))  # ★ 起后台任务，立刻返回
+    _BG_TASKS.add(task)
+    task.add_done_callback(_BG_TASKS.discard)

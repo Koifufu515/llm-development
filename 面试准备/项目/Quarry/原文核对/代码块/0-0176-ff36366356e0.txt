@@ -1,0 +1,1 @@
+uv run python -m quarry.scripts.try_split corpus/travel-guide/丽江.md

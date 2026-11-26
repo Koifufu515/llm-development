@@ -1,0 +1,596 @@
+
+
+===== block 170 d5cc7f4862bf lines 1-2 source 知行旅行助手-v2#170 =====
+有 steps： 向东出发，沿长安街行驶 2 公里；京津塘高速；进入天津市区
+只有原文： 沿G2京沪高速行驶；在沧州出口下
+
+
+===== block 171 2e465473bf84 lines 1-11 source 知行旅行助手-v2#171 =====
+"""parse_driving_rows 演示：高德驾车返回 → 距离 / 耗时 / 过路费 / 红绿灯 / 摘要（纯函数，无需密钥）"""
+import json
+
+from app.tools.mcp_tools import parse_driving_rows
+
+amap = {"status": "1", "route": {"paths": [{"distance": "137000", "duration": "6120", "tolls": "65", "traffic_lights": "12",
+                                            "steps": [{"instruction": "向东出发，沿长安街行驶 2 公里"}, {"road_name": "京津塘高速"}]}]}}
+print("JSON 文本      ：", parse_driving_rows(json.dumps(amap, ensure_ascii=False)))
+print("content blocks ：", parse_driving_rows([{"type": "text", "text": json.dumps(amap)}]))
+print("夹在说明文字里 ：", parse_driving_rows("规划结果如下 " + json.dumps(amap) + " 仅供参考"))
+print("什么都没有     ：", parse_driving_rows("高德服务暂不可用"))
+
+
+===== block 172 16f9cbfa85a7 lines 1-4 source 知行旅行助手-v2#172 =====
+JSON 文本      ： {'distance_km': 137.0, 'duration_text': '01:42', 'tolls': 65.0, 'traffic_lights': 12, 'summary': '向东出发，沿长安街行驶 2 公里；京津塘高速'}
+content blocks ： {'distance_km': 137.0, 'duration_text': '01:42', 'tolls': 65.0, 'traffic_lights': 12, 'summary': '向东出发，沿长安街行驶 2 公里；京津塘高速'}
+夹在说明文字里 ： {'distance_km': 137.0, 'duration_text': '01:42', 'tolls': 65.0, 'traffic_lights': 12, 'summary': '向东出发，沿长安街行驶 2 公里；京津塘高速'}
+什么都没有     ： {}
+
+
+===== block 173 661174b92323 lines 1-157 source 知行旅行助手-v2#173 =====
+async def get_all_mcp_tools() -> List[BaseTool]:
+    """获取所有 MCP 工具"""
+    manager = await get_mcp_client()
+    tools = await manager.get_tools()
+    app_logger.info(f"📦 获取了 {len(tools)} 个 MCP 工具")
+    return tools
+
+async def get_hotel_tools() -> List[BaseTool]:
+    """
+    获取酒店相关工具
+
+    Returns:
+        酒店搜索、周边查询等工具
+    """
+    manager = await get_mcp_client()
+    all_tools = await manager.get_tools()
+
+    hotel_tools = [
+        tool for tool in all_tools
+        if any(keyword in tool.name.lower() for keyword in [
+            'find-hotels',           # 酒店搜索
+            'searchhotels',          # aigohotel-mcp 实际工具名（旧关键词匹配不到，导致漏加载）
+            # 不再纳入 maps_around_search——它属"周边 POI 搜索"，返回的是评分/晚
+            # 的地图凑数条目，与 find-hotels 的"总价+星级+地址"格式并存时，模型会在多城住宿轮
+            # 对同一城市调两种工具、各展示一批（用户实测：上海榜单一遍变两遍、标题错位）。
+            # 仅保留真实酒店源，同城每次查询结果唯一、格式统一，展示干净
+        ])
+    ]
+
+    app_logger.info(f"🏨 酒店工具: {[t.name for t in hotel_tools]}")
+    return hotel_tools
+
+async def get_flight_tools() -> List[BaseTool]:
+    """
+ 获取航班相关工具（VariFlight Aviation MCP，真实数据源）
+    供交通规划步骤使用，替代原 mock flight_subagent
+
+    Returns:
+        航班搜索、价格查询等工具
+    """
+    manager = await get_mcp_client()
+    all_tools = await manager.get_tools()
+
+    flight_tools = [
+        tool for tool in all_tools
+        if 'flight' in tool.name.lower()   # 覆盖 searchFlightsByDepArr / getFlightPriceByCities 等
+    ]
+
+    app_logger.info(f"✈️ 航班工具: {[t.name for t in flight_tools]}")
+    return flight_tools
+
+async def get_train_tools() -> List[BaseTool]:
+    """
+ 获取高铁/火车相关工具（12306 MCP，真实数据源）
+    供交通规划步骤使用，替代原 mock train_subagent
+
+    Returns:
+        车票查询、车次查询等工具
+    """
+    manager = await get_mcp_client()
+    all_tools = await manager.get_tools()
+
+    train_tools = [
+        tool for tool in all_tools
+        if any(keyword in tool.name.lower() for keyword in [
+            'train',      # 车次/列车查询
+            'ticket',     # 余票/票价查询
+            'railway',    # 铁路查询（兼容不同命名风格）
+        ])
+    ]
+    # 车票查询工具统一套入参兜底（别名归一+上下文回填+可读报错）
+    train_tools = [_guard_train_tool(t) for t in train_tools]
+
+    app_logger.info(f"🚄 高铁工具: {[t.name for t in train_tools]}")
+    return train_tools
+
+async def get_driving_tools() -> List[BaseTool]:
+    """
+ 获取自驾路线相关工具（高德 MCP，真实数据源）
+    供交通规划步骤使用，替代原 mock driving_subagent
+
+    Returns:
+        驾车路线规划工具
+    """
+    manager = await get_mcp_client()
+    all_tools = await manager.get_tools()
+
+    driving_tools = [
+        tool for tool in all_tools
+        if 'maps_direction_driving' in tool.name.lower()   # 高德驾车路线规划
+    ]
+
+    app_logger.info(f"🚗 自驾工具: {[t.name for t in driving_tools]}")
+    return driving_tools
+
+async def get_weather_tools() -> List[BaseTool]:
+    """
+    获取天气相关工具
+
+    Returns:
+        天气查询工具
+    """
+    manager = await get_mcp_client()
+    all_tools = await manager.get_tools()
+
+    weather_tools = [
+        tool for tool in all_tools
+        if any(keyword in tool.name.lower() for keyword in [
+            'get_weather_forecast',      # 自建天气服务
+        ])
+    ]
+
+    app_logger.info(f"🌤️ 天气工具: {[t.name for t in weather_tools]}")
+    return weather_tools
+
+async def get_search_tools() -> List[BaseTool]:
+    """
+    获取搜索相关工具
+
+    Returns:
+        旅游信息搜索工具
+    """
+    manager = await get_mcp_client()
+    all_tools = await manager.get_tools()
+
+    search_tools = [
+        tool for tool in all_tools
+        if any(keyword in tool.name.lower() for keyword in [
+            'search_travel_info',  # 自建搜索服务
+        ])
+    ]
+
+    app_logger.info(f"🔍 搜索工具: {[t.name for t in search_tools]}")
+    return search_tools
+
+async def get_date_tools() -> List[BaseTool]:
+    """
+    获取日期相关工具
+
+    Returns:
+        获取当前日期的工具
+    """
+    manager = await get_mcp_client()
+    all_tools = await manager.get_tools()
+    for t in all_tools:
+        print(f"当前所有的工具: ",t)
+
+    date_tools = [
+        tool for tool in all_tools
+        if any(keyword in tool.name.lower() for keyword in [
+            'get-current-date',
+            'gettodaydate',
+        ])
+    ]
+
+    app_logger.info(f"📅 日期工具: {[t.name for t in date_tools]}")
+    return date_tools
+
+
+===== block 174 d95162c00246 lines 1-13 source 知行旅行助手-v2#174 =====
+"""按类取工具演示：连上 MCP，看每一类拿到哪些工具（需 `.env` 配好 MCP 相关密钥）"""
+import asyncio
+
+from app.tools.mcp_tools import (get_all_mcp_tools, get_date_tools, get_driving_tools, get_flight_tools, get_hotel_tools,
+                                 get_search_tools, get_train_tools, get_weather_tools)
+
+async def main():
+    print("全部：", len(await get_all_mcp_tools()), "个")
+    for name, getter in [("高铁", get_train_tools), ("航班", get_flight_tools), ("自驾", get_driving_tools), ("酒店", get_hotel_tools),
+                         ("天气", get_weather_tools), ("搜索", get_search_tools), ("日期", get_date_tools)]:
+        print(f"{name}：", [t.name for t in await getter()])
+
+asyncio.run(main())
+
+
+===== block 175 b135ae8f3ac5 lines 1-38 source 知行旅行助手-v2#175 =====
+"""
+capabilities 公共助手函数：四类能力的 flow 共用，避免每个包各写一份
+"""
+from typing import Any, Sequence
+
+async def get_agent_and_state(conversation_id: str) -> tuple[Any, dict, dict]:
+    """取该会话的 Agent、config 和当前 State（只读快照）
+
+    四类 flow 每次要读写状态机都要这三步（建 agent → 拼 config → 取快照），
+    抽成一个函数后调用方一行搞定：agent, config, state = await get_agent_and_state(conv_id)
+    """
+    from app.agents.handoffs.travel_agent import create_travel_agent
+    agent = await create_travel_agent()
+    config = {
+        "configurable": {"thread_id": conversation_id},
+        "recursion_limit": 60,   # 抬高 LangGraph 默认递归上限（默认 25），避免长回合被掐断
+    }
+    snap = await agent.aget_state(config)
+    return agent, config, dict(snap.values or {})
+
+def duration_to_minutes(text: str) -> int:
+    """历时 HH:mm → 分钟（自动模式代选排序用）
+
+    容错：解析失败返回大数，让这条候选在按耗时排序时自然排到最后（既不崩、也不会被误选为最优）
+    """
+    try:
+        hh, _, mm = str(text or "").partition(":")
+        return int(hh) * 60 + int(mm)
+    except Exception:
+        return 10 ** 6
+
+def leg_signature(legs: Sequence[Any]) -> str:
+    """
+    段对象只要有 from_ / to / travel_date 三个属性即可（高铁、航班、自驾的 XxxLeg 都满足），
+    所以用鸭子类型接收，不绑定具体类型。
+    """
+    # ★ 鸭子类型：有 from_ / to / travel_date 三个属性就行
+    return "|".join(f"{leg.from_}→{leg.to}@{leg.travel_date}" for leg in legs)
+
+
+===== block 176 d39d566f0bca lines 1-11 source 知行旅行助手-v2#176 =====
+"""leg_signature 演示：一批段拼成一个签名字符串；段对象只要有 from_ / to / travel_date 三个属性就行（纯函数，无需密钥）"""
+from types import SimpleNamespace
+
+from app.capabilities.base.common import leg_signature
+
+legs = [SimpleNamespace(from_="北京", to="天津", travel_date="2026-10-01"),     # 用 SimpleNamespace 冒充段对象：鸭子类型
+        SimpleNamespace(from_="天津", to="上海", travel_date="2026-10-02")]
+print(leg_signature(legs))
+later = [SimpleNamespace(from_="北京", to="天津", travel_date="2026-10-03")]
+print("同一段换一天，签名不同：", leg_signature(legs[:1]) != leg_signature(later))
+print("没有段：", repr(leg_signature([])))
+
+
+===== block 177 b91ea107fe94 lines 1-3 source 知行旅行助手-v2#177 =====
+北京→天津@2026-10-01|天津→上海@2026-10-02
+同一段换一天，签名不同： True
+没有段： ''
+
+
+===== block 178 51a662e479be lines 1-5 source 知行旅行助手-v2#178 =====
+"""duration_to_minutes 演示：历时 HH:mm → 分钟，给自动模式排序用；解析不了就排到最后（纯函数，无需密钥）"""
+from app.capabilities.base.common import duration_to_minutes
+
+for text in ["04:52", "00:35", "15:25", "", "约4小时"]:
+    print(f"{text!r:8} → {duration_to_minutes(text)}")
+
+
+===== block 179 0e2ada85eb20 lines 1-5 source 知行旅行助手-v2#179 =====
+'04:52'  → 292
+'00:35'  → 35
+'15:25'  → 925
+''       → 1000000
+'约4小时'   → 1000000
+
+
+===== block 180 b4ab9dcba55e lines 1-32 source 知行旅行助手-v2#180 =====
+"""
+两种缓存（泛型，四类共用）：
+
+- PayloadCache：提交侧候选缓存——查询侧下发卡片时 store，提交侧校验时 get，比对"选的在不在候选里"；
+- SignatureCache：段签名查询缓存——同一批段第二次访问直接复用，避免重复打外部服务。
+
+两者都用 Generic[T] 参数化 Payload 类型（TrainMultiSegmentPayload / HotelMultiSegmentPayload…），
+一套代码装四种 payload，类型检查器还能帮你查错。
+"""
+from typing import Callable, Generic, Optional, TypeVar
+
+from app.utils.logger import app_logger
+
+# 泛型 T：某个 capability 的 Payload 类型
+T = TypeVar("T")
+
+class PayloadCache(Generic[T]):
+    """提交侧候选缓存：按 cache_key（= conversation_id）分桶，多会话并发互不污染"""
+
+    _DEFAULT_KEY = "_"
+
+    def __init__(self, name: str):
+        self.name = name
+        self._data: dict[str, T] = {}
+
+    def get(self, cache_key: Optional[str] = None) -> Optional[T]:
+        """取某会话最近下发的候选；不存在返回 None"""
+        return self._data.get(cache_key or self._DEFAULT_KEY)
+
+    def store(self, payload: T, cache_key: Optional[str] = None) -> None:
+        """写入本会话的候选（供后续提交侧校验）"""
+        self._data[cache_key or self._DEFAULT_KEY] = payload
+
+
+===== block 181 c58c0ea46ef7 lines 1-49 source 知行旅行助手-v2#181 =====
+class SignatureCache(Generic[T]):
+    """段签名查询缓存：同一会话、同一批段第二次访问直接复用，避免重复打外部服务
+
+    is_complete 回答"这份 payload 值不值得缓存"，定义权交给调用方，四类的口径并不相同：
+    - 高铁：每一段都有候选才缓存——某段偶发为空若被缓存，用户重试会永远命中这份空快照（"空段死锁"）；
+    - 航班 / 自驾 / 住宿：只要有一段有结果就缓存——没有机场码之类的段本来就查不出来，重试也没用。
+    容量超过 capacity 时，踢掉最早写入的一条。
+    """
+
+    def __init__(self, name: str, capacity: int = 32):
+        self.name = name
+        self.capacity = capacity
+        self._data: dict[str, T] = {}
+
+    def _make_key(self, conversation_id: str, sig: str) -> str:
+        return f"{conversation_id}#{sig}"
+
+    def get(
+            self,
+            conversation_id: str,
+            sig: str,
+            is_complete: Callable[[T], bool] = lambda _p: True,
+    ) -> Optional[T]:
+        """取缓存：命中且 is_complete 判定通过才复用（不通过当没命中，留给重试）"""
+        cached = self._data.get(self._make_key(conversation_id, sig))
+        if cached is None:
+            return None
+        # ★ 读：不值得复用的当没命中，留给重试
+        if not is_complete(cached):
+            app_logger.debug(f"[{self.name}] 缓存命中但不完整，不复用")
+            return None
+        app_logger.info(f"🎯 [{self.name}] 命中段签名缓存")
+        return cached
+
+    def store(
+            self,
+            conversation_id: str,
+            sig: str,
+            payload: T,
+            is_complete: Callable[[T], bool] = lambda _p: True,
+    ) -> None:
+        """写入缓存：只有 is_complete 判定通过才写"""
+        # ★ 写：值不值得缓存由调用方的 is_complete 决定（高铁 all，其余三类 any）
+        if not is_complete(payload):
+            app_logger.warning(f"⚠️ [{self.name}] payload 不值得缓存，不写签名缓存（留给下次重试）")
+            return
+        self._data[self._make_key(conversation_id, sig)] = payload
+        if len(self._data) > self.capacity:      # 简单容量控制：超过时踢掉最早写入的一条
+            self._data.pop(next(iter(self._data)))
+
+
+===== block 182 335c511cae41 lines 1-13 source 知行旅行助手-v2#182 =====
+"""PayloadCache 演示：按会话分桶互不覆盖；不传 key 落到默认桶（纯逻辑，无需密钥）"""
+from app.capabilities.base.payload_cache import PayloadCache
+
+cache: PayloadCache[str] = PayloadCache("demo")
+cache.store("会话 A 的卡片", cache_key="conv-A")
+cache.store("会话 B 的卡片", cache_key="conv-B")
+cache.store("模型自己调工具时的卡片")                  # 不传 key → 默认桶
+print("conv-A        ：", cache.get("conv-A"))
+print("conv-B        ：", cache.get("conv-B"))
+print("默认桶        ：", cache.get())
+print("没下发过的会话：", cache.get("conv-C"))
+cache.store("会话 A 的新卡片", cache_key="conv-A")
+print("同一会话再下发：", cache.get("conv-A"))
+
+
+===== block 183 4c4eeed24534 lines 1-5 source 知行旅行助手-v2#183 =====
+conv-A        ： 会话 A 的卡片
+conv-B        ： 会话 B 的卡片
+默认桶        ： 模型自己调工具时的卡片
+没下发过的会话： None
+同一会话再下发： 会话 A 的新卡片
+
+
+===== block 184 46b380465338 lines 1-21 source 知行旅行助手-v2#184 =====
+"""SignatureCache 演示：is_complete 在读、写两头把关；换个会话不命中；超过容量踢掉最早写入的一条（纯逻辑，无需密钥）"""
+from app.capabilities.base.payload_cache import SignatureCache
+
+def every_leg(payload: list) -> bool:     # 测试口径：每段都有结果（高铁那种）
+    return all(payload)
+
+def any_leg(payload: list) -> bool:       # 测试口径：有一段有结果就行（航班那种）
+    return any(payload)
+
+SIG = "北京→天津@2026-10-01|天津→上海@2026-10-02"
+partial = [["G1"], []]                                       # 两段，第二段为空
+cache: SignatureCache[list] = SignatureCache("demo", capacity=2)
+cache.store("conv-A", SIG, partial, is_complete=every_leg)
+print("口径\"每段都要有\"，部分为空 → 写进去了吗：", cache.get("conv-A", SIG) is not None)
+cache.store("conv-A", SIG, partial, is_complete=any_leg)
+print("口径\"有一段就行\"，部分为空 → 写进去了吗：", cache.get("conv-A", SIG) is not None)
+print("同一批段换个会话 → 命中吗：", cache.get("conv-B", SIG) is not None)
+print("读的时候按\"每段都要有\"把关 → ", cache.get("conv-A", SIG, is_complete=every_leg))
+cache.store("conv-A", "批次2", [["G3"]])
+cache.store("conv-A", "批次3", [["G5"]])
+print("容量 2，再写两批后最早那条还在吗：", cache.get("conv-A", SIG) is not None)
+
+
+===== block 185 7fee6372902d lines 1-5 source 知行旅行助手-v2#185 =====
+口径"每段都要有"，部分为空 → 写进去了吗： False
+口径"有一段就行"，部分为空 → 写进去了吗： True
+同一批段换个会话 → 命中吗： False
+读的时候按"每段都要有"把关 →  None
+容量 2，再写两批后最早那条还在吗： False
+
+
+===== block 186 fde8e11921de lines 1-20 source 知行旅行助手-v2#186 =====
+"""
+capabilities 公共基座：四类能力共用的缓存与助手函数
+"""
+from app.capabilities.base.common import (
+    get_agent_and_state,
+    duration_to_minutes,
+    leg_signature,
+)
+from app.capabilities.base.payload_cache import (
+    PayloadCache,
+    SignatureCache,
+)
+
+__all__ = [
+    "get_agent_and_state",
+    "duration_to_minutes",
+    "leg_signature",
+    "PayloadCache",
+    "SignatureCache",
+]
+
+
+===== block 187 21625fd3b1d6 lines 1-148 source 知行旅行助手-v2#187 =====
+"""用户意图单一入口：全项目"这句话是什么意思"的判定都来自这里。
+
+为什么要收口：改造前这件事散在七处（直查门禁、两处表单快筛、回退守卫、
+确认语、酒店接受语、交通改选），各写各的词表。同一个词在一处认、另一处不认
+（"高铁"在交通清单剔除里有、在直查门禁里没有），不是巧合，是没有单一词汇源的必然结果。
+
+本模块不做分类模型，就是一张词表加一次扫描——意图类别只有四种
+（规划 / 单点查询 / 闲聊 / 调整），难的从来不是分类，是槽位与状态。
+真要上模型，也应该在这里换实现，而不是再开第八处词表。
+"""
+from dataclasses import dataclass, field
+
+# ===== 词表：全项目唯一来源，改词只改这里 =====
+
+# 交通查询对象词。★ 裸词必须收：用户说的是"高铁""飞机"，不是"高铁票""飞机票"
+TRAIN_OBJECTS = frozenset({
+    "高铁票", "火车票", "车票", "动车票", "城际票", "班次", "车次", "余票", "余座",
+    "票价", "出发时刻", "到达时刻", "高铁", "动车", "火车", "列车",
+})
+FLIGHT_OBJECTS = frozenset({"航班", "机票", "飞机票", "直飞", "班机", "飞机"})
+# 天气查询对象词。★ 缺了这张表，"明天福州天气怎么样"会被当成闲聊交给裸模型乱答。
+#   ★ 必须收"不含天气二字"的口语问法（多少度/冷不冷/带伞…），否则用户换个说法就漏判；
+#     单字"冷/热/雨"一律不收——"冷门景点""热干面""雨季"会被误伤
+WEATHER_OBJECTS = frozenset({
+    "天气", "气温", "温度", "降雨", "下雨", "下雪", "台风", "空气质量",
+    "多少度", "几度", "冷不冷", "热不热", "冷吗", "热吗", "凉快", "降温", "升温",
+    "带伞", "伞", "湿度", "风力", "穿衣", "穿什么", "紫外线", "雾霾", "暴雨",
+    "雷阵雨", "晴天", "阴天", "多云", "防晒",
+})
+# "天气之外的第二诉求"信号词：命中才把非天气部分交回模型补答，纯天气问句不加赘述。
+# ★ 不能收裸"怎么"——"天气怎么样"是标准问法，收它会误判成有第二诉求
+EXTRA_ASK_WORDS = frozenset({
+    "适合", "好玩", "值得", "推荐", "要不要", "能不能", "建议",
+    "安排", "路线", "门票", "美食", "景点", "必去", "逛街",
+    "怎么玩", "怎么走", "怎么去", "怎么安排", "怎么办",
+})
+QUERY_VERBS = frozenset({"查", "搜", "问", "看看", "有没", "还有", "多少"})
+# 出现这些词说明用户要的是"行程规划"而不是单点查询——对象词放宽后靠它挡回去
+PLANNING_NOISE = frozenset({
+    "规划", "行程", "攻略", "预算", "人数", "自由行", "安排", "旅行天数",
+    # ★ 裸"玩/游玩/旅游/旅行"必须收：对象词放宽到"高铁"之后，
+    #   "我想坐高铁去杭州玩，明天的"会凑齐"对象词 + 日期词"，全靠这几个词挡回规划通道
+    "玩", "游玩", "怎么玩", "旅游", "旅行",
+})
+# 相对日期词与天数偏移（长词在前：匹配"大后天"不能被"后天"截胡）
+DAY_OFFSET = (("大后天", 3), ("后天", 2), ("明天", 1), ("明日", 1), ("今天", 0), ("今日", 0))
+DATE_WORDS = frozenset(w for w, _ in DAY_OFFSET)
+
+# 自动确认表单（前端模板固定文案，去空白后比对）
+AUTO_CONFIRM_WORDS = ("全程交给AI自动确认", "无需逐步询问")
+
+# 纯确认语：整句削掉首尾空白与结尾标点后，恰好等于其中一个词才算
+CONFIRM_WORDS = frozenset({
+    "满意", "可以", "确认", "确定", "对的", "对", "是的", "是", "嗯",
+    "好的", "好", "好嘞", "行", "中", "没问题", "就这样", "就这个", "OK", "ok", "Ok",
+})
+CONFIRM_TAIL = "。！!…,.，、"
+
+# 回退意图：phrases = 单独出现即算；pairs = (左边任一) 与 (右边任一) 同时出现才算
+BACK_INTENT = {
+    "destination": {
+        "phrases": ("重新选", "重选", "选别的", "选另一个", "选其他",
+                    "别的地方", "不想去", "选错了", "换一下"),
+        "pairs": ((("换", "改"), ("目的地", "城市", "地方")), (("不去",), ("了",))),
+    },
+    "transport": {
+        "phrases": ("重新选", "不坐", "不乘", "换一个", "换一下"),
+        "pairs": ((("换", "改", "坐", "乘", "还是"),
+                   ("交通", "高铁", "动车", "火车", "飞机", "航班", "自驾", "驾车", "车")),),
+    },
+    "requirement": {
+        "phrases": ("重新规划", "从头", "重新来", "重新开始", "全部重来", "重新选"),
+        "pairs": (),
+    },
+}
+
+# 住宿降级轮的"委托语"：用户把选择权交回给系统
+HOTEL_ACCEPT_WORDS = frozenset({
+    "按推荐来", "按你的推荐", "你决定", "你看着办", "听你的",
+    "都可以", "都行", "随便", "随便选", "无所谓",
+})
+
+def _hit(text: str, words) -> bool:
+    """这句话里出现过词表里的任意一个词"""
+    return any(w in text for w in words)
+
+@dataclass(frozen=True)
+class UserIntent:
+    """一句话的意图快照。一次扫描算完，下游读字段，不再各自 search"""
+
+    text: str
+    auto_confirm: bool = False          # 表单勾了"全程交给 AI 自动确认"
+    is_confirm_reply: bool = False      # 整句是一句纯确认语
+    train_object: bool = False          # 提到了车票/车次类对象
+    flight_object: bool = False         # 提到了航班类对象
+    weather_object: bool = False        # 提到了天气类对象
+    extra_ask: bool = False             # 天气问句里还夹着"天气之外"的诉求
+    query_verb: bool = False
+    date_word: bool = False
+    planning_noise: bool = False        # 像"规划行程"而不是单点查询
+    hotel_accept: bool = False          # 住宿轮的委托语
+    back: dict = field(default_factory=dict)   # key -> 是否表达了回退意图
+
+    @property
+    def transport_object(self) -> bool:
+        """提到任何交通查询对象（车票或航班）"""
+        return self.train_object or self.flight_object
+
+    @property
+    def looks_like_query(self) -> bool:
+        """像"单点班次查询"：对象词 +（动词 或 日期词），且不含规划噪声
+
+        ★ 这就是直查通道的门禁①②，现在只有这一处定义。
+          放宽对象词的风险由 planning_noise 接住："明天坐高铁去上海旅游"不会被抢走
+        """
+        return (self.transport_object
+                and (self.query_verb or self.date_word)
+                and not self.planning_noise)
+
+    def wants_back(self, key: str) -> bool:
+        """用户这句话有没有表达『换 / 改 / 重新选』的意图"""
+        return bool(self.back.get(key))
+
+def detect_intent(text: str) -> UserIntent:
+    """一次扫描产出意图快照。纯字符串判定，0ms，不调任何模型"""
+    raw = str(text or "")
+    flat = "".join(raw.split())          # 去掉全部空白，供表单快筛用
+    core = raw.strip().rstrip(CONFIRM_TAIL).rstrip()
+    back = {}
+    for key, cfg in BACK_INTENT.items():
+        # ★ 独立短语命中即算；否则要"动作词 × 对象词"共现
+        back[key] = _hit(raw, cfg["phrases"]) or any(
+            _hit(raw, left) and _hit(raw, right) for left, right in cfg["pairs"]
+        )
+    return UserIntent(
+        text=raw,
+        auto_confirm=_hit(flat, AUTO_CONFIRM_WORDS),
+        is_confirm_reply=core in CONFIRM_WORDS,
+        train_object=_hit(raw, TRAIN_OBJECTS),
+        flight_object=_hit(raw, FLIGHT_OBJECTS),
+        query_verb=_hit(raw, QUERY_VERBS),
+        weather_object=_hit(raw, WEATHER_OBJECTS),
+        extra_ask=_hit(raw, EXTRA_ASK_WORDS),
+        date_word=_hit(raw, DATE_WORDS),
+        planning_noise=_hit(raw, PLANNING_NOISE),
+        hotel_accept=_hit(raw, HOTEL_ACCEPT_WORDS),
+        back=back,
+    )

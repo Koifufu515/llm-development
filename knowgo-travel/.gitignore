@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.py[cod]
+.env
+.pytest_cache/
+logs/
+
+node_modules/
+data/models/
+data/rag_index/
+外部服务配置.env
+
+data/.jwt_secret

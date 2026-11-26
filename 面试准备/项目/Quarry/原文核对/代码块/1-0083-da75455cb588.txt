@@ -1,0 +1,4 @@
+CREATE UNIQUE INDEX collections_one_active
+  ON collections (tenant_id, slug) WHERE status = 'active';
+CREATE UNIQUE INDEX collections_one_building
+  ON collections (tenant_id, slug) WHERE status = 'building';

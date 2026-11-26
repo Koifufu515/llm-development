@@ -1,0 +1,5 @@
+"""_to_float 演示：宽松取数，转不了就返回 None，绝不编一个数（纯函数，无需密钥）"""
+from app.tools.mcp_tools import _to_float
+
+for v in ["137000", 6120, " 65.5 ", "", None, "约 2 小时"]:
+    print(f"{v!r:12} → {_to_float(v)!r}")

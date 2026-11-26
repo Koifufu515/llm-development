@@ -1,0 +1,578 @@
+
+
+===== block 103 af96b6868c24 lines 1-70 source 知行旅行助手-v2#103 =====
+"""
+第 07 章 · 一次性建库脚本
+把 data/documents/destinations/ 下的 Markdown 文档处理进 Chroma
+
+用法：
+    uv run python scripts/Chapter_Seven/7_build_vectorstore.py
+
+产物：
+    data/vectorstore/    ← Chroma 持久化文件
+"""
+# Windows 事件循环兼容（虽然本脚本不用 psycopg，但保持一致）
+import sys
+import asyncio
+import selectors
+
+if sys.platform == "win32":
+    selector = selectors.SelectSelector()
+    loop = asyncio.SelectorEventLoop(selector)
+    asyncio.set_event_loop(loop)
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+from app.rag.document_loader import DocumentManager
+from app.rag.text_splitter import AdvancedParentDocumentSplitter
+from app.rag.vectorstore import VectorStoreManager
+
+def main():
+    print("╔" + "═" * 58 + "╗")
+    print("║" + " 第 07 章 · 建库脚本".center(58) + "║")
+    print("╚" + "═" * 58 + "╝")
+
+    # 1. 加载文档
+    print("\n▶ 步骤 1：加载 Markdown 文档")
+    doc_manager = DocumentManager()
+    documents = doc_manager.load_destination_documents()
+
+    if not documents:
+        print(
+            "\n❌ 没找到任何目的地文档！\n"
+            "请在 data/documents/destinations/ 下放至少一份 .md 攻略后再跑。\n"
+        )
+        return
+
+    print(f"  ✅ 加载 {len(documents)} 份文档：")
+    for doc in documents:
+        print(f"    - {doc.metadata.get('source', '?')}")
+
+    # 2. 父子分块
+    print("\n▶ 步骤 2：父子分块")
+    splitter = AdvancedParentDocumentSplitter(
+        parent_chunk_size=1000,
+        parent_chunk_overlap=200,
+        child_chunk_size=200,
+        child_chunk_overlap=50,
+    )
+    parent_docs, child_docs = splitter.split_documents(documents)
+    print(f"  ✅ 父块 {len(parent_docs)} 个 / 子块 {len(child_docs)} 个")
+
+    # 3. 建库（子块做 embedding + 存 Chroma）
+    print("\n▶ 步骤 3：embedding + 存 Chroma（会调 DashScope API，稍等）")
+    vs_manager = VectorStoreManager()
+    vs_manager.create_vectorstore(child_docs)
+
+    print("\n" + "🎉" * 20)
+    print(f"  建库完成！")
+    print(f"  向量库位置：data/vectorstore/")
+    print(f"  下次运行 Agent 就能查询这些文档了")
+    print("🎉" * 20 + "\n")
+
+if __name__ == "__main__":
+    main()
+
+
+===== block 104 1c52a9d7077e lines 1-155 source 知行旅行助手-v2#104 =====
+"""
+第 07 章冒烟测试：Advanced RAG 检索
+
+用法：
+    uv run python scripts/Chapter_Seven/7_test_rag.py
+
+前置：
+- 已经跑过 scripts/Chapter_Seven/7_build_vectorstore.py（Chroma 里有数据）
+- .env 里配好 DASHSCOPE_API_KEY
+- Redis Docker 已启动（否则会自动降级为无缓存）
+
+看点：
+- 场景 1：直接调 Pipeline，看 5 层各层耗时
+- 场景 2：同查询二次调用，看缓存命中
+- 场景 3：Agent 集成，看模型主动调 query_destination_info
+"""
+# Windows 事件循环兼容
+import sys
+import asyncio
+import selectors
+import time
+
+if sys.platform == "win32":
+    selector = selectors.SelectSelector()
+    loop = asyncio.SelectorEventLoop(selector)
+    asyncio.set_event_loop(loop)
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
+
+from app.core.checkpointer import checkpointer_lifespan
+from app.core.store import store_lifespan
+from app.rag.pipeline import get_rag_pipeline
+from app.agents.handoffs.travel_agent import create_travel_agent
+
+def _short(text, n=250):
+    if not isinstance(text, str):
+        text = str(text)
+    return text if len(text) <= n else text[:n] + "..."
+
+def scenario_1_direct_retrieve():
+    """场景 1：直接调 Pipeline，看 5 层日志"""
+    print("\n" + "=" * 60)
+    print(" 场景 1：直接调用 Pipeline")
+    print("=" * 60)
+
+    pipeline = get_rag_pipeline()
+
+    queries = [
+        "西安 兵马俑值不值得去",
+        "西安 最佳旅游季节",
+        "哪里适合亲子游",  # 目的地不明确，测试语义泛化
+    ]
+
+    for q in queries:
+        print(f"\n  🔎 查询：{q}")
+        t0 = time.perf_counter()
+        docs = pipeline.retrieve(q)
+        elapsed = time.perf_counter() - t0
+        print(f"  ⏱️  总耗时 {elapsed:.2f} s，返回 {len(docs)} 个片段")
+        for i, doc in enumerate(docs, start=1):
+            preview = doc.page_content[:120].replace("\n", " ")
+            print(f"    [{i}] {preview}...")
+
+def scenario_2_cache_hit():
+    """场景 2：重复调用同一查询，看缓存命中"""
+    print("\n" + "=" * 60)
+    print(" 场景 2：缓存命中验证")
+    print("=" * 60)
+
+    pipeline = get_rag_pipeline()
+    q = "西安美食有哪些推荐"
+
+    # 第 1 次：未命中缓存
+    t0 = time.perf_counter()
+    docs1 = pipeline.retrieve(q)
+    t1 = time.perf_counter() - t0
+    print(f"  第 1 次：{t1:.2f} s（应走完整 5 层）")
+
+    # 第 2 次：命中缓存
+    t0 = time.perf_counter()
+    docs2 = pipeline.retrieve(q)
+    t2 = time.perf_counter() - t0
+    print(f"  第 2 次：{t2:.2f} s（应命中缓存，接近 0 s）")
+
+    if t2 < t1 / 5:
+        print("  ✅ 缓存生效")
+    else:
+        print("  ⚠️ 缓存似乎没生效，检查 Redis 是否运行")
+
+async def scenario_3_agent_integration():
+    """场景 3：Agent 主动调 query_destination_info"""
+    print("\n" + "=" * 60)
+    print(" 场景 3：Agent 集成 RAG")
+    print("=" * 60)
+
+    agent = await create_travel_agent()
+    config = {
+        "configurable": {
+            "thread_id": "ch07_rag_test",
+            "user_id": "ch07_user_001",
+        }
+    }
+
+    turns = [
+        # 需求收集
+        "从上海 10 月 20 日出发，去西安玩 4 天，两个人，预算 6000 每人，喜欢文化和美食。",
+        "确认。",
+        # 目的地推荐：期待 Agent 调 query_destination_info
+        "帮我介绍下西安有哪些必去景点，我很感兴趣。",
+    ]
+
+    for i, text in enumerate(turns, start=1):
+        print("\n" + "─" * 60)
+        print(f"[第 {i} 轮]")
+        print(f"  用户：{text}")
+
+        input_state = {"messages": [HumanMessage(content=text)]}
+        try:
+            result = await agent.ainvoke(input_state, config=config)
+        except Exception as e:
+            print(f"  ❌ 出错: {type(e).__name__}: {e}")
+            break
+
+        last_msg = result["messages"][-1]
+        if isinstance(last_msg, AIMessage):
+            print(f"  Agent：{_short(last_msg.content)}")
+            for tc in (last_msg.tool_calls or []):
+                print(f"    🔧 {tc['name']}")
+        elif isinstance(last_msg, ToolMessage):
+            print(f"  🛠️  {_short(last_msg.content)}")
+
+        cur_step = result.get("current_step")
+        print(f"  📌 current_step = {cur_step}")
+
+async def main():
+    print("╔" + "═" * 58 + "╗")
+    print("║" + " 第 07 章 · Advanced RAG 冒烟".center(58) + "║")
+    print("╚" + "═" * 58 + "╝")
+
+    # 场景 1 和 2 不涉及 Checkpointer/Store，直接跑
+    scenario_1_direct_retrieve()
+    scenario_2_cache_hit()
+
+    # 场景 3 需要完整环境
+    async with checkpointer_lifespan():
+        async with store_lifespan():
+            await scenario_3_agent_integration()
+
+    print("\n" + "🎉" * 20)
+    print("  第 07 章冒烟完成！")
+    print("🎉" * 20 + "\n")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+
+===== block 105 ef15a4f4402e lines 1-9 source 知行旅行助手-v2#105 =====
+@tool
+async def query_destination_info(destination: str, query: str = "") -> str:
+    """查询目的地详细信息（并行查询多个源）"""
+    router = create_destination_router()          # ← 造一张子图（本章环节 6 实现）
+    result = await router.ainvoke({               # ← 把子图跑一遍
+        "original_query": query or f"推荐{destination}旅游",
+        "destination": destination,
+    })
+    return result["final_report"]                 # ← 拿归并后的综合报告
+
+
+===== block 106 6c25a30cbcb1 lines 1-32 source 知行旅行助手-v2#106 =====
+import json
+from typing import TypedDict, Annotated, Literal
+from operator import add                      # reducer 用的"列表拼接"函数
+from pydantic import BaseModel, Field
+from langchain_community.chat_models import ChatTongyi
+from langchain.agents import create_agent
+from langgraph.graph import StateGraph, START, END
+from langgraph.types import Send              # 动态扇出的"信封"
+from app.config import settings
+
+from app.utils.logger import app_logger
+
+class Classification(TypedDict):
+    # 分类器产出的"一个待派任务"
+    # agent 用 Literal 钉死取值：它下一步要当"节点名"用，拼错会跳到不存在的节点报错
+    agent: Literal["explore", "weather"]
+    query: str                                 # 派给该 agent 的子查询
+
+class AgentOutput(TypedDict):
+    # 一个分支跑完交回来的"一条结果"
+    agent_name: str                            # 出处章：并行产出顺序不定，盖章才分得清谁是谁
+    result: str
+
+class DestinationRouterState(TypedDict):
+    original_query: str                        # 用户原始问题
+    destination: str                           # 目的地城市
+    classifications: list[Classification]       # 分类器决定要派的任务列表
+    # ★ 默认更新规则是"覆盖"——后写的盖掉先写的，那样两个分支跑完只剩一个结果。
+    #   加 Annotated[..., add] 声明 reducer 后，框架改用 add（列表拼接）合并：
+    #   explore 交 [A]、weather 交 [B] → [A, B]，一条不丢、还不用你加锁。
+    agent_results: Annotated[list[AgentOutput], add]
+    final_report: str
+
+
+===== block 107 e425c0649b97 lines 1-19 source 知行旅行助手-v2#107 =====
+from langgraph.graph import StateGraph, START, END
+from app.agents.routers.destination_router import DestinationRouterState  # 导入真实 State
+
+# 两个 trivial stub 节点：各往 agent_results 交一条，模拟 explore / weather 并行返回
+def branch_explore(state): return {"agent_results": [{"agent_name": "explore", "result": "攻略…"}]}
+def branch_weather(state): return {"agent_results": [{"agent_name": "weather", "result": "天气…"}]}
+
+g = StateGraph(DestinationRouterState)
+g.add_node("explore", branch_explore)
+g.add_node("weather", branch_weather)
+g.add_edge(START, "explore")        # 两个分支从 START 并行出发
+g.add_edge(START, "weather")
+g.add_edge("explore", END)
+g.add_edge("weather", END)
+app = g.compile()
+
+result = app.invoke({"original_query": "", "destination": "", "classifications": [],
+                     "agent_results": [], "final_report": ""})
+print(result["agent_results"])   # 两条都在！因为真实 State 的 agent_results 用了 Annotated[list, add] reducer
+
+
+===== block 108 721ab8ceb098 lines 1-35 source 知行旅行助手-v2#108 =====
+class ClassificationResult(BaseModel):
+    # 给 with_structured_output 用的"输出模具"：强制 LLM 按这个结构吐
+    classifications: list[Classification] = Field(description="要调用的 Agent 列表及其子查询")
+
+def classifier_node(state: DestinationRouterState) -> dict:
+    """分类器节点：看用户问题 → 决定派哪些 Agent"""
+    app_logger.info(f"分类器分析查询: {state['original_query']}")
+
+    llm = ChatTongyi(model=settings.qwen_model_name, api_key=settings.dashscope_api_key)
+    structured_llm = llm.with_structured_output(ClassificationResult)   # 输出被约束成上面的模具
+
+    result = structured_llm.invoke([
+        {"role": "system", "content": """你是旅行查询分类专家。分析用户查询，决定需要调用哪些 Agent：
+
+**可用 Agent**：
+- explore：景点攻略、美食推荐、住宿信息、交通指南（从知识库检索）
+- weather：实时天气信息（调用天气 API）
+
+**分类规则**：
+1. 涉及景点、美食、住宿、攻略 → explore
+2. 涉及天气、气温、降雨 → weather
+3. 综合性查询（如"推荐XX旅游"）→ 两个都调用"""},
+        {"role": "user", "content": f"目的地：{state['destination']}\n查询：{state['original_query']}"},
+    ])
+
+    # ★ 确定性补齐：目的地步要求必展示实时天气，但 LLM 偶发只返回 explore、漏掉 weather
+    #   （实测某次天津查询只回 1 个 Agent → 天气整块没跑 → 前端天气栏空了）。
+    #   dict(c) 把 Pydantic 对象转普通 dict，方便下面 .get 判断和 append 补一条。
+    items = [dict(c) for c in result.classifications]
+    if not any(c.get("agent") == "weather" for c in items):
+        items.append({"agent": "weather", "query": f"{state['destination']} 天气"})
+        app_logger.info("✅ LLM 未选 weather，已由代码强制补齐")
+
+    app_logger.info(f"✅ 分类完成：{len(items)} 个 Agent")
+    return {"classifications": items}
+
+
+===== block 109 d45bbef9e1c1 lines 1-7 source 知行旅行助手-v2#109 =====
+"""演示 classifier_node：给一个只问天气的查询，看代码怎么把 Agent 派全（需 .env 配 DashScope 密钥）"""
+from app.agents.routers.destination_router import classifier_node
+
+state = {"original_query": "杭州这几天冷不冷", "destination": "杭州"}
+out = classifier_node(state)                    # 节点就是普通函数：传 state、拿 dict
+for c in out["classifications"]:
+    print(f"派给 {c['agent']:8s} 子查询：{c['query']}")
+
+
+===== block 110 7b6e416269f8 lines 1-18 source 知行旅行助手-v2#110 =====
+def route_to_agents(state: DestinationRouterState) -> list[Send]:
+    """路由函数（条件边）：把 classifications 扇出成一批并行任务"""
+    sends = []
+    seen = set()
+    for c in state["classifications"]:
+        # ★ 去重：LLM 偶发对同一子查询重复输出（实测"苏州文化探索"出现两次），
+        #   按 (agent, query) 建 key、重复的跳过，避免同一分支白跑两遍、报告出现重复段。
+        #   .strip() 防"苏州文化探索"和"苏州文化探索 "（尾部空格）被当成两个任务。
+        key = (c["agent"], c["query"].strip())
+        if key in seen:
+            continue
+        seen.add(key)
+        # Send(目标节点名, 发给该节点的输入)：返回列表里有几个 Send，就并行开几个分支。
+        # 发过去的是只含 query/destination 的小 dict（不是整张 State），所以下游节点签名是 state: dict。
+        sends.append(Send(c["agent"], {"query": c["query"], "destination": state["destination"]}))
+
+    app_logger.info(f"并行发送 {len(sends)} 个任务（去重后）")
+    return sends
+
+
+===== block 111 74a754cacc2f lines 1-13 source 知行旅行助手-v2#111 =====
+"""演示 route_to_agents：扇出 + 去重（纯函数，可直接跑）"""
+from app.agents.routers.destination_router import route_to_agents
+
+state = {
+    "destination": "苏州",
+    "classifications": [
+        {"agent": "explore", "query": "苏州文化探索"},
+        {"agent": "explore", "query": "苏州文化探索"},   # 故意重复，应被去掉
+        {"agent": "weather", "query": "苏州 天气"},
+    ],
+}
+for s in route_to_agents(state):                # 3 条 → 去重成 2 条 Send
+    print(f"扇出到节点 {s.node}，携带查询：{s.arg['query']}")
+
+
+===== block 112 3be8b4dd109b lines 1-60 source 知行旅行助手-v2#112 =====
+from app.tools.rag_tools import get_rag_tools # 4.2就补上了现在报错是因为没有创建
+# 创建探索 Agent（带 RAG 工具）
+def _create_explore_agent():
+    """创建带 RAG 工具的探索 Agent"""
+
+    llm = ChatTongyi(
+        model=settings.qwen_model_name,
+        api_key=settings.dashscope_api_key,
+        temperature=0.7
+    )
+
+    # 获取 RAG 工具
+    rag_tools = get_rag_tools()
+
+    # 创建 Agent - Agent 会自主决定调用哪些工具
+    agent = create_agent(
+        model=llm,
+        tools=rag_tools,
+        system_prompt="""你是一位专业的旅行顾问，负责为用户提供目的地的详细信息。
+            你有以下工具可以使用：
+            - search_destination_guide: 检索景点攻略、门票、游玩建议
+            - search_food_recommendations: 检索美食推荐
+            - search_accommodation_info: 检索住宿建议
+            - search_travel_tips: 检索旅行注意事项
+            
+            **工作方式**：
+            1. 分析用户的查询需求
+            2. 根据需要选择合适的工具进行检索
+            3. 你可以调用多个工具来获取全面的信息
+            4. 基于检索到的信息，生成专业、详细的回答
+            
+            **注意**：
+            - 只有当你需要知识库中的信息时才调用工具
+            - 如果用户只是闲聊或问简单问题，直接回答即可
+            - 整合多个工具的结果时，注意信息的逻辑性和连贯性
+            """
+                )
+    return agent
+_explore_agent = None                          # 模块级单例：Agent 造一次就够，别每次进节点都重造
+
+async def explore_agent_node(state: dict) -> dict:
+    """探索 Agent 节点（并行分支之一）。签名 state: dict —— 收的是 Send 投喂的小 dict"""
+    global _explore_agent
+    query, destination = state["query"], state["destination"]
+    app_logger.info(f"🏛️ 探索 Agent 执行: {destination} - {query}")
+
+    # ★ 关键顺序：先注入城市，再调 Agent。这样 Agent 内部工具检索时，
+    #   _format_rag_results 才能按这个城市过滤（见 4.2），否则会"查上海返回西安攻略"。
+    from app.tools.rag_tools import set_rag_city
+    set_rag_city(destination)
+
+    if _explore_agent is None:                 # 懒加载：第一次用到才造（见 4.3）
+        _explore_agent = _create_explore_agent()
+
+    user_message = f"请为我提供关于 {destination} 的以下信息：{query}"
+    response = await _explore_agent.ainvoke({"messages": [{"role": "user", "content": user_message}]})
+    final_message = response["messages"][-1].content   # 取 Agent 调完工具、整合后的最后一句回复
+
+    formatted = f"## {destination} 旅游信息\n\n{final_message}\n\n---\n*信息来源：知识库检索*\n"
+    return {"agent_results": [{"agent_name": "explore", "result": formatted}]}   # 只交自己这条，reducer 会合并
+
+
+===== block 113 645e8e8cce69 lines 1-127 source 知行旅行助手-v2#113 =====
+import contextvars
+from typing import Optional
+from langchain.tools import tool
+from langchain_core.tools import ToolException
+from app.rag.pipeline import AdvancedRAGPipeline
+from app.rag.document_loader import DocumentManager
+from app.rag.text_splitter import AdvancedParentDocumentSplitter
+from app.rag.vectorstore import VectorStoreManager
+from app.utils.logger import app_logger
+
+# ★ 用 ContextVar 存"当前目标城市"（4.2 详解为什么不能用普通全局变量）
+_RAG_CITY: contextvars.ContextVar[str] = contextvars.ContextVar("rag_city", default="")
+
+def set_rag_city(city: str) -> None:
+    """注入目标城市（并行分支互不串号）"""
+    _RAG_CITY.set(str(city or "").strip())
+
+_rag_pipeline: Optional[AdvancedRAGPipeline] = None       # 全局单例：整条 pipeline 造一次复用
+_parent_splitter: Optional[AdvancedParentDocumentSplitter] = None
+
+async def _get_rag_pipeline() -> AdvancedRAGPipeline:
+    """懒加载整条 RAG 管道（内部就是第 7 章那套父子分块+混合检索+重排+缓存，本章不重讲）"""
+    global _rag_pipeline, _parent_splitter
+    if _rag_pipeline is None:
+        app_logger.info("🔧 初始化 RAG 管道...")
+        documents = DocumentManager().load_destination_documents() or []
+        _parent_splitter = AdvancedParentDocumentSplitter()
+        parent_docs, child_docs = _parent_splitter.split_documents(documents)
+
+        vs_manager = VectorStoreManager()
+        try:
+            vectorstore = vs_manager.load_vectorstore()
+            # ★ 判空校验：Chroma 集合不存在时会静默新建"空集合"而不报错，
+            #   只靠 try/except 判断不出"库是空的"，必须显式数条数，为 0 就重建。
+            if vectorstore._collection.count() == 0 and child_docs:
+                app_logger.warning("⚠️ 向量库为空，重建...")
+                try:
+                    vectorstore = vs_manager.create_vectorstore(child_docs)
+                except Exception as ce:
+                    app_logger.error(f"❌ 重建失败（{ce}），降级为仅 BM25")
+        except Exception as e:
+            app_logger.info(f"📦 向量库加载失败（{e}），创建新的...")
+            if child_docs:
+                vectorstore = vs_manager.create_vectorstore(child_docs)
+            else:
+                raise RuntimeError(f"向量库不可用且无子文档可重建: {e}")
+
+        _rag_pipeline = AdvancedRAGPipeline(
+            vectorstore=vectorstore, all_documents=child_docs,
+            parent_splitter=_parent_splitter, query_strategy="multi_query",
+            top_k=3, enable_cache=True,
+        )
+        app_logger.info("✅ RAG 管道初始化完成")
+    return _rag_pipeline
+
+def _format_rag_results(documents: list, query: str) -> str:
+    """格式化检索结果 —— ★ 城市限定：只保留正文提到目标城市的文档（4.2 讲为什么）"""
+    city = _RAG_CITY.get()
+    if city and documents:
+        kept = [d for d in documents if city in (d.page_content or "")]   # 剔除不含目标城市的
+        if len(kept) != len(documents):
+            app_logger.warning(f"⚠️ 已剔除 {len(documents) - len(kept)} 条非「{city}」文档")
+        documents = kept
+    if not documents:                          # 剔完为空就如实说，绝不拿别的城市内容冒充
+        if city:
+            return (f"知识库中暂无「{city}」的攻略资料（已按城市过滤）。"
+                    "请基于通用旅行常识给建议，且不要编造具体门票价格/开放时间。")
+        return f"未找到与「{query}」相关的信息。"
+
+    parts = []
+    for i, doc in enumerate(documents, 1):
+        content = doc.page_content[:800] + ("..." if len(doc.page_content) > 800 else "")
+        parts.append(f"【资料 {i}】\n{content}\n来源：{doc.metadata.get('source', '未知来源')}")
+    return "\n\n".join(parts)
+
+# —— 四把工具：结构完全相同，只差 docstring（给模型的说明书）和查询增强词 ——
+
+@tool
+async def search_destination_guide(query: str) -> str:
+    """从旅游攻略知识库检索目的地信息（景点/门票/开放时间/路线/交通/住宿区域）。
+    需要知识库攻略时用它。query 例：'西安兵马俑门票和游玩建议'。"""
+    app_logger.info(f"RAG 工具被调用: {query}")
+    try:
+        pipeline = await _get_rag_pipeline()
+        return _format_rag_results(pipeline.retrieve(query), query)   # 攻略最泛，不加增强词
+    except Exception as e:
+        app_logger.error(f"❌ RAG 检索失败: {e}")
+        raise ToolException(f"检索过程中出现错误：{str(e)}")   # 抛给 Agent，让它自己决定怎么办
+
+@tool
+async def search_food_recommendations(query: str) -> str:
+    """检索目的地美食（特色/必吃/餐厅/美食街/价格）。query 例：'西安特色美食推荐'。"""
+    app_logger.info(f"美食检索工具被调用: {query}")
+    try:
+        pipeline = await _get_rag_pipeline()
+        # 查询增强：原 query 后补该领域关键词再检索，让 embedding 更容易命中美食类内容
+        return _format_rag_results(pipeline.retrieve(f"{query} 美食 餐厅 小吃"), query)
+    except Exception as e:
+        app_logger.error(f"❌ 美食检索失败: {e}")
+        raise ToolException(f"检索过程中出现错误：{str(e)}")
+
+@tool
+async def search_accommodation_info(query: str) -> str:
+    """检索目的地住宿（区域推荐/类型特点/价格范围/选择建议）。query 例：'西安住哪个区域好'。"""
+    app_logger.info(f"住宿检索工具被调用: {query}")
+    try:
+        pipeline = await _get_rag_pipeline()
+        return _format_rag_results(pipeline.retrieve(f"{query} 住宿 酒店 民宿"), query)
+    except Exception as e:
+        app_logger.error(f"❌ 住宿检索失败: {e}")
+        raise ToolException(f"检索过程中出现错误：{str(e)}")
+
+@tool
+async def search_travel_tips(query: str) -> str:
+    """检索旅行实用信息（注意事项/避坑/最佳季节/穿衣/消费水平）。query 例：'西安旅游注意事项'。"""
+    app_logger.info(f"旅行贴士检索工具被调用: {query}")
+    try:
+        pipeline = await _get_rag_pipeline()
+        return _format_rag_results(pipeline.retrieve(f"{query} 注意事项 建议 提示"), query)
+    except Exception as e:
+        app_logger.error(f"❌ 旅行贴士检索失败: {e}")
+        raise ToolException(f"检索过程中出现错误：{str(e)}")
+
+def get_rag_tools() -> list:
+    """把四把工具打包成列表，交给 explore Agent 挂载"""
+    return [search_destination_guide, search_food_recommendations,
+            search_accommodation_info, search_travel_tips]

@@ -1,0 +1,4 @@
+from app.api.v1 import users, cities, conversations, messages, itinerary_plans, skills   # ★ 新增两个
+
+app.include_router(itinerary_plans.router, prefix="/api/v1")   # 行程清单
+app.include_router(skills.router, prefix="/api/v1")            # 卡片提交回口

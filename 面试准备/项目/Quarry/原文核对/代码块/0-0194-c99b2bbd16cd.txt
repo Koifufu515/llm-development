@@ -1,0 +1,1 @@
+docker compose exec postgres psql -U quarry -d quarry -c "SELECT version, status, left(sha256, 8) AS sha FROM documents WHERE source_uri = 'corp-policy/travel-reimbursement.md' ORDER BY version;"

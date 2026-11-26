@@ -1,0 +1,2 @@
+SELECT count(*) FROM chunks
+WHERE level = 1 AND tokens @@ to_tsquery('simple', '''兵马俑'' | ''门票''');

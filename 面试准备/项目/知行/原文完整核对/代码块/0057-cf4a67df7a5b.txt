@@ -1,0 +1,10 @@
+STEP_STATE_FIELDS = {
+    "requirement_collection":     ["user_requirement"],
+    "destination_recommendation": ["selected_destination", "destination_options"],
+    "transport_planning":         ["selected_transport", "transport_options"],
+    "accommodation_planning":     ["selected_accommodation_types", "accommodation_options"],
+    "food_planning":              ["selected_food_types", "food_options"],
+    "itinerary_generation":       ["itinerary", "itinerary_body"],
+    "budget_summarization":       ["budget"],
+    "report_generation":          ["report"],
+}

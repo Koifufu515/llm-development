@@ -1,0 +1,209 @@
+{
+  "scope": "6条人工编写的景点实体诊断，词项命中代理指标，不是独立大样本问答准确率",
+  "results": [
+    {
+      "city": "苏州",
+      "query": "古典园林有哪些，网师园有什么特点",
+      "strategy": "none",
+      "rerank": false,
+      "seconds": 0.303,
+      "found": true,
+      "reciprocal_rank": 1.0,
+      "city_isolation": true,
+      "sources": [
+        "https://en.wikivoyage.org/wiki/Suzhou",
+        "https://en.wikivoyage.org/wiki/Suzhou",
+        "https://en.wikivoyage.org/wiki/Suzhou",
+        "https://en.wikivoyage.org/wiki/Suzhou",
+        "https://en.wikivoyage.org/wiki/Suzhou"
+      ]
+    },
+    {
+      "city": "北京",
+      "query": "故宫是什么地方，有哪些历史背景",
+      "strategy": "none",
+      "rerank": false,
+      "seconds": 0.299,
+      "found": true,
+      "reciprocal_rank": 0.25,
+      "city_isolation": true,
+      "sources": [
+        "https://en.wikivoyage.org/wiki/Beijing/Tongzhou",
+        "https://en.wikivoyage.org/wiki/Beijing/Chaoyang",
+        "https://en.wikivoyage.org/wiki/Beijing/Chongwen",
+        "https://en.wikivoyage.org/wiki/Beijing/Forbidden%20City",
+        "https://en.wikivoyage.org/wiki/Beijing/Xuanwu"
+      ]
+    },
+    {
+      "city": "上海",
+      "query": "外滩有什么值得参观的建筑",
+      "strategy": "none",
+      "rerank": false,
+      "seconds": 0.286,
+      "found": true,
+      "reciprocal_rank": 1.0,
+      "city_isolation": true,
+      "sources": [
+        "https://en.wikivoyage.org/wiki/Shanghai/Pudong",
+        "https://en.wikivoyage.org/wiki/Shanghai/Putuo",
+        "https://en.wikivoyage.org/wiki/Shanghai/Jing%27an",
+        "https://en.wikivoyage.org/wiki/Shanghai",
+        "https://en.wikivoyage.org/wiki/Shanghai/Minhang"
+      ]
+    },
+    {
+      "city": "西安",
+      "query": "秦始皇兵马俑是什么，有什么看点",
+      "strategy": "none",
+      "rerank": false,
+      "seconds": 0.256,
+      "found": true,
+      "reciprocal_rank": 0.5,
+      "city_isolation": true,
+      "sources": [
+        "https://en.wikivoyage.org/wiki/Xi%27an",
+        "https://en.wikivoyage.org/wiki/Xi%27an",
+        "https://en.wikivoyage.org/wiki/Xi%27an",
+        "https://en.wikivoyage.org/wiki/Xi%27an",
+        "https://en.wikivoyage.org/wiki/Xi%27an"
+      ]
+    },
+    {
+      "city": "杭州",
+      "query": "西湖有什么景点",
+      "strategy": "none",
+      "rerank": false,
+      "seconds": 0.258,
+      "found": true,
+      "reciprocal_rank": 1.0,
+      "city_isolation": true,
+      "sources": [
+        "https://en.wikivoyage.org/wiki/Hangzhou",
+        "https://en.wikivoyage.org/wiki/Hangzhou",
+        "https://en.wikivoyage.org/wiki/Hangzhou",
+        "https://en.wikivoyage.org/wiki/Hangzhou",
+        "https://en.wikivoyage.org/wiki/Hangzhou"
+      ]
+    },
+    {
+      "city": "南京",
+      "query": "中山陵有哪些特点",
+      "strategy": "none",
+      "rerank": false,
+      "seconds": 0.231,
+      "found": true,
+      "reciprocal_rank": 1.0,
+      "city_isolation": true,
+      "sources": [
+        "https://en.wikivoyage.org/wiki/Nanjing",
+        "https://en.wikivoyage.org/wiki/Nanjing",
+        "https://en.wikivoyage.org/wiki/Nanjing",
+        "https://en.wikivoyage.org/wiki/Nanjing",
+        "https://en.wikivoyage.org/wiki/Nanjing"
+      ]
+    },
+    {
+      "city": "苏州",
+      "query": "古典园林有哪些，网师园有什么特点",
+      "strategy": "multiquery",
+      "rerank": true,
+      "seconds": 8.259,
+      "found": true,
+      "reciprocal_rank": 1.0,
+      "city_isolation": true,
+      "sources": [
+        "https://en.wikivoyage.org/wiki/Suzhou",
+        "https://en.wikivoyage.org/wiki/Suzhou",
+        "https://en.wikivoyage.org/wiki/Suzhou",
+        "https://en.wikivoyage.org/wiki/Suzhou",
+        "https://en.wikivoyage.org/wiki/Suzhou"
+      ]
+    },
+    {
+      "city": "北京",
+      "query": "故宫是什么地方，有哪些历史背景",
+      "strategy": "multiquery",
+      "rerank": true,
+      "seconds": 5.148,
+      "found": true,
+      "reciprocal_rank": 1.0,
+      "city_isolation": true,
+      "sources": [
+        "https://en.wikivoyage.org/wiki/Beijing/Dongcheng",
+        "https://en.wikivoyage.org/wiki/Beijing/Forbidden%20City",
+        "https://en.wikivoyage.org/wiki/Beijing/Tongzhou",
+        "https://en.wikivoyage.org/wiki/Beijing/Forbidden%20City",
+        "https://en.wikivoyage.org/wiki/Beijing/Dongcheng"
+      ]
+    },
+    {
+      "city": "上海",
+      "query": "外滩有什么值得参观的建筑",
+      "strategy": "multiquery",
+      "rerank": true,
+      "seconds": 8.831,
+      "found": true,
+      "reciprocal_rank": 0.25,
+      "city_isolation": true,
+      "sources": [
+        "https://en.wikivoyage.org/wiki/Shanghai/Pudong",
+        "https://en.wikivoyage.org/wiki/Shanghai/Old%20City",
+        "https://en.wikivoyage.org/wiki/Shanghai/Pudong",
+        "https://en.wikivoyage.org/wiki/Shanghai/Pudong",
+        "https://en.wikivoyage.org/wiki/Shanghai/Old%20City"
+      ]
+    },
+    {
+      "city": "西安",
+      "query": "秦始皇兵马俑是什么，有什么看点",
+      "strategy": "multiquery",
+      "rerank": true,
+      "seconds": 5.899,
+      "found": true,
+      "reciprocal_rank": 1.0,
+      "city_isolation": true,
+      "sources": [
+        "https://en.wikivoyage.org/wiki/Xi%27an",
+        "https://en.wikivoyage.org/wiki/Xi%27an",
+        "https://en.wikivoyage.org/wiki/Xi%27an",
+        "https://en.wikivoyage.org/wiki/Xi%27an",
+        "https://en.wikivoyage.org/wiki/Xi%27an"
+      ]
+    },
+    {
+      "city": "杭州",
+      "query": "西湖有什么景点",
+      "strategy": "multiquery",
+      "rerank": true,
+      "seconds": 9.056,
+      "found": true,
+      "reciprocal_rank": 1.0,
+      "city_isolation": true,
+      "sources": [
+        "https://en.wikivoyage.org/wiki/Hangzhou",
+        "https://en.wikivoyage.org/wiki/Hangzhou",
+        "https://en.wikivoyage.org/wiki/Hangzhou",
+        "https://en.wikivoyage.org/wiki/Hangzhou",
+        "https://en.wikivoyage.org/wiki/Hangzhou"
+      ]
+    },
+    {
+      "city": "南京",
+      "query": "中山陵有哪些特点",
+      "strategy": "multiquery",
+      "rerank": true,
+      "seconds": 2.547,
+      "found": true,
+      "reciprocal_rank": 1.0,
+      "city_isolation": true,
+      "sources": [
+        "https://en.wikivoyage.org/wiki/Nanjing",
+        "https://en.wikivoyage.org/wiki/Nanjing",
+        "https://en.wikivoyage.org/wiki/Nanjing",
+        "https://en.wikivoyage.org/wiki/Nanjing",
+        "https://en.wikivoyage.org/wiki/Nanjing"
+      ]
+    }
+  ]
+}

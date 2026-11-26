@@ -1,0 +1,1 @@
+CONSTRAINT collections_dim_ck CHECK (embed_dim = 1024)

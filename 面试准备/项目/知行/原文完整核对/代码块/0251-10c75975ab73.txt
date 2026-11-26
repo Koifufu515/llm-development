@@ -1,0 +1,73 @@
+async def _query_one_leg(
+    query_tool: BaseTool, segment_id: str, leg: DrivingLeg
+) -> DrivingSegment:
+    """查询单段自驾（由 asyncio.gather 并行调度）；任何异常都降级为空段，绝不抛出"""
+    travel_date = (leg.travel_date or "").strip()
+    frm, to = (leg.from_ or "").strip(), (leg.to or "").strip()
+    if not frm or not to:                       # 城市名缺失：不放行直查，降级为空段
+        app_logger.warning(f"⚠️ driving_multi_segment {segment_id} 城市名缺失，跳过查询")
+        return _empty_segment(segment_id, leg)
+    # 已收录城市用中心坐标；未收录则退回城市名尝试（高德不接受时即为查询失败，仍降级空段）
+    # ★ 城市换坐标；表里没有的城市原样传名字
+    origin, dest = _CITY_COORD.get(frm, frm), _CITY_COORD.get(to, to)
+    try:
+        raw = await query_tool.ainvoke({"origin": origin, "destination": dest})
+    except Exception as exc:                    # 单段失败不影响其它段，前端对空段置灰
+        app_logger.warning(
+            f"⚠️ driving_multi_segment {segment_id}（{frm}→{to}）查询异常：{exc}"
+        )
+        return _empty_segment(segment_id, leg)
+    row = parse_driving_rows(raw)
+    if not row:                                 # 解析不出任何字段：空段（ok=False）
+        app_logger.warning(
+            f"⚠️ driving_multi_segment {segment_id}（{frm}→{to}）返回无法解析，降级为空段"
+        )
+        return _empty_segment(segment_id, leg)
+    segment = DrivingSegment(
+        segment_id=segment_id, from_=frm, to=to, date=travel_date, ok=True,
+        distance_km=float(row.get("distance_km") or 0),
+        duration_text=str(row.get("duration_text") or ""),
+        tolls=float(row.get("tolls") or 0),
+        traffic_lights=int(row.get("traffic_lights") or 0),
+        summary=str(row.get("summary") or ""),
+    )
+    app_logger.info(
+        f"🚗 driving_multi_segment {segment_id} {frm}→{to} "
+        f"解析：{segment.distance_km}km / {segment.duration_text or '—'} / "
+        f"过路费{segment.tolls:g}元 / 红绿灯{segment.traffic_lights}"
+    )
+    return segment
+
+async def build_driving_multi_segment_payload(
+    legs: list[Any],
+    cache_key: Optional[str] = None,
+) -> DrivingMultiSegmentPayload:
+    """核心函数（非工具）：并行查询全部段 → 组装 payload，并缓存供提交侧校验
+
+    legs 长度即段数；每段只取默认策略的一条路线（只读确认，无策略可选）。
+    数据源不可用 / 解析为空时返回**空段**而不是抛异常，避免打断对话。
+    cache_key：隔离键（调用方传 conversation_id），保证提交侧校验到的是**本会话**的候选表
+    """
+    try:
+        parsed = [leg if isinstance(leg, DrivingLeg) else DrivingLeg.model_validate(leg) for leg in legs]
+    except Exception as exc:
+        app_logger.warning(f"⚠️ driving_multi_segment 入参不合法，已降级为空 payload：{exc}")
+        return DrivingMultiSegmentPayload(segments=[])
+    if not parsed:
+        return DrivingMultiSegmentPayload(segments=[])
+    query_tool = await _resolve_query_tool()
+    if query_tool is None:                      # 数据源不可用：返回空段而不是抛错
+        empty = DrivingMultiSegmentPayload(segments=[
+            _empty_segment(f"s{i}", leg) for i, leg in enumerate(parsed, 1)
+        ])
+        _PAYLOAD_CACHE.store(empty, cache_key)
+        return empty
+    segments = await asyncio.gather(*[        # ← 并行并发，非串行逐段
+        _query_one_leg(query_tool, f"s{index}", leg)
+        for index, leg in enumerate(parsed, 1)
+    ])
+    payload = DrivingMultiSegmentPayload(segments=list(segments))
+    _PAYLOAD_CACHE.store(payload, cache_key)  # 供提交侧做「是否存在」校验
+    return payload
+
+# ==================== 提交侧：只做基础合法性校验（无策略/时间可校验） ====================

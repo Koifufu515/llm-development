@@ -1,0 +1,1 @@
+uv run python -m quarry.scripts.try_pipeline "兵马俑的门票多少钱" travel-guide --no-facts

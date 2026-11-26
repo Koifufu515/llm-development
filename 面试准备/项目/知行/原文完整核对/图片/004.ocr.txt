@@ -1,0 +1,158 @@
+场景3多城不同城市。上海一杭州 南京 上海
+3
+2
+相邻两城各一段高铁，含返程共3段；每个游玩城市一站酒店，共2站；链路与场景 1完全相同
+次高铁查询
+次酒店查询
+• 本场景经过的节点
+本场景不经过（虚化）
+fn 调用对应业务函数/提交节点
+2
+3
+5
+用户发起行程请求
+判断行程交通类型
+判断是否 AI帮忙确认
+行程节点预处理
+统计有效交通段、停留城市段
+出发地
+上海
+V高铁 航班 自驾
+AI帮忙确认。有目的地
+上海 杭州 南京 上海
+目的地
+杭州、南京
+本场景勾选高铁。优先级 高铁＞航班＞自驾，
+词表快筛＋结构化提取复核，走快速通道
+3
+2
+① 上海一杭州
+保留
+两个都勾只走高铁，另一种一次都不查
+有效交通段
+停留城市
+AI 帮忙确认。无目的地
+交通方式
+高铁
+AI 自动选1座城市，再走快速通道
+② 杭州一南京
+V保留
+停留城市：杭州、南京。上海不在目的地串里，
+AI 帮忙确认
+未勾选
+③ 南京一上海
+V保留，返程段
+所以不算停留站，只作为起终点
+用户手动选择
+本场景
+解析行程节点序列：「杭州、南京」按顿号切分，顺序即游览
+天数＜城市数X2时先推告警，提交行程时由代码拦截
+顺序
+run Chat Lud
+train_mode_requested（）
+_build_legs（）
+_expected_legs（）
+ordered_play_cities（）
+_produce（）
+flight_card_mode（）
+detect_intent（）
+select_destination_tool（）
+_manual_multi_city_day_warning（）
+_stay_windows（）
+是否存在有效交通段？
+/存在有效交通段
+交通候选卡片轮•高铁
+本场景3段，代码一次并行查询
+train multi seament
+V存在
+候选卡片轮
+fn 提交节点•调用对应业务函数
+fn 调用对应业务函数
+fn 调用对应业务续跑函数
+3段一进入交通候选卡片轮
+推送高铁候选卡片
+用户提交车次选择
+下发确认回执帧
+生成用户口吻续跑消息
+X 不存在
+代码一次并行查全部段，推 skilL_ui 帧
+卡片上为每段选1趟，预览页一次提交
+0 段一跳过交通轮
+回显车次（按行程段顺序）
+合成发言不落库，由代码指定进规划状态机
+段日期：去程=出发日、城际=下一城首日、返程=末日
+POST /api/v1/skills/train_multi_segment/submit
+每段都有候选才写签名缓存；全段空 -empty 不推
+步骤守卫：不在交通步拒收，重复提交按幂等成功
+1.上海 杭州
+force_planning=True• persist_user=False
+2.杭州 南京
+resume_stage="accommodation_planning"
+三段同时查，不比对到站/发车先后，
+空卡片
+也不判断中转时间够不够
+3. 南京一上海
+同时回填卡片提交态，刷新/切会话后仍锁定
+multi_leg_train（）
+用户
+apply_train_selection（）
+_confirmed_content（）
+-resume_content（）
+emit_train_skill_ui（）
+产出
+TrainSubmitResult
+mark_skill_ui_submitted（）
+run_chat_turn（）
+_zero_leg_guard（）
+车次已确认，正在为您规划住宿
+resume_stage=accommodation_planning
+V 进入住宿轮
+多段住宿候选卡片轮 本场景2站：杭州、南京
+hotel_multi_segment
+END
+直接生成完整行程报告
+候选卡片轮
+fn 提交节点• 调用对应业务函数
+fn
+调用对应业务函数
+fn 调用住宿业务续跑函数
+上海一杭州一南京一上海
+推送住宿候选卡片
+用户提交住宿选择
+下发确认回执帧
+生成住宿续跑消息
+模型只提交结构化数据，逐日行程与预算明细表
+全部由代码渲染；清单落库，流程结束
+按停留城市并行查询，推skilL_ui帧
+每站选1家门店或1个品牌，一次提交
+入住=该城首日、离店=次城转场日，末站封顶到末
+POST
+回显住宿（按行程站顺序）
+住宿是最后一个人工选择项
+1.杭州
+_next_step（） 跳过餐饮轮，餐饮取表单预选
+逐日行程
+预算明细表
+行程清单
+/api/v1/skills/hotel_multi_segment/submit
+2.南京
+直接要求生成完整行程报告
+查不到门店的城降级为 mode=brand 品牌候选
+校验通过后写住宿账本与 stay_prices
+回显已选门店/品牌，并回填卡片提交态
+summarize budget tooL（
+hotel card mode（）
+用户
+apply_hotel_selection（）
+_confirmed_content（）
+_hotel_resume_content（）
+submit itinerary body tooL（）
+emit_hotel_skill_ui（）
+产出
+HotelMultiSegmentSubmitResult
+mark_skill_ui_submitted（）
+run_chat_turn（）
+_render_itinerary_body（）
+generate_plan（）
+一句话记住
+多城不同城市：相邻两城一段高铁，含返程共3段；每个游玩城市一站酒店，共2站

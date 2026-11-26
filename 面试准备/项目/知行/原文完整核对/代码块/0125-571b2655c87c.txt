@@ -1,0 +1,38 @@
+"""快速通道服务。本章先放四个路段助手（拆多城、排游玩顺序、造交通段、分配住宿晚数），第 12 章整份重写本文件"""
+import re
+
+# 目的地支持逗号分隔多城（"杭州,深圳"），全链路真查每段交通 + 每城酒店/天气。
+# 串联语义：出发地 → city0 → city1 → ... → 返程（返程终点=出发地）。
+# 原本把整串"杭州,深圳"当单个城市塞进所有查询（toStation/arrcity/place/city），
+# 导致交通全查空 + LLM 自行扩天数为 5 天。
+_CITY_DELIMS = "，,、"
+
+def _split_cities(destination: str) -> list[str]:
+    """把 destination 按中/英逗号、顿号切分为城市列表（去空去重保序）"""
+    if not destination:
+        return []
+    flat = destination
+    for ch in _CITY_DELIMS:
+        flat = flat.replace(ch, " ")
+    out: list[str] = []
+    for city in flat.split():
+        if city not in out:
+            out.append(city)
+    return out
+
+def ordered_play_cities(departure: str, destination: str) -> list[str]:
+    """游玩/住宿节点城市序列（去重保序）：**出发地仅当本身也在目的地串里才计入**，且置于最前。
+
+ （用户规格）：住宿站点 = 目的地城市序列。北京→上海 = [上海]（不再多查北京），
+    北京→天津/上海 = [天津,上海]，北京→北京 = [北京]；目的地含出发地（北京→北京/天津）时
+    出发地是"第一游玩地"（先本地玩再走），故置于最前 → [北京,天津]
+    """
+    cities = _split_cities(destination)
+    dep = (departure or "").strip()
+    # ★ 出发地也在目的地里：先在出发地玩
+    ordered = (([dep] if dep and dep in cities else []) + cities)
+    out: list[str] = []
+    for c in ordered:
+        if c and c not in out:
+            out.append(c)
+    return out

@@ -1,0 +1,15 @@
+"""run_chat_turn 桩演示：函数立刻返回 EventStream，帧随后才陆续到（纯逻辑，无需密钥；仅桩阶段可用）"""
+import asyncio
+import time
+
+from app.services.chat_contract_service import run_chat_turn
+
+async def main():
+    t0 = time.perf_counter()
+    stream = await run_chat_turn(None, "user-1", "conv-1", "你好")   # 桩不碰数据库，db 传 None 即可
+    print(f"run_chat_turn 返回用时 {1000 * (time.perf_counter() - t0):.2f} ms（没等编排跑完）")
+    async for event in stream:
+        print("收到帧：", event)
+
+if __name__ == "__main__":
+    asyncio.run(main())

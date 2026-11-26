@@ -1,0 +1,11 @@
+"""_build_budget 演示：预算数字全由代码按固定口径算，可以逐项复算（纯函数，无需密钥）"""
+from app.services.express_planning_service import ExpressRequirement, _build_budget
+
+req = ExpressRequirement(departure_city="福州", destination="杭州", departure_date="2026-10-01",
+                         travel_days=3, adult_count=2, budget_max=3000, auto_confirm=True)
+sel = {"transports": [{"type": "train", "price": 356.0}],            # 选定器的产物（这里直接给）
+       "hotels": [{"city": "杭州", "name": "湖滨精选酒店", "price": 358.0}],
+       "cities": ["杭州"], "total_legs": 1}                          # ★ 城市数/路段总数（新预算按真实城市数算"城"）
+print(_build_budget(req, sel))
+# 复算：交通 356×2=712；住宿 358×2晚×1间=716；餐饮 150×3×2=900；门票 200×3×2=1200；杂费 100×3×2=600
+#      合计 4128，人均 2064 ≤ 3000 → 人均未超预算

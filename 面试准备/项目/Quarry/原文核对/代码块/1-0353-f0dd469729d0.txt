@@ -1,0 +1,1 @@
+uv run python -c "from quarry.infra.settings import get_settings; s = get_settings(); print(s.fact_model, s.fact_concurrency, s.fact_ttl_days)"

@@ -1,0 +1,1 @@
+{'health': 200, 'no_key': 401, 'collections': 200, 'forbidden': 403, 'invalid': 422, 'search': 200, 'upload': {'status': 'ready', 'stage_error': None, 'indexed_at': '2026-11-08T16:26:34.216660+00:00'}, 'sdk': {'evidences': 4, 'prompt_chars': 6727}}

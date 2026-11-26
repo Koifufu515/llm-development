@@ -1,0 +1,334 @@
+
+
+===== block 703 7e9b26e43498 lines 1-141 source 知行旅行助手代码-v2#485 =====
+async def _produce(
+        db: AsyncSession, user_id: str, conversation_id: str, content: str, stream: EventStream,
+        force_planning: bool = False, persist_user: bool = True,
+        resume_stage: str | None = None,
+) -> None:
+    try:
+        stream = _SkillUiRecorder(stream)
+        # 会话标题：首条消息自动生成
+        conv = await get_owned_conversation(db, conversation_id, user_id)
+        if conv and conv.title == "新对话" and persist_user:
+            conv.title = content[:30]
+            await db.commit()
+
+        # 保存用户消息
+        if persist_user:
+            db.add(Message(conversation_id=conversation_id, role="user", content=content))
+            await db.commit()
+
+        # 读取最近4条消息作为上下文
+        hist_q = select(Message.role, Message.content).where(
+            Message.conversation_id == conversation_id
+        ).order_by(Message.created_at.desc()).limit(4)
+        hist_rows = (await db.execute(hist_q)).all()
+        history = [f"{r.role}: {r.content}" for r in reversed(hist_rows)]
+
+        _auto_quick_hit = _hit_auto_confirm(content)
+        if _auto_quick_hit:
+            stream.push(make_event(ROLE_ASSISTANT, "✈️ 正在为您规划行程，请稍候…\n"))
+
+        if force_planning:
+            router = RouterResult(
+                is_itinerary_planning=True,
+                inference_log="[卡片提交] 车次已选定，续跑住宿步",
+                skills=[],
+            )
+        else:
+            router = await chat_route(content, history=history)
+
+          # 直查票务确定性门禁，优先级高于意图路由(这个部分后续会被替换掉，可以看环节18)
+        _direct_text = None if force_planning else await try_direct_ticket_query(content, stream, conversation_id)
+
+        # 推送规划提示文本
+        if _direct_text is None and router.is_itinerary_planning and not _auto_quick_hit:
+            _resume_text = _RESUME_PENDING_TEXT.get(resume_stage or "")
+            stream.push(make_event(ROLE_ASSISTANT, _resume_text or (
+                "\U0001F684 车次已确认，正在为您规划住宿…\n" if force_planning
+                else "\u2708\ufe0f 正在为您规划行程，请稍候…\n"
+            )))
+
+        for s in router.skills:
+            stream.push(make_event(ROLE_SKILLS, {
+                "skill_name": s.skill_name, "title": s.title, "desc": s.desc,
+            }))
+
+        # 快速通道分流
+        express_req = None
+        if _direct_text is None and router.is_itinerary_planning and not force_planning:
+            from app.services.express_planning_service import try_express_planning
+            express_req = await try_express_planning(user_id, content, stream)
+
+        # 执行分支：直查 / 快速通道 / 状态机
+        if _direct_text is not None:
+            full_text, state_step, committed, body = _direct_text, None, False, None
+        elif express_req is not None:
+            from app.services.express_planning_service import run_express_planning
+            # 快速通道同样产出结构化逐日行程，交给 generate_plan 作清单兜底
+            full_text, body = await run_express_planning(express_req, stream)
+            committed = False
+            if full_text is None:
+                app_logger.info("[express] 极速模式未接管，回落状态机")
+                full_text, state_step, committed, body = await execute_turn(
+                    user_id, conversation_id, content, router.is_itinerary_planning, stream
+                )
+            else:
+                state_step = "itinerary_generation"
+        else:
+            _warn = _manual_multi_city_day_warning(content)
+            if _warn:
+                stream.push(make_event(ROLE_ASSISTANT, _warn + "\n\n"))
+            full_text, state_step, committed, body = await execute_turn(
+                user_id, conversation_id, content, router.is_itinerary_planning, stream
+            )
+            if _warn:
+                full_text = f"{_warn}\n\n{full_text or ''}"
+
+        # 行程清单生成逻辑
+        plan_id = None
+        _auto_confirm_mode = _auto_quick_hit or express_req is not None
+        _ready_steps = _ITINERARY_READY_STEPS if _auto_confirm_mode else {
+            "budget_summarization", "report_generation"
+        }
+
+        _source = full_text if _looks_like_itinerary(full_text) else (
+            await _recent_itinerary_text(db, conversation_id) if committed else None
+        )
+        if not _source and body:
+            _source = full_text or ""
+
+        if (router.is_itinerary_planning
+                and state_step in _ready_steps
+                and (_source or body)):
+            stream.push(make_event(ROLE_ITINERARY, {
+                "status": "pending", "id": "", "message": "行程清单生成中...",
+            }))
+            try:
+                plan_id = await generate_plan(db, conversation_id, _source or "", structure=body)
+                stream.push(make_event(ROLE_ITINERARY, {
+                    "status": "success", "id": plan_id, "message": "行程清单已生成，点击查看！",
+                }))
+                if express_req is not None:
+                    from app.services.express_planning_service import sync_express_state
+                    await sync_express_state(conversation_id, express_req, full_text, plan_id)
+            except Exception:
+                app_logger.exception("行程清单生成失败")
+                stream.push(make_event(ROLE_ITINERARY, {
+                    "status": "error", "id": "", "message": "行程清单生成失败",
+                }))
+        stream.push(make_event(ROLE_DONE, "finish", code=200))
+
+        # 消息落库，超长内容压缩
+        saved_text = full_text
+        if router.is_itinerary_planning and len(full_text) > COMPRESS_THRESHOLD:
+            saved_text = await compress_content(full_text)
+        extra: dict = {"original": full_text, "inference_steps": router.inference_log}
+        if stream.skill_ui:
+            extra["skill_ui"] = stream.skill_ui
+        if plan_id:
+            extra["itinerary_plans"] = {"status": "success", "id": plan_id, "message": "行程清单已生成，点击查看！"}
+        db.add(Message(
+            conversation_id=conversation_id,
+            role="assistant",
+            content=saved_text,
+            extra_info=extra,
+        ))
+        await db.commit()
+    except Exception as e:
+        app_logger.exception("对话服务异常")
+        stream.push(make_event(ROLE_ERROR, str(e)))
+        stream.push(make_event(ROLE_DONE, "finish", code=500))
+    finally:
+        stream.close()
+
+
+===== block 704 d4ecbfac8f7c lines 1-68 source 知行旅行助手代码-v2#509 =====
+# ===== 旅行域纯查询直通：单点事实查询不走状态机 =====
+# 用于识别单独查高铁/航班的请求，直接调用MCP工具并由代码渲染班次表，不读写状态机
+from app.core.intent import DAY_OFFSET as _DAY_OFFSET
+
+_FLIGHT_LIMIT = 10
+
+def _render_flight_table(rows: list[dict]) -> str:
+    """航班清单渲染：仅渲染解析出的真实航班，禁止模型编造"""
+    if not rows:
+        return ""
+    lines = [
+        "\n\n---\n",
+        "**以下为系统直出的实时航班（每班以本表为准，表外航班为无效信息）**\n", "\n",
+        "| 航班 | 出发→到达 | 航司 | 准点率 | 航站楼 | 价格 |\n|---|---|---|---|---|---|\n"
+    ]
+    for r in rows[:_FLIGHT_LIMIT]:
+        stop = f"（经停{r['stop']}）" if r.get("stop") else ""
+        # 仅使用航班号匹配到的真实票价，无匹配则显示占位符
+        price = f"{r['price']:.0f}元" if r.get("price") else "—"
+        lines.append(
+            f"| {r['code']}{stop} | {r['dep']}→{r['arr']} | {r['airline'][:8]} | "
+            f"{r['ontime'] or '—'} | {r['terminal'] or '—'} | {price} |\n"
+        )
+    lines.append("\n以上为实时航班时刻，票价与余座以航空公司官方渠道为准。\n")
+    app_logger.info(f"✅ 直出真实航班清单：{len(rows)} 班（表外航班均视为编造）")
+    return "".join(lines)
+
+async def _flight_table(frm: str, to: str, day: str) -> str:
+    """航班直查：城市→机场编码→调用VariFlight工具，代码渲染表格。无数据返回空串，不编造航班"""
+    from app.tools.mcp_tools import (_CITY_AIRPORT, _CITY_IATA, flight_price_args,
+                                     get_flight_tools, parse_flight_prices, parse_flight_rows)
+    # 时刻表使用机场码，票价接口使用城市码，两套编码不可混用
+    dep, arr = _CITY_AIRPORT.get(frm), _CITY_AIRPORT.get(to)
+    if not dep or not arr:
+        return ""
+
+    tools = await get_flight_tools()
+    tool = next((t for t in tools if t.name.lower() == "searchflightsbydeparr"), None)
+    if tool is None:
+        return ""
+
+    ptool = next((t for t in tools if t.name.lower() == "getflightpricebycities"), None)
+    cdep, carr = _CITY_IATA.get(frm), _CITY_IATA.get(to)
+
+    async def _prices() -> str:
+        """单独查询票价，票价失败仅价格列置空，不影响航班基础信息"""
+        if ptool is None or not (cdep and carr):
+            app_logger.info(f"[直查] 航班票价跳过：ptool={bool(ptool)} 城市码={cdep}/{carr}")
+            return ""
+        try:
+            return await ptool.ainvoke(flight_price_args(ptool, day, cdep, carr))
+        except Exception:
+            app_logger.warning("[直查] 航班票价查询失败，本次表内价格留空", exc_info=True)
+            return ""
+
+    try:
+        raw, price_raw = await asyncio.gather(
+            tool.ainvoke({"date": day, "dep": dep, "arr": arr}), _prices())
+    except Exception:
+        app_logger.warning("[直查] 航班查询失败", exc_info=True)
+        return ""
+
+    rows = parse_flight_rows(raw)
+    # 按航班号匹配票价，航线最低价不可直接当作单班票价
+    by_flight = parse_flight_prices(price_raw)[0] if price_raw else {}
+    for r in rows:
+        r["price"] = float(by_flight.get(str(r.get("code", "")).upper()) or 0)
+    return _render_flight_table(rows) if rows else ""
+
+
+===== block 705 912eddd50fae lines 1-93 source 知行旅行助手代码-v2#517 =====
+async def try_direct_ticket_query(content: str, stream=None,
+                                   conversation_id: str = "") -> str | None:
+    """命中交通班次单点查询（高铁/航班）则返回代码渲染的真实班次清单
+    确定性门禁规则：
+    ① 含票务对象 +（查询动词/日期词）；② 不含规划词汇；
+    ③ 可解析起讫城市；④ 对应工具已加载。任一不满足返回 None，交由原通道处理
+    """
+    intent = detect_intent(content)
+    slot = _PENDING_QUERY.get(conversation_id or "")
+
+    # 存在待补槽位，但用户输入包含规划类内容，清空查询状态
+    if slot and intent.planning_noise:
+        _PENDING_QUERY.pop(conversation_id or "", None)
+        slot = None
+
+    if not slot and not intent.looks_like_query:
+        app_logger.info(f"[direct] 门禁①②未命中，交回原通道：{content[:30]}")
+        return None
+
+    slot = slot or {"kind": "flight" if intent.flight_object else "train"}
+    _fill_slots(slot, content, intent)
+
+    # 起讫城市缺失，追问补齐槽位，超过轮数上限则退出直查通道
+    if not (slot.get("frm") and slot.get("to")):
+        slot["turns"] = slot.get("turns", 0) + 1
+        if conversation_id and slot["turns"] <= _PENDING_TTL:
+            _PENDING_QUERY[conversation_id] = slot
+            app_logger.info(f"[direct] 槽位待补（第 {slot['turns']} 轮）：{slot}")
+        else:
+            _PENDING_QUERY.pop(conversation_id or "", None)
+            return None
+        text = _missing_slot_text(slot)
+        if stream is not None:
+            stream.push(make_event(ROLE_ASSISTANT, text))
+        return text
+
+    # 槽位收集完成，清除待查询缓存
+    _PENDING_QUERY.pop(conversation_id or "", None)
+    frm, to, day = slot["frm"], slot["to"], slot.get("date") or _parse_query_date(content)
+
+    def _emit(text: str) -> str:
+        """统一流式事件推送，所有分支出口统一调用，防止事件漏推"""
+        if stream is not None:
+            stream.push(make_event(ROLE_ASSISTANT, text))
+        return text
+
+    _note = ""
+    # 航班查询分支，无直飞班次自动降级查询同日高铁
+    if intent.flight_object:
+        if stream is not None:
+            stream.push(make_event(ROLE_ASSISTANT, f"✈️ 正在为您查询 {frm} → {to} 的航班，请稍候…\n"))
+        _ftable = await _flight_table(frm, to, day)
+        if _ftable:
+            app_logger.info(f"✅ 直查通道（航班）：{day} {frm}→{to}（代码渲染，未走状态机）")
+            return _emit(f"为您查询到 **{day}** {frm} → {to} 的航班：{_ftable}")
+        _note = (f"未查询到 **{day}** {frm} → {to} 的直飞航班（航班数据源该航线暂无直飞班次），"
+                 "为您附上同期高铁班次供参考：\n\n")
+
+    # 高铁查询分支
+    try:
+        from app.tools.mcp_tools import get_train_tools, parse_compact_rows, parse_ticket_rows
+        tools = await get_train_tools()
+    except Exception:
+        return None
+
+    tool = next((t for t in tools if t.name.lower() == "get-tickets"), None)
+    if tool is None:
+        return None
+
+    if stream is not None:
+        stream.push(make_event(ROLE_ASSISTANT, f"🚄 正在为您查询 {frm} → {to} 的高铁班次，请稍候…\n"))
+    try:
+        raw = await tool.ainvoke({"date": day, "fromStation": frm, "toStation": to})
+    except Exception:
+        app_logger.warning("[直查] 12306 班次查询失败", exc_info=True)
+        return _emit(_note + f"抱歉，**{day} {frm} → {to}** 的实时班次查询失败，请稍后重试或换一站查询。")
+
+    rows = parse_compact_rows(raw) or parse_ticket_rows(raw)
+    if not rows:
+        return _emit(_note + f"没有查到 **{day} {frm} → {to}** 的可用班次（12306 未返回余票数据），"
+                      "您可以换一个日期或邻近车站再试。")
+
+    table = _render_ticket_table(
+        {(rows[0]["from"], rows[0]["to"]): _rows_to_seg(rows)},
+        header="**以下为 12306 实时班次（数据来源：12306，余票与票价随时变动）**\n",
+        tail="\n以上为查询结果，如需预订请在 12306 官方渠道下单。\n",
+    )
+    if not table:
+        return None
+
+    app_logger.info(f"✅ 直查通道：{day} {frm}→{to} 共 {len(rows)} 趟（代码渲染，未走状态机）")
+    return _emit(_note + f"为您查询到 **{day}** {frm} → {to} 的班次：{table}")
+    
+
+
+===== block 706 8262426c6e72 lines 1-20 source 知行旅行助手代码-v2#518 =====
+"""try_direct_ticket_query 门禁演示：前三道门禁全是正则，不命中立刻返回 None（前 5 句纯逻辑；最后一句需 12306 MCP）"""
+import asyncio
+
+from app.services.chat_stream_executor import try_direct_ticket_query
+
+NOT_HIT = [
+    "我想坐高铁去杭州玩",                        # 门禁①：没有票务对象词（"高铁"不算，"高铁票"才算）
+    "高铁票好贵啊",                             # 门禁①：有对象词，但既无查询动词也无日期词
+    "帮我规划行程，顺便查下福州到深圳的高铁票",    # 门禁②：含"规划/行程"→ 这是规划，交回原通道
+    "查一下明天的高铁票",                        # 门禁③：解析不出起讫城市
+    "你好呀",
+]
+
+async def main():
+    for text in NOT_HIT:
+        print(f"{text:22s} → {await try_direct_ticket_query(text)}")   # stream=None：只看返回值
+    print(await try_direct_ticket_query("查一下明天福州到深圳的高铁票"))  # 命中 → 真查 12306（需 MCP）
+
+if __name__ == "__main__":
+    asyncio.run(main())

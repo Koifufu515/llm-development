@@ -1,0 +1,5 @@
+协议泄漏？False  为您查询到以下班次
+协议泄漏？True   ✿FUNCTION✿: get-tickets
+协议泄漏？True   你可以在回复中插入以下命令……
+文本 chunk 带工具调用？ False
+工具 chunk 带工具调用？ True ← 工具轮常常 0 文本，只能靠它认出来

@@ -1,0 +1,70 @@
+knowgo_travel_backend
+master v
+營 7_build_vectorstorev
+@
+Q
+试用
+X
+m xian.md x
+v 7_build_vectorstore.py
+口
+西安旅游政路
+~口 knowgo_travel_backend
+-venv library根目；
+## 城市桃况
+app
+v data
+西安，古称长安，是中国四大古都之一，拥有 3100 多年的建城史和 1100 多年的建都史。作为丝绸之路的起点，西安见证了十三个王朝的兴衰，是中华文明的重要发祥地之一。
+v口 documents
+**最佳旅游季节**：3-5月（春季）和9-11月（秋季），气候宜人。
+口 destinations
+Mt xian.md
+**推荐游玩天数**：4-5 天
+> Ilogs
+v G scripts
+## 必游景点
+d 1_test_|Im.py
+12
+i 2_test_state_persistei
+### 兵马俑博物馆（5A級景区）
+14
+>心3_test_requirement_a
+15
+**简介**：世界第八大奇迹，泰始皇陵的陪葬坑，展示了泰朝军队的恢弘气势。
+> 4_test_handoffs.py
+16
+>心5_test_rollback_and_r
+17
+**门票**：120元（旺季）/90元《淡季）
+>心6_test_mcp.py
+18
+>心 7_build_vectorstore.py
+19
+**开放时间**：8:30-18:00
+>心 7 test_rag.py
+20
+21
+**游览建议**：
+init_：py
+22
+- 建议游览时间：3-4 小时
++.env
+- 一定要请讲解员（约100元），否则看不懂
+拖拽至此上传
+西占加王 1旦终和组木口用日
+运行
+≥ 7 build vectorstore
+C：\users\Administrator\.Local\bin\uv.exe run E:/knowgo_travel_backend/.venv/Scripts/python.exe E：\knowgo_travel_backend\scripts\7_bvild_vectonstore.py
+心
+引
+i
+4 TRAE AI
+登录失败
+• knowgo_travel_backend >a data
+2:1
+日TRAE
+knowgo_travel_backend
+M Islands Dark•
+CRLF UTF-8
+艮 3个空格
+wv （knowgo._travel_backend） ［Python 3.12.13］

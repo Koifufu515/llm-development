@@ -1,0 +1,19 @@
+[32m14:18:44.398[0m | [1mINFO   [0m | [36mquarry.rerank.factory[0m:[36mget_reranker[0m:[36m19[0m | [1m重排后端：api[0m
+Building prefix dict from the default dictionary ...
+Loading model from cache /var/folders/rk/qtxh2ds10vd6_cdg09pdzrbm0000gn/T/jieba.cache
+Loading model cost 0.209 seconds.
+Prefix dict has been built successfully.
+
+并发 4，请求 60 成功 / 0 失败，耗时 7.9 秒，吞吐 7.6 次/秒
+重排 开，事实层 开
+
+  阶段                  P50      P95      P99
+  lookup_ms             2.8      9.3    229.7
+  recall_ms           181.6    380.6   1487.4
+  rerank_ms           252.1    359.1    392.1
+  expand_ms             9.1     13.8     16.8
+  facts_ms              3.5      5.7      6.6
+  assemble_ms           0.1      0.5      0.7
+  合计                458.5    890.6   1774.3
+
+⚠️ P95 超过 800 毫秒的预算，看看哪一段最贵（一般是重排）

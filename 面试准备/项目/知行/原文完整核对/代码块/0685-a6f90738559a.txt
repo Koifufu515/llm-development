@@ -1,0 +1,33 @@
+"""select_transport_tool 段级循环：拒绝 / 从用户原话回填车次 / 最后一段完成推进（直接调真实工具，纯逻辑，无需密钥）"""
+from langchain.tools import ToolRuntime
+from langchain_core.messages import HumanMessage
+
+from app.tools.state_transition import select_transport_tool
+
+state = {"messages": [HumanMessage(content="好的")], "current_step": "transport_planning",
+         "user_requirement": {"departure_city": "北京", "travel_days": 4}, "selected_destination": "天津、上海",
+         "leg_cursor": 0, "leg_selections": {}}
+
+def call(**kwargs):
+    """测试驱动：用当前 state 调一次真实工具，返回它的 Command.update"""
+    rt = ToolRuntime(state=state, context=None, config={}, stream_writer=None, tool_call_id="call_1", store=None)
+    return select_transport_tool.func(runtime=rt, **kwargs).update
+
+# 出口 A：当前该确认"北京→天津"，legs 里却只有第 2 段，而且哪儿都抓不到车次号
+up = call(transport_type="train", legs=["天津→上海"])
+print("出口 A 拒绝       →", [k for k in up if k != "messages"] or "不写任何字段", "|", up["messages"][0].content[:30], "…")
+
+# 出口 B：模型忘传 legs，但用户原话里有车次号 → 回填给当前段，游标 +1，current_step 不动
+state["messages"].append(HumanMessage(content="北京到天津坐 G1197吧"))
+up = call(transport_type="train")
+print("出口 B 回填第 1 段 →", {k: v for k, v in up.items() if k != "messages"})
+state.update({k: v for k, v in up.items() if k != "messages"})          # 测试驱动：像 LangGraph 一样合并回 state
+
+# 中间段：照常确认，游标 +1；后面还有返程段，current_step 不动
+up = call(transport_type="train", legs=["天津→上海 G7512 09:05"])
+print("第 2 段确认       →", {k: v for k, v in up.items() if k != "messages"})
+state.update({k: v for k, v in up.items() if k != "messages"})
+
+# 出口 C：最后一段（返程）确认 → 一次写入全部字段，推进到住宿步
+up = call(transport_type="train", legs=["上海→北京 G2 19:00"])
+print("出口 C 最后一段   →", {k: v for k, v in up.items() if k != "messages"})

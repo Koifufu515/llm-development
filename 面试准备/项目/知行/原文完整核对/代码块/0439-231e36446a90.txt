@@ -1,0 +1,223 @@
+# ============== 快捷回退工具 ==============
+
+@tool
+def go_back_to_requirement(
+        reason: str = "用户需要修改旅行需求",
+        runtime: ToolRuntime = None
+) -> Command:
+    """
+    快捷回退：返回到需求收集步骤，重新开始规划。
+
+    使用场景：
+    - 用户说"我想重新规划"
+    - 用户说"出发日期要改"
+    - 用户说"预算变了"
+    - 用户说"人数不对"
+    - 用户说"从头开始"
+
+    参数：
+    - reason: 回退原因（可选，默认为"用户需要修改旅行需求"）
+
+    效果：
+    - 清除所有已收集的数据
+    - 返回到最初的需求收集阶段
+    """
+    app_logger.info(f"快捷回退到需求收集: {reason}")
+
+    blocked = _guard_back(runtime, "requirement", "重新规划")
+    if blocked:
+        return blocked
+
+    # ★ 守卫通过后委托给通用回退：7 个快捷工具共用一个内核
+    return go_back_to_step.invoke({
+        "target_step": "requirement_collection",
+        "reason": reason,
+        "clear_subsequent_data": True,
+        "runtime": runtime
+    })
+
+@tool
+def go_back_to_destination(
+        reason: str = "用户需要重新选择目的地",
+        runtime: ToolRuntime = None
+) -> Command:
+    """
+    快捷回退：返回到目的地推荐步骤。
+
+    使用场景：
+    - 用户说"换个目的地"
+    - 用户说"这个地方不想去了"
+    - 用户说"有没有其他推荐"
+    - 用户说"目的地选错了"
+
+    参数：
+    - reason: 回退原因（可选）
+
+    效果：
+    - 保留用户需求
+    - 清除目的地选择及后续所有数据
+    """
+    app_logger.info(f"快捷回退到目的地推荐: {reason}")
+
+    blocked = _guard_back(runtime, "destination", "更换目的地")
+    if blocked:
+        return blocked
+
+    return go_back_to_step.invoke({
+        "target_step": "destination_recommendation",
+        "reason": reason,
+        "clear_subsequent_data": True,
+        "runtime": runtime
+    })
+
+@tool
+def go_back_to_transport(
+        reason: str = "用户需要更换交通方式",
+        runtime: ToolRuntime = None
+) -> Command:
+    """
+    快捷回退：返回到交通规划步骤。
+
+    使用场景：
+    - 用户说"不想坐飞机了"
+    - 用户说"改成高铁"
+    - 用户说"还是自驾吧"
+    - 用户说"交通方式重新选"
+
+    参数：
+    - reason: 回退原因（可选）
+
+    效果：
+    - 保留用户需求和目的地选择
+    - 清除交通方式及后续数据
+    """
+    app_logger.info(f"快捷回退到交通规划: {reason}")
+
+    blocked = _guard_back(runtime, "transport", "更换交通方式")
+    if blocked:
+        return blocked
+
+    return go_back_to_step.invoke({
+        "target_step": "transport_planning",
+        "reason": reason,
+        "clear_subsequent_data": True,
+        "runtime": runtime
+    })
+
+@tool
+def go_back_to_accommodation(
+        reason: str = "用户需要调整住宿偏好",
+        runtime: ToolRuntime = None
+) -> Command:
+    """
+    快捷回退：返回到住宿规划步骤。
+
+    使用场景：
+    - 用户说"住宿要求改一下"
+    - 用户说"想住民宿"
+    - 用户说"酒店太贵了"
+    - 用户说"换个住宿类型"
+
+    参数：
+    - reason: 回退原因（可选）
+
+    效果：
+    - 保留需求、目的地、交通方式
+    - 清除住宿选择及后续数据
+    """
+    app_logger.info(f"快捷回退到住宿规划: {reason}")
+
+    return go_back_to_step.invoke({
+        "target_step": "accommodation_planning",
+        "reason": reason,
+        "clear_subsequent_data": True,
+        "runtime": runtime
+    })
+
+@tool
+def go_back_to_food(
+        reason: str = "用户需要调整餐饮偏好",
+        runtime: ToolRuntime = None
+) -> Command:
+    """
+    快捷回退：返回到餐饮规划步骤。
+
+    使用场景：
+    - 用户说"餐饮偏好改一下"
+    - 用户说"想多吃特色美食"
+    - 用户说"简单点就行"
+
+    参数：
+    - reason: 回退原因（可选）
+
+    效果：
+    - 保留需求、目的地、交通、住宿
+    - 清除餐饮选择及后续数据
+    """
+    app_logger.info(f"快捷回退到餐饮规划: {reason}")
+
+    return go_back_to_step.invoke({
+        "target_step": "food_planning",
+        "reason": reason,
+        "clear_subsequent_data": True,
+        "runtime": runtime
+    })
+
+@tool
+def go_back_to_itinerary(
+        reason: str = "用户需要调整行程安排",
+        runtime: ToolRuntime = None
+) -> Command:
+    """
+    快捷回退：返回到行程生成步骤。
+
+    使用场景：
+    - 用户说"行程安排不太合理"
+    - 用户说"想加点景点"
+    - 用户说"太累了，减少活动"
+    - 用户说"重新排一下行程"
+
+    参数：
+    - reason: 回退原因（可选）
+
+    效果：
+    - 保留所有偏好设置
+    - 仅清除行程和预算数据
+    """
+    app_logger.info(f"快捷回退到行程生成: {reason}")
+
+    return go_back_to_step.invoke({
+        "target_step": "itinerary_generation",
+        "reason": reason,
+        "clear_subsequent_data": True,
+        "runtime": runtime
+    })
+
+@tool
+def go_back_to_budget(
+        reason: str = "用户需要重新计算预算",
+        runtime: ToolRuntime = None
+) -> Command:
+    """
+    快捷回退：返回到预算汇总步骤。
+
+    使用场景：
+    - 用户说"预算超了"
+    - 用户说"重新算一下费用"
+    - 用户说"看看能不能便宜点"
+
+    参数：
+    - reason: 回退原因（可选）
+
+    效果：
+    - 保留行程安排
+    - 仅清除预算和订单数据
+    """
+    app_logger.info(f"快捷回退到预算汇总: {reason}")
+
+    return go_back_to_step.invoke({
+        "target_step": "budget_summarization",
+        "reason": reason,
+        "clear_subsequent_data": True,
+        "runtime": runtime
+    })

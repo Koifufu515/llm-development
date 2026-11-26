@@ -1,0 +1,4 @@
+current_step → destination_recommendation
+置为 None 的字段： ['accommodation_options', 'budget', 'destination_options', 'food_options', 'itinerary', 'itinerary_body', 'leg_cursor', 'leg_selections', 'order_id', 'selected_accommodation_types', 'selected_destination', 'selected_food_types', 'selected_hotels', 'selected_transport', 'selected_transport_legs', 'stay_cursor', 'transport_options']
+需求还在吗？ True
+回退到订单步 → 只回一条拒绝消息 | 订单生成是最终步骤，无法回退到此步骤。如需修改，请回退到更早 …

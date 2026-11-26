@@ -1,0 +1,6 @@
+"""_reid 演示：候选 id 加上段号前缀，保证跨段唯一（纯函数，无需密钥）"""
+from app.capabilities.hotel_multi_segment.hotel_agent_tool import _reid
+from app.capabilities.hotel_multi_segment.hotel_parser import brand_fallback
+
+print([b.brand_id + ":" + b.brandName for b in brand_fallback("经济型")[:3]], "（重编号之前）")
+print([b.brand_id + ":" + b.brandName for b in _reid("h2", brand_fallback("经济型")[:3], "brand_id")], "（第 2 段重编号之后）")

@@ -1,0 +1,3865 @@
+
+
+知行旅行助手代码-v2 
+
+🔗 原文链接： 知行旅行助手代码-v2 
+⏰ 转存时间： 2026/10/24 15:33:44
+✂️ 本文档由 易飞书 整理生成
+
+前置注意点
+
+1.我在项目中写了很多scripts脚本(非常多)，帮助你们去理解代码，让大家知道模型传给这个函数的真实情况，如果情况比较着急的话，可以不去创建与运行scripts脚本
+
+**2.**预算的话，我这里没有做很严格的校验(我本来打算去掉的，因为携程也没有)
+
+2.1 因为预算这个东西加了麻烦会很多，首先你想去浙江和深圳总共玩6天，你的预算只有3000，并且你想坐飞机这个可能吗？
+
+2.2 后续的话可能做更严格的预算校验或者是去掉预算，本次的预算就保留着
+
+前端代码:
+
+前端采用React19+Next16，解压下来之后拖进Pycharm，然后打开终端输入
+
+下载依赖:npm install
+
+启动前端:npm run dev
+
+后端代码:
+
+如果想立刻运行的话
+
+1.第01章的 **3.**中获取api_key 然后配置到 .env文件中
+
+2.第01章的 **4.**中拉取docker
+
+[代码块 448301759484]
+
+后端启动方式
+
+[代码块 2a6ca86eb77d]
+
+第 01 章 · 项目全景与环境搭建
+
+3.你要准备的环境清单
+
+阿里云 DashScope（千问 LLM）：https://bailian.console.aliyun.com/cn-beijing/model/settings/api-key
+
+LangSmith（可观测性，可选但强烈推荐）：https://smith.langchain.com/
+
+高德开放平台（地图/天气）：https://console.amap.com/
+
+腾讯地图key（必填），获取链接：https://lbs.qq.com/dev/console/application/mine
+
+Variflight 航班 API 链接: https://mcp.variflight.com/?utm_source=clauo1.585dg.com
+
+温馨提示:好像每一个月会送50额度，不过最多只能用10次左右
+
+AIGOHOTEL 酒店 MCP(选开发者) :https://travelportal-partner-center.dida.com/distribution-link
+
+温馨提示:这个酒店的MCP不太稳定，目前还没有找到更好的，毕竟这个免费
+
+DeepSeek(记得冲10元):https://platform.deepseek.com/usage
+
+Tavily:https://www.tavily.com/
+
+12306的MCP https://www.modelscope.cn/mcp/servers/@Joooook/12306-mcp
+
+4.用 Docker 拉起 PostgreSQL 和 Redis
+
+我们不本机安装数据库，全部丢给 Docker——好处是一条命令启停、卸载零残留、版本随意换。
+
+4.1 PostgreSQL（存对话记录、长期记忆、Checkpointer）
+
+选用镜像是 pgvector/pgvector:pg17。这是官方 PostgreSQL 17 加了 pgvector 扩展的版本——本项目主要向量能力放在 Chroma，但选带 pgvector 的镜像可以为将来"把向量也搬进 PG 统一管理"留后路，用不到的时候就当普通 PG 用。
+
+Windows PowerShell：
+
+[代码块 aad45d54edcd]
+
+参数详解（每一个都要看懂）：
+
+参数
+作用
+
+-d
+后台运行（daemon 模式），关掉终端也不停
+
+--name travel_postgres
+容器名，后面用它启停/查日志
+
+-e POSTGRES_DB=xxx
+初始化时自动创建这个数据库
+
+-e POSTGRES_USER=xxx
+初始化用户名
+
+-e POSTGRES_PASSWORD=xxx
+初始化密码（生产环境务必改强）
+
+-p 5432:5432
+端口映射（主机 5432 → 容器 5432），本机 psql/DBeaver 连的就是主机 5432
+
+-v E:\docker-data\postgres:/var/lib/postgresql/data
+数据卷挂载，保证容器删了数据还在
+
+--restart unless-stopped
+开机自启，除非你手动 stop 它
+
+验证跑起来了：
+
+[代码块 6bfb56a3a6ce]
+
+4.2 Redis（缓存、后期扩展用）
+
+[代码块 ba5845684b98]
+
+这里比 PG 多了两个细节：
+
+redis:7-alpine：alpine 版本极小（~30MB），生产环境常用
+
+命令最后的 redis-server --appendonly yes：开启 AOF 持久化，保证 Redis 重启不丢数据
+
+验证：
+
+[代码块 b5b55e0d5b85]
+
+macOS / Linux 用户：命令一模一样，只是换行符从反引号 \`` 改成反斜杠 `，数据目录路径改成 ~/docker-data/postgres 之类的。
+
+5.用 uv 初始化 Python 项目
+
+uv 是 Rust 写的 Python 包管理器，比传统 pip + venv 快得多，且原生支持 pyproject.toml 单一配置。
+
+安装 uv（如果还没装）：
+
+[代码块 28f519647d5d]
+
+安装完 uv --version 能出来版本号就 OK。
+
+5.1 建项目
+
+[代码块 aee9e0e6cddb]
+
+此时目录结构：
+
+5.2 声明依赖
+
+打开 pyproject.toml，把 [project] 段替换成下面这份完整清单。这是项目最终会用到的全部依赖，我们一次性装齐，避免后面每章都要 uv add xxx。
+
+[代码块 334ac814c38d]
+
+5.3 装依赖
+
+[代码块 93b87e831129]
+
+6.搭出项目骨架
+
+6.2 一次建出第一层目录
+
+这一章只建第一层目录：
+
+app/ 下的 11 个 Python 包，各放一个空的 init.py；
+
+app/data/、app/scripts/ 和项目根的 data/、evaluation/、logs/、scripts/，只是普通目录，不需要 init.py。scripts/ 里的脚本一律按文件路径运行（uv run python scripts/xxx.py），不当模块导入。
+
+更深一层的子目录（agents/handoffs/、api/v1/、mcp_core/servers/、capabilities/ 下的四个包等），到用它的那一章再建。
+
+Windows 一键建目录（在项目根执行）：
+
+[代码块 c72ef39aa799]
+
+macOS / Linux：
+
+[代码块 23ea3a96b1ba]
+
+7.三个"启动必备"文件
+
+7.1   环境变量
+
+📁 文件路径：.env
+
+在项目根建 .env 文件（注意开头是点），先只填能填的部分，其他 Key 后面章节用到再补：
+
+[代码块 2971aead4771]
+
+7.2  配置读取
+
+ 📁 文件路径：app/config.py
+
+Python 里读环境变量的姿势很多，最专业的姿势是用 pydantic-settings：类型自动校验、有默认值、支持嵌套、一处修改全项目生效。
+
+[代码块 288a86454326]
+
+7.3  全局日志器
+
+ 📁 文件路径：app/utils/logger.py
+
+后面每个模块都要打日志，先把日志器准备好。用 loguru，比标准库 logging 好用一百倍：
+
+[代码块 e7266a0c554a]
+
+7.4  FastAPI 入口
+
+ 📁 文件路径：app/main.py
+
+这是本章最后一个文件，也是能让你跑起来看到东西的文件：
+
+[代码块 e15cb052f58c]
+
+8.冒烟测试
+
+四步验证一切正常。
+
+第 1 步：确认 Docker 服务在跑
+
+[代码块 bf1a6b8e1eac]
+
+应该能看到 travel_postgres 和 travel_redis 两行，状态 Up。
+
+第 2 步：启动 FastAPI
+
+在项目根执行：
+
+[代码块 689a01c6dcec]
+
+第 3 步：浏览器验证
+
+打开三个链接，都应该有响应：
+
+URL
+期望结果
+
+http://localhost:8000/
+JSON：{"status": "healthy", ...}
+
+http://localhost:8000/health/config
+JSON：能看到你的模型名和配置
+
+http://localhost:8000/docs
+Swagger UI 页面，看到两个 API 定义
+
+第 4 步：命令行小实验，验证 LLM 通路
+
+在项目根建一个临时文件 scripts/Chapter_One/1_test_llm.py（scripts 目录顺手建一下）：
+
+[代码块 fb4649d07104]
+
+跑它：
+
+[代码块 00a0f93d7369]
+
+如果一切正常，你会看到类似：
+
+[代码块 8f4cac23acdb]
+
+能看到这段话，意味着你的整套本地环境（Python + 依赖 + 配置 + LLM Key）全部通了。
+
+第 02 章 · 状态机地基：TravelState + Checkpointer + Store
+
+用一个简单的图把三者关系串起来：
+
+环节 1：定义 TravelState
+
+1.2 完整的 State 定义
+
+📁 文件路径：app/core/state.py
+
+[代码块 db9ba142a904]
+
+环节 2：定义长期记忆的 Pydantic 模型
+
+📁 文件路径：app/core/memory_models.py
+
+[代码块 e84aab8e657d]
+
+环节 3：搭建 Checkpointer（会话持久化）
+
+3.1 为什么必须是"单例 + 连接池"
+
+📁 文件路径：app/core/checkpointer.py
+
+[代码块 610199f580d2]
+
+环节 4：搭建 Store（用户长期记忆）
+
+📁 文件路径：app/core/store.py
+
+[代码块 10d4f9f48b2d]
+
+环节 5：main.py 嵌套 lifespan 组装
+
+📁 文件路径：app/main.py
+
+[代码块 dee03ce74beb]
+
+环节 6：冒烟测试——跨"进程重启"验证持久化
+
+6.2 完整测试脚本
+
+📁 文件路径：scripts/Chapter_Two/2_test_state_persistence.py
+
+[代码块 c5355b5fdc41]
+
+6.3 预期输出
+
+[代码块 75f44a83b899]
+
+第 03 章 · 第一个可用 Agent：单步骤 + 单工
+
+环节 1：搭建 LLM 工厂
+
+📁 文件路径：app/utils/llm_factory.py
+
+[代码块 aaaaf2a2173b]
+
+1.2 完整代码
+
+📁 文件路径：app/tools/init.py
+
+[代码块 115a777dae8a]
+
+📁 文件路径：app/tools/state_transition.py
+
+[代码块 1ff9e871435e]
+
+环节 2：写"需求收集"这一步的 System Prompt
+
+📁 文件路径：app/agents/init.py
+
+[代码块 a92239afb9fa]
+
+📁 文件路径：app/agents/handoffs/init.py
+
+[代码块 f06e140802aa]
+
+📁 文件路径：app/agents/handoffs/step_prompts.py（暂时的，后续会删掉）
+
+[代码块 192bd281a0ef]
+
+环节 3：用 create_agent 把它们拼起来
+
+📁 文件路径：app/agents/handoffs/travel_agent.py
+
+[代码块 46fb82650e3d]
+
+环节 4：冒烟测试 —— 让它真的说话
+
+📁 文件路径：scripts/Chapter_Three/3_test_requirement_agent.py
+
+[代码块 c580103ba580]
+
+4.1 期望输出（节选）
+
+[代码块 ea46a103cff1]
+
+第 04 章 · Handoffs 核心：StepConfig + Middleware 动态注入
+
+环节 1：补齐剩下 5 把状态转换工具
+
+1.1 完整代码（直接删除state_transition的代码然后再复制下面的进去）
+
+📁 文件路径：app/tools/state_transition.py
+
+[代码块 05a997e25df2]
+
+环节 2：定义 StepConfig 数据契约
+
+2.2 完整代码
+
+📁 文件路径：app/agents/handoffs/step_config.py
+
+[代码块 3589a7f447c3]
+
+环节 4：实现 StepConfigMiddleware
+
+📁 文件路径：app/core/middleware.py
+
+[代码块 9177ea995aee]
+
+环节 5：更新 create_travel_agent(直接删除的travel_agent代码然后再复制下面的进去)
+
+📁 文件路径：app/agents/handoffs/travel_agent.py
+
+[代码块 a6b37efdfd3d]
+
+环节 6：冒烟测试 —— 跨步骤流转
+
+6.1 冒烟脚本
+
+📁 文件路径：scripts/Chapter_Four/4_test_handoffs.py
+
+[代码块 006debd3940b]
+
+6.2 预期输出（节选）
+
+[代码块 0c197f3b1934]
+
+看到 current_step 从 requirement_collection 一路推到 report_generation——8 步都跳完了，中间一次没有换 Agent，Middleware 只是给同一个 Agent 换了衣服。
+
+第 05 章 · 工具体系：回退工具 + 长期记忆
+
+本章写的 app/core/middleware 中间件代码，只是阶段性的教学版本，专门用来入门讲解核心逻辑，并不是项目最终成型的代码。
+
+后续第11章会对这部分代码做一次大规模调整，具体变动规则如下：
+
+第11章会直接删除本章 app/core/middleware 目录下的所有旧代码。
+
+2**. 删除旧代码不是无用返工**，是为了后续更好地搭建完整、规范的项目架构。11章会新增大量全新代码，同时本章保留的部分代码也会小幅修改优化。
+
+简单来说，第五章的中间件代码主打通俗易懂、适配教学，优先保证大家能看懂、学会基础逻辑；后续章节会基于这套基础逻辑，做专业化、工程化的全面优化升级。
+
+环节 1：回退工具的核心机制 —— 级联清空
+
+1.3 完整代码（在 state_transition.py 末尾追加）
+
+📁 文件路径：app/tools/state_transition.py
+
+[代码块 8ba941148745]
+
+1.4 级联清空的可视化
+
+用一张图看清"回退到第 3 步"时会清哪些字段：
+
+[代码块 f691124847e8]
+
+环节 2：7 把快捷回退工具
+
+2.1 完整代码（追加）
+
+📁 文件路径：app/tools/state_transition.py
+
+[代码块 fd6cca41a844]
+
+环节 3：查询进度工具(了解，后续用不上)
+
+回退能力到位后，用户很可能会问："我现在到哪一步了？"或者"还有几步？"。这就是 check_current_progress 的用武之地。
+
+📁 文件路径：app/tools/state_transition.py
+
+[代码块 04ee85e1a377]
+
+环节 4：长期记忆工具家族
+
+4.2 一把工具的完整实现（其他四把同构）
+
+📁 文件路径：app/tools/memory_tools.py
+
+[代码块 3cca27c77cef]
+
+环节 5：Middleware 升级 —— 记忆注入进 Prompt
+
+5.2 更新 Middleware（直接删除middleware的代码然后再复制下面的进去）
+
+📁 文件路径：app/core/middleware.py
+
+[代码块 d003d3699330]
+
+🔮 后续预告：middleware 后面还会长
+
+这一版 middleware 是教学骨架，讲清了 awrap_model_call 的 6 步循环 + 长期记忆注入，一共不到 90 行。但它不是终点——到第 8 章引入多段并行 capabilities 后，middleware 会一次性升级到生产版（约 700 行），围绕现在这 6 步骨架加装 3 类护栏：
+
+新增护栏
+防的是什么问题
+为什么现在不加
+
+手动模式硬闸门（一轮一步 + 确认闸门）
+手动模式下模型不问就自动推进到下一步；一轮内连查 6 轮不停手
+现在还没多轮候选选择的场景
+
+capability 接管时摘查询工具
+代码已并行查完全部段、卡片推给用户了，模型又自己调一次 get-tickets，编造班次写进正文
+capability 要到第 8 章才引入
+
+残缺 tool_calls 自愈
+工具节点异常留下"AIMessage 带 tool_calls 但没有对应 ToolMessage"的残缺历史，整个会话之后每轮都 400 卡死
+单工具场景异常概率低，多段并行才高发
+
+核心承诺：本章教的这 6 步骨架 + 长期记忆逻辑，在生产版里一字不改地保留——生产版是**"骨架 + 3 类新东西"**，不是重写。所以到第 8 章看到 700 行代码时不用怕："你早就学过其中一半了，剩下一半是围绕它包了一圈护栏"。
+
+先学会走，再学会跑——那些护栏防的都是 capability（多段并行）场景才有的问题，现在提前引入反而会让你不知道它们在防什么。
+
+环节 6：更新 StepConfig，暴露记忆与回退工具（直接删除step_config的代码然后再复制下面的进去
+
+分配原则：记忆工具跟当下步骤主题一致（餐饮步暴露饮食禁忌 & 偏好），回退工具只往上退，不越级往下推。
+
+📁 文件路径：app/agents/handoffs/step_config.py
+
+[代码块 f07ba0e8ac66]
+
+环节 7：更新 create_travel_agent（直接删除travel_agent的代码然后再复制下面的进去）
+
+工具家族从 7 把扩到 21 把——总工具表要把新增的都注册进去，Middleware 才能在每一步筛选出该步能用的子集：
+
+📁 文件路径：app/agents/handoffs/travel_agent.py
+
+[代码块 675a2558c4f5]
+
+环节 8：冒烟测试 —— 回退 + 记忆综合场景
+
+一个能把两类新能力都跑一遍的场景：
+
+[代码块 df703214f174]
+
+8.1 冒烟脚本
+
+📁 文件路径：scripts/Chapter_Five/5_test_rollback_and_memory.py
+
+[代码块 ed3897c38bc5]
+
+第 06 章 · MCP 集成：从"闭门造车"到"接入九个真实数据源"
+
+环节 1：写第一个自建 MCP Server —— 天气服务
+
+📁 文件路径：app/mcp_core/servers/weather_server.py
+
+[代码块 155205ca0d05]
+
+环节 2：第二个自建 MCP Server —— 搜索服务
+
+📁 文件路径：app/mcp_core/servers/search_server.py
+
+[代码块 87154558b221]
+
+环节 3：MCP 客户端管理器（单例 + 隔离加载 + 降级）
+
+3.2 完整代码
+
+📁 文件路径：app/mcp_core/client.py
+
+[代码块 993ad2ab4f7b]
+
+环节 5：工具筛选器
+
+📁 文件路径：app/tools/mcp_tools.py
+
+[代码块 7fcd38fef69d]
+
+环节 6：更新 StepConfig，把 MCP 工具挂进各步（直接删除step_config的代码然后再复制下面的进去）
+
+📁 文件路径：app/agents/handoffs/step_config.py（更新版）
+
+[代码块 4124cd6e41b4]
+
+环节 7：更新 main.py 的 lifespan —— MCP 嵌进内层
+
+📁 文件路径：app/main.py
+
+[代码块 83d47b9d9315]
+
+环节 8：更新 create_travel_agent（直接删除create_travel_agent的代码然后再复制下面的进去）
+
+📁 文件路径：app/agents/handoffs/travel_agent.py
+
+[代码块 0e921e268b82]
+
+环节 9：冒烟测试 —— 真实数据在线
+
+📁 文件路径：scripts/Chapter_Six/6_test_mcp.py
+
+[代码块 fe73eab75942]
+
+第 07 章 · Advanced RAG：从"朴素向量检索"到"五层加强的检索管道"
+
+环节 1：文档加载
+
+先从最简单的做起——把 data/documents/destinations/ 下面的目的地攻略 Markdown 全部加载进来。
+
+📁 文件路径：app/rag/init.py
+
+[代码块 1ef9a2512127]
+
+📁 文件路径：app/rag/document_loader.py
+
+[代码块 c703fc8050b1]
+
+环节 2：父子分块（Advanced RAG 的第一层加强）
+
+📁 文件路径：app/rag/text_splitter.py
+
+[代码块 6f2836187b81]
+
+环节 3：向量化 + Chroma 向量库
+
+📁 文件路径：app/rag/vectorstore.py
+
+[代码块 20e893a000f1]
+
+环节 4：混合检索（BM25 + Dense + RRF）
+
+4.2 完整代码
+
+📁 文件路径：app/rag/retriever.py
+
+[代码块 7070deae9e96]
+
+环节 5：查询优化（Multi-Query 主打，HyDE / Rewriter 备选）
+
+📁 文件路径：app/rag/query_optimizer.py
+
+[代码块 c0dbbb5e403c]
+
+环节 6：LLM 重排（Advanced RAG 的第四层加强）
+
+6.2 完整代码
+
+📁 文件路径：app/rag/reranker.py
+
+[代码块 3b3726b18d04]
+
+环节 7：Redis 缓存层
+
+📁 文件路径：app/rag/cache.py
+
+[代码块 2694c29393b7]
+
+环节 8：整合成 AdvancedRAGPipeline
+
+五层都写好了，现在串起来：
+
+📁 文件路径：app/rag/pipeline.py
+
+[代码块 a810a883c624]
+
+环节 9：把 RAG 包成 Agent 工具
+
+9.1 全局单例的 pipeline
+
+📁 文件路径：app/rag/pipeline.py（末尾追加）
+
+[代码块 e42d2245c197]
+
+9.2 定义 RAG 工具
+
+📁 文件路径：app/tools/router_query.py
+
+[代码块 71450cb02207]
+
+9.3 更新 StepConfig 把 RAG 工具挂进去
+
+📁 文件路径：app/agents/handoffs/step_config.py（局部更新）
+
+[代码块 b85153d3f384]
+
+环节 10：建库脚本 —— 一次性把知识库处理进 Chroma
+
+RAG 用之前要先建库——把 Markdown 文档切分、embedding 后存进 Chroma。这一步只需跑一次（除非文档改了）。
+
+📁 文件路径：scripts/Chapter_Seven/7_build_vectorstore.py
+
+[代码块 af96b6868c24]
+
+环节 11：冒烟测试
+
+📁 文件路径：scripts/Chapter_Seven/7_test_rag.py
+
+[代码块 1c52a9d7077e]
+
+第 08 章 · 目的地推荐子图：StateGraph 扇出扇入与并行子 Agent
+
+环节 1：State 怎么设计才能"接住多个分支的结果"
+
+📁 文件路径：app/agents/routers/destination_router.py
+
+[代码块 6c25a30cbcb1]
+
+1.3 reducer 归并演示
+
+📁 文件路径：scripts/Chapter_Eight/8_reducer_demo.py
+
+[代码块 e425c0649b97]
+
+环节 2：分类器 —— 看用户问题决定派谁（附：代码怎么兜住模型的漏）
+
+【本节目标】 让 LLM 读用户问题，自动决定这次要派哪几个子 Agent。
+
+重点： with_structured_output 让 LLM 直接吐结构化任务列表；但"天气必查"这种铁律不靠模型自觉，代码强制补齐。
+
+📁 文件路径：app/agents/routers/destination_router.py(继续跟着)
+
+[代码块 721ab8ceb098]
+
+2.3 分类器调用演示
+
+📁 文件路径：scripts/Chapter_Eight/8_classifier_demo.py
+
+[代码块 d45bbef9e1c1]
+
+环节 3：Send 动态扇出 —— 数量运行时才定的并行，只能这么发
+
+📁 文件路径：app/agents/routers/destination_router.py(继续跟着)
+
+[代码块 7b6e416269f8]
+
+3.3 扇出与去重演示
+
+📁 文件路径：scripts/Chapter_Eight/8_fanout_demo.py
+
+[代码块 74a754cacc2f]
+
+环节 4：探索 Agent —— 把 RAG 升级成四把工具，再用 ContextVar 隔离并行分支
+
+📁 文件路径：app/agents/routers/destination_router.py(继续跟着)
+
+[代码块 3be8b4dd109b]
+
+4.1 一把工具，在这里长成四把（rag_tools.py）
+
+📁 文件路径：app/tools/rag_tools.py
+
+[代码块 645e8e8cce69]
+
+4.4 按城市过滤检索结果
+
+📁 文件路径：scripts/Chapter_Eight/8_format_rag_results_demo.py
+
+[代码块 08eb81e84e6a]
+
+4.5 四把 RAG 工具调用演示
+
+📁 文件路径：scripts/Chapter_Eight/8_rag_tools_demo.py
+
+[代码块 38d65ba00677]
+
+4.6 探索 Agent 节点调用演示
+
+📁 文件路径：scripts/Chapter_Eight/8_explore_agent_demo.py
+
+[代码块 2ee37c3c558a]
+
+环节 5：天气 Agent —— MCP 返回归一化，以及"宁可不说也不编造"
+
+📁 文件路径：app/agents/routers/destination_router.py(继续跟着)
+
+[代码块 6bbde316d694]
+
+5.3 天气载荷三形态归一
+
+📁 文件路径：scripts/Chapter_Eight/8_normalize_weather_payload.py
+
+[代码块 8ebe6e43416f]
+
+环节 6：综合器与组装 —— 把扇入的结果收拢成一张图
+
+📁 文件路径：app/agents/routers/destination_router.py(继续跟着)
+
+[代码块 e329261e1ae4]
+
+6.3 编译子图并查看结构
+
+📁 文件路径：scripts/Chapter_Eight/8_build_router_demo.py
+
+[代码块 445ec6586237]
+
+环节 7：综合冒烟 —— 把整张子图跑一遍
+
+7.1 整张子图综合冒烟
+
+📁 文件路径：scripts/Chapter_Eight/8_router_smoke.py
+
+[代码块 230d28ff98bc]
+
+第 09 章 · 多段并行 capabilities：公共地基与四类实现
+
+环节 1：事件契约（events.py）
+
+1.1 events.py
+
+📁 文件路径：app/core/events.py（新建，整个文件）
+
+[代码块 ae8815135b27]
+
+1.2 三类帧演示
+
+📁 文件路径：scripts/Chapter_Nine/9_make_event_demo.py
+
+[代码块 f223b09e663d]
+
+[代码块 014539bdc1c5]
+
+环节 2：路段助手——这趟行程有几城、几段、每城住几晚
+
+2.1 片①：拆多城、排游玩顺序
+
+📁 文件路径：app/services/express_planning_service.py（新建；本章只放路段助手，片①）
+
+[代码块 571b2655c87c]
+
+2.2 _split_cities 演示
+
+📁 文件路径：scripts/Chapter_Nine/9_split_cities_demo.py
+
+各种分隔符混用、重复城市、空串（纯函数，无需密钥）：
+
+[代码块 2facd18a667b]
+
+[代码块 d909b2e80088]
+
+2.3 ordered_play_cities 演示
+
+📁 文件路径：scripts/Chapter_Nine/9_ordered_play_cities_demo.py
+
+[代码块 4202261f13a7]
+
+[代码块 f440108bc9a5]
+
+2.4 片②：造段、分配晚数
+
+📁 文件路径：app/services/express_planning_service.py（片②，接在片①后面）
+
+[代码块 060aef6e71b5]
+
+2.5 _build_legs 演示
+
+📁 文件路径：scripts/Chapter_Nine/9_build_legs_demo.py
+
+[代码块 3637d1e5f040]
+
+[代码块 9c22e03c194c]
+
+2.6 _stay_nights 演示
+
+📁 文件路径：scripts/Chapter_Nine/9_stay_nights_demo.py
+
+6 天 3 站是 [1, 3, 2]：首站 1 晚，余下 5 晚分给后两站，除不尽的 1 晚给了靠前的那站（纯函数，无需密钥）：
+
+[代码块 f99bf187d2d5]
+
+[代码块 d85a22df1777]
+
+2.7 追加到 state_transition：这趟有哪几城、哪几段
+
+📁 文件路径：app/tools/state_transition.py（追加到文件末尾）
+
+[代码块 89a2de4c6b18]
+
+2.8 _multi_city_names 演示
+
+📁 文件路径：scripts/Chapter_Nine/9_multi_city_names_demo.py
+
+[代码块 4d1aea4cde45]
+
+[代码块 c7fd6d3c2b11]
+
+2.9 _expected_legs 演示
+
+📁 文件路径：scripts/Chapter_Nine/9_expected_legs_demo.py
+
+[代码块 a56ea80bbaca]
+
+[代码块 565f8904771f]
+
+环节 3：每一段查哪一天（middleware.py 整份重写开工）
+
+3.1 片①：文件头
+
+📁 文件路径：app/core/middleware.py（整份重写，片①）
+
+[代码块 b5b783cdedfb]
+
+3.2 片②：_leg_query_date
+
+📁 文件路径：app/core/middleware.py（片②，接在片①后面）
+
+[代码块 dbf7c7408915]
+
+3.3 _leg_query_date 演示
+
+📁 文件路径：scripts/Chapter_Nine/9_leg_query_date_demo.py
+
+5 天行程，两种目的地写法，外加一个缺出发日期的反例（纯函数，无需密钥）：
+
+[代码块 11ba21540b37]
+
+[代码块 e05f439d8e8c]
+
+读法：去天津、上海时，第 1 段是出发当天，天津住 1 晚，第 2 段就是 10-02，返程是第 5 天 10-05；目的地是"北京、天津"时，先在北京玩一天，去天津那段挪到了 10-02，返程同样落在末日 10-05。
+
+环节 4：车票全链路——入参守卫与结果压缩
+
+4.1 片①：本轮上下文与入参归一
+
+📁 文件路径：app/tools/mcp_tools.py（整份重写，片①）
+
+[代码块 6198dab66ea2]
+
+顶部多了一行 import ast：环节 4.3 的 load_structured 要用 ast.literal_eval 读单引号的 Python dict 文本。
+
+_TURN_CTX 是一个 ContextVar：每个请求协程各有一份，并发的两个会话互不串味。中间件每轮调 set_turn_context，写入"本轮已知的出发地、目的地、日期、当前段"（环节 17 的看点⑬）。
+
+_normalize_train_args 分三步：别名纠正（trainDate → date、from → fromStation……）→ 用本轮上下文回填缺失项（多段行程按"当前段"回填，日期强制以代码算的段日期为准）→ 仍然缺参或日期已过，就返回一句可读的提示让模型补全重试，而不是把 MCP 的底层报错甩给它。
+
+返回值要么是 dict（参数齐了），要么是 str（提示语）——调用方按类型分流，环节 4.8 的守卫就是这么用的。
+
+4.2 _normalize_train_args 演示
+
+📁 文件路径：scripts/Chapter_Nine/9_normalize_train_args_demo.py
+
+别名、回填、多段、缺参、过去日期五种情况（纯逻辑，无需密钥）：
+
+[代码块 8bcdb0bfd69e]
+
+[代码块 4af2c9664464]
+
+"多段按当前段"那一行值得看：本轮上下文说正在确认"天津→上海"这一段，模型什么都没传，参数就被补成了这一段。
+
+4.3 片②：解析与压缩车票结果
+
+📁 文件路径：app/tools/mcp_tools.py（片②，接在片①后面）
+
+[代码块 bb8868bfff52]
+
+4.4 parse_ticket_rows 演示
+
+📁 文件路径：scripts/Chapter_Nine/9_parse_ticket_rows_demo.py
+
+三趟车、每趟一到两个席别，字符串和 content blocks 两种输入（纯函数，无需密钥）：
+
+[代码块 ada794f231cf]
+
+[代码块 de07e0570b5e]
+
+4.5 parse_compact_rows 演示
+
+📁 文件路径：scripts/Chapter_Nine/9_parse_compact_rows_demo.py
+
+表头和格式说明行不会被误认成班次（纯函数，无需密钥）：
+
+[代码块 84a37d1604a9]
+
+[代码块 08e78857a4aa]
+
+4.6 compact_ticket_text 演示
+
+📁 文件路径：scripts/Chapter_Nine/9_compact_ticket_text_demo.py
+
+三趟乱序的车压成两行，按发车时间排好；再看解析失败时的降级（纯函数，无需密钥）：
+
+[代码块 c6da93c150bc]
+
+[代码块 e4f887e3e9eb]
+
+席别按 _SEAT_ORDER 挑最常用的那个展示：G7 的商务座无票，展示的是二等座；K51 只有硬卧，就展示硬卧。
+
+4.7 片③：守卫包装
+
+📁 文件路径：app/tools/mcp_tools.py（片③，接在片②后面）
+
+[代码块 d7b130cd3f45]
+
+4.8 守卫全链路演示
+
+📁 文件路径：scripts/Chapter_Nine/9_arg_guard_demo.py
+
+两个假工具（测试驱动）：一个照 12306 的 schema 要求三个必填参数，一个是天气工具。看守卫包了谁、模型用别名时 12306 真正收到什么（纯逻辑，无需密钥）：
+
+[代码块 21ac3e5ee3fd]
+
+[代码块 a2a66b7ed956]
+
+环节 5：航班与自驾——两种原始返回的解析
+
+【本节目标】 航班返回的是 Python dict 文本，自驾返回的是 JSON（有时夹在说明文字里），各写一个解析器，统一成结构化记录。
+
+重点： 全部遵守一条纪律——缺什么就空着，绝不编。转不了的数返回 None，算不出的时长返回空串，整条解析不出返回空 dict。
+
+5.1 片④：航班
+
+📁 文件路径：app/tools/mcp_tools.py（片④，接在片③后面）
+
+[代码块 8cd4b5584724]
+
+5.2 parse_flight_rows 演示
+
+📁 文件路径：scripts/Chapter_Nine/9_parse_flight_rows_demo.py
+
+四条原始记录：一条重复、一条缺起飞时间，最后剩两条并按起飞时间排好（纯函数，无需密钥）：
+
+[代码块 4cc9efc722d2]
+
+[代码块 c5084e8b1caf]
+
+5.3 parse_flight_prices 演示
+
+📁 文件路径：scripts/Chapter_Nine/9_parse_flight_prices_demo.py
+
+五种输入：三种正常形态、一种"暂无数据"、一种混进了非票价数字（纯函数，无需密钥）：
+
+[代码块 c8d31a788579]
+
+5.4 片⑤：自驾
+
+📁 文件路径：app/tools/mcp_tools.py（片⑤，接在片④后面）
+
+[代码块 7833e17d4b69]
+
+5.5 _to_float 演示
+
+📁 文件路径：scripts/Chapter_Nine/9_to_float_demo.py
+
+数字、数字字符串、带空格的都能转，"约 2 小时"这种转不了就是 None（纯函数，无需密钥）：
+
+[代码块 7cf8ba256e6e]
+
+[代码块 74d900ec13a2]
+
+5.6 _seconds_to_hhmm 演示
+
+📁 文件路径：scripts/Chapter_Nine/9_seconds_to_hhmm_demo.py
+
+6120 秒是 1 小时 42 分；不足 1 分钟得 00:00；0 和非法值都是空串（纯函数，无需密钥）：
+
+[代码块 b89654fd45fb]
+
+[代码块 3cbcc56a8eea]
+
+5.7 _loads_first_json 演示
+
+📁 文件路径：scripts/Chapter_Nine/9_loads_first_json_demo.py
+
+第三行最有意思：前面那段 {不是json} 括号配平但解析失败，函数接着往后扫，找到了真正的 JSON（纯函数，无需密钥）：
+
+[代码块 0ac449f07281]
+
+[代码块 6ab78900159a]
+
+5.8 _driving_summary 演示
+
+📁 文件路径：scripts/Chapter_Nine/9_driving_summary_demo.py
+
+有 steps 时只取前 _DRIVING_SUMMARY_LIMIT 条；只有原文时走正则兜底（纯函数，无需密钥）：
+
+[代码块 a209007b7646]
+
+[代码块 d5cc7f4862bf]
+
+5.9 parse_driving_rows 演示
+
+📁 文件路径：scripts/Chapter_Nine/9_parse_driving_rows_demo.py
+
+同一份高德返回，以 JSON 文本、content blocks、夹在说明文字里三种形态送进来，结果一致；服务不可用时返回空 dict（纯函数，无需密钥）：
+
+[代码块 2e465473bf84]
+
+[代码块 16f9cbfa85a7]
+
+环节 6：按类取工具
+
+【本节目标】 写完 mcp_tools.py 的最后一片：每一类工具一个获取函数，四类 capability 和各步骤都从这里拿工具。
+
+6.1 片⑥：get_*_tools
+
+📁 文件路径：app/tools/mcp_tools.py（片⑥，接在片⑤后面）
+
+[代码块 661174b92323]
+
+6.2 按类取工具演示
+
+📁 文件路径：scripts/Chapter_Nine/9_mcp_tool_groups_demo.py
+
+这个脚本要真的连上 MCP 服务（需 .env 配好 MCP 相关密钥），打印每一类拿到哪些工具：
+
+[代码块 d95162c00246]
+
+环节 7：公共基座（app/capabilities/base/）
+
+7.2 common.py：三个助手函数
+
+📁 文件路径：app/capabilities/base/common.py（新建，整个文件）
+
+[代码块 b135ae8f3ac5]
+
+7.3 段签名演示
+
+📁 文件路径：scripts/Chapter_Nine/9_leg_signature_demo.py
+
+段对象用 SimpleNamespace 冒充——属性对得上，什么类型都行（纯函数，无需密钥）：
+
+[代码块 d39d566f0bca]
+
+[代码块 b91ea107fe94]
+
+7.4 历时换算演示
+
+📁 文件路径：scripts/Chapter_Nine/9_duration_to_minutes_demo.py
+
+解析不了的历时一律换成 1000000 分钟，排序时排到最后（纯函数，无需密钥）：
+
+[代码块 51a662e479be]
+
+[代码块 0e2ada85eb20]
+
+7.5 payload_cache.py 片①：提交侧缓存 PayloadCache
+
+📁 文件路径：app/capabilities/base/payload_cache.py（新建，片①）
+
+[代码块 b4ab9dcba55e]
+
+7.6 payload_cache.py 片②：段签名缓存 SignatureCache
+
+📁 文件路径：app/capabilities/base/payload_cache.py（片②，接在片①后面）
+
+[代码块 c58c0ea46ef7]
+
+7.7 提交侧缓存演示
+
+📁 文件路径：scripts/Chapter_Nine/9_payload_cache_demo.py
+
+两个会话各存各的，不传 key 的落进默认桶，同一会话再下发会覆盖旧的（纯逻辑，无需密钥）：
+
+[代码块 335c511cae41]
+
+[代码块 4c4eeed24534]
+
+7.8 签名缓存演示
+
+📁 文件路径：scripts/Chapter_Nine/9_signature_cache_demo.py
+
+同一份"一段有、一段空"的结果，两种口径一个写、一个不写；换个会话不命中；容量设成 2，再写两批后最早那条被挤掉（纯逻辑，无需密钥）：
+
+[代码块 46b380465338]
+
+[代码块 7fee6372902d]
+
+7.9 包入口 base/init.py
+
+📁 文件路径：app/capabilities/base/init.py（新建，整个文件，本包最后写）
+
+[代码块 fde8e11921de]
+
+7.10 用户意图单一入口 app/core/intent.py
+
+📁 文件路径：app/core/intent.py（新建文件）
+
+[代码块 21625fd3b1d6]
+
+环节 8：高铁（上）——数据契约与段级并行查询
+
+8.1 schema 片①：下发侧契约
+
+📁 文件路径：app/capabilities/train_multi_segment/train_skill_schema.py（新建，片①）
+
+[代码块 be7ddbaee06f]
+
+8.2 schema 片②：提交侧契约
+
+📁 文件路径：app/capabilities/train_multi_segment/train_skill_schema.py（片②，接在片①后面）
+
+[代码块 42f1aa374f68]
+
+8.3 数据契约演示
+
+📁 文件路径：scripts/Chapter_Nine/9_train_schema_demo.py
+
+别名进、别名出，整数票价导出成整数（纯逻辑，无需密钥）：
+
+[代码块 72ee0c729af3]
+
+[代码块 09a856580188]
+
+8.4 agent_tool 片①：缓存、工具定位、席别与余票
+
+📁 文件路径：app/capabilities/train_multi_segment/train_agent_tool.py（新建，片①）
+
+[代码块 eb824b3d4574]
+
+8.5 _pick_seat 演示
+
+📁 文件路径：scripts/Chapter_Nine/9_pick_seat_demo.py
+
+期望的席别有就用它，没有就按常用度挑，冷门席别兜底，一个都没有返回 None（纯函数，无需密钥）：、
+
+[代码块 1c5a485ad4a1]
+
+[代码块 cb6aea5cf85b]
+
+8.6 _ticket_status 演示
+
+📁 文件路径：scripts/Chapter_Nine/9_ticket_status_demo.py
+
+注意空串得到"未知"而不是"无票"，认不出的写法原样保留（纯函数，无需密钥）：
+
+[代码块 5dce569e82e3]
+
+[代码块 8df2eadb75df]
+
+8.7 agent_tool 片②：兜底解析与候选转换
+
+📁 文件路径：app/capabilities/train_multi_segment/train_agent_tool.py（片②，接在片①后面）
+
+[代码块 04be988691a2]
+
+8.8 _compact_to_rows 演示
+
+📁 文件路径：scripts/Chapter_Nine/9_compact_to_rows_demo.py
+
+第二行的票价没返回，席别字典就是空的，交给 _rows_to_options 跳过（纯函数，无需密钥）：
+
+[代码块 da3010170c50]
+
+[代码块 9e475ab4a703]
+
+8.9 _rows_to_options 演示
+
+📁 文件路径：scripts/Chapter_Nine/9_train_rows_to_options_demo.py
+
+原始返回先过环节 4 的 parse_ticket_rows，再转成候选：07:48 那趟排到了前面，option_id 各不相同（纯函数，无需密钥）：
+
+[代码块 080402679adc]
+
+[代码块 2a66c899ea5c]
+
+8.10 agent_tool 片③：单段查询与并行组装
+
+📁 文件路径：app/capabilities/train_multi_segment/train_agent_tool.py（片③，接在片②后面）
+
+[代码块 72e8f353e1e0]
+
+8.11 _query_one_leg 演示
+
+📁 文件路径：scripts/Chapter_Nine/9_train_query_one_leg_demo.py
+
+假工具（测试驱动）对"故障站"抛异常：正常段拿到两趟车，异常段降级为空列表，没有任何异常冒出来（纯逻辑，无需密钥）：
+
+[代码块 f121afe4720c]
+
+[代码块 1613a3344241]
+
+8.12 并行组装演示
+
+📁 文件路径：scripts/Chapter_Nine/9_build_train_payload_demo.py
+
+把模块缓存的 _QUERY_TOOL 换成假工具（测试驱动），其余全是真实代码。两段同时发出、各查一次，payload 进了提交侧缓存（纯逻辑，无需密钥）：
+
+[代码块 511ecf35c53e]
+
+[代码块 a1f2eb1d2d27]
+
+8.13 agent_tool 片④：提交校验与两个工具
+
+📁 文件路径：app/capabilities/train_multi_segment/train_agent_tool.py（片④，接在片③后面）
+
+[代码块 313ec9976334]
+
+8.14 提交校验演示
+
+📁 文件路径：scripts/Chapter_Nine/9_validate_train_submission_demo.py
+
+六种提交，外加一个"没下发过卡片的会话"（纯逻辑，无需密钥）：
+
+[代码块 20c9fe4f9e6f]
+
+[代码块 eb50f2c7ef16]
+
+环节 9：高铁（下）——三种模式编排
+
+【本节目标】 把 agent_tool 接进流程：什么时候走代码卡片，手动确认怎么推卡片，自动确认怎么代选，提交后怎么落库推进。
+
+重点： flow 不操心"怎么查"——它只做判定、组装段和日期、推帧、写状态。三种模式共用同一份 payload 缓存。
+
+9.1 flow 片①：路线判定与段日期
+
+📁 文件路径：app/capabilities/train_multi_segment/train_flow.py（新建，片①）
+
+[代码块 1a29101f84d6]
+
+9.2 路线判定演示
+
+📁 文件路径：scripts/Chapter_Nine/9_train_mode_demo.py
+
+最后一行：勾了高铁但只在北京本地玩，0 段，不走代码卡片（纯逻辑，无需密钥）：
+
+[代码块 59770f3ba506]
+
+[代码块 aa4c178f6b43]
+
+9.3 _legs_with_dates 演示
+
+📁 文件路径：scripts/Chapter_Nine/9_train_legs_with_dates_demo.py
+
+和环节 3 的段日期一模一样——本来就是同一个函数算的（纯逻辑，无需密钥）：
+
+[代码块 48a64ad4679f]
+
+[代码块 5bd6296e69a6]
+
+9.4 flow 片②：手动确认——推卡片
+
+📁 文件路径：app/capabilities/train_multi_segment/train_flow.py（片②，接在片①后面）
+
+[代码块 75c25cb464a0]
+
+9.5 手动确认演示
+
+📁 文件路径：scripts/Chapter_Nine/9_emit_train_skill_ui_demo.py
+
+Collector 是测试驱动，替代第 12 章的事件流，只把帧收起来；12306 仍然用假工具（纯逻辑，无需密钥）：
+
+[代码块 38802284f440]
+
+[代码块 5dd8d5fee0fb]
+
+"总次数 3"怎么来的：第 1 次是"查不到车"那一段，第 2、3 次是两段并行；同一批段再推一次命中签名缓存，没有再查。
+
+9.6 flow 片③：自动确认与零段直通
+
+📁 文件路径：app/capabilities/train_multi_segment/train_flow.py（片③，接在片②后面）
+
+[代码块 02c797329c06]
+
+9.7 _pick_best 演示
+
+📁 文件路径：scripts/Chapter_Nine/9_train_pick_best_demo.py
+
+三趟候选：G103 无票被排除，G101 有票、G105 候补，历时相同比价格（纯函数，无需密钥）：
+
+[代码块 313cf22ce44b]
+
+[代码块 05bec4c0e96e]
+
+G105（候补、480 元）赢过了 G101（有票、509 元）。函数注释里写的是"有票优先"，实际规则只排除"无票"——以代码为准，讲给别人听时别说成"有票的一定优先"。
+
+9.8 flow 片④：提交落库
+
+📁 文件路径：app/capabilities/train_multi_segment/train_flow.py（片④，接在片③后面）
+
+[代码块 9a77020cfa74]
+
+9.9 包入口
+
+📁 文件路径：app/capabilities/train_multi_segment/init.py（新建，整个文件；本包最后写）
+
+[代码块 faa5cc774416]
+
+环节 10：航班（上）——数据契约与段级并行查询
+
+【本节目标】 以高铁为模板，只看航班不一样的三处：城市要先换成机场码、历时要自己算、票价拿不到。
+
+重点： 拿不到的数据就空着或记 0，由后面的代码知道"这是未知"——而不是编一个看起来合理的值。
+
+10.1 schema 片①：下发侧契约
+
+📁 文件路径：app/capabilities/flight_multi_segment/flight_skill_schema.py（新建，片①）
+
+[代码块 31c4bce2b063]
+
+10.2 schema 片②：提交侧契约
+
+📁 文件路径：app/capabilities/flight_multi_segment/flight_skill_schema.py（片②，接在片①后面）
+
+[代码块 0205e30d81d7]
+
+与高铁同构：每段回传 segment_id + option_id。
+
+10.3 agent_tool 片①：缓存、工具定位、历时
+
+📁 文件路径：app/capabilities/flight_multi_segment/flight_agent_tool.py（新建，片①）
+
+[代码块 5bcf48df9df5]
+
+10.4 _price_args 演示
+
+📁 文件路径：scripts/Chapter_Nine/9_flight_price_args_demo.py
+
+先看六个参数名各自被归到哪一类，再看认得出和认不出两种工具（纯逻辑，无需密钥）：
+
+[代码块 a92623b56d69]
+
+[代码块 8914522944e5]
+
+[代码块 517169e13143]
+
+10.5 _duration 演示
+
+📁 文件路径：scripts/Chapter_Nine/9_flight_duration_demo.py
+
+只有第一行算得出来：跨天、缺失、相等都留空（纯函数，无需密钥）：
+
+[代码块 6b79d768acdb]
+
+[代码块 5c74b8c18b2b]
+
+10.6 agent_tool 片②：候选转换与并行查询
+
+📁 文件路径：app/capabilities/flight_multi_segment/flight_agent_tool.py（片②，接在片①后面）
+
+[代码块 111f5003ce31]
+
+10.7 _rows_to_options 演示
+
+📁 文件路径：scripts/Chapter_Nine/9_flight_rows_to_options_demo.py
+
+两班按起飞时间排好，历时算出来了，票价都是 0（纯函数，无需密钥）：
+
+[代码块 56a638a65e26]
+
+[代码块 f4df8756f637]
+
+10.8 _query_one_leg 演示
+
+📁 文件路径：scripts/Chapter_Nine/9_flight_query_one_leg_demo.py
+
+北京、上海换成了 PEK、SHA 才送去查；"某小城"没有机场码，工具根本没被调用（纯逻辑，无需密钥）：
+
+[代码块 a66915566977]
+
+[代码块 980c1ee9b8a0]
+
+10.9 agent_tool 片③：提交校验与两个工具
+
+📁 文件路径：app/capabilities/flight_multi_segment/flight_agent_tool.py（片③，接在片②后面）
+
+[代码块 531901633849]
+
+与高铁同构：同样的几道关，同样不比对时间先后；两个 @tool 供模型调用。
+
+环节 11：航班（下）——三种模式编排
+
+【本节目标】 看清航班 flow 和高铁 flow 的两处差别：卡片判定要让位给高铁，代选规则看价格。
+
+11.1 flow 片①：路线判定与段日期
+
+📁 文件路径：app/capabilities/flight_multi_segment/flight_flow.py（新建，片①）
+
+[代码块 40ef7806b000]
+
+11.2 航班卡片判定演示
+
+📁 文件路径：scripts/Chapter_Nine/9_flight_card_mode_demo.py
+
+高铁、航班都勾时，航班"被选了"但不出卡片（纯逻辑，无需密钥）：
+
+[代码块 bdb20fd324cc]
+
+[代码块 7a9651c47860]
+
+11.3 flow 片②：手动确认——推卡片
+
+📁 文件路径：app/capabilities/flight_multi_segment/flight_flow.py（片②，接在片①后面）
+
+[代码块 7e23a9c1e9a7]
+
+11.4 缓存口径对比演示
+
+📁 文件路径：scripts/Chapter_Nine/9_cache_rule_demo.py
+
+同样是"一段有结果、一段为空"，两种口径的判断相反（纯逻辑，无需密钥）：
+
+[代码块 53a912cb5184]
+
+[代码块 ea8cd2dfc13f]
+
+11.5 flow 片③：自动确认
+
+📁 文件路径：app/capabilities/flight_multi_segment/flight_flow.py（片③，接在片②后面）
+
+[代码块 7a5b3d80a4bc]
+
+11.6 _pick_best 演示
+
+📁 文件路径：scripts/Chapter_Nine/9_flight_pick_best_demo.py
+
+有已知票价时挑最便宜的；全部未知时取第一班（纯函数，无需密钥）：
+
+[代码块 453b69a8f7ce]
+
+[代码块 becfa3084d42]
+
+11.7 flow 片④：提交落库
+
+📁 文件路径：app/capabilities/flight_multi_segment/flight_flow.py（片④，接在片③后面）
+
+[代码块 476b7a802048]
+
+与高铁同构：校验 → 幂等 / 步骤检查 → 写段账本 → 推进到住宿步，selected_transport 记为 flight。
+
+11.8 包入口
+
+📁 文件路径：app/capabilities/flight_multi_segment/init.py（新建，整个文件；本包最后写）
+
+[代码块 e555a1eb99c2]
+
+环节 12：自驾（上）——数据契约与段级并行查询
+
+12.1 schema 片①：下发侧契约
+
+📁 文件路径：app/capabilities/driving_multi_segment/driving_skill_schema.py（新建，片①）
+
+[代码块 f85d08796fa8]
+
+12.2 schema 片②：提交侧契约
+
+📁 文件路径：app/capabilities/driving_multi_segment/driving_skill_schema.py（片②，接在片①后面）
+
+[代码块 623075001320]
+
+提交只需要 segment_id——确认的是"这一段按这条路线走"，没有别的可选。
+
+12.3 agent_tool 片①：缓存、工具定位、空段
+
+📁 文件路径：app/capabilities/driving_multi_segment/driving_agent_tool.py（新建，片①）
+
+[代码块 f8bea537df42]
+
+12.4 agent_tool 片②：单段查询与并行组装
+
+📁 文件路径：app/capabilities/driving_multi_segment/driving_agent_tool.py（片②，接在片①后面）
+
+[代码块 10c75975ab73]
+
+12.5 _query_one_leg 演示
+
+📁 文件路径：scripts/Chapter_Nine/9_driving_query_one_leg_demo.py
+
+四段：正常、查询异常、返回乱码、缺城市名——后三段全部降级为 ok=False；最后一段连工具都没调（纯逻辑，无需密钥）：
+
+[代码块 043492335bca]
+
+[代码块 ec7fc9856611]
+
+12.6 agent_tool 片③：提交校验与两个工具
+
+📁 文件路径：app/capabilities/driving_multi_segment/driving_agent_tool.py（片③，接在片②后面）
+
+[代码块 15d5e519ebea]
+
+12.7 提交校验演示
+
+📁 文件路径：scripts/Chapter_Nine/9_validate_driving_submission_demo.py
+
+用假的高德工具（测试驱动）先组装出两段，再看四种提交（纯逻辑，无需密钥）：
+
+[代码块 5a35075061e4]
+
+[代码块 f4f5f2b5889b]
+
+环节 13：自驾（下）——三种模式编排
+
+【本节目标】 自驾的 flow 最简单：判定优先级最低，自动模式不用"选"，全部查到就推进。
+
+13.1 flow 片①：路线判定与段日期
+
+📁 文件路径：app/capabilities/driving_multi_segment/driving_flow.py（新建，片①）
+
+[代码块 3399685fd983]
+
+13.2 自驾卡片判定演示
+
+📁 文件路径：scripts/Chapter_Nine/9_driving_card_mode_demo.py
+
+同时勾了航班，自驾就让位；最后两行是查到、没查到两种段的落库文本（纯逻辑，无需密钥）：
+
+[代码块 12bdb1225216]
+
+[代码块 2e090f582ecb]
+
+13.3 flow 片②：手动确认——推卡片
+
+📁 文件路径：app/capabilities/driving_multi_segment/driving_flow.py（片②，接在片①后面）
+
+[代码块 34b0aaf60123]
+
+和航班同构；判"整张卡片是否为空"看的是有没有 ok 的段。
+
+13.4 flow 片③：自动确认
+
+📁 文件路径：app/capabilities/driving_multi_segment/driving_flow.py（片③，接在片②后面）
+
+[代码块 98ac166495d2]
+
+没有可选项，自动模式就是"全部段都查到了，直接落库推进"；任何一段 ok=False 就不推进。
+
+13.5 flow 片④：提交落库
+
+📁 文件路径：app/capabilities/driving_multi_segment/driving_flow.py（片④，接在片③后面）
+
+[代码块 0de618c765ae]
+
+校验通过后按段写账本、推进到住宿步，selected_transport 记为 driving。
+
+13.6 包入口
+
+📁 文件路径：app/capabilities/driving_multi_segment/init.py（新建，整个文件；本包最后写）
+
+[代码块 71861396e90f]
+
+环节 14：住宿（上）——数据契约与解析核心（hotel_skill_schema.py + hotel_parser.py）
+
+14.1 hotel_skill_schema.py 片①：下发契约
+
+📁 文件路径：app/capabilities/hotel_multi_segment/hotel_skill_schema.py（新建，片①）
+
+[代码块 055595b35f89]
+
+14.2 hotel_skill_schema.py 片②：提交契约
+
+📁 文件路径：app/capabilities/hotel_multi_segment/hotel_skill_schema.py（片②，接在片①后面；两片拼起来即完整文件）
+
+[代码块 26a15782b1d4]
+
+14.3 两种模式
+
+📁 文件路径：scripts/Chapter_Nine/9_hotel_schema_demo.py
+
+各造一站，再试一个不存在的模式（纯逻辑，无需密钥）：
+
+[代码块 443c4e48d3af]
+
+[代码块 06ad3474a862]
+
+14.4 hotel_parser.py 片①：常量
+
+📁 文件路径：app/capabilities/hotel_multi_segment/hotel_parser.py（新建，片①）
+
+[代码块 650b75579566]
+
+14.5 hotel_parser.py 片②：档位、晚数、取数
+
+📁 文件路径：app/capabilities/hotel_multi_segment/hotel_parser.py（片②，接在片①后面）
+
+[代码块 c1fbfdcda5c5]
+
+_level_of 把"经济型""五星"这类文案映射到档位键，认不出按经济型。stay_nights 算住几晚，日期倒挂或不合法时按 1 晚兜底——这里只算数，不做业务校验。_to_number 从任意写法里抠出第一个数字。
+
+14.6 住几晚
+
+📁 文件路径：scripts/Chapter_Nine/9_hotel_stay_nights_demo.py
+
+正常、倒挂、非法日期（纯函数，无需密钥）：
+
+[代码块 9bcf5c6c4b02]
+
+[代码块 438d2bd57c2a]
+
+14.7 抠数字
+
+📁 文件路径：scripts/Chapter_Nine/9_to_number_demo.py
+
+带货币符号、带单位、空值（纯函数，无需密钥）：
+
+[代码块 905ec9bf23c8]
+
+[代码块 0dd03f722275]
+
+14.8 hotel_parser.py 片③：结构化解析与价格
+
+📁 文件路径：app/capabilities/hotel_multi_segment/hotel_parser.py（片③，接在片②后面）
+
+[代码块 6444f67086c0]
+
+14.9 三级尝试
+
+📁 文件路径：scripts/Chapter_Nine/9_load_structured_demo.py
+
+整段 JSON、夹在文字里的 JSON、单引号 dict、纯文字（纯函数，无需密钥）：
+
+[代码块 91e80a87ba47]
+
+[代码块 c168330a4f38]
+
+第二行拿到的是里层的数组而不是外层的对象：哪个片段先解析成功就用哪个。反正下一步 _best_record_list 会在任意结构里找酒店列表，拿到哪一层都不影响结果。
+
+14.10 总价与每晚
+
+📁 文件路径：scripts/Chapter_Nine/9_price_pair_demo.py
+
+住 2 晚，四种价格写法（纯函数，无需密钥）：
+
+[代码块 4f1efb324a67]
+
+[代码块 ae34c974b5db]
+
+前三种写法得到同一个结果；什么都没有就是 (0.0, 0.0)，不猜。
+
+14.11 hotel_parser.py 片④：找酒店列表、纯文本兜底、归一
+
+📁 文件路径：app/capabilities/hotel_multi_segment/hotel_parser.py（片④，接在片③后面）
+
+[代码块 e2ab5831d67e]
+
+14.12 找到真正的酒店列表
+
+📁 文件路径：scripts/Chapter_Nine/9_best_record_list_demo.py
+
+一份返回里同时有城市列表、分页和酒店列表（纯函数，无需密钥）：
+
+[代码块 ce118d75e4b7]
+
+[代码块 98232f4ed0f5]
+
+14.13 从原始返回到门店候选
+
+📁 文件路径：scripts/Chapter_Nine/9_hotels_from_raw_demo.py
+
+content blocks 形态的结构化返回，加一段报错文本（纯函数，无需密钥）：
+
+[代码块 12f9da056232]
+
+[代码块 7b249786417a]
+
+"锦江之星(Jinjiang Inn)"去掉了英文尾巴；"(西湖北山街店)"是中文，保留。
+
+14.14 hotel_parser.py 片⑤：品牌兜底与入参组装
+
+📁 文件路径：app/capabilities/hotel_multi_segment/hotel_parser.py（片⑤，接在片④后面；五片拼起来即完整文件）
+
+[代码块 35f4c5a92323]
+
+14.15 品牌兜底
+
+📁 文件路径：scripts/Chapter_Nine/9_brand_fallback_demo.py
+
+四个档位加一个认不出的（纯函数，无需密钥）：
+
+[代码块 17827155716e]
+
+[代码块 c15fd21f8c54]
+
+14.16 两种入参形态
+
+📁 文件路径：scripts/Chapter_Nine/9_build_args_demo.py
+
+两个只带 args_schema 的假工具（纯逻辑，无需密钥）：
+
+[代码块 c5c5da8a16cb]
+
+[代码块 670d3fd79e13]
+
+环节 15：住宿（中）——段级并行查询（hotel_agent_tool.py）
+
+【本节目标】 写出住宿的段级查询：每站并行查门店，查不到的站降级成品牌模式；提交时校验模式和 id。
+
+重点： 候选 id 重新编号成"段号-序号"，跨站唯一；提交的模式必须和下发的一致。
+
+15.1 片①：缓存与重编号
+
+📁 文件路径：app/capabilities/hotel_multi_segment/hotel_agent_tool.py（新建，片①）
+
+[代码块 9ca2b2b0a1c1]
+
+解析出来的门店 id 是 h1、h2，品牌 id 是 b1、b2——每站都从 1 开始，两站会撞号。_reid 给它们加上段号前缀。
+
+15.2 重新编号
+
+📁 文件路径：scripts/Chapter_Nine/9_hotel_reid_demo.py
+
+第 2 站的三个品牌（纯函数，无需密钥）：
+
+[代码块 a279a461307f]
+
+[代码块 552a46b1c4aa]
+
+15.3 片②：单站查询与并行
+
+📁 文件路径：app/capabilities/hotel_multi_segment/hotel_agent_tool.py（片②，接在片①后面）
+
+[代码块 f6041aaab9e2]
+
+15.4 单站查询
+
+📁 文件路径：scripts/Chapter_Nine/9_hotel_query_one_segment_demo.py
+
+正常、查询异常、没有工具三站（纯逻辑，无需密钥）：
+
+[代码块 bcbd2094a47c]
+
+[代码块 b33415b3fb43]
+
+后两站都成了品牌模式，候选 id 各自带着段号。
+
+15.5 片③：提交校验
+
+📁 文件路径：app/capabilities/hotel_multi_segment/hotel_agent_tool.py（片③，接在片②后面）
+
+[代码块 4517c98240df]
+
+15.6 提交校验演示
+
+📁 文件路径：scripts/Chapter_Nine/9_validate_hotel_submission_demo.py
+
+两站：一站门店、一站品牌，再交四种提交（纯逻辑，无需密钥）：
+
+[代码块 3027362f3e88]
+
+[代码块 f8b26a3eb8fb]
+
+15.7 片④：两个工具入口
+
+📁 文件路径：app/capabilities/hotel_multi_segment/hotel_agent_tool.py（片④，接在片③后面；四片拼起来即完整文件）
+
+[代码块 fc1a0c9a8f91]
+
+环节 16：住宿（下）——编排（hotel_flow.py + init.py）
+
+16.1 片①：入住窗口与查询条件
+
+📁 文件路径：app/capabilities/hotel_multi_segment/hotel_flow.py（新建，片①）
+
+[代码块 d8fa35f9ef17]
+
+16.2 每站住哪几天
+
+📁 文件路径：scripts/Chapter_Nine/9_stay_windows_demo.py
+
+两种行程，再加一个没填出发日期的（纯逻辑，无需密钥）：
+
+[代码块 33fcbe676f7e]
+
+[代码块 0645c43d2b14]
+
+16.3 查询条件
+
+📁 文件路径：scripts/Chapter_Nine/9_hotel_segments_demo.py
+
+2 个成人 + 1 个儿童，表单预选了星级酒店和一个非法值（纯逻辑，无需密钥）：
+
+[代码块 7ed9729f645a]
+
+[代码块 0f543ed5523e]
+
+16.4 片②：手动模式
+
+📁 文件路径：app/capabilities/hotel_multi_segment/hotel_flow.py（片②，接在片①后面）
+
+[代码块 93b4561343fb]
+
+16.5 引导语
+
+📁 文件路径：scripts/Chapter_Nine/9_hotel_lead_text_demo.py
+
+一站门店、一站品牌（纯逻辑，无需密钥）：
+
+[代码块 ee12818b0819]
+
+[代码块 1359f9033ed6]
+
+16.6 片③：自动模式
+
+📁 文件路径：app/capabilities/hotel_multi_segment/hotel_flow.py（片③，接在片②后面
+
+[代码块 52ed1c6dda85]
+
+自动模式下每站直接取第一个候选：门店模式取第一家店，品牌模式取第一个品牌，写入住宿账本后推进到行程生成。
+
+16.7 片④：提交落库
+
+📁 文件路径：app/capabilities/hotel_multi_segment/hotel_flow.py（片④，接在片③后面；四片拼起来即完整文件）
+
+[代码块 0c3af5939135]
+
+和交通的提交落库同一个套路：先校验，再看步骤（已经过了住宿步就直接回 OK），最后写入住宿账本、推进。全程不做日期校验。
+
+16.8 init.py：包的出口
+
+📁 文件路径：app/capabilities/hotel_multi_segment/init.py（新建，一片即完整文件）
+
+[代码块 753c913ec0ad]
+
+环节 17：中间件收口——状态机怎么"让位"给代码并行（middleware.py 片③–⑤）
+
+17.1 片③：确认模式与闸门常量
+
+📁 文件路径：app/core/middleware.py（片③，接在片②后面）
+
+[代码块 9fcc66c5ff41]
+
+17.2 片④：三个自愈助手
+
+📁 文件路径：app/core/middleware.py（片④，接在片③后面）
+
+[代码块 c8494e703776]
+
+17.3 已经展示过行程了吗
+
+📁 文件路径：scripts/Chapter_Nine/9_history_has_itinerary_demo.py
+
+三段历史（纯函数，无需密钥）：
+
+[代码块 e4dea79e0898]
+
+[代码块 507af8c996fd]
+
+第三段里"第一天"出现在用户的消息里，不算——只看 AI 说过什么。
+
+17.4 修补残缺历史
+
+📁 文件路径：scripts/Chapter_Nine/9_repair_dangling_demo.py
+
+一次调用了两个工具、只回来一个，后面还跟着一条孤立的工具结果（纯函数，无需密钥）：
+
+[代码块 9b7cd705359b]
+
+[代码块 fdc53168d0a9]
+
+补的那条紧跟在同一组工具结果后面，配对关系完整；孤立的 t9 被丢掉。
+
+17.5 整轮裁窗口
+
+📁 文件路径：scripts/Chapter_Nine/9_trim_window_demo.py
+
+1 条系统消息 + 11 轮对话，每轮 4 条（纯函数，无需密钥）：
+
+[代码块 2504f89eca8f]
+
+[代码块 8cd6662da327]
+
+45 条裁到 25 条：系统消息留着，对话从第 6 轮的用户提问开始，前 5 轮整轮丢掉，没有半轮。
+
+17.6 片⑤：StepConfigMiddleware 终版
+
+📁 文件路径：app/core/middleware.py（片⑤，接在片④后面；五片拼起来即完整文件）
+
+[代码块 31ebf0476d19]
+
+环节 18：冒烟——四类全链路离线验收
+
+【本节目标】 把四类 capability 的"查询 → 下发 → 提交校验"整条链路离线跑一遍，确认本章全部写对。
+
+重点： 只换数据源（一个假工具顶四类），其余全是真实代码；9 项检查全部 ✅。
+
+18.1 冒烟脚本
+
+📁 文件路径：scripts/Chapter_Nine/9_smoke_test.py
+
+一个假工具按入参判断该返回哪一类原始数据（纯逻辑，无需密钥）：
+
+[代码块 f882e33f4152]
+
+[代码块 206819ffa2fc]
+
+第 10 章 · Web 后端脚手架：ORM / 鉴权 / 领域服务
+
+环节 1：准备：依赖、目录与进度检查
+
+1.1 确认两个依赖
+
+本章要用到第 1 章依赖清单里的两个包：
+
+asyncpg：环节 2 的引擎连接串是 postgresql+asyncpg://...，SQLAlchemy 要靠它异步连 PG。第 2 章 Checkpointer 用的 psycopg 是另一套驱动，替代不了它。没装的话，一 import app.models.base 就报 No module named 'asyncpg'。
+
+email-validator：环节 4 的 EmailStr 只声明类型，真正的格式校验交给这个包。没装的话，第一次 import schema 就报 PydanticImportError。
+
+按第 1 章的清单 uv sync 过就已经装好了。如果你的环境是按早期清单装的（里面没有这两项），在项目根目录补一句：
+
+[代码块 9204bb69d568]
+
+bcrypt、PyJWT、redis、httpx 也都在第 1 章的清单里。
+
+1.2 建目录
+
+第 1 章的骨架已经建好了 app/schemas/（带空的 init.py）、app/data/ 和 app/scripts/，这里只需要再建一个子包 app/api/v1/，放一个空的 init.py。
+
+macOS / Linux：
+
+[代码块 fea2d174eaec]
+
+Windows（PowerShell）：
+
+[代码块 d96373463c36]
+
+注意 app/scripts/（项目自带的运维脚本）和项目根的 scripts/（课件演示脚本）不是一个目录。
+
+环节 2：ORM 基类与会话工厂（models/base.py）
+
+2.1 整个文件
+
+📁 文件路径：app/models/base.py（整文件，新建）
+
+[代码块 75e53c0423d6]
+
+2.2 先确认连得上
+
+📁 文件路径：scripts/Chapter_Ten/10_db_ping.py
+
+[代码块 5d22c93c3da6]
+
+环节 3：三张业务表
+
+【本节目标】 建 users、conversation、message 三张表，填满 models/init.py，把表建进库里。
+
+重点： 外键一半复数一半单数（users.id / conversation.id）；外键列要手动建索引；models/init.py 统一登记三张表，否则字符串懒引用会找不到类。
+
+3.1 User
+
+📁 文件路径：app/models/user.py（整文件，新建）
+
+[代码块 dc8932f76c81]
+
+3.2 Conversation
+
+📁 文件路径：app/models/conversation.py（整文件，新建）
+
+[代码块 d5edb21a0071]
+
+3.3 Message
+
+📁 文件路径：app/models/message.py（整文件，新建）
+
+[代码块 f16f46b056a7]
+
+3.4 models/init.py
+
+📁 文件路径：app/models/init.py（整文件，填满第 1 章建的空文件；第 12 章会在这里加第四张表）
+
+[代码块 70ecc42c14c3]
+
+3.6 不连库，先看表结构
+
+📁 文件路径：scripts/Chapter_Ten/10_models_demo.py
+
+[代码块 4f808cea2991]
+
+3.7 建表
+
+📁 文件路径：scripts/Chapter_Ten/10_init_db.py
+
+[代码块 173e12784122]
+
+环节 4：数据契约（schemas/）
+
+4.1 三个 schema 文件
+
+📁 文件路径：app/schemas/user.py（整文件，新建）
+
+[代码块 7808d01cdb0a]
+
+📁 文件路径：app/schemas/conversation.py（整文件，新建）
+
+[代码块 903ec3185970]
+
+📁 文件路径：app/schemas/message.py（整文件，新建）
+
+[代码块 4443e6553804]
+
+4.2 契约演示
+
+📁 文件路径：scripts/Chapter_Ten/10_schemas_demo.py
+
+[代码块 3109ef030dec]
+
+环节 5：密码与令牌（utils/security.py）
+
+5.1 整个文件
+
+📁 文件路径：app/utils/security.py（整文件，新建）
+
+[代码块 ac347615fbb8]
+
+5.2 往返演示
+
+📁 文件路径：scripts/Chapter_Ten/10_security_demo.py
+
+[代码块 e7220a2be4b7]
+
+环节 6：鉴权依赖（api/dependencies.py）
+
+【本节目标】 写一个 get_current_user 依赖：接口参数里加一行 Depends(get_current_user)，就拿到了已登录的 User 对象。
+
+重点： HTTPBearer 负责读 Authorization 头；令牌无效、没有 sub、用户不存在三种情况都返回 401；每个请求都查一次库是故意的。
+
+6.1 整个文件
+
+📁 文件路径：app/api/dependencies.py（整文件，新建）
+
+[代码块 d8f68ee49f6d]
+
+6.2 五种结局
+
+📁 文件路径：scripts/Chapter_Ten/10_token_auth_demo.py
+
+[代码块 093f878bfd1a]
+
+环节 7：会话领域服务（services/conversation_service.py）
+
+7.1 整个文件
+
+📁 文件路径：app/services/conversation_service.py（整文件，新建）
+
+[代码块 cfed7c4ce506]
+
+7.2 所有权演示
+
+📁 文件路径：scripts/Chapter_Ten/10_ownership_demo.py
+
+[代码块 85d705af4c67]
+
+环节 8：城市服务：Redis 缓存 + 内置清单兜底
+
+【本节目标】 给前端的出发地 / 目的地选择器提供全国城市清单，做成"Redis 优先、内置清单兜底"，Redis 挂了接口也不断。
+
+重点： 读多写少、允许短暂不一致的数据，用 cache-aside：命中直接读；没命中就从源头构造并回灌；Redis 整个不可用时回落到源头，功能不中断。
+
+8.1 城市数据
+
+📁 文件路径：app/data/cities.py（整文件，新建）
+
+[代码块 163f2c060882]
+
+342 个地级市、直辖市和热门自治州，城市名不带"市"，省份用简称。这是纯数据，照抄即可。
+
+8.2 城市服务
+
+📁 文件路径：app/services/city_service.py（整文件，新建）
+
+[代码块 f2dec7e60148]
+
+8.3 手动预热脚本
+
+📁 文件路径：app/scripts/sync_cities.py（整文件，新建）路径是对的
+
+[代码块 c62ba4fce753]
+
+8.4 城市接口
+
+📁 文件路径：app/api/v1/cities.py（整文件，新建）
+
+[代码块 394b6213ce4c]
+
+8.5 城市服务演示
+
+📁 文件路径：scripts/Chapter_Ten/10_city_service_demo.py
+
+[代码块 094a61dc7ad1]
+
+环节 9：用户接口：注册、登录、我是谁（api/v1/users.py）
+
+9.1 片①：注册
+
+📁 文件路径：app/api/v1/users.py（片①：新建文件）
+
+[代码块 fc230ccb571d]
+
+9.2 片②：登录与 /me
+
+📁 文件路径：app/api/v1/users.py（片②，接在片①后面；两片拼起来即完整文件）
+
+[代码块 1d3ef8b7b7e9]
+
+9.3 用户接口演示
+
+📁 文件路径：scripts/Chapter_Ten/10_users_api_demo.py
+
+[代码块 7b560feddc54]
+
+环节 10：会话接口：增删改查（api/v1/conversations.py）
+
+10.1 片①：新建与列表
+
+📁 文件路径：app/api/v1/conversations.py（片①：新建文件）
+
+[代码块 15ad634d43e0]
+
+10.2 片②：详情、修改、删除
+
+📁 文件路径：app/api/v1/conversations.py（片②，接在片①后面；两片拼起来即完整文件）
+
+[代码块 cc8e9d119a1d]
+
+10.3 会话接口演示
+
+📁 文件路径：scripts/Chapter_Ten/10_conversations_api_demo.py
+
+[代码块 fea066853fde]
+
+环节 11：装配、启动与冒烟
+
+11.1 main.py
+
+📁 文件路径：app/main.py（在第 6 章版本基础上改三处，完整文件，可整份覆盖）
+
+[代码块 607fd6619206]
+
+11.2 启动脚本(复制完之后继续右击运行)
+
+📁 文件路径：app/run.py（整文件，新建）
+
+[代码块 0cd22e7b9fb6]
+
+11.3 冒烟测试
+
+📁 文件路径：scripts/Chapter_Ten/10_smoke_test.py
+
+[代码块 1cc67be3c2bc]
+
+第 11 章 · 状态机工具引擎：七步前向工具链 + 回退系统
+
+环节 1：模块全景：state_transition.py 这 1900 多行怎么搭
+
+1.6 片①：文件头
+
+📁 文件路径：app/tools/state_transition.py（片①：新建文件，写入文件头）(要重新构建，可以先回去看第五章的开头说了啥，现在就直接删除之前写的)
+
+[代码块 bd627621a89c]
+
+环节 2：需求收集（record_requirement_tool）
+
+2.1 片②：从表单里抠权威值
+
+📁 文件路径：app/tools/state_transition.py（片②，接在片①后面）
+
+[代码块 2038cad6eefb]
+
+2.2 表单权威值解析演示
+
+📁 文件路径：scripts/Chapter_Eleven/11_form_parse_demo.py
+
+[代码块 474b4ce70d57]
+
+[代码块 31bc86fecc0b]
+
+2.3 片③：record_requirement_tool
+
+📁 文件路径：app/tools/state_transition.py（片③，接在片②后面）
+
+[代码块 73002754e85f]
+
+2.6 需求工具演示
+
+📁 文件路径：scripts/Chapter_Eleven/11_record_requirement_demo.py
+
+[代码块 4eab2e3df2d4]
+
+[代码块 44823c797188]
+
+环节 3：两个薄推进器：目的地 / 餐饮
+
+3.1 片④：select_destination_tool + select_food_tool
+
+📁 文件路径：app/tools/state_transition.py（片④，接在片③后面）
+
+[代码块 61b4cfc19227]
+
+3.5 薄推进器演示
+
+📁 文件路径：scripts/Chapter_Eleven/11_thin_tools_demo.py
+
+目的地直接写入推进；餐饮先传一个非法值，再传合法值（直接调真实工具，纯逻辑，无需密钥）：
+
+[代码块 3ecf3b2de7d0]
+
+[代码块 b7a91fdf2589]
+
+环节 4：交通：段级循环（select_transport_tool）
+
+4.1 片⑤：三个被反复复用的助手
+
+📁 文件路径：app/tools/state_transition.py（片⑤，接在片④后面）
+
+[代码块 ec474316d303]
+
+4.2 _multi_city_names 演示
+
+📁 文件路径：scripts/Chapter_Eleven/11_multi_city_names_demo.py
+
+导入真实函数，喂多城、混合分隔符、单城和空串（纯函数，无需密钥）：
+
+[代码块 4c486c187b3f]
+
+[代码块 fc6d9f6c3ac4]
+
+4.3 _expected_legs 演示
+
+📁 文件路径：scripts/Chapter_Eleven/11_expected_legs_demo.py
+
+导入真实函数，看五种出发地 / 目的地组合各有几段（纯函数，无需密钥）：
+
+[代码块 4ffddbc02235]
+
+[代码块 0cc1caff8934]
+
+"北京 → 北京、天津"只有一段：出发地也在目的地里时先本地玩，自身段"北京→北京"被跳过。"北京 → 北京"是本地游，零段。
+
+4.4 片⑥：车次号正则与"所选班次"回捞
+
+📁 文件路径：app/tools/state_transition.py（片⑥，接在片⑤后面）
+
+[代码块 ddf20e7beaf0]
+
+4.5 LegChoice 契约演示
+
+📁 文件路径：scripts/Chapter_Eleven/11_leg_choice_demo.py（纯逻辑，无需密钥）：
+
+[代码块 3bd9045f8c18]
+
+[代码块 00445d085bf7]
+
+4.6 为什么必须是字段相等，不能是子串匹配
+
+📁 文件路径：scripts/Chapter_Eleven/11_match_leg_demo.py
+
+用真实消息类型造两段对话，交给真实函数（纯函数，无需密钥）：
+
+[代码块 7122cddf374c]
+
+[代码块 f9a9f5c881e3]
+
+4.7 片⑦：select_transport_tool
+
+📁 文件路径：app/tools/state_transition.py（片⑦，接在片⑥后面）
+
+[代码块 ce14dd811546]
+
+4.11 段级循环演示
+
+📁 文件路径：scripts/Chapter_Eleven/11_transport_loop_demo.py
+
+[代码块 a6f90738559a]
+
+[代码块 8c368e3eb347]
+
+环节 5：住宿：逐城循环（select_accommodation_tool）
+
+5.1 片⑧：select_accommodation_tool
+
+📁 文件路径：app/tools/state_transition.py（片⑧，接在片⑦后面）
+
+[代码块 b6465f485003]
+
+5.4 逐城循环演示
+
+📁 文件路径：scripts/Chapter_Eleven/11_hotel_loop_demo.py
+
+两城行程：先传错城，再依次确认天津、上海（直接调真实工具，纯逻辑，无需密钥）：
+
+[代码块 58d0e4d53a9d]
+
+[代码块 9df5d0a21714]
+
+环节 6：自动模式一站式确认（select_accommodation_food_tool）
+
+6.1 片⑨：select_accommodation_food_tool
+
+📁 文件路径：app/tools/state_transition.py（片⑨，接在片⑧后面）
+
+[代码块 cc45d86263b3]
+
+6.5 一站式守卫演示
+
+📁 文件路径：scripts/Chapter_Eleven/11_auto_combo_guard_demo.py
+
+同一次调用，auto_confirm 分别为 False 和 True（直接调真实工具，纯逻辑，无需密钥）：
+
+[代码块 f34bf65a3242]
+
+[代码块 70f66a84aa8e]
+
+环节 7：行程结构化（上）：被取代的老工具与 schema（片⑩⑪）
+
+7.1 片⑩：被取代的 generate_itinerary_tool
+
+📁 文件路径：app/tools/state_transition.py（片⑩，接在片⑨后面）
+
+[代码块 1a2d638e61a4]
+
+7.2 老工具产出演示
+
+📁 文件路径：scripts/Chapter_Eleven/11_legacy_itinerary_demo.py
+
+把前几步的字段都备齐，调一次真实的老工具（纯逻辑，无需密钥）：
+
+[代码块 f1fb543d3ef3]
+
+[代码块 b617b0adf15b]
+
+只有占位内容，没有任何真实安排——这就是要改成"模型交结构化数据"的原因。
+
+7.3 片⑪：把格式规则变成 schema
+
+📁 文件路径：app/tools/state_transition.py（片⑪，接在片⑩后面）
+
+[代码块 81f97ae0c189]
+
+7.6 schema 校验演示
+
+📁 文件路径：scripts/Chapter_Eleven/11_itinerary_schema_demo.py
+
+一份合格的 3 天行程，加五种不合格的写法，逐个交给真实 ItineraryBody 校验（纯逻辑，无需密钥）：
+
+[代码块 2a269353b780]
+
+[代码块 4378b043de45]
+
+环节 8：行程结构化（下）：代码归一与提交工具（片⑫⑬⑭）
+
+8.1 片⑫：补位条目、逐日城市与返程句
+
+📁 文件路径：app/tools/state_transition.py（片⑫，接在片⑪后面）
+
+[代码块 fffc385f2c0d]
+
+8.2 _fill_item 演示
+
+📁 文件路径：scripts/Chapter_Eleven/11_fill_item_demo.py
+
+导入真实的两个补位函数，看不同天、不同城市补出来的句子（纯函数，无需密钥）：
+
+[代码块 c1d5fea1072d]
+
+[代码块 43598d80db57]
+
+8.3 _back_hint 演示
+
+📁 文件路径：scripts/Chapter_Eleven/11_back_hint_demo.py
+
+四种 state，对应返程句的四个分支（纯函数，无需密钥）：
+
+[代码块 37d026f3c957]
+
+[代码块 e3aada8b7fc0]
+
+第二行对应只确认了去程和城际转场的旧会话：兜底句不会把天津→上海的 G7512 当成返程，退回"返程回到出发城市"。
+
+8.4 片⑬：_normalize_itinerary_days
+
+📁 文件路径：app/tools/state_transition.py（片⑬，接在片⑫后面）
+
+[代码块 eb5e970c7777]
+
+8.5 代码归一演示
+
+📁 文件路径：scripts/Chapter_Eleven/11_normalize_days_demo.py
+
+一份只写了第 1、3 天、还多写了第 5 天的"不合格"结构，交给真实函数按 3 天归一（纯函数，无需密钥）：
+
+[代码块 dcf696e11134]
+
+[代码块 6cfa13d90947]
+
+8.6 片⑭：submit_itinerary_body_tool
+
+📁 文件路径：app/tools/state_transition.py（片⑭，接在片⑬后面）
+
+[代码块 5c94d29abd32]
+
+8.7 提交工具演示
+
+📁 文件路径：scripts/Chapter_Eleven/11_submit_itinerary_demo.py
+
+要 2 天，只交 1 天、中午条目还太短；state 里已经带着上一轮算好的预算（直接调真实工具，纯逻辑，无需密钥）：
+
+[代码块 071a401425fd]
+
+[代码块 ae1897dde217]
+
+环节 9：预算（summarize_budget_tool）
+
+9.1 片⑮：summarize_budget_tool
+
+📁 文件路径：app/tools/state_transition.py（片⑮，接在片⑭后面）
+
+[代码块 b588a746c63d]
+
+9.5 预算演示
+
+📁 文件路径：scripts/Chapter_Eleven/11_budget_demo.py
+
+原需求 3 天、人均 3000；用户说多玩 1 天、预算加到 4000（直接调真实工具，纯逻辑，无需密钥）：
+
+[代码块 353d244ea8f8]
+
+[代码块 1591f36ec883]
+
+9.6 回头看：行程工具的就地补算
+
+📁 文件路径：scripts/Chapter_Eleven/11_inplace_budget_demo.py
+
+片⑮ 写好了，环节 8.6 留下的那条路径现在可以走通：state 里没有预算时交一份行程（纯逻辑，无需密钥）：
+
+[代码块 63a6cb108db0]
+
+[代码块 178cbdd8fe5b]
+
+环节 10：回退骨架（ALL_STEPS + STEP_STATE_FIELDS + go_back_to_step）
+
+10.1 片⑯：两份登记表
+
+📁 文件路径：app/tools/state_transition.py（片⑯，接在片⑮后面）
+
+[代码块 13a740167267]
+
+10.2 登记表演示
+
+📁 文件路径：scripts/Chapter_Eleven/11_step_registry_demo.py
+
+把两张真实登记表按步骤顺序打出来（纯逻辑，无需密钥）：
+
+[代码块 d31c88e5a2f9]
+
+[代码块 bb586220298e]
+
+10.3 片⑰：go_back_to_step
+
+📁 文件路径：app/tools/state_transition.py（片⑰，接在片⑯后面）
+
+[代码块 815c1f11d016]
+
+10.7 回退演示
+
+📁 文件路径：scripts/Chapter_Eleven/11_go_back_demo.py
+
+一个已经走到住宿步的 state，先退回目的地步，再试着退回订单步（直接调真实工具，纯逻辑，无需密钥）：
+
+[代码块 b5e129db3713]
+
+[代码块 700bcb914607]
+
+环节 11：回退守卫、快捷回退与进度查询（片⑱⑲⑳）
+
+11.1 片⑱：回退守卫
+
+📁 文件路径：app/tools/state_transition.py（片⑱，接在片⑰后面）
+
+[代码块 a927d2418b9e]
+
+11.2 回退意图演示
+
+📁 文件路径：scripts/Chapter_Eleven/11_back_intent_demo.py
+
+六句用户原话，交给真实的 _guard_back 判断放行还是拒绝（纯逻辑，无需密钥）：
+
+[代码块 e92e59810710]
+
+[代码块 657b7dc2b007]
+
+11.3 片⑲：七个快捷回退
+
+📁 文件路径：app/tools/state_transition.py（片⑲，接在片⑱后面）
+
+[代码块 231e36446a90]
+
+11.4 快捷回退演示
+
+📁 文件路径：scripts/Chapter_Eleven/11_shortcut_back_demo.py
+
+同一个 state：用户没说要换时调有守卫的工具，说了之后再调一次，再调一次没有守卫的（直接调真实工具，纯逻辑，无需密钥）：
+
+[代码块 9006a71a0b11]
+
+[代码块 77c1538f123e]
+
+11.5 片⑳：进度查询与导出清单
+
+📁 文件路径：app/tools/state_transition.py（片⑳，接在片⑲后面；二十片拼起来即完整文件）
+
+[代码块 57bf26804450]
+
+11.6 进度查询演示
+
+📁 文件路径：scripts/Chapter_Eleven/11_progress_query_demo.py
+
+一个走到住宿步的 state，看它会汇报什么（直接调真实工具，纯逻辑，无需密钥）：
+
+[代码块 6fd20fd9da8c]
+
+[代码块 d8c5bb4d0984]
+
+环节 12：步骤配置终版（step_config.py）
+
+12.2 终版代码
+
+📁 文件路径：app/agents/handoffs/step_config.py（终版，整份覆盖第 6、7 章的版本）
+
+[代码块 ddb781490d6e]
+
+12.4 步骤配置演示
+
+📁 文件路径：scripts/Chapter_Eleven/11_step_config_demo.py
+
+[代码块 2bb93eb3fb92]
+
+环节 13：装配 Agent（travel_agent.py 终版）
+
+13.1 travel_agent.py 终版
+
+📁 文件路径：app/agents/handoffs/travel_agent.py（终版，可整份覆盖）
+
+[代码块 682e36719e03]
+
+13.2 装配演示
+
+📁 文件路径：scripts/Chapter_Eleven/11_agent_tools_demo.py
+
+真正构建一次 Agent，数一数挂了多少把工具（需 PG + MCP；与 main.py 的 lifespan 同一套初始化）：
+
+[代码块 0dc095de480e]
+
+环节 14：综合冒烟：前向七步 + 回退
+
+14.1 冒烟脚本
+
+📁 文件路径：scripts/Chapter_Eleven/11_smoke_test.py
+
+九个断言点，覆盖全章最该守住的判据（纯逻辑，无需密钥）：
+
+[代码块 3c1cfb7c6237]
+
+[代码块 c3b51e2e780f]
+
+第 12 章 · 流式 API 与完整编排层：从 SSE 地基到编排总线与执行器
+
+环节 1：事件契约 + 生产者-消费者管道（events.py / event_stream.py）
+
+1.1 帧契约回顾：8 个 role 各管一类事
+
+events.py 第 9 章为了推卡片已经完整建好，本章原样复用，贴出来方便对照：
+
+📁 文件路径：app/core/events.py（第 9 章已建，本章不改）
+
+[代码块 0d370a3fdea0]
+
+1.2 EventStream：把队列包成能 async for 的管道
+
+📁 文件路径：app/core/event_stream.py
+
+[代码块 968229ae2fbf]
+
+1.5 生产者-消费者演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_event_stream_demo.py
+
+导入真实 EventStream，后台生产、前台消费，看"边生边推"的时间线（纯逻辑，无需密钥）：
+
+[代码块 f27c7880176b]
+
+预期输出（生产一帧、消费一帧，交替出现）：
+
+[代码块 338162da9e0d]
+
+1.6 忘了 close 会怎样
+
+📁 文件路径：scripts/Chapter_Twelve/12_forget_close_demo.py
+
+queue.get() 在队列空时会一直等。生产者要是忘了 close()，消费者的 async for 就永远卡住——SSE 连接不结束，前端输入框一直转圈。下面用 wait_for 给它 2 秒，亲眼看看（纯逻辑，无需密钥）：
+
+[代码块 e2e543161185]
+
+[代码块 cfde46f72cce]
+
+环节 2：全局响应包裹 + SSE 豁免（response.py）
+
+2.1 片①：契约的两个入口
+
+📁 文件路径：app/core/response.py（片①）
+
+[代码块 3a4ddc05c3e9]
+
+2.2 片②：兜底异常与参数校验——堆栈进日志、摘要进响应
+
+📁 文件路径：app/core/response.py（片②，接在片①后面）
+
+[代码块 371aa772e10e]
+
+2.3 片③：wrap_json_middleware——三条放行规则
+
+📁 文件路径：app/core/response.py（片③，接在片②后面；三片拼起来即完整文件）
+
+[代码块 68ace1babf09]
+
+2.4 挂进 main.py（第一步改动）
+
+第 10 章的 main.py 还没挂任何响应处理器。在它的基础上追加这几行（其余不动）：
+
+📁 文件路径：app/main.py（第一步改动：追加中间件与校验器）
+
+[代码块 a88fae1084a7]
+
+环节 3：SSE 端点（messages.py）
+
+3.1 先给 run_chat_turn 放个最小桩
+
+messages.py 要 import 编排入口 run_chat_turn，可它的真身要到环节 9–10 才搭。为了让端点按阅读顺序就能跑通，先放一个签名完全一致的最小桩；后面换真身时签名不变，端点一行不用改。
+
+📁 文件路径：app/services/chat_contract_service.py（最小桩，环节 9–10 按片整份替换）
+
+[代码块 37ee5b6e2638]
+
+3.2 桩的"立即返回"演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_run_chat_turn_stub_demo.py
+
+仅桩阶段可用——环节 10 换成真总线后它需要真数据库（纯逻辑，无需密钥）：
+
+[代码块 dd192475902c]
+
+[代码块 3723a6d5afba]
+
+3.3 片①：路由、SSE 响应头与帧格式
+
+📁 文件路径：app/api/v1/messages.py（片①）
+
+[代码块 f1f10f4ceea2]
+
+3.4 SSE 帧长什么样
+
+📁 文件路径：scripts/Chapter_Twelve/12_sse_frame_demo.py
+
+导入真实 _sse，用 repr 把结尾的换行也打出来（纯函数，无需密钥）：
+
+[代码块 a0eadcaed98f]
+
+[代码块 ba541788a8c4]
+
+3.5 片②：send_message——边读边 yield
+
+📁 文件路径：app/api/v1/messages.py（片②，接在片①后面）
+
+[代码块 cab2b9708786]
+
+3.6 片③：GET /messages——历史回放
+
+📁 文件路径：app/api/v1/messages.py（片③，接在片②后面；三片拼起来即完整文件）
+
+[代码块 2fdd467314bb]
+
+3.8 挂上 messages 路由（第二步改动）
+
+📁 文件路径：app/main.py（第二步改动：import 与 include_router 各加一处）
+
+[代码块 3135b9a86d19]
+
+3.9 用 Python 读一次真 SSE
+
+📁 文件路径：scripts/Chapter_Twelve/12_sse_client_demo.py
+
+前端那段 fetch 读流的 Python 版。先启动服务（第 10 章的启动方式,或者右击app/run），再跑脚本（需服务已启动 + PG）：
+
+[代码块 1a211387fe24]
+
+环节 4：意图路由（chat_router.py）
+
+4.1 片①：技能目录与三字段返回契约
+
+📁 文件路径：app/agents/routers/chat_router.py（片①）
+
+[代码块 504041d36c18]
+
+4.2 schema 里的 description 就是 prompt
+
+📁 文件路径：scripts/Chapter_Twelve/12_router_schema_demo.py
+
+[代码块 4d7fa9fa1017]
+
+[代码块 fe7e83b1165c]
+
+4.3 片②：chat_route——带历史的结构化调用
+
+📁 文件路径：app/agents/routers/chat_router.py（片②，接在片①后面；两片拼起来即完整文件）
+
+[代码块 fc28c89a7921]
+
+4.5 同一句"确认"，带不带历史
+
+📁 文件路径：scripts/Chapter_Twelve/12_chat_route_demo.py
+
+导入真实 chat_route，同一句话分别不带 / 带 4 条历史各判一次（需 .env 配 DashScope 密钥）：
+
+[代码块 8b4fa005f2c7]
+
+环节 5：清单生成（itinerary_plan_service.py + ItineraryPlan 表）
+
+5.1 先给在线质检放个桩
+
+📁 文件路径：app/services/quality_check_service.py（最小桩，第 13 章整份替换）
+
+[代码块 68f745a04dd7]
+
+5.2 第四张表：ItineraryPlan
+
+第 10 章那三张表是"账号 / 会话 / 消息"。清单体量大、结构专、只服务"查看清单"一个场景，塞进 Message.content 不合适，单开第四张表：
+
+📁 文件路径：app/models/itinerary_plan.py
+
+[代码块 f80f6d8f36d2]
+
+加了新表，就要照第 10 章的规矩登记进 models/init.py，否则 Base.metadata 不知道它：
+
+📁 文件路径：app/models/init.py（完整文件：在第 10 章三张表的基础上加了一行）
+
+[代码块 59452edcfc2f]
+
+5.3 把第四张表建出来
+
+📁 文件路径：scripts/Chapter_Twelve/12_init_db.py
+
+[代码块 da998acada97]
+
+5.4 片①：读清单——get_plan / get_owned_plan
+
+📁 文件路径：app/services/itinerary_plan_service.py（片①）
+
+[代码块 f70b9a8f28a8]
+
+5.5 片②：前端契约的四层 Pydantic
+
+📁 文件路径：app/services/itinerary_plan_service.py（片②，接在片①后面）
+
+[代码块 d9fc6e190500]
+
+5.6 bind_tools 实际送出去什么
+
+📁 文件路径：scripts/Chapter_Twelve/12_plan_tool_schema_demo.py
+
+[代码块 e2ff36d9650c]
+
+[代码块 968ebc966bc6]
+
+5.7 片③：兜底构造——不靠 LLM 也能出清单
+
+📁 文件路径：app/services/itinerary_plan_service.py（片③，接在片②后面）
+
+[代码块 38511fd79313]
+
+5.8 不经 LLM 也能出清单
+
+📁 文件路径：scripts/Chapter_Twelve/12_plan_from_structure_demo.py
+
+导入真实 _plan_from_structure，喂一份 itinerary_body 形态的逐日结构（纯函数，无需密钥）：
+
+[代码块 2d9ef08bf94c]
+
+[代码块 a5a46f32b39e]
+
+第 2 天没有中午的安排，清单里就没有"中午"这一项，不会凭空造出来。兜底版的景点名只取条目的首段（"返程：杭州东站 G1653"取成"返程"），完整信息都在介绍字段里；图片和坐标留空，交给下一片补。
+
+5.9 片④：提炼提示词与关键词清洗
+
+📁 文件路径：app/services/itinerary_plan_service.py（片④，接在片③后面）
+
+[代码块 270e3bcb0974]
+
+提示词允许模型补景点的常识介绍，但门票价格、营业时间这类事实数字严禁编造。_clean_keyword 剥掉模型留下的序号和括号注解，"1.杭州东站（返程）"直接拿去搜高德是搜不到的。
+
+5.10 _clean_keyword 演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_clean_keyword_demo.py
+
+导入真实 _clean_keyword，喂几种模型常见的脏名字（纯函数，无需密钥）：
+
+[代码块 9416ba92a1a0]
+
+[代码块 ad2d5cba2299]
+
+5.11 片⑤：高德 POI 补坐标和封面
+
+📁 文件路径：app/services/itinerary_plan_service.py（片⑤，接在片④后面）
+
+[代码块 04f3de1fc780]
+
+5.12 片⑥：高德方向 API 补每日路线
+
+📁 文件路径：app/services/itinerary_plan_service.py（片⑥，接在片⑤后面）
+
+[代码块 b2ae86d73465]
+
+每天按景点顺序两两取驾车路线，把各 step 的 polyline 拼成平铺数组。某段失败就存空数组，前端退化成直线。高德参数"经度在前"，存进清单时换成前端要的"纬度在前"。
+
+5.13 片⑦：generate_plan——提炼 → 兜底 → 增强 → UPSERT
+
+📁 文件路径：app/services/itinerary_plan_service.py（片⑦，接在片⑥后面；七片拼起来即完整文件）
+
+[代码块 2096586e83c0]
+
+5.14 连跑两次，plan_id 不变
+
+📁 文件路径：scripts/Chapter_Twelve/12_generate_plan_demo.py
+
+造一个测试用户和会话，对同一会话调两次真实 generate_plan（需 PG + DeepSeek / 高德密钥；DeepSeek 不可用时会自动走结构兜底）：
+
+[代码块 2b74639b6b36]
+
+环节 6：长文压缩（chat_compress_service.py）
+
+【本节目标】 超过 2000 字的回复压成 300 字以内的摘要存进 content，全文另存 extra_info.original。
+
+重点： 双存——列表要快，详情要全；阈值挡掉无谓调用。需求本身极简，代码就该极简。
+
+6.1 全文件：19 行
+
+📁 文件路径：app/services/chat_compress_service.py
+
+[代码块 bdcfee531196]
+
+6.3 压缩演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_compress_demo.py
+
+导入真实 compress_content 和阈值，造一篇 10 天的长正文压一次（需 .env 配 DeepSeek 密钥）：
+
+[代码块 945633799dd4]
+
+环节 7：快速通道（上）：门禁、自动选城与并行收集（express_planning_service.py）
+
+7.1 片①：入口的双层门禁(可以删除直接创建的，之前创建的都在，只是删除是为了更好的创建)
+
+📁 文件路径：app/services/express_planning_service.py（片①）
+
+[代码块 e516110bf8f4]
+
+7.2 文本数字提取
+
+📁 文件路径：scripts/Chapter_Twelve/_number_before.py
+
+[代码块 cc67beafc58d]
+
+7.3 双层门禁演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_express_gate_demo.py
+
+场景 1 被正则直接挡掉，不花一次 LLM；场景 2 真走提取（场景 1 纯逻辑，场景 2 需 DashScope 密钥）：
+
+[代码块 0a0f426991e1]
+
+7.4 片②：没填目的地？一次 LLM 直接选城
+
+📁 文件路径：app/services/express_planning_service.py（片②，接在片①后面）
+
+[代码块 2f8a09825da9]
+
+自动确认模式下目的地可以留空，由 AI 按出发地、季节、风格、预算直接选一个。这里不走 RAG、不跑多 Agent，就一次调用，输出格式钉死为"城市名|理由"；解析失败返回 None，调用方回落状态机。
+
+7.5 片③：多目的地路段
+
+📁 文件路径：app/services/express_planning_service.py（片③，接在片②后面）
+
+[代码块 b44585384ffb]
+
+7.6 游玩城市与交通段
+
+📁 文件路径：scripts/Chapter_Twelve/12_plan_cities_demo.py
+
+导入真实 _plan_cities 和 _build_legs，用真实 ExpressRequirement 构造四种需求（纯函数，无需密钥）：
+
+[代码块 ba6182af9324]
+
+[代码块 d3a4eaa04a66]
+
+最后一行"北京 → 北京"没有任何交通段，是本地游——执行器那边管这种情况叫"零段直通"（环节 16）。
+
+7.7 片④：_collect_context——一次性并行查齐
+
+📁 文件路径：app/services/express_planning_service.py（片④，接在片③后面）
+
+[代码块 6e3755667a29]
+
+7.8 并行收集实测
+
+📁 文件路径：scripts/Chapter_Twelve/12_collect_context_demo.py
+
+导入真实 _collect_context，查"福州 → 杭州、上海"两段两城（需 .env 配好 MCP 相关密钥）：
+
+[代码块 119c1d6957d2]
+
+环节 8：快速通道（下）：规则选定、单次生成与记忆交接
+
+8.1 片⑤：交通选定——_pick_train 的综合分
+
+📁 文件路径：app/services/express_planning_service.py（片⑤，接在片④后面）
+
+[代码块 a5c3360db9e9]
+
+8.2 _pick_train 演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_pick_train_demo.py
+
+导入真实 _pick_train，喂一段 12306 原始格式文本（纯函数，无需密钥）：
+
+[代码块 61741db706c4]
+
+[代码块 987934c7664b]
+
+8.3 片⑥：航班选定——两种返回形态都能抠
+
+📁 文件路径：app/services/express_planning_service.py（片⑥，接在片⑤后面）
+
+[代码块 4ec8976d3943]
+
+航班数据源的返回格式不统一，有时是 JSON，有时是文本。这里宽松解析：只要认出"航班号 + 价格"就收，取最便宜的一班；两样缺一就跳过，绝不猜。
+
+8.4 _pick_flight 演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_pick_flight_demo.py
+
+导入真实 _pick_flight，分别喂 JSON、纯文本和空数据（纯函数，无需密钥）：
+
+[代码块 21303d8d07b6]
+
+[代码块 5af9ae7d25fb]
+
+8.5 片⑦：酒店与天气选定
+
+📁 文件路径：app/services/express_planning_service.py（片⑦，接在片⑥后面）
+
+[代码块 47d4a7767d04]
+
+8.6 _pick_hotel 演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_pick_hotel_demo.py
+
+导入真实 _pick_hotel，喂一份含异常低价的酒店 JSON（纯函数，无需密钥）：
+
+[代码块 3e9e53e8c04c]
+
+[代码块 9074f625d0bd]
+
+8.7 _pick_weather 演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_pick_weather_demo.py
+
+导入真实 _pick_weather，分别命中、不命中出发日，再喂一个空串（纯函数，无需密钥）：
+
+[代码块 623611220371]
+
+[代码块 fd74f72ee382]
+
+8.8 片⑧：_select_choices——每段每城一次定齐
+
+📁 文件路径：app/services/express_planning_service.py（片⑧，接在片⑦后面)
+
+[代码块 8aa3490478b7]
+
+8.9 选定总装演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_select_choices_demo.py
+
+手工造一份 _collect_context 形态的原始数据，交给真实 _select_choices 一次选定（纯函数，无需密钥）：
+
+[代码块 28d206d70dfb]
+
+[代码块 87a7b4386e1e]
+
+8.10 片⑨：全流程唯一一次 LLM 长输出
+
+📁 文件路径：app/services/express_planning_service.py（片⑨，接在片⑧后面）
+
+[代码块 af025f844781]
+
+LLM 在这里只干一件事：把已经锁定的交通、酒店、天气写成行程正文。它不做任何决策，这正是快速通道能压到一分钟的关键。streaming=True + astream + stream.push：每来一个 chunk 就推一帧，用户看到的是正文逐字流出。
+
+8.11 片⑩：预算归代码
+
+📁 文件路径：app/services/express_planning_service.py（片⑩，接在片⑨后面）
+
+[代码块 3d7cd1bd1414]
+
+8.12 _build_budget 演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_build_budget_demo.py
+
+导入真实 _build_budget，每一项都能按注释里的算式手工复算（纯函数，无需密钥）：
+
+[代码块 4e6a9b7e1715]
+
+[代码块 db699fbc5a34]
+
+8.13 片⑪：主流程 run_express_planning
+
+📁 文件路径：app/services/express_planning_service.py（片⑪，接在片⑩后面）
+
+[代码块 22fc59e0a4a0]
+
+主线一目了然：没目的地先选城 → 多目的地天数不足就自动上调并告知（每城至少 2 天）→ 收集 → 选定 → 生成 → 预算。返回"摘要 + 正文 + 预算"全文，交给编排总线走清单、压缩、落库。
+
+8.14 片⑫：sync_express_state——把记忆交还状态机
+
+📁 文件路径：app/services/express_planning_service.py（片⑫，接在片⑪后面；十二片拼起来即完整文件）
+
+[代码块 17eb2e69e3d0]
+
+8.15 快速通道整跑
+
+📁 文件路径：scripts/Chapter_Twelve/12_express_run_demo.py
+
+导入真实 run_express_planning，从头到尾跑一遍，逐帧打印（需 DashScope + MCP 密钥）：
+
+[代码块 b01e91809db6]
+
+环节 9：编排总线（上）：旁路记录与门禁助手
+
+9.1 先给执行器放个桩
+
+📁 文件路径：app/services/chat_stream_executor.py（最小桩，环节 12–17 按片①–⑰ 逐步替换）
+
+[代码块 65329cc50c38]
+
+桩只钉死两件事：try_direct_ticket_query 返回"命中给文本、不命中给 None"，execute_turn 返回四元组。后面换真身时，总线一行都不用改。
+
+9.2 片①：导入与四个门禁常量(删除之前的)
+
+📁 文件路径：app/services/chat_contract_service.py（片①）
+
+[代码块 f84794eae7aa]
+
+9.3 片②：_SkillUiRecorder——包一层，顺手记下卡片
+
+📁 文件路径：app/services/chat_contract_service.py（片②，接在片①后面）
+
+[代码块 fd698b24a2d5]
+
+9.4 旁路记录演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_skill_ui_recorder_demo.py
+
+导入真实 _SkillUiRecorder，像 _produce 那样包住一个 EventStream（纯逻辑，无需密钥）：
+
+[代码块 54389865de85]
+
+[代码块 862cf718cdc0]
+
+9.5 片③：mark_skill_ui_submitted——提交态写回历史
+
+📁 文件路径：app/services/chat_contract_service.py（片③，接在片②后面）
+
+[代码块 dc79bc0e0e3c]
+
+9.6 回填提交态演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_mark_submitted_demo.py
+
+先造一条带卡片帧的 assistant 消息，再调真实 mark_skill_ui_submitted（需 PG）：
+
+[代码块 50d15479ee1b]
+
+9.7 片④：三个门禁助手
+
+📁 文件路径：app/services/chat_contract_service.py（片④，接在片③后面）
+
+[代码块 533352a41ee2]
+
+9.8 _looks_like_itinerary 演示
+
+📁 文件路径：scripts/12_looks_like_itinerary_demo.py
+
+导入真实函数，喂多日、单日、需求追问、太短四段文本（纯函数，无需密钥）：
+
+[代码块 cf1f3a5892e5]
+
+[代码块 92baf0bc791d]
+
+9.9 天数告警演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_day_warning_demo.py
+
+导入真实 _manual_multi_city_day_warning，喂四段表单风格的文本（纯函数，无需密钥）：
+
+[代码块 25c77b942704]
+
+[代码块 8b929b093716]
+
+环节 10：编排总线（下）：run_chat_turn 与 _produce 六段（片⑤⑥）
+
+10.1 片⑤：run_chat_turn 与续跑文案表
+
+这里的_product报错是因为没有创建，创建就在环节6
+
+📁 文件路径：app/services/chat_contract_service.py（片⑤，接在片④后面）
+
+[代码块 d19bba97a5bc]
+
+10.2 片⑥：_produce——一轮对话的完整编排
+
+📁 文件路径：app/services/chat_contract_service.py（片⑥，接在片⑤后面；六片拼起来即完整文件）
+
+[代码块 7e9b26e43498]
+
+10.8 总线跑一轮（执行器还是桩）
+
+📁 文件路径：scripts/Chapter_Twelve/12_bus_stub_demo.py
+
+造一个测试用户和会话，调真实 run_chat_turn 跑一句"你好呀"，再查库看落了什么（需 PG + DashScope 密钥）：
+
+[代码块 ff59c1f5dd84]
+
+10.9 让路由"挂掉"，看流怎么收尾
+
+📁 文件路径：scripts/Chapter_Twelve/12_produce_error_path_demo.py
+
+用 patch 让 chat_route 抛异常，验证 finally 里的 close 真的生效（需 PG；不调 LLM）：
+
+[代码块 eac663e001bb]
+
+[代码块 4bd99d717d9d]
+
+环节 11：卡片续跑与清单读回（skills.py / itinerary_plans.py）
+
+11.1 片①：导入与路由
+
+📁 文件路径：app/api/v1/skills.py（片①）
+
+[代码块 bf7cabde231d]
+
+11.2 片②：四个提交请求体
+
+📁 文件路径：app/api/v1/skills.py（片②，接在片①后面）
+
+[代码块 cd7aeb59d1b8]
+
+11.3 片③：续跑合成发言 + 已选回显
+
+📁 文件路径：app/api/v1/skills.py（片③，接在片②后面）
+
+[代码块 7c97bfe87bed]
+
+11.4 两段文案演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_confirmed_content_demo.py
+
+导入真实的 _confirmed_content / _resume_content，用第 9 章的真实 TrainSubmitResult 构造回执（纯函数，无需密钥）：
+
+[代码块 60e4e30d2a24]
+
+[代码块 0318d66af0af]
+
+11.5 片④：高铁提交端点——校验 → 回填 → 回显 → 续跑
+
+📁 文件路径：app/api/v1/skills.py（片④，接在片③后面）
+
+[代码块 416ef7779f9f]
+
+11.6 片⑤：住宿、航班、自驾——同构的另外三个
+
+📁 文件路径：app/api/v1/skills.py（片⑤，接在片④后面；五片拼起来即完整文件）
+
+[代码块 5d6b4adf70de]
+
+11.8 读回清单：itinerary_plans.py
+
+写侧（生成 → 落库）在环节 5，这里是读侧：前端手里只有 itinerary_plans 帧里的 plan_id，凭它把整份清单取回来渲染。
+
+📁 文件路径：app/api/v1/itinerary_plans.py
+
+[代码块 9697d508a80b]
+
+11.9 挂上 skills / itinerary_plans 路由（第三步改动）
+
+📁 文件路径：app/main.py（第三步改动：import 与 include_router 再各加两处）
+
+[代码块 eeff304ca31c]
+
+环节 12：执行器全景：梳理 chat_stream_executor 模块
+
+12.9 片①：文件头(删除之前的)
+
+📁 文件路径：app/services/chat_stream_executor.py（片①：替换桩文件开头的 docstring 和两行 import，桩里的两个函数先留在它下面）
+
+[代码块 6f03e9ae5df7]
+
+环节 13：闲聊直连（_stream_plain）
+
+【本节目标】 把一句闲聊直连 LLM，逐字流式推给前端。
+
+重点： 这是流式的最小形态——astream 取 token 流，每来一个 chunk 就推一帧、攒一份。后面所有复杂的执行函数，本质上都是在这几行上"加填坑"。
+
+13.1 片②：_stream_plain
+
+📁 文件路径：app/services/chat_stream_executor.py（片②，追加到文件末尾）
+
+[代码块 635dda4bdb2b]
+
+13.4 闲聊直连演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_stream_plain_demo.py
+
+导入真实 _stream_plain，一边生产一边消费（需 .env 配 DashScope 密钥）：
+
+[代码块 8584172b59f1]
+
+环节 14：直查通道（try_direct_ticket_query）
+
+14.1 片③：班次行归并与普速过滤
+
+📁 文件路径：app/services/chat_stream_executor.py（片③，接在片②后面）
+
+[代码块 f7a5dfc3519d]
+
+14.2 _rows_to_seg 演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_rows_to_seg_demo.py
+
+导入真实 _rows_to_seg，喂两种形态的行和一条重复车次（纯函数，无需密钥）：
+
+[代码块 0254d77b492d]
+
+[代码块 9403bb6d1cb5]
+
+原始行按常用度挑到了二等座，票态如实显示"无"，不替用户挑一个有票的来冒充。
+
+14.3 片④：渲染班次表、从工具消息直出
+
+📁 文件路径：app/services/chat_stream_executor.py（片④，接在片③后面）
+
+[代码块 a5d80dbc73f0]
+
+14.4 _render_ticket_table 演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_render_ticket_table_demo.py
+
+导入真实 _render_ticket_table：默认版、只出当前段、用户版表头各渲染一次（纯函数，无需密钥）：
+
+[代码块 29a26cf6fb60]
+
+[代码块 6afa4a0656a7]
+
+[代码块 f709d0c3a115]
+
+only_leg="杭州→上海" 那次只剩第二段，收尾语变成"请从以上真实班次中选择「杭州→上海」这一段的班次"。
+
+14.5 _ticket_table_from_tail 演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_ticket_table_from_tail_demo.py
+
+用真实的 ToolMessage / AIMessage 造一段本轮消息，交给真实 _ticket_table_from_tail（纯函数，无需密钥）：
+
+[代码块 c520c119c534]
+
+输出两张表（福州 → 杭州东 2 趟、杭州东 → 上海虹桥 1 趟），最后一行是 ''——AI 消息里说的"G1234"不算数。
+
+14.6 片⑤：直查门禁词表与航班表
+
+📁 文件路径：app/services/chat_stream_executor.py（片⑤，接在片④后面）
+
+[代码块 d4ecbfac8f7c]
+
+14.7 _render_flight_table 演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_render_flight_table_demo.py
+
+[代码块 73b5ee5f47e9]
+
+[代码块 cd564844c961]
+
+14.8 片⑥：起讫城市与查询日期
+
+📁 文件路径：app/services/chat_stream_executor.py（片⑥，接在片⑤后面）
+
+[代码块 ae47a44b0ec1]
+
+14.9 _parse_city_pair 演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_parse_city_pair_demo.py
+
+导入真实 _parse_city_pair，喂四句话（纯函数，无需密钥）：
+
+[代码块 fb4bfa736b76]
+
+[代码块 1c5faae853e5]
+
+第三行说明了为什么正则只能当兜底：两个地名都不在地级市清单里，正则把"的车"也吞了进去。这时直查会如实告诉用户"没有查到可用班次"，而不会编一张表出来。
+
+14.10 _parse_query_date 演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_parse_query_date_demo.py
+
+导入真实 _parse_query_date 和片⑤里的 _DAY_OFFSET（纯函数，无需密钥；日期随运行当天变化）：
+
+[代码块 d16d28cfad4f]
+
+[代码块 ae121d8828c6]
+
+14.11 片⑦：入口函数 try_direct_ticket_query
+
+📁 文件路径：app/services/chat_stream_executor.py（片⑦，接在片⑥后面）
+
+[代码块 912eddd50fae]
+
+14.12 门禁演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_direct_gate_demo.py
+
+导入真实 try_direct_ticket_query：前 5 句各被某道门禁挡下，立刻返回 None；最后一句全部命中，真查 12306（前 5 句纯逻辑；最后一句需 12306 MCP）：
+
+[代码块 8262426c6e72]
+
+[代码块 1386d22eb7f1]
+
+环节 15：框架流式核心（_stream_agent）
+
+15.1 片⑧：协议泄漏与泄漏句判定
+
+📁 文件路径：app/services/chat_stream_executor.py（片⑧，接在片⑦后面）
+
+[代码块 f849dbdb407e]
+
+15.2 片⑨：空头承诺、阻塞收尾与总入口 _scrub_leak_text
+
+📁 文件路径：app/services/chat_stream_executor.py（片⑨，接在片⑧后面）
+
+[代码块 fa91d304fcaa]
+
+15.3 _scrub_leak_text 演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_scrub_leak_demo.py
+
+把四种泄漏塞进同一段文本，交给真实 _scrub_leak_text（纯函数，无需密钥）：
+
+[代码块 f08c5220e7ab]
+
+[代码块 cc322df3a710]
+
+15.4 片⑩：整篇去重、重述折叠与工具轮识别
+
+📁 文件路径：app/services/chat_stream_executor.py（片⑩，接在片⑨后面）
+
+[代码块 bc35ac51de70]
+
+15.5 _fold_restatements 演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_fold_restatements_demo.py
+
+两轮文本共用一份折叠状态，交给真实 _fold_restatements（纯函数，无需密钥）：
+
+[代码块 b711fc5af4e5]
+
+第 2 轮的重述段和第二次"请稍候"都被删掉了，列表行原样留下。
+
+15.6 _dedupe_texts 演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_dedupe_texts_demo.py
+
+第 1 轮是被截断的半篇，第 3 轮是完整版，交给真实 _dedupe_texts（纯函数，无需密钥）：
+
+[代码块 706b7b57766e]
+
+[代码块 7e7f674966b4]
+
+15.7 流式 chunk 的两个即时判定
+
+📁 文件路径：scripts/Chapter_Twelve/12_protocol_leak_demo.py
+
+导入片⑧的 _is_protocol_leak 和片⑩的 _chunk_has_tool_call，用真实 AIMessageChunk 造一个文本 chunk 和一个工具 chunk（纯函数，无需密钥）：
+
+[代码块 287c76cabf1e]
+
+[代码块 9cb9f9d8f8e7]
+
+15.8 片⑪：_stream_agent
+
+📁 文件路径：app/services/chat_stream_executor.py（片⑪，接在片⑩后面）
+
+[代码块 cd4b3b1590ea]
+
+15.11 用剧本驱动真实 _stream_agent
+
+📁 文件路径：scripts/Chapter_Twelve/12_stream_agent_demo.py
+
+ScriptedAgent 只是个测试驱动：把写好的 astream_events 事件按顺序吐出来，首轮缓冲、清洗、reset 全是真实 _stream_agent 在做（纯逻辑，无需密钥）：
+
+[代码块 0fa3b5188185]
+
+[代码块 e68e20d1e57f]
+
+环节 16：后处理零件：住宿降级 / 交通清单 / 行程渲染 / 天气
+
+16.1 片⑫：住宿降级族
+
+📁 文件路径：app/services/chat_stream_executor.py（片⑫，接在片⑪后面）
+
+[代码块 79b154cec6f6]
+
+16.2 _match_hotel_choice 演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_hotel_choice_demo.py
+
+导入真实 _match_hotel_choice，喂品牌名、委托语和犹豫的话（纯函数，无需密钥）：
+
+[代码块 338421a16b6f]
+
+[代码块 6ec39fe394f2]
+
+16.3 _build_hotel_fallback 演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_hotel_fallback_demo.py
+
+导入真实 _build_hotel_fallback，三种模式各生成一次（纯函数，无需密钥）：
+
+[代码块 b3a050903a0a]
+
+[代码块 eeb72e048ee3]
+
+16.4 片⑬：交通清单归代码
+
+📁 文件路径：app/services/chat_stream_executor.py（片⑬，接在片⑫后面）
+
+[代码块 89174acd01ca]
+
+16.5 _strip_transport_lists 演示
+
+📁 文件路径：scripts/12_strip_transport_demo.py
+
+把模型自编的车次、残行、航班塞进一段正文，交给真实 _strip_transport_lists（纯函数，无需密钥）：
+
+[代码块 a77090c72c4d]
+
+16.6 _zero_leg_guard 演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_zero_leg_demo.py
+
+导入真实 _zero_leg_guard，喂同城、多城和缺出发地三种状态（纯函数，无需密钥）：
+
+[代码块 09766d30c20c]
+
+16.7 _leg_context 演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_leg_context_demo.py
+
+导入真实 _leg_context，让游标从第 1 段走到越界（纯函数，无需密钥）：
+
+[代码块 1245fb8e2c5e]
+
+[代码块 402fde7151a4]
+
+16.8 片⑭：行程正文归代码渲染 + 逐段推送
+
+📁 文件路径：app/services/chat_stream_executor.py（片⑭，接在片⑬后面）
+
+[代码块 02fec71c33df]
+
+16.9 _render_itinerary_body 演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_render_itinerary_body_demo.py
+
+导入真实 _render_itinerary_body，喂两天的结构和一份预算（纯函数，无需密钥）：
+
+[代码块 a1818a04755c]
+
+输出结尾的预算部分：
+
+[代码块 dfc51aaae7a8]
+
+第 2 天中午没有安排，渲染出来的"中午"下面就是空的——结构里没有的，代码绝不补编。
+
+16.10 _push_rendered 演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_push_rendered_demo.py
+
+导入真实 _push_rendered，量一下分了几帧、用了多久（纯逻辑，无需密钥）：
+
+[代码块 719fedb15d38]
+
+[代码块 b00a63e5b746]
+
+16.11 片⑮：天气归代码
+
+📁 文件路径：app/services/chat_stream_executor.py（片⑮，接在片⑭后面）
+
+[代码块 483d2faa8dd4]
+
+16.12_strip_model_weather 演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_strip_model_weather_demo.py
+
+导入真实 _strip_model_weather，喂一段混着天气和占位语的目的地正文（纯函数，无需密钥）：
+
+[代码块 a0712915fd78]
+
+[代码块 1605015921cd]
+
+16.13 _queried_cities 演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_queried_cities_demo.py
+
+用真实 AIMessage 造一条带工具调用的消息，交给真实 _queried_cities（纯函数，无需密钥）：
+
+[代码块 de379dbefcd1]
+
+[代码块 84c2a6940917]
+
+16.14 _weather_paragraph 演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_weather_paragraph_demo.py
+
+导入真实 _weather_paragraph，单城和多城各查一次（需 .env 配好天气 MCP / 高德密钥）：
+
+[代码块 caab5c976300]
+
+16.15 回头补第 9 章：结构性不可查判定 + 机场码补全
+
+两处都在第 9 章版本基础上改。原有函数的行为一点不变，第 9 章的演示脚本照常能跑。
+
+① flight_unreachable_cities：分清"结构性不可查"和"瞬时为空"
+
+📁 文件路径：app/capabilities/flight_multi_segment/flight_flow.py（在第 9 章版本基础上：插在 flight_card_mode 与 _fmt_option 之间）
+
+[代码块 e8c692c1cff8]
+
+16.16 新文件：transport_switch_service.py
+
+📁 文件路径：app/services/transport_switch_service.py（新建）
+
+[代码块 d2890ea7cda7]
+
+16.17 改选与降级判定演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_transport_switch_demo.py
+
+逐条断言三件事：原话 → 改选目标；改选落库后，卡片路由真的换了方向；结构性不可查和可查分得开。FakeAgent 只记录 aupdate_state 写了什么，不连库（纯逻辑，无需密钥）：
+
+[代码块 20a4c7a97989]
+
+[代码块 a3daa7fba12b]
+
+环节 17：状态机执行总线（execute_turn）
+
+【本节目标】 写完最后两片，把前面所有零件串起来：预读状态 → 流式跑一轮 → 读快照 → 七处后处理 → 统一推送 → 交回四元组。
+
+重点： recursion_limit=60；流式之前先预读步骤，决定要不要 buffer_all；回合末只信 snap.values；后处理追加不替换，推送的和落库的是同一份。
+
+17.1 片⑯：步骤常量、缓冲集合与 _covers_all_days
+
+📁 文件路径：app/services/chat_stream_executor.py（片⑯，接在片⑮后面）
+
+[代码块 d4c2e5dac18a]
+
+17.2 _covers_all_days 演示
+
+📁 文件路径：scripts/12_covers_all_days_demo.py
+
+导入真实 _covers_all_days，分别要 3 天、4 天、0 天（纯函数，无需密钥）：
+
+[代码块 ce0e71c5ca13]
+
+[代码块 ce0e71c5ca13]
+
+17.3 片⑰：execute_turn
+
+📁 文件路径：app/services/chat_stream_executor.py（片⑰，接在片⑯后面；这是最后一片）
+
+[代码块 70e157796316]
+
+17.9 execute_turn 直调演示
+
+📁 文件路径：scripts/Chapter_Twelve/12_execute_turn_demo.py
+
+像 main.py 的 lifespan 那样初始化 Checkpointer 和 Store，同一个 thread 先规划一轮、再闲聊一句，直接调真实 execute_turn（需 PG + DashScope + MCP 全套）：
+
+[代码块 4220396dee4e]
+
+环节 18：总装 main.py + 端到端冒烟
+
+【本节目标】 把前面三步改动合成终版 main.py，再用一个脚本把闲聊、直查、规划、历史、清单、异常六条路径跑一遍。
+
+重点： 包裹中间件最后注册 = 最外层；冒烟既走 HTTP 看真实帧序，也在进程内 patch，验证"异常也要 close"。
+
+18.1 终版 main.py
+
+三步改动（环节 2.4 挂中间件、3.8 挂 messages、11.9 挂 skills / itinerary_plans）合在一起，就是下面这份完整文件，可以直接整份覆盖：
+
+📁 文件路径：app/main.py（终版，可整份覆盖）
+
+[代码块 b95ecd9f2e5e]
+
+18.2 端到端冒烟脚本
+
+📁 文件路径：scripts/Chapter_Twelve/12_smoke_test.py
+
+先启动服务，再跑脚本。场景 1–4 走 HTTP，看真实的 SSE 帧序、历史和清单；场景 5 在进程内 patch 路由让它抛错（需服务已启动，PG / Redis / MCP / 各密钥齐全；规划那一轮约 1 分钟）：
+
+记得要:uv run python -m app.run --reload
+
+[代码块 930e54038f36]
+
+第 13 章 · 质量守门与离线评测：一套裁判，两处复用
+
+学习评测的前置知识要加油哦: 
+
+环节 1：准备：装 DeepEval，看清本章要写的文件
+
+1.1 装 DeepEval
+
+在项目根目录执行：
+
+[代码块 0af1bbc27d04]
+
+环节 2：给裁判找一个替身：QwenJudge
+
+2.1 片①：文件头与适配器
+
+📁 文件路径：app/services/quality_check_service.py（片①：替换第 12 章桩文件开头的 docstring，桩函数 schedule_quality_check 先留在下面）
+
+[代码块 8165e8a7306c]
+
+2.2 那个"不能重写 model"的坑
+
+📁 文件路径：scripts/Chapter_Thirteen/13_judge_demo.py
+
+[代码块 6613ae0e14e8]
+
+环节 3：三维度标尺与 require_budget 开关
+
+3.1 片②：裁判上下文与两条预算条款
+
+📁 文件路径：app/services/quality_check_service.py（片②，追加到文件末尾）
+
+[代码块 8756c3e30517]
+
+3.2 片③：三维度标尺
+
+📁 文件路径：app/services/quality_check_service.py（片③，接在片②后面）
+
+[代码块 bc4bc3388d42]
+
+3.3 开关演示
+
+📁 文件路径：scripts/Chapter_Thirteen/13_require_budget_demo.py
+
+[代码块 4163c836db86]
+
+只构造 GEval 对象，不发起任何裁判调用：
+
+[代码块 71bb1cb9c9e0]
+
+环节 4：把清单翻译给裁判：plan_to_text
+
+4.1 片④：后台任务集合与清单转正文
+
+📁 文件路径：app/services/quality_check_service.py（片④，接在片③后面）
+
+[代码块 00983880481c]
+
+4.2 清单转正文演示
+
+📁 文件路径：scripts/Chapter_Thirteen/13_plan_to_text_demo.py
+
+[代码块 44ffb6806b9e]
+
+[代码块 566eb449cdb4]
+
+环节 5：落库后的那一跳：run_quality_check + schedule_quality_check。
+
+5.1 片⑤：写真正的质检
+
+📁 文件路径：app/services/quality_check_service.py（片⑤)
+
+[代码块 af0099fd86a3]
+
+5.3 schedule_quality_check 怎么接回落库线
+
+📁 文件路径：scripts/Chapter_Thirteen/13_bg_task_demo.py
+
+[代码块 35bc73992f81]
+
+运行：uv run python scripts/Chapter_Thirteen/13_bg_task_demo.py
+
+用测试驱动 FakeMetric 冒充三个维度，按剧本给分或抛异常，再把 app_logger 换成只打印的替身，不调用模型（纯逻辑，无需密钥）：
+
+[代码块 231eb80c21ba]
+
+环节 6：evaluation/ 目录：公共配置与薄转发
+
+6.1 conftest.py
+
+📁 文件路径：evaluation/conftest.py（整文件，新建）
+
+[代码块 f13ffed0d62b]
+
+6.2 两个薄转发
+
+📁 文件路径：evaluation/qwen_judge.py（整文件，新建）
+
+[代码块 7804dc298860]
+
+📁 文件路径：evaluation/itinerary_metric.py（整文件，新建）
+
+[代码块 3cc5db5680be]
+
+6.3 同一性演示
+
+📁 文件路径：scripts/Chapter_Thirteen/13_forwarder_demo.py
+
+[代码块 a809015d67f6]
+
+运行：uv run python scripts/Chapter_Thirteen/13_forwarder_demo.py
+
+[代码块 0b99d6a11883]
+
+环节 7：确定性评测：路由器正确性
+
+7.1 路由正确性指标
+
+📁 文件路径：evaluation/router_metric.py（整文件，新建）
+
+[代码块 9fdafc798df8]
+
+7.2 回归用例
+
+📁 文件路径：evaluation/router_cases.py（整文件，新建）
+
+[代码块 db2fbdca22e2]
+
+7.3 评测入口
+
+📁 文件路径：evaluation/test_router.py（整文件，新建）
+
+[代码块 655e8efe7bac]
+
+逐条用例真实调用第 12 章的 chat_route()，把强类型结果序列化成 JSON 放进 actual_output，交给确定性指标断言。@pytest.mark.parametrize 的 ids 用每条用例的 note，失败时一眼就知道是哪一条。
+
+跑法（需 .env 配 DashScope 密钥，13 条用例会真实调用 13 次路由器）：
+
+[代码块 5c179c6887ce]
+
+7.4 指标演示
+
+📁 文件路径：scripts/Chapter_Thirteen/13_router_metric_demo.py
+
+[代码块 6b8e4a2c6c34]
+
+不调用路由器，直接把"路由器的输出"写成 JSON 喂给真实的指标（纯逻辑，无需密钥）：
+
+[代码块 77e0508fae57]
+
+环节 8：LLM 裁判评测：行程质量正反样本
+
+【本节目标】 行程质量没有标准答案，用三维度 GEval 打分，再用正 / 反样本双模式断言。
+
+重点： 正样本要求三个维度全部达标；反样本要求至少一个维度不达标。反样本存在的意义是检验裁判本身的判别力。
+
+8.1 样本集
+
+📁 文件路径：evaluation/itinerary_cases.py（整文件，新建）
+
+[代码块 7789b3840391]
+
+📁 文件路径：scripts/Chapter_Thirteen/13_itinerary_cases_demo.py
+
+[代码块 e391ed093dc6]
+
+运行：uv run python scripts/Chapter_Thirteen/13_itinerary_cases_demo.py
+
+[代码块 fa70a9f7e321]
+
+8.2 评测入口
+
+📁 文件路径：evaluation/test_itinerary.py（整文件，新建）
+
+[代码块 b805e70063ed]
+
+跑法（需 .env 配 DashScope 密钥；6 条样本 × 3 个维度 = 18 次裁判调用，约 2 分钟）：
+
+[代码块 0d3ef2db4553]
+
+环节 9：线上质检门禁：从真实落库行程拉数据
+
+9.1 数据源
+
+📁 文件路径：evaluation/itinerary_db.py（整文件，新建）
+
+[代码块 4c30623b97de]
+
+9.2 门禁入口
+
+📁 文件路径：evaluation/test_itinerary_db.py（整文件，新建）
+
+[代码块 f6ecb954b675]
+
+跑法（需 PG + .env 配 DashScope 密钥；最多取 3 份行程，每份 3 次裁判调用）：
+
+[代码块 81e4d0ccc584]
+
+环节 10：综合冒烟：结构自检一遍
+
+【本节目标】 一个冒烟脚本把本章的零件装一遍：共用裁判、判据开关、清单转正文、确定性路由指标。不调用模型、不连库。
+
+重点： 冒烟只回答"零件装不装得起来、开关切不切得动"；"跑得好不好"交给 pytest 全量评测。
+
+📁 文件路径：scripts/Chapter_Thirteen/13_quality_smoke.py
+
+[代码块 5cfd8044fbd1]
+

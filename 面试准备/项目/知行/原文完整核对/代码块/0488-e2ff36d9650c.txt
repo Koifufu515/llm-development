@@ -1,0 +1,15 @@
+"""bind_tools 送给 DeepSeek 的是什么：把 TravelItinerary 转成工具 schema 看一眼（纯逻辑，无需密钥）"""
+import json
+
+from langchain_core.utils.function_calling import convert_to_openai_tool
+
+from app.services.itinerary_plan_service import TravelItinerary
+
+tool = convert_to_openai_tool(TravelItinerary)          # bind_tools 内部做的就是这一步
+print("工具名：", tool["function"]["name"])
+params = tool["function"]["parameters"]
+spot = (params["properties"]["itinerary_list"]["items"]["properties"]["itinerary"]["items"]
+        ["properties"]["scenic_spots_list"]["items"]["properties"])     # 四层嵌套：清单→天→时段→景点
+for name, prop in spot.items():
+    print(f"  ScenicSpot.{name:20s} {prop.get('description')}")   # Field description 原样进了工具说明
+print(json.dumps(tool, ensure_ascii=False)[:120], "…")

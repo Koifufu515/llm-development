@@ -1,0 +1,11 @@
+"""_pick_best（航班）演示：价格低优先；价格未知（0）排在已知价格之后（纯函数，无需密钥）"""
+from app.capabilities.flight_multi_segment.flight_flow import _fmt_option, _pick_best
+from app.capabilities.flight_multi_segment.flight_skill_schema import FlightOption
+
+def opt(no: str, dep: str, arr: str, price: float) -> FlightOption:
+    return FlightOption(flight_no=no, dep_time=dep, arr_time=arr, dep_airport="首都国际机场", arr_airport="虹桥国际机场",
+                        price=price, option_id=f"{no}-{dep}-虹桥国际机场")
+
+print("有已知票价  ：", _fmt_option(_pick_best([opt("CA1501", "08:00", "10:10", 0), opt("MU5104", "10:00", "12:15", 860),
+                                                opt("HO1252", "12:00", "14:10", 720)])))
+print("票价全未知  ：", _fmt_option(_pick_best([opt("CA1501", "08:00", "10:10", 0), opt("MU5104", "10:00", "12:15", 0)])))

@@ -1,0 +1,44 @@
+"""服务入口。第一章只有 /healthz 一个接口。"""
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+
+from quarry.infra.db import acquire, close_pool, init_pool
+from quarry.infra.logging import get_logger
+from quarry.infra.settings import get_settings
+
+log = get_logger()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await init_pool()
+    log.info("quarry-rag 启动完成，开关：{}", get_settings().switches())
+    try:
+        yield
+    finally:
+        await close_pool()
+
+app = FastAPI(title="quarry-rag", version="0.1.0", lifespan=lifespan)
+
+@app.get("/healthz")
+async def healthz() -> JSONResponse:
+    s = get_settings()
+    backend = {"db": False, "pgvector": None, "hnsw_index": False}
+    try:
+        async with acquire() as conn:
+            backend["db"] = await conn.fetchval("SELECT 1") == 1
+            backend["pgvector"] = await conn.fetchval(
+                "SELECT extversion FROM pg_extension WHERE extname = 'vector'")
+            backend["hnsw_index"] = await conn.fetchval(
+                "SELECT to_regclass('chunks_embed_hnsw') IS NOT NULL")
+    except Exception as e:
+        log.warning("healthz 数据库检查失败：{!r}", e)
+
+    ok = backend["db"] and bool(backend["pgvector"]) and bool(backend["hnsw_index"])
+    # 健康探针只看状态码：依赖不通就返回 503，部署系统才会把这个实例摘掉
+    return JSONResponse(
+        status_code=200 if ok else 503,
+        content={"status": "ok" if ok else "degraded", "env": s.app_env,
+                 "backend": backend, "switches": s.switches()},
+    )

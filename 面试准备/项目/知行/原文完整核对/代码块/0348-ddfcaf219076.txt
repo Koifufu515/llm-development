@@ -1,0 +1,6 @@
+不带令牌     → 401 {'detail': 'Not authenticated'}
+乱码令牌     → 401 {'detail': '令牌无效或已过期'}
+令牌里没有 sub → 401 {'detail': '令牌格式错误'}
+账号已被删    → 401 {'detail': '用户不存在'}
+正常登录     → 200 {'username': 'alice'}
+不带令牌时的响应头 WWW-Authenticate： Bearer

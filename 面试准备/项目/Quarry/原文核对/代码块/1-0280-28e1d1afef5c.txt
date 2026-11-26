@@ -1,0 +1,4 @@
+qvec_list, tsq = await asyncio.gather(
+    get_embedder().embed([query]),
+    loop.run_in_executor(get_cpu_executor(), build_tsquery, query),
+)

@@ -1,0 +1,1 @@
+../../../../../knowgo-travel/scripts/verify_full_auto.py

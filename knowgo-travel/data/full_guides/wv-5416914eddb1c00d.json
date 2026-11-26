@@ -1,0 +1,21 @@
+{
+  "city": "上海",
+  "title": "上海景点资料 · Shanghai/Hongkou",
+  "source_url": "https://en.wikivoyage.org/wiki/Shanghai/Hongkou",
+  "text": "资料城市：上海。本文是历史开放景点资料，不提供实时开放时间或价格；出行前需要核实。\n\n1933 Shanghai\nAn abattoir with impressive architecture in British colonial times has been renovated into an artist centre, with a theatre, shops, cafes, restaurants and creative design buildings.\n\nLu Xun Park\nThis park provides a quiet spot for reading, meditation, and exercising, yet on the eastern side are plenty of rides small kids would enjoy and a lake with boats for rent. Lu Xun &mdash; one of the most important Chinese writers of the 20th century &mdash; is buried here and has both a memorial statue and clock in his honor. Mao was an admirer and did an inscription for the tomb.",
+  "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+  "license": "CC BY-SA 3.0",
+  "attribution": "Wikivoyage contributors; https://en.wikivoyage.org/wiki/Shanghai/Hongkou",
+  "sha256": "5b14a4f1fbb02d1f3211eeb41374a3417d23f6c85aa9afdc9f31109cbc048301",
+  "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+  "poi_count": 2,
+  "source_dataset": "https://github.com/wikivoyage/wikivoyage.github.io",
+  "excluded_fields": [
+    "price",
+    "hours",
+    "phone",
+    "email",
+    "hotel",
+    "restaurant"
+  ]
+}

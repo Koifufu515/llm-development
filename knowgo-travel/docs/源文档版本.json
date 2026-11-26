@@ -1,0 +1,18 @@
+{
+  "sources": [
+    {
+      "name": "知行旅行助手-v2.html",
+      "bytes": 125620180,
+      "sha256": "e33011c302b824270e6f938b8b51e2fdae06357970c3a1cd2711a4534694ca72"
+    },
+    {
+      "name": "知行旅行助手代码-v2.html",
+      "bytes": 12384050,
+      "sha256": "9c837d603443d64d06fdbdc78307c7ce4eee8348fc74ed66e7e5991866806591"
+    }
+  ],
+  "unique_code_blocks": 709,
+  "python_parseable_blocks": 504,
+  "functional_groups": 55,
+  "note": "静态清点不是执行覆盖率；Windows按用户要求排除；原前端仓库和私有MCP地址不在材料中，等价功能重建。"
+}

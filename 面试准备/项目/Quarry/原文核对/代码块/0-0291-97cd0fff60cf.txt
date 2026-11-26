@@ -1,0 +1,3 @@
+async def write(chunk):
+    await pg.write(chunk)     # 步骤 1
+    await es.write(chunk)     # 步骤 2 失败的话，PG 已经写了

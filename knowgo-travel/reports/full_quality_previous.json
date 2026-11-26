@@ -1,0 +1,83 @@
+[
+  {
+    "id": "54c643b5-f383-4257-9a92-ed5fdd8ab026",
+    "quality": {
+      "scope": "模型对所给资料的一致性评分，不等同事实准确率；不阻断主流程。",
+      "status": "warning",
+      "metrics": [
+        {
+          "name": "完整性",
+          "score": 1.0,
+          "reason": "The Actual Output fully aligns with the Input and Context: (1) It explicitly lists 4 days, two cities (Suzhou for Days 1–2, Nanjing for Days 3–4), train transport (G986, G19 matching Context segment IDs s1/s2/s3), economy hotels (Welfare Hotel in Suzhou, Pod Inn in Nanjing matching h1/h2), and all four daily time slots (morning/noon/afternoon/evening) per day. (2) All specified travel days, cities, transport legs, and accommodations are covered — including correct check-in/out dates (e.g., Suzhou hotel covers Oct 31–Nov 2; Nanjing hotel Nov 2–3), and transit times match Context departure/arrival times exactly. (3) Context constraints — e.g., train-only transport, no forced pre-arrival activities (Day 1 morning starts with train, then hotel check-in at 08:30 — no景点 before arrival), and food preferences (local/Su/Nanjing cuisine featured) — are respected. (4) No extraneous days, cities, transport, or accommodations appear; all content is grounded in Input/Context — even tips reference real logistics (e.g., 'Suzhou North to Pingjiang Road ~20 min taxi').",
+          "threshold": 0.7
+        },
+        {
+          "name": "需求匹配",
+          "score": 1.0,
+          "reason": "The Actual Output strictly adheres to all confirmed constraints: budget (total estimate 2517 < 6000 CNY), transport (only trains, matching G986/G19 and exact segments s1/s2/s3), accommodation (economy hotels in苏州 and 南京 with quoted prices and durations matching h1/h2), food preferences (local/specialty via Suzhou/Nanjing cuisine), and adult-only travel (no children). All transport times, dates, and hotel details align precisely with Context and Input budget breakdowns. No estimation overrides confirmed data — e.g., train times/dates match Context’s queried options exactly, and hotel check-in/out dates match the 4-day trip spanning Oct 31–Nov 3. Context provides sufficient clarification (e.g., hotel addresses, train availability) without contradiction.",
+          "threshold": 0.7
+        },
+        {
+          "name": "资料一致性",
+          "score": 0.2,
+          "reason": "The Actual Output contains numerous unsupported factual claims. For example, it specifies exact train times (e.g., G986 from Shanghai to Suzhou at 07:05) — while the Context confirms G986 exists for that leg, it does not state the departure is from 'Shanghai虹桥' (only '上海'), nor does it specify the arrival station as '苏州北站' in the context — the Context says 'from_station': '上海', 'to_station': '苏州北', but the Input only lists '苏州' as a destination, and the Context’s first option has 'to': '苏州' (not '苏州北') inconsistently. More critically, the output invents specific hotels (e.g., '蔚徕酒店(苏州相城大道徐图港地铁站店)') with check-in times (08:30), descriptions, distances, and addresses — while the Context *does* list that hotel with address and price, it provides *no start/end times, no check-in time, no description of services or proximity to stations beyond distance*, violating Step 2 (reject unsupported statements). It also fabricates attractions like 'Garden of Pleasure (Pleasence)', 'Former Residence of Yu Yue', 'North Temple Pagoda', 'Ding Hui Temple' — none appear in the Context, and their descriptions are absent from provided text. The output also asserts 'G19' returns on Day 4 (2026-11-03), but the Context shows the return train date as '2026-11-03', while the Input specifies 'departure_date': '2026-10-31' and 'travel_days': 4, implying return on 2026-11-03 — this *is* consistent, but many other details (e.g., '17:24 departure') are pulled from Context; however, the output adds unverified narrative (e.g., 'reserve time for security check') and misrepresents source coverage — e.g., 'source_ids' point to IDs like '6394c57360842788a39cc35a', but the Context contains no such IDs — those are fabricated. Thus, multiple violations of Steps 1, 2, and 4.",
+          "threshold": 0.7
+        }
+      ]
+    }
+  },
+  {
+    "id": "ddadea20-b026-4a24-b882-afd76b7c30c5",
+    "quality": {
+      "scope": "模型对所给资料的一致性评分，不等同事实准确率；不阻断主流程。",
+      "status": "warning",
+      "metrics": [
+        {
+          "name": "完整性",
+          "score": 1.0,
+          "reason": "Step 1: Input specifies 2 days, destination苏州, driving transport, economy hotel accommodation, and implies full-day coverage (morning/noon/afternoon/evening). Actual Output explicitly lists Day 1 and Day 2, both in 苏州, uses 'driving' for both legs, names a specific economy-tier hotel (蔚徕), and assigns activities to all four time slots each day — fully explicit. Step 2: All input requirements are covered — no missing day, city, transport leg (outbound/inbound), accommodation, or time slot. Step 3: Context provides high-precision driving data (100.6 km / 115 min & 103.6 km / 102 min) matching Actual Output’s durations and descriptions; no景点 is scheduled before arrival on Day 1 (transport ends at 09:55, check-in starts 10:30). Step 4: Transport occupies only designated morning/evening slots, doesn’t displace accommodation (Day 1 check-in after arrival) or city coverage (both days correctly in 苏州); overnight stay is properly placed and aligned with budget context (1 night). All criteria satisfied precisely.",
+          "threshold": 0.7
+        },
+        {
+          "name": "需求匹配",
+          "score": 1.0,
+          "reason": "The Actual Output strictly adheres to all confirmed Input constraints: budget (total estimate 1186.73 CNY << 6000 CNY), style (self-guided cultural/leisure自驾游), number of people (1 adult, 0 children), transport (driving only), accommodation (economy hotel —蔚徕 at 154 CNY/night), food preferences (local/specialty —苏帮菜, 碧螺春, handcraft-adjacent dining), and no dietary restrictions. All estimations (e.g., driving time/distance, attraction durations) are grounded in Context (e.g., GaoDe route data, hotel address/days, attraction descriptions) and explicitly reflected without overclaiming — e.g., 'handmade shops' and 'local elder people' usage matches Context's 'back streets', 'local elder people', and 'quiet residential neighborhood' notes. No contradictions between Context and Output; all cited source_ids map to Context snippets. All four evaluation steps are fully satisfied.",
+          "threshold": 0.7
+        },
+        {
+          "name": "资料一致性",
+          "score": 0.2,
+          "reason": "The Actual Output contains multiple unsupported factual claims. For example, it specifies '蔚徕酒店(苏州相城大道徐图港地铁站店)' with address '元和街道春申湖中路235号' — while the Context confirms the hotel name and address, the Output adds unverified details like '距离观前街约8公里' (approx. 8 km from Guanqian Street), which is not stated in the Context. It also invents specific timing (e.g., '08:00–09:55'), activity descriptions ('云岩寺塔（中国比萨斜塔）'), and cultural interpretations ('君到姑苏见，人家尽枕河') without textual support. The 'source_ids' (e.g., '6394c57360842788a39cc35a') do not appear in the provided Context, violating Step 2 and Step 4. Additionally, the Input specifies 'travel_days': 2 and 'departure_date': '2026-10-31', but the Output implies Day 2 ends on '2026-11-01' without clarifying checkout timing — misrepresenting the scope per Step 3.",
+          "threshold": 0.7
+        }
+      ]
+    }
+  },
+  {
+    "id": "21144e13-60a9-45e9-a376-991a0bd27885",
+    "quality": {
+      "scope": "模型对所给资料的一致性评分，不等同事实准确率；不阻断主流程。",
+      "status": "warning",
+      "metrics": [
+        {
+          "name": "完整性",
+          "score": 1.0,
+          "reason": "The Actual Output fully reflects all required elements from Input: 2-day trip to Beijing, flight transport (HU7608 and HU7601), economy hotel (Bu Ding Hotel Beijing West Railway Station), and time-blocked activities across morning/noon/afternoon/evening for both days. Transportation timing aligns with Context flight data (e.g., Day 1 arrival 14:15, check-in follows; Day 2 departure at 07:25 matches HU7601). Accommodation matches Context’s 'h1' segment (1 night, Beijing, 213 CNY). Food preferences ('local', 'specialty') are honored via '门框胡同百年卤煮' and description emphasizing '老北京小吃' and '烟火气'. No Input element is omitted, and all decisions respect budget, city, days, transport, and accommodation constraints — even the 'free' blocks on Day 2 afternoon/evening appropriately reflect post-departure status without forcing in-city activities. All evaluation steps are satisfied.",
+          "threshold": 0.7
+        },
+        {
+          "name": "需求匹配",
+          "score": 1.0,
+          "reason": "The Actual Output strictly adheres to all confirmed constraints: budget (total estimate 2313 < 6000), transport (HU7608/HU7601 flights matching quoted segments s1/s2), accommodation (exactly '布丁酒店(北京西站店)' at 213 CNY for 1 night, matching h1), adult count (1), travel days (2), and food preferences (local/specialty via '门框胡同百年卤煮' and '前门大街'). All estimations (e.g., food, attractions, misc) are implicit in the itinerary but not explicitly labeled as estimates — however, the Context and Input clearly separate quoted vs. estimated items, and the Output doesn’t contradict them. The Context provides sufficient validation (e.g., flight times, hotel name/price, Qianmen/Chongwen references). No constraint violations or taboo breaches occur.",
+          "threshold": 0.7
+        },
+        {
+          "name": "资料一致性",
+          "score": 0.2,
+          "reason": "The Actual Output introduces numerous unsupported details: specific flight numbers (HU7608, HU7601) are present in the Context, but the output adds unverified details like 'Shanghai Hongqiao Airport' and 'Beijing Capital International Airport' — the Context only lists airport codes (SHA, PEK), not full names. The hotel name 'Pod Inn (Beijing West Railway Station)' appears in the Context, but the output fabricates its address ('Taipingqiao West Road, Huayuan Yili 8 North Gate') and misrepresents check-in logistics. Activities like 'Qianmen Gate historical exhibition', 'Menkuan Hutong century-old lu zhu', and 'Chongwen District' references go beyond the Context's minimal mention of 'Qianmen' and 'Chongwen south of Ring Road Two' — no source supports exhibits, specific restaurants, or district-level administrative labels. The itinerary assigns Day 1 and Day 2 activities with precise timings and descriptions (e.g., 'airport express rail + subway to Beijing West'), but the Context contains no transit routing, duration estimates, or operational details for ground transport. Per evaluation steps 1–4, all such additions violate strict evidence-only grounding.",
+          "threshold": 0.7
+        }
+      ]
+    }
+  }
+]

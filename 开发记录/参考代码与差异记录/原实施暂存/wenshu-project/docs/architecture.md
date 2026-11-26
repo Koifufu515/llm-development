@@ -1,0 +1,1 @@
+../../../../../wenshu-project/docs/architecture.md

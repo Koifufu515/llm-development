@@ -1,0 +1,30 @@
+{
+  "links_checked": 1146,
+  "broken_links": [],
+  "broken_navigation_targets": [],
+  "service_http": {
+    "文枢后端": 200,
+    "文枢页面": 200,
+    "知行": {
+      "url": "http://127.0.0.1:8001/travel",
+      "error": "ConnectionRefusedError",
+      "direct_connection": true
+    },
+    "Quarry": {
+      "url": "http://127.0.0.1:8113/healthz",
+      "status": 200
+    }
+  },
+  "desktop_top_level": [
+    "knowgo-travel",
+    "quarry-rag",
+    "skills",
+    "wenshu-project",
+    "原始资料",
+    "学习笔记",
+    "开发记录",
+    "面试准备",
+    "项目导航.md"
+  ],
+  "original_project_paths_preserved": true
+}

@@ -1,0 +1,20 @@
+"""_push_rendered 演示：代码渲染的长正文按 48 字一段、每段隔 25ms 推送，观感就是流式（纯逻辑，无需密钥）"""
+import asyncio
+import time
+
+from app.core.event_stream import EventStream
+from app.services.chat_stream_executor import _push_rendered
+
+TEXT = "#### Day 1 杭州\n- **上午**\n  - 西湖断桥，沿白堤慢慢走\n" * 4
+
+async def main():
+    stream = EventStream()
+    t0 = time.perf_counter()
+    await _push_rendered(stream, TEXT)
+    stream.close()
+    frames = [e["content"] async for e in stream]
+    print(f"{len(TEXT)} 字 → {len(frames)} 帧，用时 {time.perf_counter() - t0:.3f}s，每帧 {[len(f) for f in frames]} 字")
+    assert "".join(frames) == TEXT              # 拼回去一字不差
+
+if __name__ == "__main__":
+    asyncio.run(main())

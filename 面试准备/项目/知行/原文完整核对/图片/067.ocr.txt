@@ -1,0 +1,98 @@
+MCP 工具层•7个外部服务，一个入口，三类加工
+项目里所有外部数据都从这一层进出。mcp_core/client.py 负责连上7个 MCP服务、把工具调用调度到正确的事件循环、兜住失败；
+tools/mcp_tools.py 负责按用途分发工具、给12306查询加参数守卫、把格式各异的返回解析成统一的行，并维护三张城市代码表。天气、搜索两个
+自建服务也在这一层。
+谁在用一这一层一 连向哪里 调用关系按AST统计
+DIR app/mcp_core/ + app/tools/mcp_tools.py
+取工具
+服务
+连接方式
+提供
+step_config.get_step_config
+每一步的工具表，用到7个取工具函数
+② 连接管理
+13个•图2
+3 分发与自建服务
+11个•图3
+weather
+高德天气
+stdio•自建
+travel_agent.create_travel_agent
+MCPCLientManager
+_wrap_hopping
+get_train_tools get_flight_tools
+预报
+注册全集，并给车票工具套守卫
+invalidate get_mcp_client
+-共8个 get_weather_forecast
+chat_stream_executor
+search
+stdio•自建
+Tavily 旅
+直查车票、天气，渲染航班表
+单例、按服务隔离加载、Windows 双事件循
+按工具名关键词筛出每类工具；天气、搜索
+游搜索
+express_planning_service
+环、调用重试与降级
+两个自建服务
+快速通道并行收集
+12306-mcp
+车票、日
+stdio•npx
+期
+四个卡片包•destination_router
+卡片查询、目的地天气节点
+4 12306 守卫与裁剪 10个•图4
+⑤
+解析器与代码表
+12个•图5
+高德地
+_ArgGuardTool
+parse_flight_rows
+amap
+HTTP
+图、驾车
+用解析器和代码表
+_normalize_train_args
+parse_flight_prices
+路线
+执行器、快速通道和四个卡片包直接调 parse_*
+compact_ticket_text
+parse_driving_rows _CITY_*
+VariFlight-Aviation
+streamable
+航班时
+解析器，读三张城市代码表。
+别名归一、上下文回填、拦截过去日期，结
+航班时刻、票价、驾车路线的解析；机场
+HTTP
+刻、票价
+果压成一行一趟
+码、城市码、坐标三张表
+写上下文•管生命周期
+streamable
+aigohotel-mcp
+共46个函数：client.py 13个，mcp_tools.py 30个，两个自建服务3个（均含嵌套函数）。
+HTTP
+酒店搜索
+middleware 每次调模型前写入车票参数上下
+文；main.Lifespan 启动时建连接、关闭时释
+放。
+bailian-websearch
+streamable
+百炼联网
+HTTP
+搜索
+一次12306车票查询经过的层 其它工具少了守卫和裁剪两步，其余相同
+模型或代码发起调用
+取工具 get_train_tools / 注册全集
+守卫 别名归一、回填、拦截 —
+跨循环调度 失败重试一次，再失败降级
+- MCP 会话 12306
+裁剪 287趟一前15趟
+—>
+解析 parse_ticket_rows - 回到调用方
+287 趟/45,633字是源码注释里记录的一次实测原始返回量，裁剪就是为它设计的。
+外部世界的不确定性，在这一层被消化掉：服务会挂（按服务隔离、重试、降级），模型会传错参数（别名归一、上下文回填、拦截过去日期），返回格式各家不同还会变（多级解析、绝不编造），数据量会撑爆
+上下文（裁剪成一行一趟）。上层拿到的永远是统一、可用、可信的数据，或者一句明确的“暂时查不到”。

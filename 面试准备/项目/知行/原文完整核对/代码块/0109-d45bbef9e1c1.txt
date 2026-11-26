@@ -1,0 +1,7 @@
+"""演示 classifier_node：给一个只问天气的查询，看代码怎么把 Agent 派全（需 .env 配 DashScope 密钥）"""
+from app.agents.routers.destination_router import classifier_node
+
+state = {"original_query": "杭州这几天冷不冷", "destination": "杭州"}
+out = classifier_node(state)                    # 节点就是普通函数：传 state、拿 dict
+for c in out["classifications"]:
+    print(f"派给 {c['agent']:8s} 子查询：{c['query']}")

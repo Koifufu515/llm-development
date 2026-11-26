@@ -1,0 +1,1 @@
+集合 travel-guide 不存在，或者没有打开 facts_enabled（见 6.2.3）

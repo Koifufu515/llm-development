@@ -1,0 +1,11 @@
+"""build_args 演示：看工具真实 schema 选嵌套形态还是扁平形态，档位折算成星级区间（纯逻辑，无需密钥）"""
+from app.capabilities.hotel_multi_segment.hotel_parser import build_args
+
+class NestedTool:            # 测试驱动：只带 args_schema 的假工具（嵌套形态）
+    args_schema = {"properties": {"originQuery": {}, "place": {}, "checkInParam": {}, "filterOptions": {}}}
+
+class FlatTool:              # 测试驱动：只带 args_schema 的假工具（扁平形态）
+    args_schema = {"properties": {"place": {}, "checkIn": {}, "stayNights": {}}}
+
+print("嵌套：", build_args(NestedTool(), "杭州", "2026-10-01", 2, 2, "经济型", 5))
+print("扁平：", build_args(FlatTool(), "杭州", "2026-10-01", 2, 2, "星级酒店", 5))

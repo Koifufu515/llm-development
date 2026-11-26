@@ -1,0 +1,187 @@
+def _query_fallback_text(content: str, intent) -> str:
+    """闲聊通道识别到交通查询意图时的确定性澄清文案，不调用模型、不编造数据。
+    触发场景：存在交通相关意图，但缺少必要查询参数，例如日期、起讫城市。
+    只向用户补齐缺失槽位，不直接查询。
+    """
+    kind = "航班" if (intent.flight_object and not intent.train_object) else "班次"
+    pair = _parse_city_pair(content)
+    if pair:
+        frm, to = pair
+        # 成功解析出城市对，仅缺少日期，引导用户补充日期信息
+        return (f"您是想查 **{frm} → {to}** 的{kind}吗？"
+                f"告诉我日期我就直接给您真实数据，例如「明天」或「10月1日」。")
+    return (f"您是想查{kind}吗？我可以直接查 12306 的实时班次与航班时刻，"
+            f"只要给我**出发地、到达地和日期**就行，例如：「查明天福州到深圳的高铁」。")
+
+async def try_weather_query(content: str, stream=None, intent=None) -> str | None:
+    """闲聊通道识别到天气查询意图时的确定性处理：代码直查高德天气并渲染，不经模型转述。
+    命中意图但缺失城市时进行追问；查询失败如实返回，不编造数据；未命中天气意图返回 None。
+    intent 可由外部传入避免重复计算，不传则函数内部自行执行意图检测。
+    """
+    intent = intent or detect_intent(content)
+    if not intent.weather_object:
+        return None
+    cities = _cities_in(content)
+    if not cities:
+        _ask = ("您想查哪座城市的天气？告诉我城市名就行，"
+                "例如：「明天福州天气怎么样」。")
+        if stream is not None:
+            stream.push(make_event(ROLE_ASSISTANT, _ask))
+        return _ask
+    try:
+        from app.tools.mcp_tools import get_weather_tools
+        from app.agents.routers.destination_router import WeatherForecast, _normalize_weather_payload
+        tools = await get_weather_tools()
+        tool = next((t for t in tools if t.name == "get_weather_forecast"), None)
+        if tool is None:
+            raise RuntimeError("天气工具未加载")
+    except Exception as e:
+        app_logger.warning(f"[weather] 天气工具未就绪：{type(e).__name__}: {e}")
+        _fail_text = (f"抱歉，暂时没拿到 **{'、'.join(cities[:_WEATHER_CITY_MAX])}** 的天气数据，""请稍后再问，或换个更规范的城市名。")
+        if stream is not None:
+            stream.push(make_event(ROLE_ASSISTANT, _fail_text))
+        return _fail_text
+
+    # 识别查询日期，存在日期词则只返回目标日期预报，否则返回全部预报
+    asked_day = _parse_query_date(content) if (
+        intent.date_word or _MONTH_DAY_RE.search(content)) else ""
+    blocks: list[str] = []
+    failed: list[str] = []
+
+    # 多城市循环查询，受最大城市数量限制；逐个查询并流式推送
+    for city in cities[:_WEATHER_CITY_MAX]:
+        try:
+            payload = _normalize_weather_payload(await tool.ainvoke({"city": city}))
+            if payload.get("error"):
+                raise RuntimeError(str(payload["error"]))
+            casts = WeatherForecast.model_validate(payload).casts
+            if not casts:
+                raise RuntimeError("天气返回为空")
+        except Exception as e:
+            app_logger.warning(f"[weather] 查询失败（不编造）：{city} | {type(e).__name__}: {e}")
+            failed.append(city)
+            continue
+        note = ""
+        if asked_day:
+            picked = [c for c in casts if c.date == asked_day]
+            if picked:
+                casts = picked
+            else:
+                note = f"（**{asked_day}** 超出预报范围（仅支持未来 4 天），以下为近期天气）\n"
+        lines = [f"- {c.date}：白天{c.dayweather}，气温{c.nighttemp}~{c.daytemp}°C，"
+                 f"{c.daywind}风 {c.daypower} 级" for c in casts]
+        block = note + f"**{city}** 天气（数据来源：高德天气）：\n" + "\n".join(lines)
+        blocks.append(block)
+        if stream is not None:
+            stream.push(make_event(ROLE_ASSISTANT, ("\n\n" if len(blocks) > 1 else "") + block))
+    if not blocks:
+        _fail_text = (f"抱歉，暂时没拿到 **{'、'.join(failed)}** 的天气数据，"
+                      "请稍后再问，或换个更规范的城市名。")
+        if stream is not None:
+            stream.push(make_event(ROLE_ASSISTANT, _fail_text))
+        return _fail_text
+    text = "\n\n".join(blocks)
+    if failed:
+        _fail_note = f"（**{'、'.join(failed)}** 暂时没查到）"
+        text += f"\n\n{_fail_note}"
+        if stream is not None:
+            stream.push(make_event(ROLE_ASSISTANT, f"\n\n{_fail_note}"))
+
+    # 存在额外问题时调用模型补充回答，天气基础数据由代码直接输出
+    if intent.extra_ask or (content.count("?") + content.count("？")) >= 2:
+        extra = await _weather_extra_answer(content)
+        if extra:
+            text = f"{text}\n\n{extra}"
+            if stream is not None:
+                stream.push(make_event(ROLE_ASSISTANT, f"\n\n{extra}"))
+    return text
+# 目的地步天气"归代码"——事实数字不经过模型转述。
+# 代码直查并渲染天气，同时剔除模型自写的天气相关文本与工具占位语。
+_WEATHER_DROP_RE = re.compile(
+    r"℃|°C|天气概况|实时天气|天气信息|请稍等|请稍候|我将查询|正在查询|稍后为您"
+)
+def _strip_model_weather(text: str) -> str:
+    """剔除模型自写的天气行与工具往返占位语（保留城市/景点/美食等其余内容）"""
+    kept = [ln for ln in (text or "").splitlines() if not _WEATHER_DROP_RE.search(ln)]
+    return re.sub(r"\n{3,}", "\n\n", "\n".join(kept)).strip()
+
+async def _weather_extra_answer(content: str) -> str:
+    """补答天气问句里"天气之外"的诉求；无其余诉求、或调用失败时返回空串（绝不影响天气段）"""
+    prompt = (
+        "用户问题里的天气部分已由系统用权威数据回答完毕。"
+        "请只回答其中**与天气无关**的其它诉求（如景点怎么玩、美食推荐、行程安排）；"
+        "不要再输出任何天气、气温、降雨相关内容。若没有其它诉求，只回复四个字：无需补充。\n\n"
+        f"用户问题：{content}"
+    )
+    try:
+        resp = await get_llm().ainvoke([HumanMessage(content=prompt)])
+    except Exception as e:
+        app_logger.warning(f"[weather] 补充回答失败（不影响天气段）：{type(e).__name__}: {e}")
+        return ""
+    text = _strip_model_weather(str(getattr(resp, "content", "") or "")).strip()
+    if not text or (len(text) <= 12 and "无需补充" in text):
+        return ""
+    return text
+
+# 协议泄漏过滤：拦截模型输出内部工具协议标记，防止污染对话历史，避免输出中断
+_LEAK_HINTS = ("✿", "你可以在回复中插入以下命令", "✿FUNCTION✿", "✿ARGS✿")
+
+def _is_protocol_leak(text: str) -> bool:
+    """判断流式文本片段是否包含模型内部工具协议泄漏标记"""
+    return any(h in text for h in _LEAK_HINTS)
+
+# ===== 系统指令/工具说明泄漏句清洗 =====
+# 拦截模型将系统提示、工具使用规范原样输出到用户正文的情况，支持单句过滤
+_LEAK_SENTENCE_HITS = (
+    "将json格式结果转换为用户可读的信息",
+    "请记住，只有在收集到足够信息后才能调用工具",
+    "当需要调用工具时，你必须以如下格式输出",
+    "以如下格式输出",
+    "请勿修改或删除上方已定义好的函数",
+    "请确保调用的工具名称和参数正确",
+    "使用这些工具可以帮助你更好地完成任务",
+    "请根据你的判断决定是否调用工具",
+)
+
+# 正则匹配工具调用痕迹，拦截工具名称、参数JSON片段泄漏
+_LEAK_TOOL_TRACE_RE = re.compile(r"_tool|我将使用以下参数调用|我将调用工具|\[\{")
+
+# 块级泄漏起始标记，用于识别整块工具说明、参数列表区域
+_LEAK_BLOCK_START = ("## 注意：", "## 注意:", "## 注意事项：", "## 注意事项:")
+
+def _is_trace_block_start(line: str) -> bool:
+    """判断该行是否为工具泄漏块的起始行"""
+    return any(line.startswith(m) for m in _LEAK_BLOCK_START) or bool(
+        _LEAK_TOOL_TRACE_RE.search(line)
+    )
+
+def _strip_leak_blocks(text: str) -> str:
+    """整段移除系统指令块与工具参数块，正常正文不受影响；无命中直接返回原文"""
+    if not text:
+        return text
+    lines = text.splitlines(keepends=True)
+    if not any(_is_trace_block_start(line.strip()) for line in lines):
+        return text
+    out: list[str] = []
+    skipping = False
+    for line in lines:
+        stripped = line.strip()
+        if not skipping:
+            if _is_trace_block_start(stripped):
+                skipping = True
+                continue
+            out.append(line)
+            continue
+        # 处于丢弃状态：空行、列表项、编号行全部丢弃；遇到普通正文行则退出丢弃模式
+        if not stripped or stripped[0] in "-*·" or stripped[:1].isdigit():
+            continue
+        skipping = False
+        out.append(line)
+    return "".join(out)
+
+def _is_leak_sentence(sentence: str) -> bool:
+    """判断单句是否属于泄漏内容：匹配预设泄漏句式，或包含工具调用痕迹"""
+    return (
+        any(h in sentence for h in _LEAK_SENTENCE_HITS)
+        or bool(_LEAK_TOOL_TRACE_RE.search(sentence))
+    )

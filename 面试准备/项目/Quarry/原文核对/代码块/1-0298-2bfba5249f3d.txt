@@ -1,0 +1,1 @@
+uv run python -c "from quarry.infra.settings import get_settings; s = get_settings(); print(s.rerank_backend, s.rerank_model, s.rerank_candidates, s.context_max_chars, s.neighbor_radius)"

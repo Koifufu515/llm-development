@@ -1,0 +1,17 @@
+"""submit_itinerary_body_tool 演示：交一份不合格的结构 → 代码归一 → 校验通过落库（直接调真实工具，纯逻辑，无需密钥）"""
+from langchain.tools import ToolRuntime
+
+from app.tools.state_transition import submit_itinerary_body_tool
+
+state = {"messages": [], "current_step": "itinerary_generation", "selected_destination": "杭州",
+         "user_requirement": {"departure_city": "北京", "travel_days": 2, "adult_count": 2, "children_count": 0, "budget_max": 3000},
+         "leg_selections": {"北京→杭州": "G35 07:00", "杭州→北京": "G36 18:00"},
+         "budget": {"total": 3100}}                  # 预算前一轮已经算好（就地补算的路径放到环节 9 再演示）
+rt = ToolRuntime(state=state, context=None, config={}, stream_writer=None, tool_call_id="call_1", store=None)
+days = [{"day": 1, "city": "杭州", "morning": ["西湖断桥与苏堤漫步，建议停留 2 小时"], "noon": ["知味观"],
+         "afternoon": ["灵隐寺祈福，门票 45 元，飞来峰石刻值得一看"], "evening": ["河坊街夜市小吃，人均约 50 元"]}]
+up = submit_itinerary_body_tool.func(days=days, runtime=rt).update       # 只交了 1 天（要 2 天），中午条目太短
+print("写进 state 的键：", [k for k in up if k != "messages"])
+print("落库天数：", len(up["itinerary_body"]), "| 第 1 天中午：", up["itinerary_body"][0]["noon"][0])
+print("第 2 天晚上：", up["itinerary_body"][-1]["evening"][-1])
+print("回给模型：", up["messages"][0].content[:60], "…")

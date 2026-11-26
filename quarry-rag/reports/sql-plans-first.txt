@@ -1,0 +1,5 @@
+Building prefix dict from the default dictionary ...
+Loading model from cache /var/folders/rk/qtxh2ds10vd6_cdg09pdzrbm0000gn/T/jieba.cache
+Loading model cost 0.243 seconds.
+Prefix dict has been built successfully.
+HNSW直接索引、共享CTE物化、OR/AND和索引大小已保存

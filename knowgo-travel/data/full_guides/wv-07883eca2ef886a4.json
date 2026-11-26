@@ -1,0 +1,21 @@
+{
+  "city": "黄山",
+  "title": "黄山景点资料 · Huangshan",
+  "source_url": "https://en.wikivoyage.org/wiki/Huangshan",
+  "text": "资料城市：黄山。本文是历史开放景点资料，不提供实时开放时间或价格；出行前需要核实。\n\nMount Huangshan\nThe main tourist destination is Mount Huangshan itself.  From the Yuping Cable Car/Mercy Light Temple entrance the \"Western Steps\" lead up for about 14km over spectacular terrain.  Allow 6-7 hours for the ascent.  If you are fit and have a good head for heights the steep ascent to Celestial Capital Peak is rewarding.  From the Yungu Cable Car carpark the ascent by the \"Eastern Steps\" is easier, taking as little as 2-3 hours.  If you choose to descend by the Eastern Steps you can extend the hike by including the Nine Dragon Waterfall area (Jiulongpu) for an additional charge.  Note that the paths are all stone steps and it can make your legs rubbery after a while. A long descend is not that much easier than a descent. Huangshan is most famous for its sun rise and sea of cloud at dawn. However, all these wonders are subject to weather condition. In off seasons, Mount Huangshan can be extremely foggy in the morning. Approach your hotel or hostel counters for some travel tips in this area, normally they are very experienced locals.\n\nZhuhai\nDo not miss this nearby gorgeous valley covered with a bamboo forest.  Some very nice restaurants and rustic inns you can stay in (preferable to Tunxi).\n\nHongcun\nWater village.  Hongcun is slightly prettier than Xidi, but much more crowded; if pressed for time, you do not need to see both villages.  Some very nice restaurants and rustic inns you can stay in (preferable to Tunxi).\n\nChengkan Ancient Village\nChengkan village is the top attractions of Huangshan famous for its splendid architectural complex themed with Huizhou style. The former residents of Chengkan viallge are quite special. The memorial of Chengkan Village is also towering and full of traditional culture\n\nXidi\nWater village.  Some very nice restaurants and rustic inns you can stay in (preferable to Tunxi).",
+  "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+  "license": "CC BY-SA 3.0",
+  "attribution": "Wikivoyage contributors; https://en.wikivoyage.org/wiki/Huangshan",
+  "sha256": "a5c67247b04a0f59b6c94864d0f6fae142a172d775b814f387173bb3815c5d3d",
+  "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+  "poi_count": 5,
+  "source_dataset": "https://github.com/wikivoyage/wikivoyage.github.io",
+  "excluded_fields": [
+    "price",
+    "hours",
+    "phone",
+    "email",
+    "hotel",
+    "restaurant"
+  ]
+}

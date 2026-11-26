@@ -1,0 +1,36 @@
+async def _enrich_routes(plan: TravelItinerary) -> None:
+    """高德方向 API 补全每日路线
+
+    每天内按景点顺序两两取驾车路线，拼接各 step 的 polyline，解为平铺
+    [lat,lng,...] 数组存入 route_polylines；段失败存空数组，前端回退直线。
+    （腾讯方向 API 改用高德：QQ_MAP_KEY 的 WebService 日配额易耗尽 status=121；
+    高德/腾讯地图同为 GCJ-02 坐标系，渲染无需转换）
+    """
+    if not settings.amap_api_key:
+        return
+    url = "https://restapi.amap.com/v3/direction/driving"
+    async with httpx.AsyncClient(timeout=8) as client:
+        for day in plan.itinerary_list:
+            spots = [
+                s for item in day.itinerary for s in item.scenic_spots_list
+                if s.latitude is not None and s.longitude is not None
+            ]
+            routes: list[list[float]] = []
+            for a, b in zip(spots, spots[1:]):
+                try:
+                    res = await client.get(url, params={
+                        "origin": f"{a.longitude},{a.latitude}",  # 高德参数经度在前
+                        "destination": f"{b.longitude},{b.latitude}",
+                        "key": settings.amap_api_key,
+                    })
+                    steps = res.json()["route"]["paths"][0]["steps"]
+                    flat: list[float] = []
+                    for step in steps:
+                        for pair in step["polyline"].split(";"):
+                            lng, lat = pair.split(",")[:2]
+                            flat.extend([float(lat), float(lng)])
+                    routes.append(flat)
+                except Exception:
+                    routes.append([])
+            if routes:
+                day.route_polylines = routes

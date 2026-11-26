@@ -1,0 +1,148 @@
+"""
+状态转换工具（Handoffs 中的状态跳转 & 数据记录工具）
+
+本文件目前只有 record_requirement_tool（需求收集）。
+后续章节会陆续加入：
+- select_destination_tool     （第 04 章）
+- select_transport_tool       （第 04 章）
+- select_accommodation_tool   （第 04 章）
+- select_food_tool            （第 04 章）
+- generate_itinerary_tool     （第 04 章）
+- summarize_budget_tool       （第 04 章）
+- ALL_ROLLBACK_TOOLS          （第 05 章）
+"""
+from datetime import datetime
+from typing import Optional
+
+from langchain.tools import tool, ToolRuntime
+from langchain_core.messages import ToolMessage
+from langgraph.types import Command
+
+from app.core.state import TravelState, UserRequirement
+from app.utils.logger import app_logger
+
+# ============== 1️⃣ 需求收集工具 ==============
+
+@tool
+def record_requirement_tool(
+        # 出发城市
+        departure_city: str,
+        # 出发日期（YYYY-MM-DD）
+        departure_date: str,
+        # 旅行天数
+        travel_days: int,
+        # 预算下限（元/人）
+        budget_min: float,
+        # 预算上限（元/人）
+        budget_max: float,
+        # 旅行风格偏好，可多选
+        travel_styles: list[str],
+        # 特殊需求（可选）
+        special_needs: str = "",
+        # 成人数量（默认 1）
+        adult_count: Optional[int] = 1,
+        # 儿童数量（<12 岁，默认 0）
+        children_count: Optional[int] = 0,
+        # 目的地（可选，未指定时此步不填，交给下一步"目的地推荐"）
+        destination: Optional[str] = None,
+
+        runtime: ToolRuntime[None, TravelState] = None
+) -> Command:
+    """
+    记录用户旅行需求，并标记进入下一步"目的地推荐"。
+
+    参数说明：
+    - departure_city: 出发城市，如 "北京"
+    - destination: 目的地（可选），如 "云南"；未指定则交给推荐步骤
+    - departure_date: 出发日期，格式 YYYY-MM-DD，如 "2026-10-01"
+    - travel_days: 出行天数，如 5
+    - adult_count: 成人数量
+    - children_count: 儿童数量（<12 岁）
+    - budget_min: 预算下限（元/人）
+    - budget_max: 预算上限（元/人）
+    - travel_styles: 旅行风格列表，可选值：
+        * "relaxation"（休闲度假）
+        * "culture"   （文化探索）
+        * "adventure" （户外冒险）
+        * "food"      （美食之旅）
+    - special_needs: 特殊需求文本（可选），如 "需要无障碍设施"
+
+    调用时机：
+    - 当且仅当用户已经把上述必填信息都给齐时才调用
+    - 若信息不全，继续用自然语言追问，不要调用本工具
+    """
+
+    app_logger.info(
+        f"记录用户需求: 出发={departure_city}, 日期={departure_date}, "
+        f"{travel_days}天, 预算 {budget_min}-{budget_max}"
+    )
+
+    # ---------- 校验 1：日期格式 ----------
+    try:
+        datetime.strptime(departure_date, "%Y-%m-%d")
+    except ValueError:
+        return Command(update={
+            "messages": [
+                ToolMessage(
+                    content="❌ 日期格式错误，请使用 YYYY-MM-DD 格式，如 2026-10-01",
+                    tool_call_id=runtime.tool_call_id
+                )
+            ]
+        })
+
+    # ---------- 校验 2：预算区间 ----------
+    if budget_min < 0 or budget_max < 0 or budget_max < budget_min:
+        return Command(update={
+            "messages": [
+                ToolMessage(
+                    content="❌ 预算填写不正确：应满足 0 ≤ budget_min ≤ budget_max",
+                    tool_call_id=runtime.tool_call_id
+                )
+            ]
+        })
+
+    # ---------- 派生值：推断预算等级 ----------
+    # 交给工具算而不是让模型算：模型算错就一步错步步错
+    avg_budget = (budget_min + budget_max) / 2
+    if avg_budget < 3000:
+        budget_level = "economy"
+    elif avg_budget < 8000:
+        budget_level = "comfort"
+    else:
+        budget_level = "luxury"
+
+    # ---------- 组装 UserRequirement ----------
+    requirement = UserRequirement(
+        departure_city=departure_city,
+        destination=destination,
+        departure_date=departure_date,
+        travel_days=travel_days,
+        adult_count=adult_count,
+        children_count=children_count,
+        budget_min=budget_min,
+        budget_max=budget_max,
+        budget_level=budget_level,
+        travel_styles=travel_styles,
+        special_needs=special_needs if special_needs else None,
+    )
+
+    # ---------- 返回 Command：更新 State，标记推进 ----------
+    return Command(update={
+        "messages": [
+            ToolMessage(
+                content=(
+                    f"✅ 需求已记录！\n"
+                    f"出发地：{departure_city}\n"
+                    f"出发日期：{departure_date}\n"
+                    f"{travel_days} 天 | {adult_count + children_count} 人\n"
+                    f"预算：{budget_min}-{budget_max} 元/人（{budget_level} 级）\n"
+                    f"风格：{', '.join(travel_styles)}"
+                ),
+                tool_call_id=runtime.tool_call_id
+            )
+        ],
+        "user_requirement": requirement,
+        # 标记推进到下一步（本章还没有中间件真正做步骤切换，
+        # 但字段先写上，第 04 章的中间件会读它做决策）
+        "current_step": "destination_recommendation",
+    })

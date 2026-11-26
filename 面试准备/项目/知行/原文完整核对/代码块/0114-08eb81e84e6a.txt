@@ -1,0 +1,14 @@
+from langchain_core.documents import Document              # 第 7 章 RAG 用的文档类
+from app.tools.rag_tools import _format_rag_results, set_rag_city   # 导入本章写好的真实函数
+
+# 造两条样例文档喂给真实函数：一条正文写西安、一条写上海
+docs = [
+    Document(page_content="西安兵马俑门票 120 元，建议早上去。", metadata={"source": "xian.md"}),
+    Document(page_content="上海外滩夜景免费，适合傍晚。", metadata={"source": "shanghai.md"}),
+]
+
+set_rag_city("西安")
+print(_format_rag_results(docs, "景点"))     # 真实函数按城市过滤：只留西安那条
+
+set_rag_city("成都")                          # 库里没有成都
+print(_format_rag_results(docs, "景点"))     # 全被剔除 → 真实函数如实说"暂无成都资料"，绝不拿别的城市冒充

@@ -1,0 +1,4 @@
+'{"hotels": [{"name": "如家'     → {'hotels': [{'name': '如家'}]}
+'结果：{"hotels": [{"name": '     → [{'name': '汉庭'}]
+"{'hotels': [{'name': '全季"     → {'hotels': [{'name': '全季'}]}
+'如家酒店 每晚 358 元'                → None

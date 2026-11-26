@@ -1,0 +1,17 @@
+from langchain.agents.middleware import AgentMiddleware, ModelRequest, ModelResponse
+
+class YourMiddleware(AgentMiddleware):
+
+    async def awrap_model_call(
+        self,
+        request: ModelRequest,                              # 即将发给模型的请求（含 messages/tools/prompt）
+        handler: Callable[[ModelRequest], ModelResponse]    # 后续处理链（真的调 LLM 在这里）
+    ) -> ModelResponse:
+        # === 前置处理 ===
+        modified = request.override(system_prompt="...", tools=[...])
+
+        # === 交给下一环 ===
+        response = await handler(modified)
+
+        # === 后置处理（可选）===
+        return response

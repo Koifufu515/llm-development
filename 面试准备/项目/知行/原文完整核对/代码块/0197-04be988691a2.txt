@@ -1,0 +1,58 @@
+def _split_seat_tail(text: str) -> tuple[str, str, float] | None:
+    """紧凑行的席位尾巴「二等座 有 553元」→ (席别, 余票, 票价)；形态不符返回 None
+
+    这串文本是**我们自己的代码**拼的（环节 4 的 compact_ticket_text）：三段、空格分隔、
+    票价以"元"收尾，形态完全确定，所以 split 就够了，不需要正则。
+    早期实现用的是一条"三组非空白字符 + 以元结尾的数字"的正则，除了难读还有个隐患：
+    像"5.5.3元"这种脏数据它会判定命中，随后 float() 抛 ValueError 把整段查询带崩；
+    这里 float 失败一律返回 None，坏数据只影响它自己那一趟
+    """
+    parts = (text or "").strip().split()
+    # ★ str.split() 按空白切、自动丢空串，等价于正则里那几个 \S+，但一眼能看懂
+    if len(parts) != 3 or not parts[2].endswith("元"):
+        return None
+    try:
+        return parts[0], parts[1], float(parts[2][:-1])
+    except ValueError:
+        return None
+
+def _compact_to_rows(raw: Any) -> list[dict]:
+    """兜底解析：万一拿到的工具已被守卫包装（输出紧凑行），还原成与 parse_ticket_rows 同构的行"""
+    rows: list[dict] = []
+    for item in parse_compact_rows(raw):
+        seat = _split_seat_tail(item.get("seat") or "")
+        rows.append({
+            "code": item["code"], "from": item["from"], "to": item["to"],
+            "dep": item["dep"], "arr": item["arr"], "dur": item["dur"],
+            # ★ 解析不出席位尾巴就给空字典，交给 _rows_to_options 跳过这一趟
+            "seats": {seat[0]: (seat[1], seat[2])} if seat else {},
+        })
+    return rows
+
+def option_id_of(row: dict) -> str:
+    """段内唯一标识：车次-发车时刻-到达站
+
+ 车次号在 12306 真实数据里**不唯一**：同一段会返回同号不同终到站的车
+    （如 G1308 08:36 分别终到「石家庄」与「正定机场」两趟）。若用 trainNo 当身份，
+    前端两趟会被同时勾选（同 key），后端回写也只会取到第一趟（到达站/票价全错）。
+    故凡涉及"哪一趟"的判定（选中、校验、回写）一律用本标识。
+    """
+    return f"{row.get('code')}-{row.get('dep')}-{row.get('to')}"
+
+def _rows_to_options(rows: list[dict], prefer_seat: str, limit: int) -> list[TrainOption]:
+    """12306 原始行 → TrainOption：按发车时间升序取前 limit 趟（仅排序取数，不做时间校验）"""
+    options: list[TrainOption] = []
+    for row in sorted(rows, key=lambda r: r.get("dep") or ""):
+        picked = _pick_seat(row.get("seats") or {}, prefer_seat)
+        if not picked:                       # 无席别数据（多为已售罄/未返回票价）则跳过该趟
+            continue
+        seat_name, (status, price) = picked
+        options.append(TrainOption(
+            trainNo=row["code"], startTime=row["dep"], endTime=row["arr"],
+            startStation=row["from"], endStation=row["to"], duration=row["dur"],
+            price=float(price), seatType=seat_name, ticketStatus=_ticket_status(status),
+            option_id=option_id_of(row),
+        ))
+        if len(options) >= limit:
+            break
+    return options

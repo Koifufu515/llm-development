@@ -1,0 +1,17 @@
+# Python 包：建目录 + 空的 __init__.py
+$packages = @(
+    "app", "app\agents", "app\api", "app\capabilities", "app\core", "app\mcp_core",
+    "app\models", "app\rag", "app\schemas", "app\services", "app\tools", "app\utils","app\scripts"
+)
+# 普通目录：不需要 __init__.py
+$folders = @("app\data", "data", "evaluation", "logs", "scripts")
+
+$packages | ForEach-Object {
+    New-Item -ItemType Directory -Path $_ -Force | Out-Null
+    $init = Join-Path $_ "__init__.py"
+    if (-not (Test-Path $init)) {
+        New-Item -ItemType File -Path $init | Out-Null
+    }
+    # 已存在就不动
+}
+$folders | ForEach-Object { New-Item -ItemType Directory -Path $_ -Force | Out-Null }

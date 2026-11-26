@@ -1,0 +1,84 @@
+# ============== 查询当前进度工具 ==============
+
+@tool
+def check_current_progress(
+        runtime: ToolRuntime = None
+) -> str:
+    """
+    查询当前规划进度，展示已完成和待完成的步骤。
+
+    使用场景：
+    - 用户问"现在到哪一步了"
+    - 用户问"还有几步"
+    - 用户问"进度如何"
+    - 需要向用户汇报当前状态
+
+    返回：
+        格式化的进度信息字符串
+    """
+    state = runtime.state
+    current_step = state.get("current_step", "requirement_collection")
+
+    app_logger.debug(f"查询进度: current_step={current_step}")
+
+    try:
+        current_index = ALL_STEPS.index(current_step)
+    except ValueError:
+        app_logger.warning(f"未知的当前步骤: {current_step}")
+        current_index = 0
+
+    # 构建进度展示
+    progress_lines = ["当前规划进度", ""]
+
+    for i, step in enumerate(ALL_STEPS):
+        label = STEP_LABELS.get(step, step)
+        step_num = i + 1
+        if i < current_index:
+            progress_lines.append(f"  [{step_num}] {label} - 已完成")
+        elif i == current_index:
+            progress_lines.append(f"  [{step_num}] {label} - 当前步骤")
+        else:
+            progress_lines.append(f"  [{step_num}] {label} - 待完成")
+
+    # 添加已收集的关键信息
+    progress_lines.append("")
+    progress_lines.append("已收集信息:")
+
+    if state.get("user_requirement"):
+        req = state["user_requirement"]
+        progress_lines.append(f"  - 出发日期: {req.get('departure_date', '未设置')}")
+        progress_lines.append(f"  - 出行天数: {req.get('travel_days', '未设置')} 天")
+        progress_lines.append(f"  - 人数: {req.get('adult_count', 0)} 成人 + {req.get('children_count', 0)} 儿童")
+
+    if state.get("selected_destination"):
+        progress_lines.append(f"  - 目的地: {state['selected_destination']}")
+
+    if state.get("selected_transport"):
+        transport_labels = {"flight": "航班", "train": "高铁", "driving": "自驾"}
+        progress_lines.append(
+            f"  - 交通: {transport_labels.get(state['selected_transport'], state['selected_transport'])}")
+
+    if state.get("selected_accommodation_types"):
+        progress_lines.append(f"  - 住宿: {', '.join(state['selected_accommodation_types'])}")
+
+    if state.get("selected_food_types"):
+        progress_lines.append(f"  - 餐饮: {', '.join(state['selected_food_types'])}")
+
+    app_logger.info(f"进度查询完成: 当前步骤={current_step}, 进度={current_index + 1}/{len(ALL_STEPS)}")
+
+    # ★ 全文件唯一返回字符串的工具：只读、不改状态
+    return "\n".join(progress_lines)
+
+# ============== 导出所有回退工具 ==============
+
+ALL_ROLLBACK_TOOLS = [
+    go_back_to_step,            # 通用回退（推荐）
+    go_back_to_requirement,     # 快捷：回到需求收集
+    go_back_to_destination,     # 快捷：回到目的地
+    go_back_to_transport,       # 快捷：回到交通
+    go_back_to_accommodation,   # 快捷：回到住宿
+    go_back_to_food,            # 快捷：回到餐饮
+    go_back_to_itinerary,       # 快捷：回到行程
+    go_back_to_budget,          # 快捷：回到预算
+    check_current_progress      # 查询进度
+]

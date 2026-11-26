@@ -1,0 +1,85 @@
+import re
+_DAY_MARK = re.compile(r"第\s*(\d+|[一二三四五六七八九十]+)\s*天|Day\s*\d", re.IGNORECASE)
+def _history_has_itinerary(msgs: list) -> bool:
+    """判断本回合历史里是否已输出过逐日行程正文
+    行程轮规则：先展示正文+预算征询、用户满意后才落库，确认轮的必要条件是
+    历史里存在 Day X 正文；若没有（例如用户第一轮直接说"满意"），不能强制落库
+    """
+    for m in msgs:
+        if getattr(m, "type", None) != "ai":
+            continue
+        content = getattr(m, "content", "") or ""
+        if isinstance(content, str) and _DAY_MARK.search(content):
+            return True
+    return False
+_TOOL_ABORTED_HINT = (
+    "【系统提示】该工具调用未执行完成（回合内被中断），没有可用结果，请勿据此作答。"
+)
+
+def _repair_dangling_tool_calls(msgs: list) -> tuple[list, int, int]:
+    """修复悬空 tool_calls / 孤立 tool 消息
+    返回 (处理后的消息列表, 补入的 ToolMessage 条数, 丢弃的孤立 ToolMessage 条数)；
+    无需修复时原样返回入参对象（零拷贝，不影响正常路径）
+    """
+    out: list = []
+    inserted = dropped = 0
+    i, n = 0, len(msgs)
+    while i < n:
+        m = msgs[i]
+        mtype = getattr(m, "type", None)
+        if mtype == "ai" and getattr(m, "tool_calls", None):
+            out.append(m)
+            # 记录本AI消息的tool_call_id，后续匹配已响应的工具消息
+            pending = {
+                tc.get("id"): tc.get("name")
+                for tc in m.tool_calls if tc.get("id")
+            }
+            j = i + 1
+            while j < n and getattr(msgs[j], "type", None) == "tool":
+                pending.pop(getattr(msgs[j], "tool_call_id", None), None)
+                out.append(msgs[j])
+                j += 1
+            # 对未得到响应的tool_call，补入占位ToolMessage
+            for tid, tname in pending.items():
+                out.append(ToolMessage(
+                    content=_TOOL_ABORTED_HINT, tool_call_id=tid, name=tname or "tool"
+                ))
+                inserted += 1
+            i = j
+            continue
+        # 没有对应AI tool_call的孤立tool消息，直接丢弃
+        if mtype == "tool":
+            dropped += 1
+            i += 1
+            continue
+        out.append(m)
+        i += 1
+    if inserted or dropped:
+        return out, inserted, dropped
+    return msgs, 0, 0
+
+# ============== 上下文窗口兜底（按"用户轮"边界丢弃最旧历史） ==============
+# 仅裁剪发往模型的视图，checkpoint持久化历史完整保留；
+# 切点只在HumanMessage边界，不切割AI-Tool消息配对，避免产生残缺工具历史
+_WINDOW_TRIGGER = 40   # 消息数超过该阈值才执行裁剪
+_WINDOW_KEEP = 24      # 目标最少保留消息条数
+
+def _trim_window(msgs: list) -> list:
+    """按用户轮边界丢弃最旧历史，找不到安全切点则原样返回"""
+    if len(msgs) <= _WINDOW_TRIGGER:
+        return msgs
+    last_human = -1
+    for i in range(len(msgs) - 1, -1, -1):
+        if isinstance(msgs[i], HumanMessage):
+            last_human = i
+            break
+    if last_human <= 0:
+        # 无更早可裁剪的用户轮
+        return msgs
+    # 寻找裁剪切点
+    cut = min(len(msgs) - _WINDOW_KEEP, last_human - 1)
+    for i in range(cut, -1, -1):
+        if isinstance(msgs[i], HumanMessage):
+            kept_system = [m for m in msgs[:i] if getattr(m, "type", None) == "system"]
+            return kept_system + msgs[i:]
+    return msgs

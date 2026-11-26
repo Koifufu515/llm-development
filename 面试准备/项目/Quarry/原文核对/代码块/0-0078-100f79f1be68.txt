@@ -1,0 +1,7 @@
+SET enable_seqscan = off;
+
+EXPLAIN
+SELECT chunk_id FROM chunks
+WHERE level = 1
+ORDER BY embedding <=> (SELECT embedding FROM chunks WHERE level = 1 LIMIT 1)
+LIMIT 3;

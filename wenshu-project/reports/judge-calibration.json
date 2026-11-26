@@ -1,0 +1,519 @@
+{
+  "cases_per_prompt": 8,
+  "sample_type": "8条人工预设期望的合成正反/边界裁判样例；非项目问答准确率",
+  "model": "qwen-plus",
+  "summary": {
+    "before": 1.0,
+    "after": 1.0
+  },
+  "rows": [
+    {
+      "version": "before",
+      "id": "correct_citation",
+      "expected_passed": true,
+      "verdict": {
+        "passed": true,
+        "score": 1.0,
+        "issues": []
+      },
+      "correct": true,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "completion",
+            "model": "qwen-plus",
+            "usage": {
+              "total_tokens": 203,
+              "completion_tokens": 18,
+              "prompt_tokens": 185,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              }
+            },
+            "runtime": "python"
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "version": "before",
+      "id": "wrong_citation",
+      "expected_passed": false,
+      "verdict": {
+        "passed": false,
+        "score": 0.2,
+        "issues": [
+          "关键结论'电子信息一式5份'引用了错误来源[来源2]，正确来源应为[来源1]；引用格式虽符合编号规范，但映射错误，导致条款支撑失效",
+          "答案未明确指出'电子信息'对应的是'电子信息纸质报告'，遗漏'纸质'这一关键限定词，可能引发歧义（如是否包含电子版）"
+        ]
+      },
+      "correct": true,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "completion",
+            "model": "qwen-plus",
+            "usage": {
+              "total_tokens": 283,
+              "completion_tokens": 98,
+              "prompt_tokens": 185,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              }
+            },
+            "runtime": "python"
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "version": "before",
+      "id": "wrong_value",
+      "expected_passed": false,
+      "verdict": {
+        "passed": false,
+        "score": 0.2,
+        "issues": [
+          "关键结论'机械一式5份'与条款[来源1]明确规定的'机械一式6份'直接矛盾",
+          "未修正错误，反而错误引用[来源1]支撑错误结论"
+        ]
+      },
+      "correct": true,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "completion",
+            "model": "qwen-plus",
+            "usage": {
+              "total_tokens": 230,
+              "completion_tokens": 60,
+              "prompt_tokens": 170,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              }
+            },
+            "runtime": "python"
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "version": "before",
+      "id": "unsupported_extra",
+      "expected_passed": false,
+      "verdict": {
+        "passed": false,
+        "score": 0.2,
+        "issues": [
+          "结论'禁止涉水拍照'有条款支撑，但额外添加'学校给每人赔偿500元'无任何来源支撑，属于虚构信息；该添加内容与问题'可以涉水拍照吗？'无关，且可能误导判断；引用[来源1]仅支持禁止行为，不涉及赔偿，引用格式虽形式正确但内容失实"
+        ]
+      },
+      "correct": true,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "completion",
+            "model": "qwen-plus",
+            "usage": {
+              "total_tokens": 275,
+              "completion_tokens": 94,
+              "prompt_tokens": 181,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              }
+            },
+            "runtime": "python"
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "version": "before",
+      "id": "proper_refusal",
+      "expected_passed": true,
+      "verdict": {
+        "passed": true,
+        "score": 0.95,
+        "issues": []
+      },
+      "correct": true,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "completion",
+            "model": "qwen-plus",
+            "usage": {
+              "total_tokens": 201,
+              "completion_tokens": 19,
+              "prompt_tokens": 182,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              }
+            },
+            "runtime": "python"
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "version": "before",
+      "id": "question_scope",
+      "expected_passed": true,
+      "verdict": {
+        "passed": true,
+        "score": 1.0,
+        "issues": []
+      },
+      "correct": true,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "completion",
+            "model": "qwen-plus",
+            "usage": {
+              "total_tokens": 205,
+              "completion_tokens": 18,
+              "prompt_tokens": 187,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              }
+            },
+            "runtime": "python"
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "version": "before",
+      "id": "table_index",
+      "expected_passed": false,
+      "verdict": {
+        "passed": false,
+        "score": 0.2,
+        "issues": [
+          "关键结论'12点50前签到'引用了错误来源：应为[来源1]而非[来源2]；[来源2]关于文献数量，与签到时间完全无关；遗漏关键信息'答辩当天'和'到达教室'，仅答时间不完整，未满足问题'什么时候签到'所要求的完整时空条件"
+        ]
+      },
+      "correct": true,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "completion",
+            "model": "qwen-plus",
+            "usage": {
+              "total_tokens": 301,
+              "completion_tokens": 95,
+              "prompt_tokens": 206,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              }
+            },
+            "runtime": "python"
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "version": "before",
+      "id": "boundary",
+      "expected_passed": false,
+      "verdict": {
+        "passed": false,
+        "score": 0.2,
+        "issues": [
+          "结论与[来源1]直接矛盾：[来源1]明确'寄存期间行李无法取出'，而答案称'可以提前预约后临时取出'，无任何条款支持该例外情形",
+          "引用[来源1]却得出相反结论，构成事实性错误",
+          "未说明'无法取出'是绝对限制，遗漏关键信息：该限制无例外（如预约、特殊申请等）"
+        ]
+      },
+      "correct": true,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "completion",
+            "model": "qwen-plus",
+            "usage": {
+              "total_tokens": 280,
+              "completion_tokens": 104,
+              "prompt_tokens": 176,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              }
+            },
+            "runtime": "python"
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "version": "after",
+      "id": "correct_citation",
+      "expected_passed": true,
+      "verdict": {
+        "passed": true,
+        "score": 1.0,
+        "issues": []
+      },
+      "correct": true,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "completion",
+            "model": "qwen-plus",
+            "usage": {
+              "total_tokens": 283,
+              "completion_tokens": 18,
+              "prompt_tokens": 265,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              }
+            },
+            "runtime": "python"
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "version": "after",
+      "id": "wrong_citation",
+      "expected_passed": false,
+      "verdict": {
+        "passed": false,
+        "score": 0.2,
+        "issues": [
+          "关键结论'电子信息一式5份'引用了错误来源[来源2]，实际应引用[来源1]；[来源2]明确对应'机械纸质报告'，与'电子信息'矛盾"
+        ]
+      },
+      "correct": true,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "completion",
+            "model": "qwen-plus",
+            "usage": {
+              "total_tokens": 326,
+              "completion_tokens": 61,
+              "prompt_tokens": 265,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              }
+            },
+            "runtime": "python"
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "version": "after",
+      "id": "wrong_value",
+      "expected_passed": false,
+      "verdict": {
+        "passed": false,
+        "score": 0.2,
+        "issues": [
+          "关键结论与原文矛盾：[来源1]明确要求'机械一式6份'，答案写成'5份'，直接违背原文",
+          "引用格式虽正确但无法挽救事实性错误"
+        ]
+      },
+      "correct": true,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "completion",
+            "model": "qwen-plus",
+            "usage": {
+              "total_tokens": 311,
+              "completion_tokens": 61,
+              "prompt_tokens": 250,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              }
+            },
+            "runtime": "python"
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "version": "after",
+      "id": "unsupported_extra",
+      "expected_passed": false,
+      "verdict": {
+        "passed": false,
+        "score": 0.3,
+        "issues": [
+          "结论'禁止涉水拍照'有[来源1]支撑，但'学校给每人赔偿500元'无任何来源支撑，属于补造事实；违反'不得补造事实'的校验要求",
+          "引用格式错误：'[来源1]'仅能对应禁止涉水拍照这一部分，却错误地覆盖了整个句子（含无依据的赔偿内容），导致来源编号与实际支撑内容不匹配"
+        ]
+      },
+      "correct": true,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "completion",
+            "model": "qwen-plus",
+            "usage": {
+              "total_tokens": 369,
+              "completion_tokens": 108,
+              "prompt_tokens": 261,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              }
+            },
+            "runtime": "python"
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "version": "after",
+      "id": "proper_refusal",
+      "expected_passed": true,
+      "verdict": {
+        "passed": true,
+        "score": 1.0,
+        "issues": []
+      },
+      "correct": true,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "completion",
+            "model": "qwen-plus",
+            "usage": {
+              "total_tokens": 280,
+              "completion_tokens": 18,
+              "prompt_tokens": 262,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              }
+            },
+            "runtime": "python"
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "version": "after",
+      "id": "question_scope",
+      "expected_passed": true,
+      "verdict": {
+        "passed": true,
+        "score": 1.0,
+        "issues": []
+      },
+      "correct": true,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "completion",
+            "model": "qwen-plus",
+            "usage": {
+              "total_tokens": 285,
+              "completion_tokens": 18,
+              "prompt_tokens": 267,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              }
+            },
+            "runtime": "python"
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "version": "after",
+      "id": "table_index",
+      "expected_passed": false,
+      "verdict": {
+        "passed": false,
+        "score": 0.2,
+        "issues": [
+          "关键结论'12点50前签到'引用了错误来源[来源2]，正确来源应为[来源1]；[来源2]内容为'文献至少30篇'，与签到时间完全无关，构成事实性矛盾",
+          "引用格式虽符合编号形式，但来源编号与条款内容严重错配，违反参考条款映射规则"
+        ]
+      },
+      "correct": true,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "completion",
+            "model": "qwen-plus",
+            "usage": {
+              "total_tokens": 384,
+              "completion_tokens": 98,
+              "prompt_tokens": 286,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              }
+            },
+            "runtime": "python"
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "version": "after",
+      "id": "boundary",
+      "expected_passed": false,
+      "verdict": {
+        "passed": false,
+        "score": 0.0,
+        "issues": [
+          "与原文矛盾：[来源1]明确'寄存期间行李无法取出'，而答案称'可以提前预约后临时取出'，直接否定原文规定",
+          "关键结论无条款支撑：答案声称'可以提前预约后临时取出'，但未提供任何来源支持该说法，且与[来源1]冲突"
+        ]
+      },
+      "correct": true,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "completion",
+            "model": "qwen-plus",
+            "usage": {
+              "total_tokens": 343,
+              "completion_tokens": 87,
+              "prompt_tokens": 256,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              }
+            },
+            "runtime": "python"
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    }
+  ]
+}

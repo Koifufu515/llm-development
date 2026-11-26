@@ -1,0 +1,186 @@
+{
+  "scope": "同城同查询/同模型/同管线；冷时只清本查询Redis键，计入真实查询优化与LLM重排，索引已加载；预热一次后各3轮。",
+  "corpus": {
+    "status": "ready",
+    "documents": 71,
+    "cities": 39,
+    "characters": 404025,
+    "parents": 654,
+    "children": 3120,
+    "version": "82743fa72fa86b29597c16e0",
+    "embedding": "text-embedding-v2",
+    "vector_store": "Chroma",
+    "cache": "Redis",
+    "reranker": "Qwen LLM"
+  },
+  "rows": [
+    {
+      "repeat": 1,
+      "cold": {
+        "seconds": 1.510945042129606,
+        "cache_hit": false,
+        "ids": [
+          "fe4998bfc580fbb5e6db7202",
+          "4cad97262ad2d31b77cb4c17",
+          "2118caad6924f80c0694f331"
+        ],
+        "queries": [
+          "苏州园林和博物馆游览推荐"
+        ],
+        "pipeline": "reference-0099-v2-scored-9-6-3-qwen-turbo",
+        "model": "qwen-turbo",
+        "metrics": {
+          "request_id": "bb1e5afd-5742-49b6-a3ca-356f63e9cf37",
+          "status": "ok",
+          "elapsed_seconds": 1.511,
+          "llm_calls": 2,
+          "llm_errors": 2,
+          "usage_reported_calls": 0,
+          "input_tokens": null,
+          "output_tokens": null,
+          "usage_complete": false,
+          "first_token_seconds": null
+        }
+      },
+      "warm": {
+        "seconds": 0.004189750179648399,
+        "cache_hit": true,
+        "ids": [
+          "fe4998bfc580fbb5e6db7202",
+          "4cad97262ad2d31b77cb4c17",
+          "2118caad6924f80c0694f331"
+        ],
+        "queries": [
+          "苏州园林和博物馆游览推荐"
+        ],
+        "pipeline": "reference-0099-v2-scored-9-6-3-qwen-turbo",
+        "model": "qwen-turbo",
+        "metrics": {
+          "request_id": "82202864-39d0-42de-bfee-cb19768fdaa4",
+          "status": "ok",
+          "elapsed_seconds": 0.0042,
+          "llm_calls": 0,
+          "llm_errors": 0,
+          "usage_reported_calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "usage_complete": true,
+          "first_token_seconds": null
+        }
+      },
+      "same_ids": true
+    },
+    {
+      "repeat": 2,
+      "cold": {
+        "seconds": 1.272933874744922,
+        "cache_hit": false,
+        "ids": [
+          "fe4998bfc580fbb5e6db7202",
+          "4cad97262ad2d31b77cb4c17",
+          "2118caad6924f80c0694f331"
+        ],
+        "queries": [
+          "苏州园林和博物馆游览推荐"
+        ],
+        "pipeline": "reference-0099-v2-scored-9-6-3-qwen-turbo",
+        "model": "qwen-turbo",
+        "metrics": {
+          "request_id": "dc06d036-3d8a-48c0-bd78-5ad5c4f12a06",
+          "status": "ok",
+          "elapsed_seconds": 1.2729,
+          "llm_calls": 2,
+          "llm_errors": 2,
+          "usage_reported_calls": 0,
+          "input_tokens": null,
+          "output_tokens": null,
+          "usage_complete": false,
+          "first_token_seconds": null
+        }
+      },
+      "warm": {
+        "seconds": 0.004713624715805054,
+        "cache_hit": true,
+        "ids": [
+          "fe4998bfc580fbb5e6db7202",
+          "4cad97262ad2d31b77cb4c17",
+          "2118caad6924f80c0694f331"
+        ],
+        "queries": [
+          "苏州园林和博物馆游览推荐"
+        ],
+        "pipeline": "reference-0099-v2-scored-9-6-3-qwen-turbo",
+        "model": "qwen-turbo",
+        "metrics": {
+          "request_id": "6bac1da3-cb04-4fdf-a4a2-b5d9c9d12d22",
+          "status": "ok",
+          "elapsed_seconds": 0.0047,
+          "llm_calls": 0,
+          "llm_errors": 0,
+          "usage_reported_calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "usage_complete": true,
+          "first_token_seconds": null
+        }
+      },
+      "same_ids": true
+    },
+    {
+      "repeat": 3,
+      "cold": {
+        "seconds": 1.328221291769296,
+        "cache_hit": false,
+        "ids": [
+          "fe4998bfc580fbb5e6db7202",
+          "4cad97262ad2d31b77cb4c17",
+          "2118caad6924f80c0694f331"
+        ],
+        "queries": [
+          "苏州园林和博物馆游览推荐"
+        ],
+        "pipeline": "reference-0099-v2-scored-9-6-3-qwen-turbo",
+        "model": "qwen-turbo",
+        "metrics": {
+          "request_id": "edc3b142-7fe4-46d8-98f7-160eaa31f0be",
+          "status": "ok",
+          "elapsed_seconds": 1.3282,
+          "llm_calls": 2,
+          "llm_errors": 2,
+          "usage_reported_calls": 0,
+          "input_tokens": null,
+          "output_tokens": null,
+          "usage_complete": false,
+          "first_token_seconds": null
+        }
+      },
+      "warm": {
+        "seconds": 0.005351416766643524,
+        "cache_hit": true,
+        "ids": [
+          "fe4998bfc580fbb5e6db7202",
+          "4cad97262ad2d31b77cb4c17",
+          "2118caad6924f80c0694f331"
+        ],
+        "queries": [
+          "苏州园林和博物馆游览推荐"
+        ],
+        "pipeline": "reference-0099-v2-scored-9-6-3-qwen-turbo",
+        "model": "qwen-turbo",
+        "metrics": {
+          "request_id": "a2638368-f19b-4dd0-a706-bb597b71f11a",
+          "status": "ok",
+          "elapsed_seconds": 0.0054,
+          "llm_calls": 0,
+          "llm_errors": 0,
+          "usage_reported_calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "usage_complete": true,
+          "first_token_seconds": null
+        }
+      },
+      "same_ids": true
+    }
+  ]
+}

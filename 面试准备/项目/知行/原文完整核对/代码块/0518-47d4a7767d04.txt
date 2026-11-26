@@ -1,0 +1,36 @@
+def _pick_hotel(text: str) -> dict | None:
+    """从酒店 JSON 选最优：与状态机自动代选同源（hotel_agent_tool.hotel_rank）——
+    剔除异常低价（<25 元/晚）后：评分≥4.5 取最低价，否则取评分最高（同分取便宜）"""
+    # 就近 import 避免顶层循环依赖（本模块其它择优函数也按需从 capabilities 导入）
+    from app.capabilities.hotel_multi_segment.hotel_agent_tool import _MIN_HOTEL_PRICE, hotel_rank
+    try:
+        data = json.loads(text)
+    except Exception:
+        return None
+    if not isinstance(data, dict):
+        return None
+
+    hotels = []
+    for h in data.get("hotelInformationList") or []:
+        if not isinstance(h, dict) or not h.get("name"):
+            continue
+        price_info = h.get("price")
+        message = price_info.get("message", "") if isinstance(price_info, dict) else ""
+        price = _number_before(message, "CNY/晚")
+        if price:
+            hotels.append({"name": h["name"], "price": price,
+                           "score": _to_float(h.get("starRating")), "address": h.get("address", "")})
+
+    valid = [h for h in hotels if h["price"] >= _MIN_HOTEL_PRICE]  # 接口偶发返回"14元/晚"这类失真价格
+    if not valid:
+        return None
+    return min(valid, key=lambda h: hotel_rank(h["price"], h["score"]))
+
+def _pick_weather(text: str, date: str) -> str:
+    """从高德预报 JSON 截取出发日期当天摘要，取不到就退第一条"""
+    try:
+        casts = json.loads(text).get("casts", [])
+        c = next((x for x in casts if x.get("date") == date), casts[0] if casts else None)
+        return f"{c['dayweather']} {c.get('daytemp')}~{c.get('nighttemp')}°C" if c else ""
+    except Exception:
+        return ""

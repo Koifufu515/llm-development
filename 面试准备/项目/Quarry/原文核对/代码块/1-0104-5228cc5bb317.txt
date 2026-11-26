@@ -1,0 +1,18 @@
+-- 写法 A：标签在块上（本项目）
+SELECT ...
+FROM chunks
+WHERE collection_id = $1
+  AND level         = 1
+  AND acl_labels   && $2::text[]          -- 卡片背面的章，当场判断
+ORDER BY embedding <=> $3::halfvec(1024)
+LIMIT 10;
+
+-- 写法 B：标签只在文档上
+SELECT c.* ...
+FROM chunks c
+JOIN documents d ON c.document_id = d.id  -- 每张卡片都要回书架查一次
+WHERE c.collection_id = $1
+  AND c.level         = 1
+  AND d.acl_labels   && $2::text[]
+ORDER BY c.embedding <=> $3::halfvec(1024)
+LIMIT 10;

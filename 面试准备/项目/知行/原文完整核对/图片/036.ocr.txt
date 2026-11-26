@@ -1,0 +1,19 @@
+应用启动/关闭生命周期
+V应用启动时
+应用关闭时V
+_aexit_
+async with checkpointer_Lifespan（）：
+关闭 Store 池
+— 打开Checkpointer 连接池
+Checkpointer 已就绪
+async with store_Lifespan（）：
+_aexit—
+— 打开 Store 连接池
+关闭 Checkpointer池
+—V
+Store 已就绪
+yield -
+FastAPI 处理请求
+期间业务代码用 get_checkpointer / get_store
+仓
+反向自动关闭——内层先退出，外层后退出（Python async context manager 栈）

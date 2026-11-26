@@ -1,0 +1,18 @@
+"""两个薄推进器：目的地直接写入推进；餐饮先校验枚举，不合法就只回错误、原地不动（直接调真实工具，纯逻辑，无需密钥）"""
+from langchain.tools import ToolRuntime
+
+from app.tools.state_transition import select_destination_tool, select_food_tool
+
+def runtime(step):
+    state = {"messages": [], "current_step": step}
+    return ToolRuntime(state=state, context=None, config={}, stream_writer=None, tool_call_id="call_1", store=None)
+
+up = select_destination_tool.func(destination="天津、上海", runtime=runtime("destination_recommendation")).update
+print("目的地       →", {k: v for k, v in up.items() if k != "messages"})
+
+bad = select_food_tool.func(food_types=["火锅"], runtime=runtime("food_planning")).update
+print("餐饮·非法值  →", [k for k in bad if k != "messages"] or "只有一条错误消息，不写字段、不推进",
+      "|", bad["messages"][0].content[:40])
+
+ok = select_food_tool.func(food_types=["local", "specialty"], runtime=runtime("food_planning")).update
+print("餐饮·合法值  →", {k: v for k, v in ok.items() if k != "messages"})

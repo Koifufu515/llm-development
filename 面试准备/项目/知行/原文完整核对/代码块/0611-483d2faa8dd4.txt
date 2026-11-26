@@ -1,0 +1,106 @@
+def _queried_cities(tail: list) -> list[str]:
+    """从本轮 query_destination_info 的调用参数里取城市
+    多城"排序确认轮"selected_destination为空时，作为城市来源
+    """
+    # 存最后拿到的城市列表
+    out: list[str] = []
+    # 遍历尾部消息（只看本轮工具调用消息）
+    for m in tail:
+        # 取出这条消息里所有的工具调用，为空就直接跳过
+        for tc in (getattr(m, "tool_calls", None) or []):
+            # 不是查询目的地信息这个工具，直接跳过
+            if (tc.get("name") if isinstance(tc, dict) else None) != "query_destination_info":
+                continue
+            # 从工具入参里面拿出目的地城市，转字符串并去掉首尾空格
+            city = str(((tc.get("args") or {}) if isinstance(tc, dict) else {}).get("destination") or "").strip()
+            # 城市不为空，并且还没加到列表里，就追加进去
+            if city and city not in out:
+                out.append(city)
+    return out
+
+async def _weather_paragraph(cities: list[str], start: str, days: int) -> str:
+    """代码直查并段落式渲染行程窗口内天气。
+    返回空字符串表示查询失败/无可用预报，绝不编造天气。
+    """
+    # 清理城市列表：去空格，最多只取配置上限数量的城市
+    cities = [c.strip() for c in cities if c.strip()][:_WEATHER_CITY_MAX]
+    # 清洗完没有城市，直接返回空串
+    if not cities:
+        return ""
+    # 局部导入，减少顶层依赖
+    from app.tools.mcp_tools import get_weather_tools
+    from app.agents.routers.destination_router import WeatherForecast, _normalize_weather_payload
+
+    # 获取全部可用MCP工具
+    tools = await get_weather_tools()
+    # 找到天气预报对应的工具实例
+    tool = next((t for t in tools if t.name == "get_weather_forecast"), None)
+    # 找不到天气工具，打日志直接返回空，不瞎编天气
+    if tool is None:
+        app_logger.warning("天气工具未加载，本轮不追加天气（不编造）")
+        return ""
+
+    try:
+        # 把传入的起始日期字符串转成date对象
+        begin = date.fromisoformat(start) if start else None
+    except ValueError:
+        # 日期格式不对，置为None
+        begin = None
+    # 计算行程最后一天：起始日 + 总天数 -1
+    end = begin + timedelta(days=days - 1) if (begin and days > 0) else None
+
+    # 用来存放每个城市渲染好的天气文本块
+    parts: list[str] = []
+    # 逐个城市查天气
+    for city in cities:
+        try:
+            # 调用天气工具，拿到原始数据，再做标准化处理
+            payload = _normalize_weather_payload(await tool.ainvoke({"city": city}))
+            # 如果返回payload里面带错误标记，抛异常，跳过这个城市
+            if payload.get("error"):
+                raise RuntimeError(str(payload["error"]))
+            # 用Pydantic校验，转成强类型预报对象
+            casts = WeatherForecast.model_validate(payload).casts
+        except Exception as e:
+            # 这个城市查天气报错，打警告日志，直接换下一个城市
+            app_logger.warning(f"天气渲染跳过 {city}：{type(e).__name__}: {e}")
+            continue
+
+        # 如果起止日期有效，过滤出刚好在行程时间段里面的预报
+        if begin and end:
+            in_window = [c for c in casts if begin <= date.fromisoformat(c.date) <= end]
+            # 窗口内有数据就用窗口内的，没有就取前面最多days条兜底
+            casts = in_window or casts[:max(days, 1)]
+        else:
+            # 没有有效起止日期，就只取前面days条预报
+            casts = casts[:days] if days > 0 else casts
+        # 预报列表是空的，跳过这个城市
+        if not casts:
+            continue
+
+        # 拼天气块的标题头
+        header = (
+            f"出发日期前后（{begin.isoformat()}至{end.isoformat()}）的天气概况如下："
+            if begin and end else f"未来 {len(casts)} 天天气概况如下："
+        )
+        # 循环生成每一天天气的文本行
+        rows = [
+            f"- {c.date}: 白天{c.dayweather}，气温{c.nighttemp}~{c.daytemp}°C" for c in casts
+        ]
+        note = ""
+        # 有起止日期的时候，判断还差多少天预报拿不到
+        if begin and end:
+            missing = days - len(casts)
+            if missing == days:
+                note = f"（{begin.isoformat()} 起超出可预报范围，暂提供未来 {len(casts)} 天，临近出发再查）"
+            elif missing > 0:
+                note = f"（后 {missing} 天超出可预报范围，临近出发再查）"
+        # 把标题、每日天气、备注拼到一块
+        block = "\n".join([header] + rows + ([note] if note else []))
+        # 多个城市就加城市小标题，单个城市不用
+        parts.append(f"### {city}\n{block}" if len(cities) > 1 else block)
+    # 所有城市都处理完，parts为空就返回空字符串
+    if not parts:
+        return ""
+    # 多个城市的块用空行隔开，最后加上数据源说明
+    return "\n\n".join(parts) + "\n\n（数据来源：高德天气）"

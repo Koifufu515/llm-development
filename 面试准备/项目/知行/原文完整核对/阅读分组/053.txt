@@ -1,0 +1,483 @@
+
+
+===== block 624 70e157796316 lines 325-479 source 知行旅行助手-v2#627 =====
+                    # 把交通方式切换成高铁，更新状态
+                    _vals = await switch_transport_mode(agent, config, _vals, "train")
+                    _fallback_note = (
+                        f"「{'、'.join(_no_air)}」暂无可直达的航班数据（该城市无民用机场或机场码暂未收录），"
+                        f"已自动为您改查高铁；如仍希望乘机，可回复「换个目的地」重新挑选。"
+                    )
+                    app_logger.warning(
+                        f"✈️→🚄 航班结构性不可查（无机场码城市：{_no_air}），已降级为高铁并交由高铁分支接管"
+                    )
+                except Exception as exc:
+                    # 切换状态失败，本轮继续走航班逻辑
+                    app_logger.warning(f"⚠️ 航班降级高铁落库失败（本轮按航班分支继续）：{exc}")
+
+            # 多段高铁卡片逻辑
+            if multi_leg_train(_vals):
+                from app.capabilities.train_multi_segment.train_flow import (
+                    emit_train_skill_ui,
+                    auto_select_train_legs,
+                    build_lead_text as build_train_lead_text
+                )
+                # 自动确认模式，代码直接帮用户选好高铁班次
+                if _vals.get("auto_confirm"):
+                    _picked = await auto_select_train_legs(conversation_id, _vals)
+                    if _picked and buffer_all:
+                        text = ("已按「耗时 + 价格」综合最优为您选定各段高铁：\n"
+                                + "\n".join(f"- {t}" for t in _picked))
+                        state_step = _ACCOMMODATION_STEP
+                else:
+                    # 向前端推送高铁选择卡片
+                    _payload, _st = await emit_train_skill_ui(stream, conversation_id, _vals)
+                    if _st == "pushed" and buffer_all:
+                        text = build_train_lead_text(_payload)
+                    elif _st == "empty" and buffer_all:
+                        text = ("⚠️ 实时高铁班次暂时查询不到（12306 数据源本次未返回余票）。"
+                                "您可以稍后发送「重新查询」，或直接回复「改航班」/「改自驾」，"
+                                "我会立即按新的交通方式为您查询。")
+            elif flight_card_mode(_vals):
+                # 多段航班卡片逻辑
+                from app.capabilities.flight_multi_segment.flight_flow import (
+                    auto_select_flights,
+                    build_lead_text as build_flight_lead_text,
+                    emit_flight_skill_ui,
+                )
+                if _vals.get("auto_confirm"):
+                    _fpicked = await auto_select_flights(conversation_id, _vals)
+                    if _fpicked and buffer_all:
+                        text = ("已按「价格最优」为您选定各段航班：\n"
+                                + "\n".join(f"- {t}" for t in _fpicked))
+                        state_step = _ACCOMMODATION_STEP
+                else:
+                    _fpayload, _fst = await emit_flight_skill_ui(stream, conversation_id, _vals)
+                    if _fst == "pushed" and buffer_all:
+                        text = build_flight_lead_text(_fpayload)
+                    elif _fst == "empty" and buffer_all:
+                        text = ("⚠️ 实时航班暂时查询不到（航班数据源本次未返回结果）。"
+                                "您可以稍后发送「重新查询」，或直接回复「改高铁」/「改自驾」，"
+                                "我会立即按新的交通方式为您查询。")
+            elif driving_card_mode(_vals):
+                # 多段自驾卡片逻辑
+                from app.capabilities.driving_multi_segment.driving_flow import (
+                    auto_select_driving,
+                    build_lead_text as build_driving_lead_text,
+                    emit_driving_skill_ui,
+                )
+                if _vals.get("auto_confirm"):
+                    _dpicked = await auto_select_driving(conversation_id, _vals)
+                    if _dpicked and buffer_all:
+                        text = ("已按高德默认策略为您确认各段自驾路线：\n"
+                                + "\n".join(f"- {t}" for t in _dpicked))
+                        state_step = _ACCOMMODATION_STEP
+                else:
+                    _dpayload, _dst = await emit_driving_skill_ui(stream, conversation_id, _vals)
+                    if _dst == "pushed" and buffer_all:
+                        text = build_driving_lead_text(_dpayload)
+                    elif _dst == "empty" and buffer_all:
+                        text = ("⚠️ 实时自驾路线暂时查询不到（高德数据源本次未返回结果）。"
+                                "您可以稍后发送「重新查询」，或直接回复「改高铁」/「改自驾」，"
+                                "我会立即按新的交通方式为您查询。")
+            # 缓冲模式，把交通切换、降级提示拼到回复开头
+            if buffer_all:
+                for _note in (_fallback_note, _switch_note):
+                    if _note and _note not in text:
+                        text = f"{_note}\n\n{text}" if text.strip() else _note
+
+        # ==========后处理⑦：行程正文用代码渲染，末尾带上预算和引导话术==========
+        code_rendered = False
+        # 检查工具消息标记：行程结构已经准备好了
+        if any(
+            getattr(m, "type", None) == "tool" and _BODY_READY_MARK in str(getattr(m, "content", ""))
+            for m in tail
+        ):
+            try:
+                vals = snap.values or {}
+            except Exception:
+                vals = {}
+            # 调用渲染函数，生成完整的行程文本
+            rendered = _render_itinerary_body(
+                vals.get("itinerary_body") or [],
+                vals.get("budget") or {},
+                vals.get("user_requirement") or {},
+                vals.get("selected_transport_legs") or [],
+                vals.get("selected_hotels") or [],
+            )
+            if rendered:
+                # 拼接行程正文 + 结尾邀请话术
+                rendered_text = rendered + _INVITE_TAIL
+                prefix = text.strip()
+                _req = vals.get("user_requirement") or {}
+                # 生成开头引导文字，带上出行天数
+                _lead = (f"已按 {int(_req.get('travel_days') or 0)} 天行程生成如下安排："
+                         if _req.get("travel_days") else "")
+                text = f"{_lead}\n\n{rendered_text}" if _lead else rendered_text
+                # 如果模型之前输出了旁白，直接丢弃，只用代码渲染的行程
+                if prefix:
+                    app_logger.warning(f"⚠️ 行程正文分支丢弃模型旁白 {len(prefix)} 字（正文仅由代码渲染）")
+                state_step = "budget_summarization"
+                code_rendered = buffer_all
+                # 非缓冲模式，重置流式输出，推送完整渲染后的行程
+                if not buffer_all:
+                    stream.push(make_event(ROLE_ASSISTANT_RESET))
+                    await _push_rendered(stream, f"\n\n{text}")
+                app_logger.info(
+                    f"✅ 行程正文已由代码渲染（{len(rendered_text)} 字），引导语由代码生成"
+                    f"（共 {len(text)} 字）"
+                )
+
+        # 缓冲模式开启的话，等全部逻辑跑完，一次性把整段文本推给前端
+        if buffer_all and text.strip():
+            if code_rendered:
+                await _push_rendered(stream, text)
+            else:
+                stream.push(make_event(ROLE_ASSISTANT, text))
+        # 规划分支执行完毕，返回结果
+        return text, state_step, committed, body
+
+    # ==================== 闲聊分支（不走Agent状态机）====================
+    # 识别用户消息的意图
+    _intent = detect_intent(content)
+    # 用户想问天气，直接调用天气查询接口，不丢给Agent
+    if _intent.weather_object:
+        _wx = await try_weather_query(content, stream, intent=_intent)
+        app_logger.info(f"[weather] 闲聊通道改推代码直查天气：{content[:30]}")
+        return _wx, None, False, None
+    # 用户想查车票航班，直接调用查询接口
+    if _intent.transport_object:
+        _wx = await try_direct_ticket_query(content, stream)
+        if _wx:
+            app_logger.info(f"[fallback] 闲聊通道改推确定性直查结果：{content[:30]}")
+            return _wx, None, False, None
+        # 查询失败，返回兜底提示文本
+        _reply = _query_fallback_text(content, _intent)
+        stream.push(make_event(ROLE_ASSISTANT, _reply))
+        return _reply, None, False, None
+    # 普通闲聊，直接调用基础流式LLM
+    return await _stream_plain(content, stream), None, False, None
+
+
+===== block 625 4220396dee4e lines 1-35 source 知行旅行助手-v2#628 =====
+"""execute_turn 直调演示：同一个 thread 先规划一轮、再闲聊一句，看帧和返回的四元组（需 PG + DashScope + MCP 全套）"""
+import asyncio
+import uuid
+
+from app.core.checkpointer import checkpointer_lifespan
+from app.core.event_stream import EventStream
+from app.core.store import store_lifespan
+from app.services.chat_stream_executor import execute_turn
+
+async def one_turn(conv_id: str, content: str, planning: bool):
+    stream = EventStream()
+
+    async def consume():
+        async for ev in stream:
+            print(f"  [{ev['role']}] {str(ev['content'])[:60]!r}")
+
+    task = asyncio.create_task(consume())
+    text, step, committed, body = await execute_turn("demo-user", conv_id, content, planning, stream)
+    stream.close()
+    await task
+    print(f"  → 返回：{len(text)} 字 | state_step={step} | committed={committed} | body={'有' if body else '无'}")
+
+async def main():
+    async with checkpointer_lifespan(), store_lifespan():   # 与 main.py 的 lifespan 同一套初始化
+        conv_id = str(uuid.uuid4())                          # thread_id：状态机的短期记忆按它隔离
+        print("① 规划请求（planning=True）")
+        await one_turn(conv_id, "我想下周六从福州出发去杭州玩3天，2个大人，人均预算3000", True)
+        print("② 闲聊（planning=False）")
+        await one_turn(conv_id, "你好呀", False)
+
+if __name__ == "__main__":
+    import selectors
+
+    # 原来：asyncio.run(main())
+    asyncio.run(main(), loop_factory=lambda: asyncio.SelectorEventLoop(selectors.SelectSelector()))
+
+
+===== block 626 b95ecd9f2e5e lines 1-98 source 知行旅行助手-v2#629 =====
+"""
+FastAPI 应用入口
+"""
+import os
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from app.config import settings
+from app.utils.logger import app_logger
+from app.api.v1 import conversations, cities, itinerary_plans, messages, users, skills  # ★ 本章新增 messages / itinerary_plans / skills
+from app.core.response import (
+    global_http_middleware,
+    validation_exception_handler,
+    wrap_json_middleware,  # 统一 {code,msg,data} 包裹
+)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """应用生命周期管理"""
+    import asyncio
+
+    # 打印当前事件循环信息（调试用）
+    loop = asyncio.get_running_loop()
+    app_logger.info(f"FastAPI 使用的事件循环: {type(loop).__name__}")
+
+    from app.core.checkpointer import checkpointer_lifespan
+    from app.mcp_core.client import MCPClientManager
+    from app.core.store import store_lifespan
+
+    app_logger.info("🚀 启动应用...")
+
+    async with checkpointer_lifespan():
+        app_logger.info("✅ Checkpointer 已就绪")
+
+        # 2. 启动 Store (在这里加入)
+        async with store_lifespan():
+            app_logger.info("✅ Store 已就绪")
+
+            # 3. 初始化 MCP
+            mcp = await MCPClientManager.get_instance()
+            app_logger.info("✅ MCP 服务初始化成功")
+
+            yield
+
+            # --- 关闭流程 (自动按相反顺序执行 context manager 的 exit，这里手动关闭 MCP) ---
+
+            await mcp.close()
+            app_logger.info("MCP 服务已关闭")
+
+        # store_lifespan 的 exit 会在这里自动执行
+
+    # checkpointer_lifespan 的 exit 会在这里自动执行
+
+    app_logger.info("应用已关闭")
+
+app = FastAPI(
+    title="LangGraph 旅行规划系统",
+    description="企业级多 Agent 旅行规划服务",
+    version="1.0.0",
+    lifespan=lifespan
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# 全局异常兜底中间件 + 参数校验器（{code,msg,data} 契约）
+app.middleware("http")(global_http_middleware)
+# 响应包裹中间件：放在最后注册 → 最外层，保证异常兜底产出的包裹体不再二次包裹
+app.middleware("http")(wrap_json_middleware)  # ★ 最后注册 = 最外层
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
+
+# 全部接口统一收编到 /api/v1（资源式扁平命名）
+app.include_router(users.router, prefix="/api/v1")
+app.include_router(cities.router, prefix="/api/v1")  # 全国城市（出发地单选/目的地多选）
+app.include_router(conversations.router, prefix="/api/v1")
+app.include_router(messages.router, prefix="/api/v1")  # 发消息（SSE）+ 历史消息
+app.include_router(itinerary_plans.router, prefix="/api/v1")  # 行程清单
+app.include_router(skills.router, prefix="/api/v1")  # Agent UI Skill 回提交口（聊天内嵌卡片）
+
+image_folder = os.path.join(os.getcwd(), "image")
+os.makedirs(image_folder, exist_ok=True)
+app.mount("/image", StaticFiles(directory=image_folder))
+
+@app.get("/")
+async def root():
+    return {
+        "status": "healthy",
+        "service": "LangGraph Travel Planner",
+        "version": "1.0.0",
+        "docs": "/docs"
+    }
+
+
+===== block 627 930e54038f36 lines 1-86 source 知行旅行助手-v2#630 =====
+"""第 12 章端到端冒烟：注册 → 闲聊 / 直查 / 快速通道规划三条 SSE → 读历史 → 读清单 → 异常路径 （需服务已启动，PG / Redis / MCP / 各密钥齐全；规划那一轮较慢，约 1 分钟） """
+import asyncio
+import json
+import uuid
+from datetime import date, timedelta
+from unittest.mock import patch
+
+import httpx
+
+from app.models.base import async_session_maker
+from app.services.chat_contract_service import run_chat_turn
+
+BASE = "http://localhost:8000/api/v1"
+FORM = f"""我想去杭州旅行 - 出发地：福州 - 出发日期：{(date.today() + timedelta(days=5)).isoformat()} - 旅行天数：3 天 - 出行人数：2 成人 0 儿童 - 人均预算：3000 元 - 交通方式：高铁 - 住宿偏好：经济型 - 餐饮偏好：本地小吃 - 全程交给 AI 自动确认，无需逐步询问"""
+
+def read_sse(c: httpx.Client, headers: dict, conv_id: str, content: str) -> list[dict]:
+    """客户端读帧：前端 fetch 读流那段代码的 Python 版（测试驱动，不是后端逻辑）"""
+    frames, buf = [], ""
+    with c.stream("POST", "/messages", headers=headers,
+                  json={"conversation_id": conv_id, "content": content}) as r:
+        for chunk in r.iter_text():
+            buf += chunk
+            while "\n\n" in buf:
+                frame, buf = buf.split("\n\n", 1)
+                if frame.startswith("data: "):
+                    frames.append(json.loads(frame[6:]))
+    return frames
+
+async def error_path(user_id: str, conv_id: str) -> list[dict]:
+    """场景 5：进程内 patch 路由让它抛错，验证 finally 里的 close"""
+    async with async_session_maker() as db:
+        with patch("app.services.chat_contract_service.chat_route",
+                   side_effect=RuntimeError("路由服务不可用")):
+            stream = await run_chat_turn(db, user_id, conv_id, "随便一条消息")
+            return [ev async for ev in stream]
+
+async def main():  # ✅ 改成 async def
+    sfx = uuid.uuid4().hex[:6]
+    with httpx.Client(base_url=BASE, timeout=300) as c:
+        body = c.post("/users/register", json={"username": f"smoke_{sfx}", "email": f"smoke_{sfx}@example.com",
+                                               "password": "secret123"}).json()
+        assert body["code"] == 200 and "data" in body, body
+
+        # 包裹契约 {code,msg,data} 生效
+        token, user_id = body["data"]["access_token"], body["data"]["user"]["id"]
+        H = {"Authorization": f"Bearer {token}"}
+        conv_ids = [c.post("/conversations", headers=H, json={}).json()["data"]["id"] for _ in range(4)]
+
+        # 场景 1：闲聊 → 不进状态机、不出清单
+        roles = [f["role"] for f in read_sse(c, H, conv_ids[0], "你好呀")]
+        assert "assistant" in roles and "itinerary_plans" not in roles
+        assert roles.count("done") == 1 and roles[-1] == "done", roles
+        print("✅ 场景 1 闲聊：帧序", roles[:3], "…", roles[-1])
+
+        # 场景 2：直查 → 代码渲染的真实班次表，不出清单
+        frames = read_sse(c, H, conv_ids[1], "查一下明天福州到深圳的高铁票")
+        texts = "".join(str(f["content"]) for f in frames if f["role"] == "assistant")
+        assert "itinerary_plans" not in [f["role"] for f in frames] and ("12306" in texts or "班次" in texts)
+        print("✅ 场景 2 直查：", texts.strip().splitlines()[0][:40], "…")
+
+        # 场景 3：自动确认表单 → 快速通道 → 清单帧 pending → success → done
+        frames = read_sse(c, H, conv_ids[2], FORM)
+        plans = [f["content"] for f in frames if f["role"] == "itinerary_plans"]
+        assert frames[-1]["role"] == "done" and plans and plans[0]["status"] == "pending", plans
+        plan_id = plans[-1]["id"] if plans[-1]["status"] == "success" else None
+        print("✅ 场景 3 规划：清单帧", [p["status"] for p in plans], "plan_id =", plan_id)
+
+        # 场景 4：读历史 + 读清单 → 双存 pattern 与清单读回
+        msgs = c.get("/messages", headers=H, params={"conversation_id": conv_ids[2]}).json()["data"]["messages"]
+        last = [m for m in msgs if m["role"] == "assistant"][-1]
+        assert {"original", "inference_steps"} <= set(last["extra_info"]), last["extra_info"].keys()
+        print(f"✅ 场景 4 历史：content {len(last['content'])} 字 / original {len(last['extra_info']['original'])} 字")
+        if plan_id:
+            plan = c.get(f"/itinerary-plans/{plan_id}", headers=H).json()["data"]
+            print("✅ 场景 4 清单：", plan["title"], "|", len(plan["itinerary_list"]), "天")
+
+    # 场景5：这里注意！async函数内部不要再 asyncio.run()，改用 await
+    frames = await error_path(user_id, conv_ids[3])
+    assert frames[-1]["role"] == "done" and frames[-1]["code"] == 500, frames
+    print("✅ 场景 5 异常：", [f["role"] for f in frames], "→ finally 里的 close 生效")
+    print("\n🎉 第 12 章端到端冒烟全部通过")
+
+if __name__ == "__main__":
+    import selectors
+    # 外层只启动一次事件循环，main现在是async协程
+    asyncio.run(main(), loop_factory=lambda: asyncio.SelectorEventLoop(selectors.SelectSelector()))
+
+
+===== block 628 0af1bbc27d04 lines 1-1 source 知行旅行助手-v2#631 =====
+uv add deepeval
+
+
+===== block 629 8165e8a7306c lines 1-49 source 知行旅行助手-v2#632 =====
+"""行程质量在线质检服务
+
+把 evaluation/ 里的评测核心（Qwen 裁判 + 三维度 GEval）收编为业务服务，
+供两处复用：
+1. generate_plan 落库成功后异步质检（本文件 run_quality_check）；
+2. evaluation/ 评测集（保持离线回归能力，依赖方向：评测 → 业务服务）。
+
+三维度标准与历史修复对齐：
+- 完整性（行程正文被精简规则挤没）
+- 需求匹配度（文化探索风格却推游乐园类问题）
+- 真实性（编造票价/景点）
+"""
+import asyncio
+
+from deepeval.metrics import GEval
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from langchain_community.chat_models.tongyi import ChatTongyi
+from langchain_core.messages import BaseMessage
+
+from app.config import settings
+from app.utils.logger import app_logger
+from deepeval.models import DeepEvalBaseLLM
+
+class QwenJudge(DeepEvalBaseLLM):
+    """用 Qwen 作为 GEval 裁判（项目无 OpenAI key，替代默认 gpt-4o）"""
+
+    def __init__(self, model_name: str | None = None):
+        self._model_name = model_name or settings.qwen_model_name
+        super().__init__()  # 基类在此自动 self.model = self.load_model()
+
+    def load_model(self) -> ChatTongyi:
+        # 裁判温度 0：打分稳定可复现
+        return ChatTongyi(
+            model=self._model_name,
+            temperature=0,  # ★ 裁判温度 0：打分可复现
+            dashscope_api_key=settings.dashscope_api_key,
+        )
+
+    def generate(self, prompt: str) -> str:
+        result: BaseMessage = self.model.invoke(prompt)
+        return result.content
+
+    async def a_generate(self, prompt: str) -> str:
+        result: BaseMessage = await self.model.ainvoke(prompt)
+        return result.content
+
+    def get_model_name(self) -> str:
+        return f"qwen-judge({self._model_name})"
+    # 注意：不可重写 model property——基类 __init__ 会 self.model = load_model()
+
+
+===== block 630 6613ae0e14e8 lines 1-17 source 知行旅行助手-v2#633 =====
+"""QwenJudge 适配器：只构造、不调用模型，看它报出的名字，以及"重写 model 属性"会怎样（需 .env 里的 DashScope 密钥，不发起调用）"""
+from app.services.quality_check_service import QwenJudge
+
+judge = QwenJudge()
+print("裁判名字 →", judge.get_model_name())
+print("底层客户端 →", type(judge.model).__name__, "| 由基类 __init__ 调 load_model() 赋值")
+
+class BadJudge(QwenJudge):
+    """反例：顺手把 model 写成只读属性"""
+    @property
+    def model(self):
+        return None
+
+try:
+    BadJudge()
+except AttributeError as exc:
+    print("重写 model 属性 → 构造时就报", type(exc).__name__)
+
+
+===== block 631 65f85d2c3b74 lines 1-3 source 知行旅行助手-v2#634 =====
+裁判名字 → qwen-judge(qwen-max)
+底层客户端 → ChatTongyi | 由基类 __init__ 调 load_model() 赋值
+重写 model 属性 → 构造时就报 AttributeError
+
+
+===== block 632 8756c3e30517 lines 1-12 source 知行旅行助手-v2#635 =====
+# 裁判上下文：INPUT=需求清单，ACTUAL_OUTPUT=行程正文
+_PARAMS = [LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT]
+
+# 完整性维度的"预算明细"判据按源料二选一
+# 背景：预算明细只存在于**流式 Markdown 正文**里（summarize_budget_tool / _build_budget 拼接），
+# 结构化清单 TravelItinerary 只有 title + itinerary_list，**没有预算字段**。
+# 离线评测喂的是 Markdown 正文（含预算表）→ 判据成立；
+# 在线质检喂的是 plan_to_text 生成的结构化清单（无预算）→ 判据恒不满足，会系统性扣分。
+# 因此改为显式开关，而不是让裁判自己去揣摩"这段文本里有没有预算"（确定性优先）。
+_BUDGET_CLAUSE = ("2) 正文末尾附有预算明细（交通/住宿/餐饮/门票等构成）。缺任一项即扣分。")  # ★ 离线：源料是含预算表的正文
+_BUDGET_CLAUSE_NA = ("《本条不适用》当前待判内容为结构化行程清单，本身不含预算明细，"  # ★ 在线：源料是没有预算字段的清单
+                     "因此不得因缺少预算而扣分；只需判断第 1 项（天数与上午/下午/晚上时段）是否完整。")

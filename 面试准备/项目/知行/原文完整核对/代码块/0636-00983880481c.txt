@@ -1,0 +1,18 @@
+# ============ 在线质检：落库后异步执行，结果仅日志告警不阻断主流程 ============
+
+# 后台任务引用集合：防止 create_task 的协程被垃圾回收
+_BG_TASKS: set = set()  # ★ 强引用后台任务
+
+def plan_to_text(plan_data: dict) -> str:
+    """结构化行程 JSON → 裁判可读的行程正文（与模型输出形态对齐）"""
+    lines: list[str] = [plan_data.get("title", "行程")]
+    for day in plan_data.get("itinerary_list", []):  # ★ 三层键名：itinerary_list → itinerary → scenic_spots_list
+        lines.append(f"\n{day.get('day', '')}：")
+        for item in day.get("itinerary", []):
+            spots = item.get("scenic_spots_list", [])
+            parts = [
+                f"{s.get('toponym', '')}（{str(s.get('toponym_desc', ''))[:60]}）"
+                for s in spots
+            ]
+            lines.append(f"{item.get('time', '')}：{'、'.join(parts)}")
+    return "\n".join(lines)

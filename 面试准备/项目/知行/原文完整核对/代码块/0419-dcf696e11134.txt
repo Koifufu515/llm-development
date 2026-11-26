@@ -1,0 +1,17 @@
+"""_normalize_itinerary_days 演示：只补空缺、只裁非法——裁掉越界天、补齐缺天和空时段、短条目补足、末日补返程（纯函数，无需密钥）"""
+from app.tools.state_transition import _normalize_itinerary_days
+
+messy = [   # 模型交上来的"不合格"结构：只写了第 1、3 天，还多写了第 5 天
+    {"day": 1, "city": "天津", "morning": ["五大道骑行，建议停留 2 小时，沿途拍照"], "noon": ["狗不理"],
+     "afternoon": [], "evening": ["海河夜游，人均约 80 元，晚上 7 点开船"], "tips": []},
+    {"day": 3, "morning": ["外滩漫步，建议 9 点前到达，人少好拍照"], "noon": [], "afternoon": [],
+     "evening": ["外滩看夜景，建议 19 点前到观景平台占位"]},
+    {"day": 5, "morning": ["这一天根本不存在"]},
+]
+days, fixes = _normalize_itinerary_days(messy, need=3, back_text="按已确认班次返程（G2 19:00）",
+                                        cities=["天津", "天津", "上海"])
+for d in days:
+    print(f"第 {d['day']} 天（{d.get('city')}）", {k: len(d[k]) for k in ("morning", "noon", "afternoon", "evening", "tips")})
+print("第 1 天中午 →", days[0]["noon"][0])
+print("第 3 天晚上 →", days[2]["evening"][-1])
+print("修了什么：", fixes)

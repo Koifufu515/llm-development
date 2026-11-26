@@ -1,0 +1,39 @@
+[32m14:04:31.804[0m | [1mINFO   [0m | [36m__main__[0m:[36mingest_file[0m:[36m74[0m | [1mtravel-guide/三亚.md: 内容未变，跳过整条管道[0m
+[32m14:04:31.806[0m | [1mINFO   [0m | [36m__main__[0m:[36mingest_file[0m:[36m74[0m | [1mtravel-guide/上海.md: 内容未变，跳过整条管道[0m
+[32m14:04:31.809[0m | [1mINFO   [0m | [36m__main__[0m:[36mingest_file[0m:[36m74[0m | [1mtravel-guide/丽江.md: 内容未变，跳过整条管道[0m
+[32m14:04:31.811[0m | [1mINFO   [0m | [36m__main__[0m:[36mingest_file[0m:[36m74[0m | [1mtravel-guide/乌鲁木齐.md: 内容未变，跳过整条管道[0m
+[32m14:04:31.813[0m | [1mINFO   [0m | [36m__main__[0m:[36mingest_file[0m:[36m74[0m | [1mtravel-guide/北京.md: 内容未变，跳过整条管道[0m
+[32m14:04:31.816[0m | [1mINFO   [0m | [36m__main__[0m:[36mingest_file[0m:[36m74[0m | [1mtravel-guide/南京.md: 内容未变，跳过整条管道[0m
+[32m14:04:31.818[0m | [1mINFO   [0m | [36m__main__[0m:[36mingest_file[0m:[36m74[0m | [1mtravel-guide/厦门.md: 内容未变，跳过整条管道[0m
+[32m14:04:31.824[0m | [1mINFO   [0m | [36m__main__[0m:[36mingest_file[0m:[36m74[0m | [1mtravel-guide/台北.md: 内容未变，跳过整条管道[0m
+[32m14:04:31.826[0m | [1mINFO   [0m | [36m__main__[0m:[36mingest_file[0m:[36m74[0m | [1mtravel-guide/哈尔滨.md: 内容未变，跳过整条管道[0m
+[32m14:04:31.829[0m | [1mINFO   [0m | [36m__main__[0m:[36mingest_file[0m:[36m74[0m | [1mtravel-guide/大理.md: 内容未变，跳过整条管道[0m
+[32m14:04:31.831[0m | [1mINFO   [0m | [36m__main__[0m:[36mingest_file[0m:[36m74[0m | [1mtravel-guide/天津.md: 内容未变，跳过整条管道[0m
+[32m14:04:31.834[0m | [1mINFO   [0m | [36m__main__[0m:[36mingest_file[0m:[36m74[0m | [1mtravel-guide/平遥.md: 内容未变，跳过整条管道[0m
+[32m14:04:31.837[0m | [1mINFO   [0m | [36m__main__[0m:[36mingest_file[0m:[36m74[0m | [1mtravel-guide/广州.md: 内容未变，跳过整条管道[0m
+[32m14:04:31.840[0m | [1mINFO   [0m | [36m__main__[0m:[36mingest_file[0m:[36m74[0m | [1mtravel-guide/张家界.md: 内容未变，跳过整条管道[0m
+[32m14:04:31.843[0m | [1mINFO   [0m | [36m__main__[0m:[36mingest_file[0m:[36m74[0m | [1mtravel-guide/成都.md: 内容未变，跳过整条管道[0m
+[32m14:04:31.845[0m | [1mINFO   [0m | [36m__main__[0m:[36mingest_file[0m:[36m74[0m | [1mtravel-guide/拉萨.md: 内容未变，跳过整条管道[0m
+[32m14:04:31.847[0m | [1mINFO   [0m | [36m__main__[0m:[36mingest_file[0m:[36m74[0m | [1mtravel-guide/敦煌.md: 内容未变，跳过整条管道[0m
+[32m14:04:31.850[0m | [1mINFO   [0m | [36m__main__[0m:[36mingest_file[0m:[36m74[0m | [1mtravel-guide/昆明.md: 内容未变，跳过整条管道[0m
+[32m14:04:31.855[0m | [1mINFO   [0m | [36m__main__[0m:[36mingest_file[0m:[36m74[0m | [1mtravel-guide/杭州.md: 内容未变，跳过整条管道[0m
+[32m14:04:31.857[0m | [1mINFO   [0m | [36m__main__[0m:[36mingest_file[0m:[36m74[0m | [1mtravel-guide/桂林.md: 内容未变，跳过整条管道[0m
+[32m14:04:31.861[0m | [1mINFO   [0m | [36m__main__[0m:[36mingest_file[0m:[36m74[0m | [1mtravel-guide/武汉.md: 内容未变，跳过整条管道[0m
+[32m14:04:31.867[0m | [1mINFO   [0m | [36m__main__[0m:[36mingest_file[0m:[36m74[0m | [1mtravel-guide/洛阳.md: 内容未变，跳过整条管道[0m
+[32m14:04:31.868[0m | [1mINFO   [0m | [36m__main__[0m:[36mingest_file[0m:[36m74[0m | [1mtravel-guide/苏州.md: 内容未变，跳过整条管道[0m
+[32m14:04:31.870[0m | [1mINFO   [0m | [36m__main__[0m:[36mingest_file[0m:[36m74[0m | [1mtravel-guide/西安.md: 内容未变，跳过整条管道[0m
+[32m14:04:31.873[0m | [1mINFO   [0m | [36m__main__[0m:[36mingest_file[0m:[36m74[0m | [1mtravel-guide/重庆.md: 内容未变，跳过整条管道[0m
+[32m14:04:31.876[0m | [1mINFO   [0m | [36m__main__[0m:[36mingest_file[0m:[36m74[0m | [1mtravel-guide/长沙.md: 内容未变，跳过整条管道[0m
+[32m14:04:31.879[0m | [1mINFO   [0m | [36m__main__[0m:[36mingest_file[0m:[36m74[0m | [1mtravel-guide/青岛.md: 内容未变，跳过整条管道[0m
+[32m14:04:31.881[0m | [1mINFO   [0m | [36m__main__[0m:[36mingest_file[0m:[36m74[0m | [1mtravel-guide/香港.md: 内容未变，跳过整条管道[0m
+[32m14:04:31.884[0m | [1mINFO   [0m | [36m__main__[0m:[36mingest_file[0m:[36m74[0m | [1mtravel-guide/黄山.md: 内容未变，跳过整条管道[0m
+[32m14:04:31.887[0m | [1mINFO   [0m | [36m__main__[0m:[36mingest_file[0m:[36m74[0m | [1mcorp-policy/差旅报销制度.md: 内容未变，跳过整条管道[0m
+[32m14:04:31.890[0m | [1mINFO   [0m | [36m__main__[0m:[36mingest_file[0m:[36m74[0m | [1minternal-notes/新人入职笔记.md: 内容未变，跳过整条管道[0m
+
+==================================================
+文件数        31
+整份跳过      31
+新向量化子块  0
+复用子块      0
+清掉孤儿块    0
+清掉旧版本块  0

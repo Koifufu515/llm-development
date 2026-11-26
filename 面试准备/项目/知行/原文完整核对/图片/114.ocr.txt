@@ -1,0 +1,163 @@
+_stream_agent 流式与清洗• 边收边洗，洗出问题就撤回重推
+_stream_agent 用 astream_events 逐token收模型输出，每轮结束先清洗再折叠，回合末去重，最后从四个出口里挑一个把文本推给前端。本组 14
+个函数里，13个只被 _stream_agent 一条链路用到。
+一轮文本走过的五站 astream_events 推来的每个 token 都按这个顺序处理
+收token
+总清洗
+折叠重述
+回合未去重
+选出口
+云沙以件月
+改收尾句、删泄漏句
+删指令块、假承诺
+换说法重讲的段落
+重复的预告语
+同文或包含关系
+苗史元笠的一勿
+直接推/补推
+撤回重推
+_15_protocoL_Leak
+_scrub_Leak_text
+toLd restatements
+dedupe texts
+第2 站内部顺序
+_StrlP_Leak_blocks _strlP_Claim_sentences
+_rewrite_closing_invite
+1s eak sentence
+（逐句）
+回合末的四个出口 只有非缓冲步骤走这里；buffer_al 时洗完直接返回，由 execute.turn收尾统一推
+丷整块补推
+～撤回重推
+丷保留已推
+～撤回重推
+首轮总是先缓冲，只有一轮输出时就没推过字：把
+leaky 为True：先推 assistant_reset 清屏，
+首轮没有可保留的正文：已推的内容原样留着，不
+首轮正文被缓冲没推：reset 后推完整拼接版。
+全文一次推出去。
+再推清洗后的全文。
+回退。
+L689-782
+_chunk_has_tool_call Fn
+-is_protocol_leak mn
+L502-504
+看这一块流式数据里有没有带工具调用，用来给这一轮打上
+认出模型吐出来的内部协议碎片（*FUNCTION*之类），整
+“工具轮”标记。
+块丢掉、不让用户看见。
+何时调用 规划分支每回合一次；交通、住宿等6个步骤开
+buffer_all 整块缓冲。
+恒时调用
+execute_turn L115/o
+何阳调庄
+每收全一个市又本的 token.
+清洗后全文返回 execute_turn；token与
+结果交给
+谁来调用
+_Stream_agent LILlo
+assistant_reset 帧推进 Eventstream。
+是不是工具旁白。
+结果交给
+市心自， rue 新目苦 Continue， 必Ttoken 小州线1
+清洗层 6 个函数 删东西的地方：只删泄漏与假话，不碰正常正文
+1592≥6⑨7
+_strip_Leak_blocks （fn
+-531≥553
+_is_trace_block_start ［fn
+L525-529
+整段删掉“##注意事项”开头、或带工具参数痕迹的那一块，
+判断某一行是不是泄漏块的开头：注意事项标题、_tool、
+直到遇到正常正文行才停。
+［｛这类痕迹。
+何时调用
+合末的残留片段。
+谁来调用
+_stream_agent L726/ L739。
+何时请乐
+每次总清洗的第一步。
+何时调用
+决级道流逐行干确的。
+洗后文本交给 _fold_restatements；和原文不一样就
+诓米佶片
+谁来调用
+_strip_Leak_blocks L536 / L543。
+把leaky 置为 True。
+结果交给
+删块后的文本交给 _strip_claim_sentences。
+结果交给
+布尔值，决定要不要进入“跳过模式”。
+_strip_claim_sentences
+1 571-577
+-rewrite_Closing_invite mn
+一 588_596
+_is_leak_sentence （fn
+1 555-560
+删掉模型自称“行程清单已生成、可在下方查看”的句子；清
+把“请确认以上行程是否符合需求”这种卡住流程的反问，换
+判断一句话是不是把系统提示或工具说明原样念出来了，比如
+单生没生成，只认清单帧。
+成“如需调整，直接告诉我即可”。
+“以如下格式输出”“我将调用工具”。
+何时调用 总清洗第二步。
+何时调用
+总清洗第三步。
+何时调用
+品道洗弟四立，你口判断。
+诓架倜用
+_scrub_leak_text L601。
+下架调用
+_scrub_leak_text L603。
+谁来调用
+_scrub_ leak_text L606。
+结果交给
+文本交给 _rewrite_Closing_invite。
+结果交给
+文本分句后，逐句交给 _is_leak_sentence。
+结果交给
+布尔值：True 的句子被丢弃。
+去重层
+5 个函数 同一回合多轮工具往返，模型容易把同一段话说两三遍
+_fold_restatements
+fn
+L657-686
+-norm_para Ltn
+_641-647
+_is_prose_para Fn
+_644-647
+把“换个说法又讲一遍”的段落折叠掉；“请稍等、正在为您”
+去掉段落里所有空白，得到一份用来比较的“指纹”。
+判断是不是普通散文段：以-|*＃或数字开头的列表、表格、
+这类预告语一回合只留一次。表格和列表不动。
+标题都不算。
+何时调用 每轮清洗之后紧接着做，跨轮共享已见过的段落。
+何时调用
+折叠时，每个段落比较之前。
+何时调用
+唯米侷用
+_stream_agent L727/ L740。
+堆米侷用
+_fold_restatements L665。
+谁来调用
+结果交给 折叠后的文本存入rounds，等回合末去重。
+结果交给
+指纹字符串，用于判断长度和相似度。
+结果交给
+-common_len fn
+L649-652
+-dedupe_texts mn
+算两段文字最长的公共连续片段有多长，≥14字就当成重述。
+（≥200字），只留更晚更完整的那份。
+何时调用
+折叠时，新段落和每个已见段落各比一次。
+何时调用
+所有轮结束后做一次。
+谁来调用
+_toLd_restatements L610.
+谁来调用
+_stream_agent L747。
+结果父行
+举效、与咸自14比珍。
+结罘交纪
+去重后的rounds拼成最终文本，进入四个出口判断。
+边推边洗的代价：token 已经推给前端了，事后才发现这一轮有泄漏或重述，只能靠 assistant_reset 撤回重推。所以交通、住宿等6个步骤干脆开 buffer_aL1—整回合不逐字推，洗完再一次性
+推出，前端就不会闪。

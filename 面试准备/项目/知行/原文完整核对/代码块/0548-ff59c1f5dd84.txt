@@ -1,0 +1,36 @@
+"""编排总线跑一轮（执行器还是桩）：看帧序、看落库、看会话标题（需 PG + DashScope 密钥）"""
+import asyncio
+import uuid
+
+from sqlalchemy import select
+
+from app.models.base import async_session_maker
+from app.models.message import Message
+from app.models.user import User
+from app.services.chat_contract_service import run_chat_turn
+from app.services.conversation_service import create_conversation
+from app.utils.security import hash_password
+
+async def main():
+    async with async_session_maker() as db:
+        sfx = uuid.uuid4().hex[:6]                       # 造一个测试用户 + 会话
+        user = User(username=f"bus_{sfx}", email=f"bus_{sfx}@example.com",
+                    password_hash=hash_password("secret123"), preferences={})
+        db.add(user)
+        await db.commit()
+        conv = await create_conversation(db, user.id)
+
+        stream = await run_chat_turn(db, str(user.id), str(conv.id), "你好呀")
+        async for ev in stream:
+            print(ev)                                    # 执行器还是桩：assistant 回显 → done
+        rows = (await db.execute(
+            select(Message.role, Message.content, Message.extra_info)
+            .where(Message.conversation_id == conv.id).order_by(Message.created_at)
+        )).all()
+        for r in rows:
+            print(f"落库 {r.role:9s} | {r.content[:24]:24s} | extra_info 键：{list((r.extra_info or {}).keys())}")
+        await db.refresh(conv)
+        print("会话标题：", conv.title)                     # 首条消息的前 30 字自动成了标题
+
+if __name__ == "__main__":
+    asyncio.run(main())

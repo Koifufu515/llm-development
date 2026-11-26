@@ -1,0 +1,1 @@
+uv run python -c "from quarry.infra.logging import get_logger; get_logger().info('日志已就绪')"

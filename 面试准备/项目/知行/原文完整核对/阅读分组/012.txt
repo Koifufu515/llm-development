@@ -1,0 +1,575 @@
+
+
+===== block 84 fe73eab75942 lines 1-124 source 知行旅行助手-v2#84 =====
+"""
+第 06 章冒烟测试：MCP 集成
+
+用法：
+    uv run python scripts/test_ch06_mcp.py
+
+前置：
+- .env 里配好 AMAP_API_KEY / TAVILY_API_KEY（其他外部服务可选）
+"""
+# Windows 事件循环兼容
+import sys
+import asyncio
+import selectors
+
+if sys.platform == "win32":
+    selector = selectors.SelectSelector()
+    loop = asyncio.SelectorEventLoop(selector)
+    asyncio.set_event_loop(loop)
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
+
+from app.core.checkpointer import checkpointer_lifespan
+from app.core.store import store_lifespan
+from app.mcp_core.client import MCPClientManager, get_mcp_client
+from app.tools.mcp_tools import get_weather_tools, get_search_tools
+from app.agents.handoffs.travel_agent import create_travel_agent
+
+def _short(text, n=250):
+    if not isinstance(text, str):
+        text = str(text)
+    return text if len(text) <= n else text[:n] + "..."
+
+async def scenario_1_direct_mcp():
+    """场景 1：直接调 MCP 工具"""
+    print("\n" + "=" * 60)
+    print(" 场景 1：直接调用 MCP 工具")
+    print("=" * 60)
+
+    # 加载 MCP
+    await get_mcp_client()
+
+    # ---- 直接调天气 ----
+    weather_tools = await get_weather_tools()
+    if not weather_tools:
+        print("  ⚠️ 天气工具未加载（可能 AMAP_API_KEY 未配置）")
+    else:
+        tool = weather_tools[0]
+        print(f"\n  📍 调用 {tool.name}(city='武汉')")
+        result = await tool.ainvoke({"city": "武汉"})
+        print(f"  返回: {_short(result, 400)}")
+
+    # ---- 直接调搜索 ----
+    search_tools = await get_search_tools()
+    if not search_tools:
+        print("\n  ⚠️ 搜索工具未加载（可能 TAVILY_API_KEY 未配置）")
+    else:
+        tool = search_tools[0]
+        print(f"\n  📍 调用 {tool.name}(query='武汉黄鹤楼', max_results=3)")
+        result = await tool.ainvoke({"query": "武汉黄鹤楼", "max_results": 3})
+        print(f"  返回: {_short(result, 400)}")
+
+async def scenario_2_agent_integration():
+    """场景 2：Agent 主动调 MCP 工具"""
+    print("\n" + "=" * 60)
+    print(" 场景 2：Agent 集成 MCP")
+    print("=" * 60)
+
+    agent = await create_travel_agent()
+
+    config = {
+        "configurable": {
+            "thread_id": "ch06_mcp_test",
+            "user_id": "ch06_user_001",
+        }
+    }
+
+    turns = [
+        # 需求收集：Agent 应当自然完成，暂不需要 MCP
+        "从北京 10 月 15 号出发，去武汉玩 3 天，两个人，预算 4000 一人，喜欢文化和美食。",
+        "确认。",
+        # 目的地推荐：**期待 Agent 调 get_weather_forecast 查武汉天气**
+        "武汉这几天天气怎么样？合不合适去？",
+    ]
+
+    for i, text in enumerate(turns, start=1):
+        print("\n" + "─" * 60)
+        print(f"[第 {i} 轮]")
+        print(f"  用户: {text}")
+
+        input_state = {"messages": [HumanMessage(content=text)]}
+        try:
+            result = await agent.ainvoke(input_state, config=config)
+        except Exception as e:
+            print(f"  ❌ 本轮出错: {type(e).__name__}: {e}")
+            break
+
+        last_msg = result["messages"][-1]
+        if isinstance(last_msg, AIMessage):
+            print(f"  Agent: {_short(last_msg.content)}")
+            for tc in (last_msg.tool_calls or []):
+                print(f"    🔧 {tc['name']}")
+        elif isinstance(last_msg, ToolMessage):
+            print(f"  🛠️  {_short(last_msg.content)}")
+
+        cur_step = result.get("current_step")
+        print(f"  📌 current_step = {cur_step}")
+
+async def main():
+    print("╔" + "═" * 58 + "╗")
+    print("║" + " 第 06 章 · MCP 集成 冒烟测试".center(58) + "║")
+    print("╚" + "═" * 58 + "╝")
+
+    async with checkpointer_lifespan():
+        async with store_lifespan():
+            await scenario_1_direct_mcp()
+            await scenario_2_agent_integration()
+
+    print("\n" + "🎉" * 20)
+    print("  第 06 章 冒烟完成！")
+    print("🎉" * 20 + "\n")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+
+===== block 85 ae849ba4f7e6 lines 1-2 source 知行旅行助手-v2#85 =====
+⏱️ MCP 工具 get_weather_forecast 开始调用
+⏱️ MCP 工具 get_weather_forecast 完成，耗时 0.85s
+
+
+===== block 86 7a52a0533997 lines 1-1 source 知行旅行助手-v2#86 =====
+✅ MCP 工具隔离加载完成: 18 个（6/9 服务在线）
+
+
+===== block 87 1ef9a2512127 lines 1-1 source 知行旅行助手-v2#87 =====
+# rag 包占位
+
+
+===== block 88 c703fc8050b1 lines 1-59 source 知行旅行助手-v2#88 =====
+"""
+文档加载与预处理
+"""
+from pathlib import Path
+from typing import List
+
+from langchain_community.document_loaders import DirectoryLoader, TextLoader
+from langchain_core.documents import Document
+
+from app.utils.logger import app_logger
+
+class DocumentManager:
+    """
+    文档管理器
+    统一从 data/documents/destinations/ 下加载 .md 目的地攻略
+    """
+
+    def __init__(self, base_dir: str = None):
+        if base_dir is None:
+            # document_loader.py 在 app/rag 里，向上找项目根
+            project_root = Path(__file__).parent.parent.parent
+            self.base_dir = project_root / "data" / "documents"
+        else:
+            self.base_dir = Path(base_dir)
+
+    def load_destination_documents(self) -> List[Document]:
+        """加载所有目的地文档
+
+        Returns:
+            LangChain Document 列表；每个 Document 带 metadata:
+              - source: 文件绝对路径（LangChain 自动填）
+              - source_type: "destination_guide"
+              - category: "destinations"
+        """
+        destinations_dir = self.base_dir / "destinations"
+
+        if not destinations_dir.exists():
+            app_logger.warning(f"目的地文档目录不存在: {destinations_dir}")
+            return []
+
+        loader = DirectoryLoader(
+            str(destinations_dir),
+            glob="**/*.md",
+            loader_cls=TextLoader,
+            loader_kwargs={
+                "encoding": "utf-8",
+                "autodetect_encoding": False,
+            },
+        )
+
+        documents = loader.load()
+        app_logger.info(f"加载了 {len(documents)} 个目的地文档")
+
+        # 补一层业务元数据，方便后续按类别过滤
+        for doc in documents:
+            doc.metadata["source_type"] = "destination_guide"
+            doc.metadata["category"] = "destinations"
+
+        return documents
+
+
+===== block 89 6f2836187b81 lines 1-120 source 知行旅行助手-v2#89 =====
+"""
+父子分块：Advanced RAG 的第一层加强
+"""
+from typing import List, Tuple, Dict
+
+from langchain_core.documents import Document
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+from app.utils.logger import app_logger
+
+class AdvancedParentDocumentSplitter:
+    """
+    高级父子文档切分器
+
+    职责：
+      - 一份文档切两次（父 1000 字 / 子 200 字）
+      - 维护 child_id → parent_id 映射
+      - 检索到子块后能一键取回对应父块作为上下文
+    """
+
+    def __init__(
+            self,
+            parent_chunk_size: int = 1000,
+            parent_chunk_overlap: int = 200,
+            child_chunk_size: int = 200,
+            child_chunk_overlap: int = 50,
+    ):
+        # 分隔符按中文习惯：段落 > 换行 > 句号 > 逗号
+        separators = ["\n\n", "\n", "。", "，", " ", ""]
+
+        self.parent_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=parent_chunk_size,
+            chunk_overlap=parent_chunk_overlap,
+            separators=separators,
+        )
+        self.child_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=child_chunk_size,
+            chunk_overlap=child_chunk_overlap,
+            separators=separators,
+        )
+
+        # 父子映射表（内存中）
+        self.parent_child_map: Dict[str, str] = {}   # child_id → parent_id
+        self.parent_docs: Dict[str, Document] = {}    # parent_id → 父块
+
+    def split_documents(
+            self,
+            documents: List[Document]
+    ) -> Tuple[List[Document], List[Document]]:
+        """
+        切分文档为父块和子块
+
+        Args:
+            documents: 原始 Document 列表（比如 5 份目的地攻略）
+
+        Returns:
+            (parent_docs, child_docs)
+            child_docs 是要送去做 embedding 的
+            parent_docs 只是"顺便返回"，方便调用方查看
+        """
+        parent_docs: List[Document] = []
+        child_docs: List[Document] = []
+
+        for doc in documents:
+            # ---------- 第 1 步：切成父块 ----------
+            parent_chunks = self.parent_splitter.split_documents([doc])
+
+            # ---------- 第 2 步：给每个父块打 id + 存表 ----------
+            for i, parent_chunk in enumerate(parent_chunks):
+                source_file = doc.metadata.get("source", "unknown")
+                parent_id = f"{source_file}__parent_{i}"
+
+                parent_chunk.metadata["parent_id"] = parent_id
+                parent_chunk.metadata["chunk_type"] = "parent"
+
+                parent_docs.append(parent_chunk)
+                self.parent_docs[parent_id] = parent_chunk
+
+                # ---------- 第 3 步：切当前父块为子块 ----------
+                child_chunks = self.child_splitter.split_documents([parent_chunk])
+
+                for j, child_chunk in enumerate(child_chunks):
+                    child_id = f"{parent_id}__child_{j}"
+                    child_chunk.metadata["child_id"] = child_id
+                    child_chunk.metadata["parent_id"] = parent_id
+                    child_chunk.metadata["chunk_type"] = "child"
+
+                    child_docs.append(child_chunk)
+                    self.parent_child_map[child_id] = parent_id
+
+        app_logger.info(
+            f"切分完成: {len(parent_docs)} 个父块 / {len(child_docs)} 个子块 "
+            f"(平均每父块 {len(child_docs) / max(len(parent_docs), 1):.1f} 子块)"
+        )
+        return parent_docs, child_docs
+
+    def get_parent_context(self, child_docs: List[Document]) -> List[Document]:
+        """
+        根据检索到的子块列表，映射到对应的父块（去重后返回）
+
+        典型用法：
+            child_hits = retriever.retrieve(query)         # 拿到子块
+            parents = splitter.get_parent_context(child_hits)  # 换成完整上下文
+            → 喂给 LLM
+        """
+        app_logger.info(f"子块映射到父块: {len(child_docs)} 个子块")
+
+        seen_parent_ids = set()
+        parent_contexts: List[Document] = []
+
+        for child in child_docs:
+            parent_id = child.metadata.get("parent_id")
+            if parent_id and parent_id not in seen_parent_ids:
+                seen_parent_ids.add(parent_id)
+                parent = self.parent_docs.get(parent_id)
+                if parent:
+                    parent_contexts.append(parent)
+
+        app_logger.info(f"映射到 {len(parent_contexts)} 个父块作为上下文")
+        return parent_contexts
+
+
+===== block 90 e5fae1c0dd27 lines 1-1 source 知行旅行助手-v2#90 =====
+separators = ["\n\n", "\n", "。", "，", " ", ""]
+
+
+===== block 91 20e893a000f1 lines 1-71 source 知行旅行助手-v2#91 =====
+"""
+向量数据库管理
+使用 Chroma + 通义 text-embedding-v2
+"""
+from pathlib import Path
+from typing import List
+
+from langchain_core.documents import Document
+from langchain_chroma import Chroma
+from langchain_community.embeddings import DashScopeEmbeddings
+
+from app.config import settings
+from app.utils.logger import app_logger
+
+class VectorStoreManager:
+    """向量数据库管理器"""
+
+    def __init__(
+            self,
+            persist_directory: str = "data/vectorstore",
+            collection_name: str = "travel_guides",
+    ):
+        self.persist_directory = Path(persist_directory)
+        self.collection_name = collection_name
+
+        # 创建目录
+        self.persist_directory.mkdir(parents=True, exist_ok=True)
+
+        # Embedding 模型（通义 text-embedding-v2，1536 维）
+        self.embeddings = DashScopeEmbeddings(
+            model="text-embedding-v2",
+            dashscope_api_key=settings.dashscope_api_key,
+        )
+
+        self.vectorstore: Chroma | None = None
+
+    def create_vectorstore(self, documents: List[Document]) -> Chroma:
+        """
+        首次建库：把文档全部 embedding 后写入 Chroma
+
+        Args:
+            documents: 通常传子块列表（父块不做检索）
+        """
+        app_logger.info(f"创建向量数据库（{len(documents)} 个文档）...")
+
+        self.vectorstore = Chroma.from_documents(
+            documents=documents,
+            embedding=self.embeddings,
+            persist_directory=str(self.persist_directory),
+            collection_name=self.collection_name,
+        )
+
+        app_logger.info("✅ 向量数据库创建完成")
+        return self.vectorstore
+
+    def load_vectorstore(self) -> Chroma:
+        """
+        加载已有向量数据库（不重新 embedding）
+
+        运行时用这个——建库跑一次就够了
+        """
+        app_logger.info("加载向量数据库...")
+
+        self.vectorstore = Chroma(
+            persist_directory=str(self.persist_directory),
+            embedding_function=self.embeddings,
+            collection_name=self.collection_name,
+        )
+
+        app_logger.info("✅ 向量数据库加载完成")
+        return self.vectorstore
+
+
+===== block 92 49548ecb4ee7 lines 1-2 source 知行旅行助手-v2#92 =====
+RRF_score(d) = Σ 1 / (k + rank_r(d))
+                r
+
+
+===== block 93 6dc8b384298e lines 1-4 source 知行旅行助手-v2#93 =====
+RRF_score(d) = 0.4 × 1/(60 + 2) + 0.6 × 1/(60 + 5)
+             = 0.4 × 0.01613 + 0.6 × 0.01538
+             = 0.00645 + 0.00923
+             = 0.01568
+
+
+===== block 94 7070deae9e96 lines 1-157 source 知行旅行助手-v2#94 =====
+"""
+混合检索器：BM25 + Dense + RRF 融合
+"""
+from collections import defaultdict
+from typing import List, Tuple
+
+from langchain_core.documents import Document
+from langchain_chroma import Chroma
+from langchain_community.retrievers import BM25Retriever
+
+from app.utils.logger import app_logger
+
+class AdvancedHybridRetriever:
+    """
+    高级混合检索器
+
+    职责：
+      - 同一份查询同时走 BM25 和 Dense
+      - RRF 融合两路结果
+      - 支持多查询变体（配合下一节的查询优化）
+      - 内置内存级 LRU 缓存（可关）
+    """
+
+    def __init__(
+            self,
+            vectorstore: Chroma,
+            documents: List[Document],       # 子块列表（做 BM25 索引用）
+            k: int = 5,                       # 最终返回前 K 个
+            bm25_weight: float = 0.4,
+            dense_weight: float = 0.6,
+            use_cache: bool = True,
+    ):
+        self.vectorstore = vectorstore
+        self.documents = documents
+        self.k = k
+        self.bm25_weight = bm25_weight
+        self.dense_weight = dense_weight
+        self.use_cache = use_cache
+
+        # 内存缓存（进程内）
+        self._cache: dict[str, List[Document]] = {} if use_cache else None
+
+        # 初始化 BM25 索引
+        self._init_bm25()
+
+    def _init_bm25(self):
+        """初始化 BM25 索引（把子块 tokens 建成倒排索引）"""
+        app_logger.info("🔧 初始化 BM25 索引...")
+        self.bm25_retriever = BM25Retriever.from_documents(self.documents)
+        # BM25 各自先取更多候选，融合后再截到 self.k
+        self.bm25_retriever.k = self.k * 2
+        app_logger.info("✅ BM25 索引初始化完成")
+
+    # ============== 单路检索 ==============
+
+    def _bm25_search(self, query: str, k: int) -> List[Document]:
+        """BM25 检索（关键词）"""
+        return self.bm25_retriever.invoke(query)[:k]
+
+    def _dense_search(self, query: str, k: int) -> List[Tuple[Document, float]]:
+        """Dense 检索（向量相似度）"""
+        results = self.vectorstore.similarity_search_with_score(query, k=k)
+        # Chroma 默认返回 L2 距离（越小越相似），转成相似度（越大越相似）
+        # 转换公式：sim = 1 / (1 + distance)，把 [0, ∞) 映射到 (0, 1]
+        return [(doc, 1 / (1 + distance)) for doc, distance in results]
+
+    # ============== RRF 融合 ==============
+
+    def _rrf_fusion(
+            self,
+            bm25_results: List[Document],
+            dense_results: List[Tuple[Document, float]],
+            k: int = 60,
+    ) -> List[Document]:
+        """
+        倒数排名融合
+
+        公式：RRF_score(d) = Σ weight_r * 1/(k + rank_r(d))
+        """
+        scores: dict[int, float] = defaultdict(float)
+        doc_map: dict[int, Document] = {}
+
+        # 用文档前 200 字的 hash 做去重键（防止相同内容不同对象）
+        def _doc_key(doc: Document) -> int:
+            return hash(doc.page_content[:200])
+
+        # BM25 贡献
+        for rank, doc in enumerate(bm25_results, start=1):
+            key = _doc_key(doc)
+            doc_map[key] = doc
+            scores[key] += self.bm25_weight * (1 / (k + rank))
+
+        # Dense 贡献
+        for rank, (doc, _) in enumerate(dense_results, start=1):
+            key = _doc_key(doc)
+            doc_map[key] = doc
+            scores[key] += self.dense_weight * (1 / (k + rank))
+
+        # 按融合分数排序
+        sorted_ = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+        return [doc_map[key] for key, _ in sorted_[:self.k]]
+
+    # ============== 对外入口 ==============
+
+    def retrieve(self, query: str, queries: List[str] = None) -> List[Document]:
+        """
+        混合检索主入口
+
+        Args:
+            query: 原始查询（用来查缓存 key）
+            queries: 可选的查询变体列表（Multi-Query 生成的多个改写）
+                     不传就只用 query 一个
+
+        Returns:
+            top-k 子块列表
+        """
+        if self.use_cache and query in self._cache:
+            app_logger.info("命中内存缓存")
+            return self._cache[query]
+
+        if queries and len(queries) > 1:
+            # ---------- 多变体路径 ----------
+            app_logger.info(f"使用 {len(queries)} 个查询变体进行检索")
+            all_results: List[Document] = []
+            for q in queries:
+                all_results.extend(self._single_retrieve(q))
+
+            # 去重（同一子块只保留第一次出现的次序）
+            seen = set()
+            unique: List[Document] = []
+            for doc in all_results:
+                key = hash(doc.page_content[:200])
+                if key not in seen:
+                    seen.add(key)
+                    unique.append(doc)
+            final_results = unique[:self.k]
+        else:
+            # ---------- 单查询路径 ----------
+            final_results = self._single_retrieve(query)
+
+        if self.use_cache:
+            self._cache[query] = final_results
+
+        return final_results
+
+    def _single_retrieve(self, query: str) -> List[Document]:
+        """单条查询：BM25 + Dense + RRF"""
+        # 各自先取 2*k 个候选（宁多勿少）
+        bm25_results = self._bm25_search(query, k=self.k * 2)
+        dense_results = self._dense_search(query, k=self.k * 2)
+        app_logger.debug(
+            f"BM25={len(bm25_results)} / Dense={len(dense_results)}"
+        )
+
+        fused = self._rrf_fusion(bm25_results, dense_results)
+        app_logger.info(f"混合检索完成，返回 {len(fused)} 个结果")
+        return fused

@@ -1,0 +1,1 @@
+AND acl_labels && $2::text[]

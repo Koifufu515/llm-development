@@ -1,0 +1,8 @@
+conversation：外键 ['user_id → users.id（删除时 CASCADE）']
+    建了索引的列 ['user_id', 'status']，唯一列 []
+message：外键 ['conversation_id → conversation.id（删除时 CASCADE）']
+    建了索引的列 ['conversation_id', 'role', 'created_at']，唯一列 []
+users：外键 无
+    建了索引的列 ['username', 'email']，唯一列 ['username', 'email']
+User 主键类型： UUID
+conv.messages 自带排序： ['message.created_at']

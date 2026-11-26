@@ -1,0 +1,847 @@
+{
+  "scope": "独立内存事实/策略平面，真实Qwen与Embedding/重排；脚本反馈/回放样例，不是线上采纳率或真实用户规模",
+  "cycles": [
+    {
+      "cycle_id": "loop_cycle_493047978fed",
+      "started_at": "2026-11-09T08:17:38.739416+00:00",
+      "observed": 2,
+      "bad_cases": 1,
+      "signals": {
+        "correction": 1,
+        "verifier_pass": 1
+      },
+      "reflect": {
+        "root_causes": {
+          "retrieval": 0,
+          "intent": 0,
+          "generation": 1,
+          "knowledge_gap": 0
+        },
+        "suggestions": [
+          {
+            "type": "rule",
+            "title": "回答必须使用【结论】【制度依据】【注意事",
+            "detail": "回答必须使用【结论】【制度依据】【注意事项】三个标题；只回答原文支持的内容，引用外层来源编号，不能用表格序号作为引用。",
+            "dept_id": "dept_hqaq"
+          },
+          {
+            "type": "generation",
+            "title": "禁止性回答需明确依据层级与适用条件",
+            "detail": "当前回答堆砌多条相似表述但未区分制度效力（如校规 vs 安全提示）、未说明‘强降雨’的判定标准（如雨量等级/气象预警级别），也未提供替代方案（如步行路线建议、临时停车指引）。应结构化输出：① 是否允许（明确结论）；② 依据来源及性质（如《XX校园交通管理办法》第X条 或 学生处安全提示）；③ 判定条件（例：气象台发布暴雨黄色及以上预警时生效）；④ 建议行动（如改乘摆渡车、使用雨具步行至遮雨连廊）"
+          }
+        ],
+        "knowledge_gaps": []
+      },
+      "knowledge_workorders": [],
+      "adaptations": [
+        {
+          "type": "rule",
+          "id": "rule_3962c5c91506429a99afc93c4be32ad3",
+          "dept_id": "dept_hqaq",
+          "auto_activated": false
+        }
+      ],
+      "deployed": {
+        "skills": 0,
+        "hooks": 0,
+        "rules": 0,
+        "rolled_back": 0
+      },
+      "completed_at": "2026-11-09T08:17:45.629773+00:00",
+      "duration_ms": 6890,
+      "before": {
+        "skills": 0,
+        "active_skills": 0,
+        "pending_skills": 0,
+        "hooks": 1,
+        "rules": 2,
+        "experiments": 0,
+        "strategy_versions": 0
+      },
+      "after": {
+        "skills": 0,
+        "active_skills": 0,
+        "pending_skills": 0,
+        "hooks": 1,
+        "rules": 3,
+        "experiments": 0,
+        "strategy_versions": 0
+      },
+      "changes": {
+        "skills": 0,
+        "active_skills": 0,
+        "pending_skills": 0,
+        "hooks": 0,
+        "rules": 1,
+        "experiments": 0,
+        "strategy_versions": 0
+      },
+      "summary": "已分析 2 条反馈（1 个 bad case），生成 1 个候选，发布 0 个策略产物。",
+      "next_action": "检查下方新生成的 Skill/Rule/Hook；人在环中阶段需要管理员审核后才会生效。"
+    },
+    {
+      "cycle_id": "loop_cycle_6a6b1690e461",
+      "started_at": "2026-11-09T08:17:52.269681+00:00",
+      "observed": 21,
+      "bad_cases": 20,
+      "signals": {
+        "correction": 20,
+        "verifier_pass": 1
+      },
+      "reflect": {
+        "root_causes": {
+          "retrieval": 0,
+          "intent": 0,
+          "generation": 1,
+          "knowledge_gap": 0
+        },
+        "suggestions": [
+          {
+            "type": "rule",
+            "title": "引用必须对应检索证据的外层来源编号，不能",
+            "detail": "引用必须对应检索证据的外层来源编号，不能使用表格行序号。",
+            "dept_id": "dept_zfxy"
+          },
+          {
+            "type": "rule",
+            "title": "禁止输出脚本注入式占位符",
+            "detail": "在生成阶段强制拦截含'[来源\\d+]'格式的非法模板字符串，替换为标准兜底响应（如'暂未查到明确要求，请联系学院教务老师确认'）；增加LLM输出后处理规则，对疑似调试/注入痕迹做正则过滤与重写。"
+          },
+          {
+            "type": "hook",
+            "title": "添加生成可信度熔断钩子",
+            "detail": "当检索结果为空或置信度低于阈值时，触发生成熔断：跳过自由生成，直接返回结构化兜底话术，并标注'依据未匹配'；避免将检索失败转化为幻觉输出。"
+          },
+          {
+            "type": "skill",
+            "title": "增强问题要素解析与制度条款映射能力",
+            "detail": "训练模型显式识别'专业方向（电子信息/机械）'+'流程节点（开题）'+'材料类型（纸质报告）'+'数量要求'四元组；若任一要素无对应制度条目，则拒绝生成数字答案，转为引导性响应。"
+          }
+        ],
+        "knowledge_gaps": []
+      },
+      "knowledge_workorders": [],
+      "adaptations": [
+        {
+          "type": "skill",
+          "id": "skill_0d18af24341f4f12b58c857afa097324",
+          "name": "开题材料要求查询",
+          "auto_activated": false
+        },
+        {
+          "type": "rule",
+          "id": "rule_12e4a0814b5f4eeb9bee2dc56342165a",
+          "dept_id": "dept_zfxy",
+          "auto_activated": false
+        },
+        {
+          "type": "rule",
+          "id": "rule_61e026d1f78d4e33b5b23cb260d27c65",
+          "dept_id": "",
+          "auto_activated": false
+        },
+        {
+          "type": "hook",
+          "id": "hook_be7bd327b9614db49cffc158b910b685",
+          "auto_activated": false
+        }
+      ],
+      "deployed": {
+        "skills": 0,
+        "hooks": 0,
+        "rules": 0,
+        "rolled_back": 0
+      },
+      "completed_at": "2026-11-09T08:21:00.082926+00:00",
+      "duration_ms": 187813,
+      "before": {
+        "skills": 0,
+        "active_skills": 0,
+        "pending_skills": 0,
+        "hooks": 1,
+        "rules": 3,
+        "experiments": 0,
+        "strategy_versions": 0
+      },
+      "after": {
+        "skills": 1,
+        "active_skills": 0,
+        "pending_skills": 1,
+        "hooks": 2,
+        "rules": 5,
+        "experiments": 1,
+        "strategy_versions": 1
+      },
+      "changes": {
+        "skills": 1,
+        "active_skills": 0,
+        "pending_skills": 1,
+        "hooks": 1,
+        "rules": 2,
+        "experiments": 1,
+        "strategy_versions": 1
+      },
+      "summary": "已分析 21 条反馈（20 个 bad case），生成 4 个候选，发布 0 个策略产物。",
+      "next_action": "检查下方新生成的 Skill/Rule/Hook；人在环中阶段需要管理员审核后才会生效。"
+    }
+  ],
+  "before": {
+    "session_id": "2c4189e31a6b4e169cffeb6b0618011c",
+    "answer": "不可以。强降雨天气禁止在校园骑行 [来源1]；大风暴雨天气请勿骑行 [来源2]；Cycling is prohibited in strong rain [来源3]。",
+    "citations": [
+      {
+        "doc_id": "462a55cc9b734893b5ff93120bf42811",
+        "doc_title": "关于校园防汛应急响应措施的通知",
+        "dept_id": "dept_hqaq",
+        "chunk_index": 0,
+        "section_path": [],
+        "snippet": "关于校园防汛应急响应措施的通知 / Notice on Emergency Response Measures for Flood Control on Campus\n受短时强降雨及东苕溪上游来水影响,东苕溪流域水位回涨。近24小时,全余杭区面雨量59.2毫米,叠加前期持续强降雨,山区山洪地质灾害风险大。根据《杭州市余杭区防汛防台抗旱抗雪防冻应急预案》,区防指于14日15:30将瓶窑镇等5个镇街防"
+      },
+      {
+        "doc_id": "0ff610154d5a4c6480b776f93600fc81",
+        "doc_title": "暴雨天气致全体师生的温馨提醒",
+        "dept_id": "dept_hqaq",
+        "chunk_index": 0,
+        "section_path": [],
+        "snippet": "暴雨天气致全体师生的温馨提醒 /Reminder During Heavy Rainfall\n余杭区气象台已发布暴雨红色预警,预计本地将出现短时强降雨,易发生短时积水、山体滑坡、树木倒伏等次生灾害。为切实做好暴雨防范工作,保障全体师生生命财产安全,现将有关注意事项温馨提醒如下:\n密切关注预警,非必要不外出\n请及时关注气象发布的雨情、预警信息,合理安排出行,非必要不外出。确需外出时避开低洼积水、边坡"
+      },
+      {
+        "doc_id": "462a55cc9b734893b5ff93120bf42811",
+        "doc_title": "关于校园防汛应急响应措施的通知",
+        "dept_id": "dept_hqaq",
+        "chunk_index": 4,
+        "section_path": [],
+        "snippet": "Follow warning information; avoid going out unless necessary.​ Closely monitor rainfall updates and alerts issued by meteorological authorities, and plan your schedule accordingly. Do not go out unles"
+      },
+      {
+        "doc_id": "462a55cc9b734893b5ff93120bf42811",
+        "doc_title": "关于校园防汛应急响应措施的通知",
+        "dept_id": "dept_hqaq",
+        "chunk_index": 1,
+        "section_path": [],
+        "snippet": "注意居家安全,避开危险区域:检查电、自来水、燃气等设施安全,及时关闭电器设备,切断不必要电源;远离河道、树木、广告牌、电线杆、建筑工地等,若发现电线低垂或折断,立即远离,切勿触碰。请勿随意敞开楼道、楼梯间公共窗户,强降雨易造成雨水倒灌,请大家随手关窗,共同守护校园公共设施。\n如遇公寓漏水、积水、设施损坏、电路故障等,请保持冷静并立即拨打校园110(28881110)报警电话,切勿自行处理;强降雨后"
+      },
+      {
+        "doc_id": "122863ac4bb746368524c9577c33b0e2",
+        "doc_title": "关于防御第9号超强台风“巴威”的安全提示(1)(1)",
+        "dept_id": "dept_hqaq",
+        "chunk_index": 3,
+        "section_path": [
+          "",
+          "2. 台风影响期间非必要不外出,坚决杜绝围观风雨、涉水拍"
+        ],
+        "snippet": "2. 台风影响期间非必要不外出,坚决杜绝围观风雨、涉水拍\n照、冒险通行等危险行为。"
+      }
+    ],
+    "dept_ids": [
+      "dept_hqaq"
+    ],
+    "confidence": 0.7,
+    "intent_type": "regulation_consult",
+    "verification": {
+      "passed": true,
+      "score": 1.0,
+      "issues": []
+    },
+    "retrieved_count": 5,
+    "route": null,
+    "queue_wait_ms": 0.006,
+    "model_usage": {
+      "calls": [
+        {
+          "kind": "intent",
+          "model": "qwen-plus",
+          "usage": {
+            "input": 265,
+            "output": 68,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "calls": 1,
+            "cost": null
+          },
+          "runtime": "pi",
+          "latency_ms": 2011
+        },
+        {
+          "kind": "rewrite",
+          "model": "qwen-plus",
+          "usage": {
+            "input": 118,
+            "output": 34,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "calls": 1,
+            "cost": null
+          },
+          "runtime": "pi",
+          "latency_ms": 1081
+        },
+        {
+          "kind": "embedding",
+          "model": "text-embedding-v4",
+          "usage": {
+            "prompt_tokens": 9,
+            "total_tokens": 9
+          }
+        },
+        {
+          "kind": "embedding",
+          "model": "text-embedding-v4",
+          "usage": {
+            "prompt_tokens": 10,
+            "total_tokens": 10
+          }
+        },
+        {
+          "kind": "embedding",
+          "model": "text-embedding-v4",
+          "usage": {
+            "prompt_tokens": 9,
+            "total_tokens": 9
+          }
+        },
+        {
+          "kind": "rerank",
+          "model": "qwen3-rerank",
+          "usage": {
+            "total_tokens": 2076
+          }
+        },
+        {
+          "kind": "rerank",
+          "model": "qwen3-rerank",
+          "usage": {
+            "total_tokens": 2103
+          }
+        },
+        {
+          "kind": "rerank",
+          "model": "qwen3-rerank",
+          "usage": {
+            "total_tokens": 1996
+          }
+        },
+        {
+          "kind": "answer",
+          "model": "qwen-plus",
+          "usage": {
+            "input": 1482,
+            "output": 38,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "calls": 1,
+            "cost": null
+          },
+          "runtime": "pi",
+          "latency_ms": 1169
+        },
+        {
+          "kind": "verify",
+          "model": "qwen-plus",
+          "usage": {
+            "input": 1492,
+            "output": 18,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "calls": 1,
+            "cost": null
+          },
+          "runtime": "pi",
+          "latency_ms": 986
+        }
+      ],
+      "usage_complete": true,
+      "cost_yuan": null
+    }
+  },
+  "after_review": {
+    "session_id": "33f72d0c76144542a472090f4d3d5b71",
+    "answer": "【结论】  \n强降雨天气禁止在校园骑行。  \n\n【制度依据】  \n强降雨天禁止骑行 [来源1]；大风暴雨天气请勿骑行 [来源2]；Cycling is prohibited in strong rain [来源3]。  \n\n【注意事项】  \n上述禁令适用于所有师生，无论骑行工具类型（自行车、电动自行车等）；确需外出时应选择安全交通方式，避开积水路段和危险区域。",
+    "citations": [
+      {
+        "doc_id": "462a55cc9b734893b5ff93120bf42811",
+        "doc_title": "关于校园防汛应急响应措施的通知",
+        "dept_id": "dept_hqaq",
+        "chunk_index": 0,
+        "section_path": [],
+        "snippet": "关于校园防汛应急响应措施的通知 / Notice on Emergency Response Measures for Flood Control on Campus\n受短时强降雨及东苕溪上游来水影响,东苕溪流域水位回涨。近24小时,全余杭区面雨量59.2毫米,叠加前期持续强降雨,山区山洪地质灾害风险大。根据《杭州市余杭区防汛防台抗旱抗雪防冻应急预案》,区防指于14日15:30将瓶窑镇等5个镇街防"
+      },
+      {
+        "doc_id": "0ff610154d5a4c6480b776f93600fc81",
+        "doc_title": "暴雨天气致全体师生的温馨提醒",
+        "dept_id": "dept_hqaq",
+        "chunk_index": 0,
+        "section_path": [],
+        "snippet": "暴雨天气致全体师生的温馨提醒 /Reminder During Heavy Rainfall\n余杭区气象台已发布暴雨红色预警,预计本地将出现短时强降雨,易发生短时积水、山体滑坡、树木倒伏等次生灾害。为切实做好暴雨防范工作,保障全体师生生命财产安全,现将有关注意事项温馨提醒如下:\n密切关注预警,非必要不外出\n请及时关注气象发布的雨情、预警信息,合理安排出行,非必要不外出。确需外出时避开低洼积水、边坡"
+      },
+      {
+        "doc_id": "462a55cc9b734893b5ff93120bf42811",
+        "doc_title": "关于校园防汛应急响应措施的通知",
+        "dept_id": "dept_hqaq",
+        "chunk_index": 4,
+        "section_path": [],
+        "snippet": "Follow warning information; avoid going out unless necessary.​ Closely monitor rainfall updates and alerts issued by meteorological authorities, and plan your schedule accordingly. Do not go out unles"
+      },
+      {
+        "doc_id": "462a55cc9b734893b5ff93120bf42811",
+        "doc_title": "关于校园防汛应急响应措施的通知",
+        "dept_id": "dept_hqaq",
+        "chunk_index": 1,
+        "section_path": [],
+        "snippet": "注意居家安全,避开危险区域:检查电、自来水、燃气等设施安全,及时关闭电器设备,切断不必要电源;远离河道、树木、广告牌、电线杆、建筑工地等,若发现电线低垂或折断,立即远离,切勿触碰。请勿随意敞开楼道、楼梯间公共窗户,强降雨易造成雨水倒灌,请大家随手关窗,共同守护校园公共设施。\n如遇公寓漏水、积水、设施损坏、电路故障等,请保持冷静并立即拨打校园110(28881110)报警电话,切勿自行处理;强降雨后"
+      },
+      {
+        "doc_id": "462a55cc9b734893b5ff93120bf42811",
+        "doc_title": "关于校园防汛应急响应措施的通知",
+        "dept_id": "dept_hqaq",
+        "chunk_index": 9,
+        "section_path": [],
+        "snippet": "Temporary closure of sports and cultural venues.​ On-campus sports and cultural venues (swimming pool, badminton hall, gym, outdoor courts, etc.) and the library shall suspend opening from 08:00 on Au"
+      }
+    ],
+    "dept_ids": [
+      "dept_hqaq"
+    ],
+    "confidence": 0.7,
+    "intent_type": "regulation_consult",
+    "verification": {
+      "passed": true,
+      "score": 1.0,
+      "issues": []
+    },
+    "retrieved_count": 5,
+    "route": null,
+    "queue_wait_ms": 0.004,
+    "model_usage": {
+      "calls": [
+        {
+          "kind": "intent",
+          "model": "qwen-plus",
+          "usage": {
+            "input": 265,
+            "output": 68,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "calls": 1,
+            "cost": null
+          },
+          "runtime": "pi",
+          "latency_ms": 1768
+        },
+        {
+          "kind": "rewrite",
+          "model": "qwen-plus",
+          "usage": {
+            "input": 118,
+            "output": 35,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "calls": 1,
+            "cost": null
+          },
+          "runtime": "pi",
+          "latency_ms": 1186
+        },
+        {
+          "kind": "embedding",
+          "model": "text-embedding-v4",
+          "usage": {
+            "prompt_tokens": 10,
+            "total_tokens": 10
+          }
+        },
+        {
+          "kind": "rerank",
+          "model": "qwen3-rerank",
+          "usage": {
+            "total_tokens": 2103
+          }
+        },
+        {
+          "kind": "rerank",
+          "model": "qwen3-rerank",
+          "usage": {
+            "total_tokens": 2076
+          }
+        },
+        {
+          "kind": "rerank",
+          "model": "qwen3-rerank",
+          "usage": {
+            "total_tokens": 2035
+          }
+        },
+        {
+          "kind": "answer",
+          "model": "qwen-plus",
+          "usage": {
+            "input": 1600,
+            "output": 93,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "calls": 1,
+            "cost": null
+          },
+          "runtime": "pi",
+          "latency_ms": 2394
+        },
+        {
+          "kind": "verify",
+          "model": "qwen-plus",
+          "usage": {
+            "input": 348,
+            "output": 18,
+            "cacheRead": 1280,
+            "cacheWrite": 0,
+            "calls": 1,
+            "cost": null
+          },
+          "runtime": "pi",
+          "latency_ms": 738
+        }
+      ],
+      "usage_complete": true,
+      "cost_yuan": null
+    }
+  },
+  "format_rule_changed_answer": true,
+  "skills": [
+    {
+      "name": "开题材料要求查询",
+      "trigger": {
+        "intent_patterns": [
+          "开题",
+          "纸质报告",
+          "带几份"
+        ],
+        "entities_required": [
+          "discipline"
+        ],
+        "confidence_threshold": 0.75
+      },
+      "action": {
+        "type": "workflow",
+        "steps": [
+          {
+            "step": 1,
+            "action": "extract_entity",
+            "params": {
+              "entity": "discipline"
+            }
+          },
+          {
+            "step": 2,
+            "action": "retrieve",
+            "params": {
+              "query": "{discipline} 开题材料要求",
+              "top_k": 5
+            }
+          },
+          {
+            "step": 3,
+            "action": "generate",
+            "params": {
+              "template": "default"
+            }
+          }
+        ]
+      },
+      "metrics": {
+        "trigger_count": 20,
+        "success_rate": 0.28,
+        "avg_latency_ms": 0,
+        "last_triggered": ""
+      },
+      "version": 1,
+      "status": "pending",
+      "auto_generated": true,
+      "confidence": 0.9,
+      "created_by": "loop_engine",
+      "created_at": "2026-11-09T08:18:06.331579+00:00",
+      "replay": {
+        "sample_count": 20,
+        "baseline_score": 0.275,
+        "candidate_score": 0.28,
+        "delta": 0.005,
+        "passed": true,
+        "details": [
+          {
+            "trace_id": "scripted_trace_19",
+            "query": "电子信息和机械开题分别要带几份纸质报告？",
+            "baseline_score": 0.3,
+            "candidate_score": 0.3,
+            "baseline_passed": false,
+            "candidate_passed": false,
+            "baseline_retrieved": 5,
+            "candidate_retrieved": 5
+          },
+          {
+            "trace_id": "scripted_trace_18",
+            "query": "电子信息和机械开题分别要带几份纸质报告？",
+            "baseline_score": 0.3,
+            "candidate_score": 0.3,
+            "baseline_passed": false,
+            "candidate_passed": false,
+            "baseline_retrieved": 5,
+            "candidate_retrieved": 5
+          },
+          {
+            "trace_id": "scripted_trace_17",
+            "query": "电子信息和机械开题分别要带几份纸质报告？",
+            "baseline_score": 0.2,
+            "candidate_score": 0.3,
+            "baseline_passed": false,
+            "candidate_passed": false,
+            "baseline_retrieved": 5,
+            "candidate_retrieved": 5
+          },
+          {
+            "trace_id": "scripted_trace_16",
+            "query": "电子信息和机械开题分别要带几份纸质报告？",
+            "baseline_score": 0.3,
+            "candidate_score": 0.3,
+            "baseline_passed": false,
+            "candidate_passed": false,
+            "baseline_retrieved": 5,
+            "candidate_retrieved": 5
+          },
+          {
+            "trace_id": "scripted_trace_15",
+            "query": "电子信息和机械开题分别要带几份纸质报告？",
+            "baseline_score": 0.2,
+            "candidate_score": 0.3,
+            "baseline_passed": false,
+            "candidate_passed": false,
+            "baseline_retrieved": 5,
+            "candidate_retrieved": 5
+          },
+          {
+            "trace_id": "scripted_trace_14",
+            "query": "电子信息和机械开题分别要带几份纸质报告？",
+            "baseline_score": 0.3,
+            "candidate_score": 0.3,
+            "baseline_passed": false,
+            "candidate_passed": false,
+            "baseline_retrieved": 5,
+            "candidate_retrieved": 5
+          },
+          {
+            "trace_id": "scripted_trace_13",
+            "query": "电子信息和机械开题分别要带几份纸质报告？",
+            "baseline_score": 0.3,
+            "candidate_score": 0.3,
+            "baseline_passed": false,
+            "candidate_passed": false,
+            "baseline_retrieved": 5,
+            "candidate_retrieved": 5
+          },
+          {
+            "trace_id": "scripted_trace_12",
+            "query": "电子信息和机械开题分别要带几份纸质报告？",
+            "baseline_score": 0.3,
+            "candidate_score": 0.3,
+            "baseline_passed": false,
+            "candidate_passed": false,
+            "baseline_retrieved": 5,
+            "candidate_retrieved": 5
+          },
+          {
+            "trace_id": "scripted_trace_11",
+            "query": "电子信息和机械开题分别要带几份纸质报告？",
+            "baseline_score": 0.3,
+            "candidate_score": 0.3,
+            "baseline_passed": false,
+            "candidate_passed": false,
+            "baseline_retrieved": 5,
+            "candidate_retrieved": 5
+          },
+          {
+            "trace_id": "scripted_trace_10",
+            "query": "电子信息和机械开题分别要带几份纸质报告？",
+            "baseline_score": 0.3,
+            "candidate_score": 0.2,
+            "baseline_passed": false,
+            "candidate_passed": false,
+            "baseline_retrieved": 5,
+            "candidate_retrieved": 5
+          },
+          {
+            "trace_id": "scripted_trace_9",
+            "query": "电子信息和机械开题分别要带几份纸质报告？",
+            "baseline_score": 0.2,
+            "candidate_score": 0.3,
+            "baseline_passed": false,
+            "candidate_passed": false,
+            "baseline_retrieved": 5,
+            "candidate_retrieved": 5
+          },
+          {
+            "trace_id": "scripted_trace_8",
+            "query": "电子信息和机械开题分别要带几份纸质报告？",
+            "baseline_score": 0.3,
+            "candidate_score": 0.3,
+            "baseline_passed": false,
+            "candidate_passed": false,
+            "baseline_retrieved": 5,
+            "candidate_retrieved": 5
+          },
+          {
+            "trace_id": "scripted_trace_7",
+            "query": "电子信息和机械开题分别要带几份纸质报告？",
+            "baseline_score": 0.3,
+            "candidate_score": 0.3,
+            "baseline_passed": false,
+            "candidate_passed": false,
+            "baseline_retrieved": 5,
+            "candidate_retrieved": 5
+          },
+          {
+            "trace_id": "scripted_trace_6",
+            "query": "电子信息和机械开题分别要带几份纸质报告？",
+            "baseline_score": 0.3,
+            "candidate_score": 0.3,
+            "baseline_passed": false,
+            "candidate_passed": false,
+            "baseline_retrieved": 5,
+            "candidate_retrieved": 5
+          },
+          {
+            "trace_id": "scripted_trace_5",
+            "query": "电子信息和机械开题分别要带几份纸质报告？",
+            "baseline_score": 0.3,
+            "candidate_score": 0.3,
+            "baseline_passed": false,
+            "candidate_passed": false,
+            "baseline_retrieved": 5,
+            "candidate_retrieved": 5
+          },
+          {
+            "trace_id": "scripted_trace_4",
+            "query": "电子信息和机械开题分别要带几份纸质报告？",
+            "baseline_score": 0.2,
+            "candidate_score": 0.2,
+            "baseline_passed": false,
+            "candidate_passed": false,
+            "baseline_retrieved": 5,
+            "candidate_retrieved": 5
+          },
+          {
+            "trace_id": "scripted_trace_3",
+            "query": "电子信息和机械开题分别要带几份纸质报告？",
+            "baseline_score": 0.3,
+            "candidate_score": 0.2,
+            "baseline_passed": false,
+            "candidate_passed": false,
+            "baseline_retrieved": 5,
+            "candidate_retrieved": 5
+          },
+          {
+            "trace_id": "scripted_trace_2",
+            "query": "电子信息和机械开题分别要带几份纸质报告？",
+            "baseline_score": 0.3,
+            "candidate_score": 0.3,
+            "baseline_passed": false,
+            "candidate_passed": false,
+            "baseline_retrieved": 5,
+            "candidate_retrieved": 5
+          },
+          {
+            "trace_id": "scripted_trace_1",
+            "query": "电子信息和机械开题分别要带几份纸质报告？",
+            "baseline_score": 0.2,
+            "candidate_score": 0.2,
+            "baseline_passed": false,
+            "candidate_passed": false,
+            "baseline_retrieved": 5,
+            "candidate_retrieved": 5
+          },
+          {
+            "trace_id": "scripted_trace_0",
+            "query": "电子信息和机械开题分别要带几份纸质报告？",
+            "baseline_score": 0.3,
+            "candidate_score": 0.3,
+            "baseline_passed": false,
+            "candidate_passed": false,
+            "baseline_retrieved": 5,
+            "candidate_retrieved": 5
+          }
+        ],
+        "created_at": "2026-11-09T08:21:00.079863+00:00"
+      },
+      "gray_percent": 0.1,
+      "experiment_id": "exp_7af6b67eeed241d5b0a3e9f20316abae",
+      "_id": "skill_0d18af24341f4f12b58c857afa097324"
+    }
+  ],
+  "rules": [
+    {
+      "_id": "rule_61e026d1f78d4e33b5b23cb260d27c65",
+      "name": "auto_rule",
+      "scope": "global",
+      "dept_id": "",
+      "content": "在生成阶段强制拦截含'[来源\\d+]'格式的非法模板字符串，替换为标准兜底响应（如'暂未查到明确要求，请联系学院教务老师确认'）；增加LLM输出后处理规则，对疑似调试/注入痕迹做正则过滤与重写。",
+      "priority": 50,
+      "status": "pending",
+      "auto_generated": true,
+      "confidence": 0.6,
+      "created_by": "loop_engine",
+      "created_at": "2026-11-09T08:21:00.081005+00:00"
+    },
+    {
+      "_id": "rule_12e4a0814b5f4eeb9bee2dc56342165a",
+      "name": "auto_rule",
+      "scope": "department",
+      "dept_id": "dept_zfxy",
+      "content": "引用必须对应检索证据的外层来源编号，不能使用表格行序号。",
+      "priority": 50,
+      "status": "pending",
+      "auto_generated": true,
+      "confidence": 0.6,
+      "created_by": "loop_engine",
+      "created_at": "2026-11-09T08:21:00.080974+00:00"
+    },
+    {
+      "_id": "rule_3962c5c91506429a99afc93c4be32ad3",
+      "name": "auto_rule",
+      "scope": "department",
+      "dept_id": "dept_hqaq",
+      "content": "回答必须使用【结论】【制度依据】【注意事项】三个标题；只回答原文支持的内容，引用外层来源编号，不能用表格序号作为引用。",
+      "priority": 50,
+      "status": "active",
+      "auto_generated": true,
+      "confidence": 0.6,
+      "created_by": "loop_engine",
+      "created_at": "2026-11-09T08:17:44.611937+00:00",
+      "reviewed_by": "scripted-human-review-simulation",
+      "reviewed_at": "2026-11-09T08:17:45.629880+00:00"
+    },
+    {
+      "_id": "rule_cite_source",
+      "name": "cite_source_rule",
+      "scope": "global",
+      "content": "所有回答必须附带来源条款引用。",
+      "priority": 100,
+      "status": "active",
+      "auto_generated": false,
+      "confidence": 1.0,
+      "created_by": "system",
+      "created_at": "2026-11-09T08:17:32.801182+00:00"
+    },
+    {
+      "_id": "rule_no_guess",
+      "name": "no_guess_rule",
+      "scope": "global",
+      "content": "文档中没有明确答案时必须说'根据现有制度文件未找到明确规定'，禁止编造。",
+      "priority": 100,
+      "status": "active",
+      "auto_generated": false,
+      "confidence": 1.0,
+      "created_by": "system",
+      "created_at": "2026-11-09T08:17:32.801182+00:00"
+    }
+  ],
+  "knowledge_workorders": [],
+  "pending_feedback_after": 0,
+  "source_database_modified": false,
+  "scripted_replay_count": 20
+}

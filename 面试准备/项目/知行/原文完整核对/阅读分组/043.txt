@@ -1,0 +1,494 @@
+
+
+===== block 496 04f3de1fc780 lines 1-69 source 知行旅行助手-v2#498 =====
+async def _enrich_spots(plan: TravelItinerary) -> None:
+    """高德 POI 补全坐标与图片
+
+    DeepSeek 只能从 RAG 文本提取，图片/经纬度经常缺失；用高德地点搜索补全。
+    高德返回 GCJ-02 坐标，与腾讯地图渲染直接兼容，无需转换。
+ 两段式关键词（清洗名→原始名）+ 静态地图兜底，尽量保证坐标与封面不缺失
+    """
+    url = "https://restapi.amap.com/v3/place/text"
+    async with httpx.AsyncClient(timeout=8) as client:
+        for day in plan.itinerary_list:
+            for item in day.itinerary:
+                for spot in item.scenic_spots_list:
+                    if spot.longitude is not None and spot.toponym_image:
+                        continue
+                    cleaned = _clean_keyword(spot.toponym)
+                    poi = None
+                    # 两段式搜索：先清洗名（高），再退回原始名；任一命中即用
+                    for kw in dict.fromkeys([cleaned, spot.toponym]):
+                        if not kw:
+                            continue
+                        try:
+                            res = await client.get(url, params={
+                                "keywords": kw,
+                                "key": settings.amap_api_key,
+                                "offset": 1,
+                            })
+                            data = res.json()
+                            pois = data.get("pois") or []
+                            if not pois:
+                                # 区分"真无结果"与"限流拒答"：高德个人 key QPS 有限，
+                                # 超速请求 status!=1 被静默拒答，打日志便于诊断
+                                if data.get("status") != "1":
+                                    app_logger.warning(
+                                        f"高德POI限流/异常: {kw} -> {data.get('infocode')} {data.get('info')}"
+                                    )
+                                await asyncio.sleep(0.25)  # 限流疑虑时也控速后再试下一关键词
+                                continue
+                            poi = pois[0]
+                            break
+                        except Exception:
+                            app_logger.warning(f"POI 补全失败: {spot.toponym}")
+                    # QPS 控速：每次成功请求后间隔，避免后续 spot 全部被限流静默拒答
+                    if poi is not None:
+                        await asyncio.sleep(0.25)
+                    if poi is None:
+                        continue
+                    if spot.longitude is None and poi.get("location"):
+                        try:
+                            lng, lat = poi["location"].split(",")[:2]
+                            spot.longitude, spot.latitude = float(lng), float(lat)
+                        except (ValueError, IndexError):
+                            pass
+                    photos = [
+                        p["url"].replace("http://", "https://")  # 统一 https，避免混合内容
+                        for p in (poi.get("photos") or []) if p.get("url")
+                    ]
+                    if not spot.toponym_image and photos:
+                        spot.toponym_image = photos[0]
+                    if not spot.toponym_image_list and photos:
+                        spot.toponym_image_list = photos
+                    # 静态地图兜底：无实景图但坐标已补全 → 生成带定位标记的地图缩略图当封面，
+                    # 保证前端每个景点至少有一张可展示的图（替代灰色占位图标）
+                    if not spot.toponym_image and spot.longitude is not None:
+                        lng, lat = spot.longitude, spot.latitude
+                        spot.toponym_image = (
+                            f"https://restapi.amap.com/v3/staticmap?location={lng},{lat}"
+                            f"&zoom=14&size=750*400&markers=mid,0xFF6E4E,:{lng},{lat}"
+                            f"&key={settings.amap_api_key}"
+                        )
+
+
+===== block 497 b2ae86d73465 lines 1-36 source 知行旅行助手-v2#499 =====
+async def _enrich_routes(plan: TravelItinerary) -> None:
+    """高德方向 API 补全每日路线
+
+    每天内按景点顺序两两取驾车路线，拼接各 step 的 polyline，解为平铺
+    [lat,lng,...] 数组存入 route_polylines；段失败存空数组，前端回退直线。
+    （腾讯方向 API 改用高德：QQ_MAP_KEY 的 WebService 日配额易耗尽 status=121；
+    高德/腾讯地图同为 GCJ-02 坐标系，渲染无需转换）
+    """
+    if not settings.amap_api_key:
+        return
+    url = "https://restapi.amap.com/v3/direction/driving"
+    async with httpx.AsyncClient(timeout=8) as client:
+        for day in plan.itinerary_list:
+            spots = [
+                s for item in day.itinerary for s in item.scenic_spots_list
+                if s.latitude is not None and s.longitude is not None
+            ]
+            routes: list[list[float]] = []
+            for a, b in zip(spots, spots[1:]):
+                try:
+                    res = await client.get(url, params={
+                        "origin": f"{a.longitude},{a.latitude}",  # 高德参数经度在前
+                        "destination": f"{b.longitude},{b.latitude}",
+                        "key": settings.amap_api_key,
+                    })
+                    steps = res.json()["route"]["paths"][0]["steps"]
+                    flat: list[float] = []
+                    for step in steps:
+                        for pair in step["polyline"].split(";"):
+                            lng, lat = pair.split(",")[:2]
+                            flat.extend([float(lat), float(lng)])
+                    routes.append(flat)
+                except Exception:
+                    routes.append([])
+            if routes:
+                day.route_polylines = routes
+
+
+===== block 498 2096586e83c0 lines 1-93 source 知行旅行助手-v2#500 =====
+def _plan_defect(plan: TravelItinerary, expected_days: int = 0) -> str:
+    """清单可用性守卫：返回缺陷说明（空串 = 可用）
+
+    背景：generate_plan 对同一会话是**覆盖更新**，且此前不校验内容。实测 DeepSeek 会把
+    需求确认语、甚至一句"如需调整…直接告诉我即可"当成行程提炼出来，于是一份已经正确的
+    清单被这种空壳覆盖（日志里同一个 plan 被连续覆盖成"（无有效行程内容）"），
+    质检随后打出 0/0/0。故落库前先判一次，不可用就不许覆盖。
+    """
+    days = plan.itinerary_list
+    if not days:
+        return "清单为空（0 天）"
+    spots = sum(len(item.scenic_spots_list) for day in days for item in day.itinerary)
+    if spots == 0:
+        return f"清单 {len(days)} 天但无任何景点条目"
+    if expected_days and len(days) != expected_days:
+        return f"天数不符（清单 {len(days)} 天，应为 {expected_days} 天）"
+    return ""
+
+async def generate_plan(
+        db: AsyncSession, conversation_id: uuid.UUID, markdown: str,
+        structure: list[dict] | None = None,
+) -> Mapped[str]:
+    """提炼结构化行程并落库，返回 plan_id（失败抛异常，由调用方推 error 帧）
+    不用 with_structured_output：其内部强制 tool_choice，DeepSeek
+    v4 思考模式不支持该参数，会返回400错误。
+    改为 bind_tools（tool_choice=auto）+ 解析 tool_calls，兼容思考模式。
+    `structure` 为状态机里已过 Pydantic 校验的 itinerary_body。
+    LLM提炼失败时，改用代码基于structure构造清单，保证清单一定生成；
+    提炼成功则优先使用模型输出，信息更丰富，包含景点描述、坐标等。
+    """
+    expected_days = len(structure) if structure else 0
+
+    plan: TravelItinerary | None = None
+    try:
+        bound = get_deepseek_llm().bind_tools([TravelItinerary])
+        res = await bound.ainvoke(_JSON_PROMPT + markdown)
+        if res.tool_calls:
+            plan = TravelItinerary.model_validate(res.tool_calls[0]["args"])
+        else:
+            app_logger.warning("DeepSeek 未返回结构化行程工具调用")
+    except Exception:
+        app_logger.warning("行程清单 LLM 提炼失败，转代码兜底", exc_info=True)
+
+    # ★ 提炼结果先过守卫：不可用就当没提炼出来，转代码兜底
+    if plan is not None:
+        defect = _plan_defect(plan, expected_days)
+        if defect:
+            app_logger.warning(f"⚠️ LLM 提炼的清单不可用（{defect}），转代码兜底：{plan.title}")
+            plan = None
+
+    if plan is None:
+        if not structure:
+            raise ValueError("行程清单提炼失败，且无可用的结构化行程可兜底")
+        plan = _plan_from_structure(structure, markdown)
+        app_logger.warning(f"行程清单已由代码兜底生成（{len(plan.itinerary_list)} 天，未经 LLM 提炼）")
+        # ★ 兜底清单同样要过守卫：structure 本身是空壳时绝不落库，更不覆盖已有清单
+        defect = _plan_defect(plan, expected_days)
+        if defect:
+            raise ValueError(f"行程清单不可用（{defect}），已放弃落库以保护上一版清单")
+
+    # POI/路线信息增强，补全景点坐标、封面图与每日路线数据
+    try:
+        await _enrich_spots(plan)   # 补全景点坐标与封面图（高德 POI + 静态地图兜底）
+        await _enrich_routes(plan)  # 补全每日路线（前端按天路线图依赖）
+    except Exception:
+        app_logger.warning("行程POI/路线增强失败（以提炼原始数据落库）", exc_info=True)
+
+    # 同一会话覆盖更新清单，每次重排行程只保留最新版本
+    row = (await db.execute(
+        select(ItineraryPlan)
+        .where(ItineraryPlan.conversation_id == conversation_id)
+        .order_by(ItineraryPlan.created_at.desc())
+        .limit(1)
+    )).scalar_one_or_none()
+
+    if row is not None:
+        row.plan_data = plan.model_dump()
+        row.status = 1
+        app_logger.info(f"行程清单已覆盖更新: {row.plan_id} ({plan.title})")
+    else:
+        row = ItineraryPlan(
+            plan_id=str(uuid.uuid4()),
+            conversation_id=conversation_id,
+            plan_data=plan.model_dump(),
+            status=1,
+        )
+        db.add(row)
+        app_logger.info(f"行程清单已生成: {row.plan_id} ({plan.title})")
+    await db.commit()
+
+    # 落库后异步在线质检，事后告警，不阻塞主流程
+    schedule_quality_check(plan.model_dump())
+    return row.plan_id
+
+
+===== block 499 2b74639b6b36 lines 1-33 source 知行旅行助手-v2#501 =====
+"""generate_plan 演示：提炼（或兜底）→ POI/路线增强 → 按会话 UPSERT；连跑两次，plan_id 不变（需 PG + DeepSeek/高德密钥）"""
+import asyncio
+import uuid
+
+from app.models.base import async_session_maker
+from app.models.user import User
+from app.services.conversation_service import create_conversation
+from app.services.itinerary_plan_service import generate_plan, get_plan
+from app.utils.security import hash_password
+
+DAYS = [{"day": 1, "city": "杭州", "morning": ["西湖断桥"], "noon": ["知味观"],
+         "afternoon": ["灵隐寺"], "evening": ["河坊街"]}]
+MD = "### 杭州 1 日游\n#### Day 1\n- 上午：西湖断桥\n- 中午：知味观\n- 下午：灵隐寺\n- 晚上：河坊街"
+
+async def main():
+    async with async_session_maker() as db:
+        sfx = uuid.uuid4().hex[:6]                       # 造一个测试用户 + 会话（清单表外键指向会话）
+        user = User(username=f"plan_{sfx}", email=f"plan_{sfx}@example.com",
+                    password_hash=hash_password("secret123"), preferences={})
+        db.add(user)
+        await db.commit()
+        conv = await create_conversation(db, user.id, "杭州 1 日游")
+
+        pid1 = await generate_plan(db, conv.id, MD, structure=DAYS)
+        pid2 = await generate_plan(db, conv.id, MD + "\n（晚上改去南宋御街）", structure=DAYS)
+        print("第一次 plan_id：", pid1)
+        print("第二次 plan_id：", pid2, "← 同一会话覆盖更新，id 不变" if pid1 == pid2 else "")
+        plan = await get_plan(db, pid2, conv.id)
+        spot = plan.plan_data["itinerary_list"][0]["itinerary"][0]["scenic_spots_list"][0]
+        print("首个景点：", spot["toponym"], spot["longitude"], spot["latitude"], spot["toponym_image"][:50])
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+
+===== block 500 bdcfee531196 lines 1-18 source 知行旅行助手-v2#502 =====
+"""对话内容压缩服务：DeepSeek 压缩长文
+
+压缩结果存 Message.content（会话列表预览），全文存 extra_info.original（前端详情渲染）。
+"""
+from app.utils.llm_factory import get_deepseek_llm
+
+_COMPRESS_PROMPT = (
+    "将以下行程规划内容压缩为 300 字以内的中文摘要，"
+    "保留行程天数安排与核心亮点，直接输出摘要正文：\n\n"
+)
+
+# 超过该长度才压缩，短文直接存原文
+COMPRESS_THRESHOLD = 2000  # ★ 闲聊、短回答根本进不来，挡掉无谓的 LLM 调用
+
+async def compress_content(full_text: str) -> str:
+    """压缩长文为摘要"""
+    res = await get_deepseek_llm().ainvoke(_COMPRESS_PROMPT + full_text)
+    return res.content
+
+
+===== block 501 199595c540f6 lines 1-3 source 知行旅行助手-v2#503 =====
+assistant 生成 5000 字 ──┬─ compress_content → 300 字摘要 → Message.content（列表预览）
+                         └─ 原文                        → extra_info.original（详情渲染）
+GET /messages 两样一起返回，列表读 content，详情读 original
+
+
+===== block 502 945633799dd4 lines 1-18 source 知行旅行助手-v2#504 =====
+"""compress_content 演示：超过阈值的长正文压成 300 字以内摘要（需 .env 配 DeepSeek 密钥）"""
+import asyncio
+
+from app.services.chat_compress_service import COMPRESS_THRESHOLD, compress_content
+
+DAY = ("#### Day {d} 杭州\n- **上午**：西湖断桥、白堤、孤山，沿湖步行拍照，建议 8 点前到避开人流\n"
+       "- **中午**：知味观，片儿川 + 小笼包，人均 60 元\n- **下午**：灵隐寺、飞来峰，需提前一天预约\n"
+       "- **晚上**：河坊街、南宋御街夜市，尝定胜糕和葱包桧\n")
+LONG = "### 详细行程\n" + "".join(DAY.format(d=d) for d in range(1, 11))
+
+async def main():
+    print(f"阈值 {COMPRESS_THRESHOLD} 字；样例正文 {len(LONG)} 字 → "
+          f"{'超阈值，要压' if len(LONG) > COMPRESS_THRESHOLD else '不压'}")
+    summary = await compress_content(LONG)
+    print(f"摘要 {len(summary)} 字：\n{summary}")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+
+===== block 503 e516110bf8f4 lines 1-111 source 知行旅行助手-v2#505 =====
+# 自动确认快速通道
+# 自动走完整条流程，绕开多轮对话状态机，减少等待耗时；手动模式依旧走原有状态机
+from datetime import datetime
+import asyncio
+import json
+
+from pydantic import BaseModel, Field
+from langchain_community.chat_models import ChatTongyi
+
+from app.core.events import ROLE_ASSISTANT, make_event
+from app.core.intent import detect_intent
+from app.config import settings
+from app.utils.logger import app_logger
+
+_DIGITS = "0123456789"
+
+def _to_float(value, default: float = 0.0) -> float:
+    # 安全转数字，出错就返回默认值
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+def _number_before(text: str, unit: str) -> float:
+    # 提取单位前面的数字，找不到就返回0
+    if unit not in (text or ""):
+        return 0.0
+    head = text.split(unit, 1)[0].rstrip()
+    i = len(head)
+    while i > 0 and head[i - 1] in _DIGITS + ".":
+        i -= 1
+    return _to_float(head[i:])
+
+def _hit_auto_confirm(content: str) -> bool:
+    # 检测文字里有没有自动确认关键词
+    return detect_intent(content).auto_confirm
+
+# 表单文本提取出来的结构化出行需求
+class ExpressRequirement(BaseModel):
+    departure_city: str = Field(description="出发城市，为空则无")
+    destination: str = Field(description="目的地城市，多城用顿号隔开")
+    departure_date: str = Field(description="出发日期，必须转为YYYY-MM-DD格式")
+    travel_days: int = Field(default=3, description="出行天数，默认3天")
+    adult_count: int = Field(default=2, description="成年人数量，默认2人")
+    children_count: int = Field(default=0, description="儿童数量，默认0")
+    budget_max: float = Field(default=0, description="人均预算上限，无限制填0")
+    auto_confirm: bool = Field(description="是否开启全程自动确认")
+    transport_types: list[str] = Field(
+        default_factory=list,
+        description="交通方式：flight/train/driving"
+    )
+    food_preferences: list[str] = Field(
+        default_factory=list,
+        description="餐饮偏好：specialty/chain/local"
+    )
+    accommodation_types: list[str] = Field(
+        default_factory=list,
+        description="酒店类型：star_hotel/economy_hotel/hostel/youth_hostel"
+    )
+    travel_styles: list[str] = Field(
+        default_factory=list,
+        description="旅行风格：relaxation/culture/adventure/food"
+    )
+
+_EXTRACT_PROMPT = (
+    "从用户旅行清单提取结构化字段。今天日期：{today}\n"
+    "1. 日期必须转为YYYY-MM-DD，今天、下周这类相对日期要换算成具体日期\n"
+    "2. 枚举字段严格按给定值填写，没提到的列表直接留空\n"
+    "3. 多目的地全部保留，不能因为和出发城市一致就删掉\n"
+    "4. 只有出现「全程交给AI自动确认」时，auto_confirm才为true\n\n"
+    "需求清单：\n{content}"
+)
+
+async def extract_requirement(content: str) -> ExpressRequirement:
+    # 一次性调用大模型，把纯文本转为结构化数据
+    llm = ChatTongyi(
+        model=settings.qwen_model_name,
+        api_key=settings.dashscope_api_key,
+        temperature=0,
+    )
+    structured = llm.with_structured_output(ExpressRequirement)
+    result: ExpressRequirement = await structured.ainvoke(
+        _EXTRACT_PROMPT.format(
+            content=content,
+            today=datetime.now().strftime("%Y-%m-%d"),
+        )
+    )
+    app_logger.info(
+        f"[express] 需求提取: dest={result.destination} date={result.departure_date} "
+        f"days={result.travel_days} auto={result.auto_confirm} "
+        f"transport={result.transport_types} food={result.food_preferences}"
+    )
+    return result
+
+async def try_express_planning(user_id: str, content: str, stream) -> ExpressRequirement | None:
+    # 分流判断：只有开启自动确认才走快速通道，否则退回原状态机
+    # 第一层：关键词快速校验，不命中直接返回，不调用LLM
+    if not _hit_auto_confirm(content):
+        return None
+
+    # 第二层：LLM二次核验，防止闲聊提到关键词误进入通道
+    req = await extract_requirement(content)
+    if not req.departure_city or not req.auto_confirm:
+        app_logger.info("[express] 提取复核未通过，回落状态机")
+        return None
+
+    app_logger.info(
+        f"[express] 命中快速通道: {req.destination or '(无目的地，AI自动选定)'} "
+        f"{req.departure_date} {req.travel_days}天"
+    )
+    return req
+
+
+===== block 504 cc67beafc58d lines 1-56 source 知行旅行助手-v2#506 =====
+"""
+演示脚本：_number_before 数字提取工具演示
+标题：演示从酒店price.message字段提取单晚价格
+真实样本输入：{"message":"查价成功。2晚总价：438CNY（约219CNY/晚）","hasPrice":true,"lowestPrice":219.0}
+"""
+
+_DIGITS = "0123456789"
+
+def _to_float(value, default: float = 0.0) -> float:
+    """安全转 float，转不了给默认值"""
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+def _number_before(text: str, unit: str) -> float:
+    """取紧挨在 unit 前面的数字，如 ('均价356CNY/晚', 'CNY/晚') → 356；没有 unit 返回 0"""
+    if unit not in (text or ""):
+        return 0.0
+    head = text.split(unit, 1)[0].rstrip()
+    i = len(head)
+    while i > 0 and head[i - 1] in _DIGITS + ".":
+        i -= 1
+    return _to_float(head[i:])
+
+if __name__ == "__main__":
+    # 真实业务样本
+    sample = {
+        "message": "查价成功。2晚总价：438CNY（约219CNY/晚）",
+        "hasPrice": True,
+        "lowestPrice": 219.0
+    }
+
+    msg_text = sample["message"]
+    print("===== 演示从酒店price.message字段提取单晚价格 =====")
+    print(f"原始message文本：{msg_text}")
+    print(f"样本自带lowestPrice真值：{sample['lowestPrice']}")
+
+    # 提取「CNY/晚」前面的单晚价格
+    extract_price = _number_before(msg_text, "CNY/晚")
+    print(f"_number_before(..., 'CNY/晚')提取结果：{extract_price}")
+
+    # 额外测试：提取总价 CNY 前面数字
+    total_price = _number_before(msg_text, "CNY")
+    print(f"_number_before(..., 'CNY')提取结果（取总价）：{total_price}")
+
+    print("\n---边界测试样例---")
+    test_cases = [
+        "均价356CNY/晚",
+        "暂无报价CNY/晚",
+        "价格：120.5CNY/晚",
+        "没有匹配的标记文本"
+    ]
+    for case in test_cases:
+        res = _number_before(case, "CNY/晚")
+        print(f"输入：{case!r:35} → 输出：{res}")
+
+
+===== block 505 0a0f426991e1 lines 1-27 source 知行旅行助手-v2#507 =====
+"""try_express_planning 双层门禁演示（场景 1 纯逻辑、0 次 LLM；场景 2 需 DashScope 密钥）"""
+import asyncio
+from datetime import date, timedelta
+
+from app.core.event_stream import EventStream
+from app.services.express_planning_service import try_express_planning
+
+FORM = f"""我想去杭州旅行
+- 出发地：福州
+- 出发日期：{(date.today() + timedelta(days=5)).isoformat()}
+- 旅行天数：3 天
+- 出行人数：2 成人 0 儿童
+- 人均预算：3000 元
+- 交通方式：高铁
+- 住宿偏好：经济型
+- 餐饮偏好：本地小吃
+- 全程交给 AI 自动确认，无需逐步询问"""
+
+async def main():
+    # 场景 1：普通规划请求——没有"全程交给 AI 自动确认"，第一层正则直接挡掉
+    print("普通消息 →", await try_express_planning("u1", "帮我规划杭州三日游", EventStream()))
+    # 场景 2：表单文本——命中正则，再用一次 LLM 结构化提取做复核
+    req = await try_express_planning("u1", FORM, EventStream())
+    print("表单消息 →", req.model_dump() if req else None)
+
+if __name__ == "__main__":
+    asyncio.run(main())

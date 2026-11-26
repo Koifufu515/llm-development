@@ -1,0 +1,9 @@
+# 看容器状态：Status 应该是 Up xxx seconds
+docker ps | Select-String travel_postgres
+
+# 进容器连一下：能看到 psql 提示符就 OK
+docker exec -it travel_postgres psql -U travel_user -d travel_planner_db
+
+# 在 psql 里试一句
+travel_planner_db=# SELECT version();
+# 看到 PostgreSQL 17.x on ... 就完事，输入 \q 退出

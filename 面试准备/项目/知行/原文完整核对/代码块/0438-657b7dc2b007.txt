@@ -1,0 +1,6 @@
+destination '换个目的地吧'         → 放行
+destination '我想去别的地方'        → 放行
+destination '这个不错就它了'        → 拒绝
+transport   '还是坐高铁吧'         → 放行
+transport   '行程挺好的'          → 拒绝
+requirement '全部重来'           → 放行

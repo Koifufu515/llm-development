@@ -1,0 +1,3 @@
+连接串里的驱动： postgresql+asyncpg
+SELECT 1 → 1
+PG 主版本 ≥ 12： True

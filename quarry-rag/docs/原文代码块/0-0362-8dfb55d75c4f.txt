@@ -1,0 +1,1 @@
+docker compose exec postgres psql -U quarry -d quarry -c "UPDATE collections SET facts_enabled = true WHERE slug = 'travel-guide';" -c "SELECT slug, facts_enabled FROM collections ORDER BY slug;"

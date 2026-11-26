@@ -1,0 +1,454 @@
+
+
+===== block 205 511ecf35c53e lines 1-40 source 知行旅行助手-v2#205 =====
+"""build_train_multi_segment_payload 演示：全部段 asyncio.gather 并行查询 → 组装 payload → 写入提交侧缓存（纯逻辑，无需密钥）"""
+import asyncio
+
+from app.capabilities.train_multi_segment import train_agent_tool
+from app.capabilities.train_multi_segment.train_agent_tool import build_train_multi_segment_payload, get_cached_payload
+
+RAW = {
+    ("北京", "天津"): """G1 北京南(telecode:VNP) -> 天津(telecode:TJP) 08:30 -> 09:05 历时：00:35
+- 二等座: 有票 54.5元
+C2001 北京南(telecode:VNP) -> 天津(telecode:TJP) 06:30 -> 07:03 历时：00:33
+- 二等座: 无 54.5元""",
+    ("天津", "上海"): """G101 天津西(telecode:TXP) -> 上海虹桥(telecode:AOH) 09:10 -> 14:02 历时：04:52
+- 二等座: 有 509.0元
+G103 天津南(telecode:TIP) -> 上海虹桥(telecode:AOH) 07:48 -> 12:31 历时：04:43
+- 二等座: 候补 509.0元""",
+}
+
+class FakeTicketTool:        # 测试驱动：假装是 12306 查询工具，按段返回原始文本，并记下被调了几次
+    name = "get-tickets"
+
+    def __init__(self):
+        self.calls = 0
+
+    async def ainvoke(self, args: dict):
+        self.calls += 1
+        if args["fromStation"] == "故障站":
+            raise RuntimeError("12306 超时")
+        return RAW.get((args["fromStation"], args["toStation"]), "")
+
+async def main():
+    train_agent_tool._QUERY_TOOL = FakeTicketTool()      # 测试驱动：把 12306 工具换成假的，其余全是真实代码
+    legs = [{"from": "北京", "to": "天津", "date": "2026-10-01"}, {"from": "天津", "to": "上海", "date": "2026-10-02"}]
+    payload = await build_train_multi_segment_payload(legs, cache_key="conv-1")
+    for seg in payload.segments:
+        print(seg.segment_id, seg.from_, "→", seg.to, seg.date, [o.option_id for o in seg.train_list])
+    print("查询次数：", train_agent_tool._QUERY_TOOL.calls, "| 已缓存供提交校验：", get_cached_payload("conv-1") is payload)
+    empty = await build_train_multi_segment_payload([], cache_key="conv-2")
+    print("没有段 → 空 payload：", empty.segments)
+
+asyncio.run(main())
+
+
+===== block 206 a1f2eb1d2d27 lines 1-4 source 知行旅行助手-v2#206 =====
+s1 北京 → 天津 2026-10-01 ['C2001-06:30-天津', 'G1-08:30-天津']
+s2 天津 → 上海 2026-10-02 ['G103-07:48-上海虹桥', 'G101-09:10-上海虹桥']
+查询次数： 2 | 已缓存供提交校验： True
+没有段 → 空 payload： []
+
+
+===== block 207 96ed03e31bdb lines 1-121 source 知行旅行助手-v2#207 =====
+def validate_train_submission(
+    payload: TrainSubmitPayload, cache_key: Optional[str] = None
+) -> TrainSubmitResult:
+    """校验 segment_id 是否存在、option_id 是否在该段候选列表内；不比对任何时间先后"""
+    cached = get_cached_payload(cache_key)
+    if cached is None:                        # 没查过班次就提交：拦下，避免写进不存在的车次
+        return TrainSubmitResult(
+            ok=False, code="NO_PAYLOAD",
+            msg="尚无候选班次记录，请先获取班次卡片后再提交",
+        )
+    items = payload.segments
+    if not items:
+        return TrainSubmitResult(
+            ok=False, code="EMPTY_SELECTION", msg="提交内容为空，至少要选择一段车次",
+        )
+    # 身份校验用 option_id（车次号在同段可重复，不能当身份）：缺 option_id 一律拦下要求重选，
+    # 绝不用 trainNo 兜底匹配，避免静默写错车次
+    no_id = [f"{item.segment_id}·{item.trainNo or '未填写车次号'}"
+             for item in items if not (item.option_id or "").strip()]
+    if no_id:
+        return TrainSubmitResult(
+            ok=False, code="MISSING_OPTION_ID",
+            msg=f"以下选择缺少车次标识（option_id）：{'、'.join(no_id)}；"
+                f"请在卡片中重新选择后提交",
+        )
+    by_id = {seg.segment_id: seg for seg in cached.segments}
+    unknown = [item.segment_id for item in items if item.segment_id not in by_id]
+    if unknown:
+        return TrainSubmitResult(
+            ok=False, code="SEGMENT_NOT_FOUND",
+            msg=f"不存在的行程段：{'、'.join(unknown)}；合法段为 {'、'.join(by_id)}",
+        )
+    bad_train = [
+        f"{item.segment_id}·{item.option_id}" for item in items
+        if item.option_id not in {t.option_id for t in by_id[item.segment_id].train_list}
+    ]
+    if bad_train:
+        return TrainSubmitResult(
+            ok=False, code="TRAIN_NOT_FOUND",
+            msg=f"以下车次不在该段候选列表中：{'、'.join(bad_train)}",
+        )
+    chosen = {item.segment_id for item in items}
+    # ★ 实时无候选（train_list 为空/查询失败、卡片里置灰）的段不算"漏选"——否则该段无从选择、
+    #   用户永远凑不齐全部段而卡在交通步。只有"有候选却没选"的段才判 INCOMPLETE。
+    missing = [seg.segment_id for seg in cached.segments
+               if seg.segment_id not in chosen and seg.train_list]
+    if missing:
+        return TrainSubmitResult(
+            ok=False, code="INCOMPLETE",
+            msg=f"以下行程段尚未选择车次：{'、'.join(missing)}",
+        )
+    return TrainSubmitResult(
+        ok=True, code="OK",
+        msg=f"已收到 {len(items)} 段选中车次，基础合法性校验通过（未做任何时间校验）",
+        accepted=items,
+    )
+
+# ==================== Agent 可调用的两个 Tool ====================
+
+@tool
+async def query_train_multi_segment_tool(
+    legs: list[dict],
+    seat_type: str = "二等座",
+    max_options_per_leg: int = 5,
+) -> str:
+    """并行查询多段高铁班次，返回可直接下发前端的 train_multi_segment skill payload。
+
+    适用于「多目的地闭环行程」需要一次性给出各段候选车次的场景
+    （如 石家庄→北京→上海→石家庄）。段与段之间**并发查询**，总耗时≈最慢一段，
+    段数由 legs 长度决定（2/3/4 段均可），不是串行逐段查。
+
+    Args:
+        legs: 行程段列表，按时间顺序排列。每项含 from（出发城市）、to（到达城市）、
+            travel_date（该段乘车日期 YYYY-MM-DD）；闭环行程最后一段回到起点。
+        seat_type: 期望席别，默认二等座。
+        max_options_per_leg: 每段返回的车次上限，默认 5。
+
+    Returns:
+        JSON 文本 {"skill_name":"train_multi_segment","segments":[...]}。
+        **请原样下发给前端 UI Skill**：不要改写字段名、不要增删 segments、不要自己再校验时间；
+        某些段查不到班次时该段 train_list 为空数组，如实告知用户即可。
+    """
+    payload = await build_train_multi_segment_payload(legs, seat_type, max_options_per_leg)
+    app_logger.info(f"🚄 train_multi_segment 出参：{len(payload.segments)} 段")
+    return payload.model_dump_json(by_alias=True)
+
+@tool
+async def submit_train_multi_segment_tool(segments: list[dict]) -> str:
+    """接收前端一次性回传的全部段选中车次，只做基础合法性校验。
+
+    **不做任何列车时间校验**（不比对到站/发车先后、不判断耗时是否够中转）。
+
+    Args:
+        segments: 前端 onSubmit 抛回的数组，每项为
+            {"segment_id": "s1", "option_id": "G1308-08:36-正定机场", "trainNo": "G1308"}。
+            **option_id 是身份**（车次号在同段可能有多趟，不能当身份）。
+
+    Returns:
+        JSON 文本 {"ok": bool, "code": str, "msg": str, "accepted": [...]}。
+        ok 为 false 时把 msg 原样告知用户，并请其在界面上改选后重新提交；
+        ok 为 true 表示已确认全部段选择（未锁票、未做时间校验）。
+    """
+    try:
+        payload = TrainSubmitPayload.model_validate({"segments": segments})
+    except Exception as exc:                  # 结构缺失（如没有 trainNo）也走确定性回执，不抛错
+        return TrainSubmitResult(
+            ok=False, code="INVALID_PAYLOAD", msg=f"提交数据结构不合法：{exc}"
+        ).model_dump_json()
+    result = validate_train_submission(payload)
+    app_logger.info(f"🚄 train_multi_segment 提交校验：{result.code} / {result.msg}")
+    return result.model_dump_json()
+
+__all__ = [
+    "TRAIN_MULTI_SEGMENT_SKILL",
+    "build_train_multi_segment_payload",
+    "get_cached_payload",
+    "train_score",
+    "validate_train_submission",
+    "query_train_multi_segment_tool",
+    "submit_train_multi_segment_tool",
+]
+
+
+===== block 208 20c9fe4f9e6f lines 1-26 source 知行旅行助手-v2#208 =====
+"""validate_train_submission 演示：只校验"段存在、车次在候选里、每段都选了"，不比对任何时间先后（纯逻辑，无需密钥）"""
+from app.capabilities.train_multi_segment.train_agent_tool import store_cached_payload, validate_train_submission
+from app.capabilities.train_multi_segment.train_skill_schema import (TrainMultiSegmentPayload, TrainOption, TrainSegment,
+                                                                     TrainSubmitPayload)
+
+def opt(no: str, dep: str, to: str) -> TrainOption:
+    return TrainOption(trainNo=no, startTime=dep, endTime="--", startStation="--", endStation=to, duration="01:00",
+                       price=100, seatType="二等座", ticketStatus="有票", option_id=f"{no}-{dep}-{to}")
+
+store_cached_payload(TrainMultiSegmentPayload(segments=[
+    TrainSegment(segment_id="s1", from_="北京", to="天津", date="2026-10-01", train_list=[opt("G1", "08:30", "天津")]),
+    TrainSegment(segment_id="s2", from_="天津", to="上海", date="2026-10-02", train_list=[opt("G101", "09:10", "上海虹桥")]),
+]), cache_key="conv-1")
+cases = {
+    "两段都选对  ": [{"segment_id": "s1", "option_id": "G1-08:30-天津"}, {"segment_id": "s2", "option_id": "G101-09:10-上海虹桥"}],
+    "什么都没选  ": [],
+    "缺 option_id": [{"segment_id": "s1", "trainNo": "G1"}],
+    "段不存在    ": [{"segment_id": "s9", "option_id": "G1-08:30-天津"}],
+    "车次不在候选": [{"segment_id": "s1", "option_id": "G9-10:00-天津"}],
+    "漏选一段    ": [{"segment_id": "s1", "option_id": "G1-08:30-天津"}],
+}
+for name, segs in cases.items():
+    r = validate_train_submission(TrainSubmitPayload.model_validate({"segments": segs}), cache_key="conv-1")
+    print(f"{name} → {r.code:17} {r.msg}")
+r = validate_train_submission(TrainSubmitPayload.model_validate({"segments": cases["两段都选对  "]}), cache_key="别的会话")
+print(f"没下发过卡片 → {r.code:17} {r.msg}")
+
+
+===== block 209 eb50f2c7ef16 lines 1-7 source 知行旅行助手-v2#209 =====
+两段都选对   → OK                已收到 2 段选中车次，基础合法性校验通过（未做任何时间校验）
+什么都没选   → EMPTY_SELECTION   提交内容为空，至少要选择一段车次
+缺 option_id → MISSING_OPTION_ID 以下选择缺少车次标识（option_id）：s1·G1；请在卡片中重新选择后提交
+段不存在     → SEGMENT_NOT_FOUND 不存在的行程段：s9；合法段为 s1、s2
+车次不在候选 → TRAIN_NOT_FOUND   以下车次不在该段候选列表中：s1·G9-10:00-天津
+漏选一段     → INCOMPLETE        以下行程段尚未选择车次：s2
+没下发过卡片 → NO_PAYLOAD        后端尚无候选班次记录，请先调用 query_train_multi_segment_tool 拉取班次
+
+
+===== block 210 1a29101f84d6 lines 1-76 source 知行旅行助手-v2#210 =====
+"""多段高铁 UI Skill —— 与状态机「交通规划步」的接线层
+
+背景：交通步原本是**逐段串行**流程（prompt 驱动：一次只查一段、只展示一段、用户确认一段），
+段账本由 select_transport_tool 的 leg_cursor/leg_selections 维护，多段行程要来回 N 轮。
+本模块把这段循环换成「代码一次并行查全部段 → 前端卡片一次选完 → 一次提交」：
+
+  1. emit_train_skill_ui   手动确认模式：并行查询全部段 → 推 skill_ui 帧（前端内嵌卡片）
+  2. auto_select_train_legs 自动确认模式：代码按「有票优先 → 耗时 → 价格」代选并推进（不弹 UI）
+  3. apply_train_selection  前端提交 → 基础合法性校验（**不做任何时间校验**）→ 写段账本 → 推进
+
+硬约束（与用户要求一致）：全流程不比对到站/发车先后，不判断中转时间是否够。
+"""
+from typing import Any, Optional
+
+from app.core.events import ROLE_SKILL_UI, make_event
+from app.capabilities.base import SignatureCache, duration_to_minutes, get_agent_and_state, leg_signature
+from app.capabilities.train_multi_segment.train_agent_tool import (
+    build_train_multi_segment_payload,
+    get_cached_payload,  # 读取提交侧校验缓存（查询侧由 build_train_multi_segment_payload 写入）
+    train_score,
+    validate_train_submission,
+)
+from app.capabilities.train_multi_segment.train_skill_schema import (
+    TRAIN_MULTI_SEGMENT_SKILL,
+    TrainLeg,
+    TrainMultiSegmentPayload,
+    TrainSubmitPayload,
+    TrainSubmitResult,
+)
+from app.utils.logger import app_logger
+
+# 刻意不做"同一批段只推一次"的去重：历史消息不携带 skill_ui 帧，用户刷新页面后
+# 卡片会消失，若此时去重仍生效则之后每一轮都不再下发 → 交通步变成死路（永远无法提交）。
+# 改为每轮都重推：候选走签名缓存 _SIG_CACHE（不会重复打 12306），前端同技能卡片只保留
+# 最新一张，因此重推在界面上是幂等的。
+
+# 表单"交通方式"可能是中文选项值，也可能是模型归一后的枚举值，两种都认
+_TRAIN_WORDS = {"train", "高铁", "火车", "动车", "高铁/火车"}
+
+# 交通步之后的步骤（用于提交接口的幂等判定：重复提交不再回写状态）
+_AFTER_TRANSPORT = {
+    "accommodation_planning", "food_planning", "itinerary_generation",
+    "budget_summarization", "report_generation",
+}
+
+def train_mode_requested(state: dict) -> bool:
+    """是否走高铁路线：表单勾了高铁（或已选定 train）才推卡片，航班/自驾保持原流程"""
+    if state.get("selected_transport") == "train":
+        return True
+    req = state.get("user_requirement") or {}
+    picked = {str(v).strip() for v in (req.get("transport_types") or [])}
+    return bool(picked & _TRAIN_WORDS)
+
+def multi_leg_train(state: dict) -> bool:
+    """是否走"高铁由代码供给卡片"的路线：高铁 + 段数≥1（0 段=本地游玩，走零段直通）"""
+    return train_mode_requested(state) and len(_legs_with_dates(state)) >= 1
+
+def _legs_with_dates(state: dict) -> list[TrainLeg]:
+    """按行程时序生成「段 + 段日期」：去程=出发日、城际=下一城首日（_leg_query_date 口径）"""
+    from app.core.middleware import _leg_query_date
+    from app.tools.state_transition import _expected_legs
+    legs = _expected_legs(state)
+    out: list[TrainLeg] = []
+    for index, leg in enumerate(legs):
+        frm, _, to = leg.partition("→")
+        if not frm or not to:
+            continue
+        out.append(TrainLeg(
+            from_=frm, to=to, travel_date=_leg_query_date(state, legs, index),
+        ))
+    return out
+
+def _fmt_option(opt: Any) -> str:
+    """车次 → 段账本文本（与 select_transport_tool 落库口径一致，行程步直接可读）"""
+    price = f"{opt.price:g}"
+    return f"{opt.trainNo} {opt.startTime}-{opt.endTime} {opt.seatType}{price}元"
+
+
+===== block 211 59770f3ba506 lines 1-10 source 知行旅行助手-v2#211 =====
+"""train_mode_requested / multi_leg_train 演示：表单勾了高铁、且至少一段城际交通，才走"代码供卡片"（纯逻辑，无需密钥）"""
+from app.capabilities.train_multi_segment.train_flow import multi_leg_train, train_mode_requested
+
+def state(transport: list, dest: str, picked: str = "") -> dict:
+    return {"user_requirement": {"departure_city": "北京", "departure_date": "2026-10-01", "travel_days": 4,
+                                 "transport_types": transport}, "selected_destination": dest, "selected_transport": picked}
+
+for name, st in {"勾了高铁、两座城": state(["高铁"], "天津、上海"), "勾了航班          ": state(["flight"], "上海"),
+                 "已选定 train     ": state([], "上海", picked="train"), "高铁但本地游      ": state(["高铁"], "北京")}.items():
+    print(f"{name} → 走高铁路线 {train_mode_requested(st)!s:5} | 代码供卡片 {multi_leg_train(st)}")
+
+
+===== block 212 aa4c178f6b43 lines 1-4 source 知行旅行助手-v2#212 =====
+勾了高铁、两座城 → 走高铁路线 True  | 代码供卡片 True
+勾了航班           → 走高铁路线 False | 代码供卡片 False
+已选定 train      → 走高铁路线 True  | 代码供卡片 True
+高铁但本地游       → 走高铁路线 True  | 代码供卡片 False
+
+
+===== block 213 48a64ad4679f lines 1-7 source 知行旅行助手-v2#213 =====
+"""_legs_with_dates 演示：段来自 _expected_legs，日期来自 _leg_query_date，一处口径（纯逻辑，无需密钥）"""
+from app.capabilities.train_multi_segment.train_flow import _legs_with_dates
+
+st = {"user_requirement": {"departure_city": "北京", "departure_date": "2026-10-01", "travel_days": 5, "transport_types": ["高铁"]},
+      "selected_destination": "天津、上海"}
+for leg in _legs_with_dates(st):
+    print(leg.from_, "→", leg.to, leg.travel_date)
+
+
+===== block 214 5bd6296e69a6 lines 1-3 source 知行旅行助手-v2#214 =====
+北京 → 天津 2026-10-01
+天津 → 上海 2026-10-02
+上海 → 北京 2026-10-05
+
+
+===== block 215 75c25cb464a0 lines 1-54 source 知行旅行助手-v2#215 =====
+async def emit_train_skill_ui(
+    stream: Any, conversation_id: str, state: dict
+) -> tuple[Optional[TrainMultiSegmentPayload], str]:
+    """手动确认模式：并行查全部段 → 推 skill_ui 帧
+
+    返回 (payload, status)，status 供调用方决定正文怎么写：
+      pushed    —— 已下发卡片（payload 非空）
+      empty     —— 各段都没查到候选，未下发卡片（调用方须如实告知，不能静默）
+      skipped   —— 不走高铁卡片路线（未选高铁 / 0 段）
+    """
+    if not train_mode_requested(state):
+        return None, "skipped"
+    legs = _legs_with_dates(state)
+    if len(legs) < 1:                        # 0 段（出发地=目的地）走零段直通，不推空卡片
+        return None, "skipped"
+    payload = await _payload_for(conversation_id, legs)
+    # ★ 全部段都为空就不推：宁可不推，也不推一张空卡片
+    if not any(seg.train_list for seg in payload.segments):
+        app_logger.warning("⚠️ 交通步多段班次全部为空，本次不下发选择卡片（避免空卡片）")
+        return None, "empty"
+    # ★ 一帧 skill_ui：前端按 skill_name 把卡片渲染在聊天流里
+    stream.push(make_event(ROLE_SKILL_UI, {
+        "skill_name": TRAIN_MULTI_SEGMENT_SKILL,
+        "data": payload.model_dump(by_alias=True),
+    }))
+    app_logger.info(
+        f"🚄 已下发多段高铁选择卡片：{len(payload.segments)} 段"
+        f"（各段候选 {[len(s.train_list) for s in payload.segments]}）"
+    )
+    return payload, "pushed"
+
+def build_lead_text(payload: Optional[TrainMultiSegmentPayload]) -> str:
+    """卡片上方的一句引导语（确定性文案，不用模型自由发挥）"""
+    n = len(payload.segments) if payload else 0
+    return (f"已为您**并行查询**到全部 {n} 段高铁的真实班次（段与段同时查询，未做先后校验）。"
+            f"请在下方卡片中依次选定每一段车次，确认无误后一次提交。\n")
+
+# 本批段的签名缓存：同一会话、同一批段的后续轮次直接复用，避免同一批段被反复查 12306
+_SIG_CACHE: SignatureCache[TrainMultiSegmentPayload] = SignatureCache("train")
+
+def _all_have_options(payload: TrainMultiSegmentPayload) -> bool:
+    """高铁的缓存口径：每一段都有候选才缓存（某段偶发为空就不缓存，下次重试会重新查询）"""
+    # ★ 高铁口径：每一段都要有候选
+    return all(seg.train_list for seg in payload.segments)
+
+async def _payload_for(conversation_id: str, legs: list[TrainLeg]) -> TrainMultiSegmentPayload:
+    """同一会话同一批段只查一次：命中完整快照直接复用，否则并行查询，并按高铁口径决定写不写缓存"""
+    sig = leg_signature(legs)
+    cached = _SIG_CACHE.get(conversation_id, sig, is_complete=_all_have_options)
+    if cached is not None:
+        return cached
+    payload = await build_train_multi_segment_payload(legs, cache_key=conversation_id)
+    _SIG_CACHE.store(conversation_id, sig, payload, is_complete=_all_have_options)
+    return payload
+
+
+===== block 216 38802284f440 lines 1-58 source 知行旅行助手-v2#216 =====
+"""emit_train_skill_ui 演示：手动确认模式——并行查全部段，推一帧 skill_ui 卡片（纯逻辑，无需密钥）"""
+import asyncio
+
+from app.capabilities.train_multi_segment import train_agent_tool
+from app.capabilities.train_multi_segment.train_flow import build_lead_text, emit_train_skill_ui
+
+RAW = {
+    ("北京", "天津"): """G1 北京南(telecode:VNP) -> 天津(telecode:TJP) 08:30 -> 09:05 历时：00:35
+- 二等座: 有票 54.5元
+C2001 北京南(telecode:VNP) -> 天津(telecode:TJP) 06:30 -> 07:03 历时：00:33
+- 二等座: 无 54.5元""",
+    ("天津", "上海"): """G101 天津西(telecode:TXP) -> 上海虹桥(telecode:AOH) 09:10 -> 14:02 历时：04:52
+- 二等座: 有 509.0元
+G103 天津南(telecode:TIP) -> 上海虹桥(telecode:AOH) 07:48 -> 12:31 历时：04:43
+- 二等座: 候补 509.0元""",
+    ("上海", "北京"): """G2 上海虹桥(telecode:AOH) -> 北京南(telecode:VNP) 19:00 -> 23:18 历时：04:18
+- 二等座: 有 553.0元
+G6 上海虹桥(telecode:AOH) -> 北京南(telecode:VNP) 17:00 -> 21:36 历时：04:36
+- 二等座: 候补 553.0元""",
+}
+
+class FakeTicketTool:        # 测试驱动：假装是 12306 查询工具，按段返回原始文本，并记下被调了几次
+    name = "get-tickets"
+
+    def __init__(self):
+        self.calls = 0
+
+    async def ainvoke(self, args: dict):
+        self.calls += 1
+        if args["fromStation"] == "故障站":
+            raise RuntimeError("12306 超时")
+        return RAW.get((args["fromStation"], args["toStation"]), "")
+
+class Collector:             # 测试驱动：替代第 12 章的 EventStream，只把推过来的帧收起来
+    def __init__(self):
+        self.frames = []
+
+    def push(self, frame):
+        self.frames.append(frame)
+
+def state(transport: list, dest: str) -> dict:
+    return {"user_requirement": {"departure_city": "北京", "departure_date": "2026-10-01", "travel_days": 4,
+                                 "transport_types": transport}, "selected_destination": dest}
+
+async def main():
+    train_agent_tool._QUERY_TOOL = FakeTicketTool()      # 测试驱动：把 12306 工具换成假的
+    stream = Collector()
+    print("没勾高铁：", (await emit_train_skill_ui(stream, "conv-1", state(["自驾"], "天津")))[1])
+    print("查不到车：", (await emit_train_skill_ui(stream, "conv-1", state(["高铁"], "无车城")))[1])
+    payload, status = await emit_train_skill_ui(stream, "conv-1", state(["高铁"], "天津、上海"))
+    frame = stream.frames[-1]
+    print("正常下发：", status, "| 帧 role =", frame["role"], "| skill_name =", frame["content"]["skill_name"],
+          "| 各段候选数 =", [len(s["train_list"]) for s in frame["content"]["data"]["segments"]])
+    await emit_train_skill_ui(stream, "conv-1", state(["高铁"], "天津、上海"))
+    print("同一批段再推一次，12306 被调用的总次数：", train_agent_tool._QUERY_TOOL.calls)
+    print("引导语：", build_lead_text(payload).strip())
+
+asyncio.run(main())
+
+
+===== block 217 5dd8d5fee0fb lines 1-5 source 知行旅行助手-v2#217 =====
+没勾高铁： skipped
+查不到车： empty
+正常下发： pushed | 帧 role = skill_ui | skill_name = train_multi_segment | 各段候选数 = [2, 2, 2]
+同一批段再推一次，12306 被调用的总次数： 5
+引导语： 已为您**并行查询**到全部 3 段高铁的真实班次（段与段同时查询，未做先后校验）。请在下方卡片中依次选定每一段车次，确认无误后一次提交。

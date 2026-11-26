@@ -1,0 +1,1 @@
+../../../../../knowgo-travel/scripts/accept_reference.py

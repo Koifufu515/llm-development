@@ -1,0 +1,27 @@
+class _SkillUiRecorder:
+    """ 卡片帧回放记录器——旁路记录本轮推送的 skill_ui 帧
+
+    卡片此前只活在本轮 SSE/WS 事件里，刷新页面或切会话即消失。此处只做记录（不改推送行为），
+    回合末把最近一条卡片帧写进 assistant 消息的 extra_info["skill_ui"]，历史接口随之透出，
+    前端挂回 ChatMessage.skillUi 即可原样重渲染卡片
+    """
+
+    def __init__(self, inner: EventStream) -> None:
+        self._inner = inner
+        self.skill_ui: dict | None = None  # 最近一条卡片帧内容 {skill_name, data}
+
+    def push(self, event: dict) -> None:
+        try:
+            if event.get("role") == ROLE_SKILL_UI and isinstance(event.get("content"), dict):
+                # ★ 只记录、不改推送：最近一条 skill_ui 卡片帧留给回合末落库
+                self.skill_ui = event["content"]
+        except Exception:
+            pass
+        self._inner.push(event)
+
+    def close(self) -> None:
+        self._inner.close()
+
+    # ★ 鸭子类型：push / close / async for 与 EventStream 完全一致，下游无感知
+    def __aiter__(self):
+        return self._inner.__aiter__()

@@ -1,0 +1,76 @@
+services:
+  postgres:
+    # 0.8.6 是 pgvector 版本，pg17 是 PostgreSQL 大版本，两者必须一起钉死
+    image: pgvector/pgvector:0.8.6-pg17
+    environment:
+      POSTGRES_USER: quarry
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: quarry
+    ports:
+      - "127.0.0.1:5433:5432"          # 宿主机 5433 → 容器 5432，避开本机可能已有的 5432
+    volumes:
+      - pgdata_v2:/var/lib/postgresql/data
+      - init_sql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U quarry -d quarry"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis/redis-stack:7.4.0-v3
+    ports:
+      - "127.0.0.1:6380:6379"          # 数据端口
+      - "127.0.0.1:8101:8001"          # RedisInsight 可视化界面
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 10
+
+  api: &app
+    build: .
+    image: quarry-rag:local
+    env_file: .env.docker
+    environment: &runtime_proxy
+      HTTP_PROXY: ${QUARRY_HTTP_PROXY:-}
+      HTTPS_PROXY: ${QUARRY_HTTP_PROXY:-}
+      NO_PROXY: postgres,redis,localhost,127.0.0.1
+    volumes:
+      - corpusdata:/app/corpus
+    ports:
+      - "127.0.0.1:8113:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz')"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  worker:
+    <<: *app
+    restart: unless-stopped
+    ports: []
+    command: ["uv", "run", "--no-sync", "python", "-m", "quarry.ingest.worker"]
+    healthcheck:
+      disable: true
+
+  devapi:
+    <<: *app
+    profiles: ["dev"]
+    ports:
+      - "127.0.0.1:8110:8000"
+    environment:
+      <<: *runtime_proxy
+      APP_ENV: development
+    command: ["uv", "run", "--no-sync", "uvicorn", "quarry.api.app:app", "--host", "0.0.0.0", "--port", "8000"]
+
+volumes:
+  pgdata_v2:
+  init_sql:
+  redisdata:
+  corpusdata:

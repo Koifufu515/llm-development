@@ -1,0 +1,1 @@
+../../../../../quarry-rag/scripts/revalidate_fact_mentions.py

@@ -1,0 +1,1 @@
+调用方 → hybrid_search() → 一条 SQL → 返回 Hit 列表

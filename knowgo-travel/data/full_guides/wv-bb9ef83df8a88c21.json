@@ -1,0 +1,21 @@
+{
+  "city": "上海",
+  "title": "上海景点资料 · Shanghai/Changning",
+  "source_url": "https://en.wikivoyage.org/wiki/Shanghai/Changning",
+  "text": "资料城市：上海。本文是历史开放景点资料，不提供实时开放时间或价格；出行前需要核实。\n\nRed Town\nA former steel factory that has been converted into an area of galleries, sculpture parks, media companies and cafes. Has a sizable grassy area full of sculptures that families come and picnic on.\n\nZhongshan Park\nEstablished as 'Jessfield Park' in 1914 by a British property developer, it was renamed in1944 in honour of Dr Sun Yat-sen.\n\nShanghai Zoo\nSee the giant panda and many more exotic animals at this spacious and modern zoo that's for the most part a far cry from the concrete animal prisons found elsewhere in the country (such as Beijing). Be prepared for some some shocking behaviour by other visitors. Note that the good amount of space given to the animals means that a lot of walking is involved. There are some fairground rides for the children as well.",
+  "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+  "license": "CC BY-SA 3.0",
+  "attribution": "Wikivoyage contributors; https://en.wikivoyage.org/wiki/Shanghai/Changning",
+  "sha256": "994f27e18b226af40d43c2cc5772005fa4ae47e641442f0d2e219595e51aeb3d",
+  "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+  "poi_count": 3,
+  "source_dataset": "https://github.com/wikivoyage/wikivoyage.github.io",
+  "excluded_fields": [
+    "price",
+    "hours",
+    "phone",
+    "email",
+    "hotel",
+    "restaurant"
+  ]
+}

@@ -1,0 +1,1 @@
+Invoke-RestMethod http://localhost:8100/healthz | ConvertTo-Json -Depth 5

@@ -1,0 +1,33 @@
+"""
+会话管理 API
+"""
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, desc
+from app.models.base import get_db
+from app.models.user import User
+from app.models.conversation import Conversation
+from app.schemas.conversation import ConversationCreate, ConversationUpdate, ConversationResponse
+from app.services import conversation_service  # 会话业务逻辑收敛到服务层
+from app.api.dependencies import get_current_user
+
+router = APIRouter(prefix="/conversations", tags=["会话管理"])
+
+@router.post("", response_model=ConversationResponse)
+async def create_conversation(
+        data: ConversationCreate,
+        user: User = Depends(get_current_user),
+        db: AsyncSession = Depends(get_db)
+):
+    """创建新会话"""
+    conversation = await conversation_service.create_conversation(db, user.id, data.title)  # ★ 走服务层
+    return ConversationResponse.from_orm(conversation)
+
+@router.get("", response_model=list[ConversationResponse])
+async def list_conversations(
+        user: User = Depends(get_current_user),
+        db: AsyncSession = Depends(get_db)
+):
+    """获取用户的所有会话"""
+    conversations = await conversation_service.list_conversations(db, user.id)
+    return [ConversationResponse.from_orm(c) for c in conversations]

@@ -1,0 +1,12 @@
+配置加载：
+   postgres = localhost:5433/quarry
+   redis    = localhost:6380
+   api_key  = **********
+   embed    = text-embedding-v4 / 1024 维 / 后端 api
+   app_env  = development
+
+✅ Postgres 连通：PostgreSQL 17.11 (Debian 17.11-1.pgdg12+2) on...
+✅ pgvector 版本：0.8.6
+❌ chunks 表不存在。跑 uv run alembic upgrade head
+✅ Redis 连通：ping = True
+✅ 向量化接口连通：text-embedding-v4 返回 1024 维

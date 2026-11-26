@@ -1,0 +1,53 @@
+def brand_fallback(price_level: str) -> list[HotelBrand]:
+    """实时报价不可用时的品牌兜底：按档位给出常见连锁品牌（不编造门店与价格）"""
+    level = _level_of(price_level)
+    return [HotelBrand(brand_id=f"b{i}", brandName=name)
+            for i, name in enumerate(_BRANDS[level], 1)]
+
+# ==================== 查询工具定位与入参适配 ====================
+
+async def resolve_hotel_tool() -> Optional[BaseTool]:
+    """定位酒店查询工具：按名含 searchhotels / find-hotels 判定（与 get_hotel_tools 同口径）
+
+    注意取 get_all_mcp_tools() 的**原始工具**：本 Skill 需要解析原始返回文本的完整结构，
+    不用被裁剪/包装过的工具版本。
+    """
+    global _QUERY_TOOL
+    if _QUERY_TOOL is not None:
+        return _QUERY_TOOL
+    for item in await get_all_mcp_tools():
+        name = getattr(item, "name", "").lower()
+        if any(hint in name for hint in _HOTEL_TOOL_HINTS):
+            _QUERY_TOOL = item
+            app_logger.info(f" 复用酒店查询工具：{item.name}")
+            return _QUERY_TOOL
+    app_logger.warning("⚠️ 未找到酒店查询工具（searchHotels / find-hotels），将走品牌兜底")
+    return None
+
+def build_args(
+    tool: BaseTool, city: str, check_in_date: str, nights: int,
+    guest_count: int, price_level: str, max_options: int,
+) -> dict:
+    """组装酒店工具入参：aigohotel searchHotels 的嵌套形态
+
+    实测 aigohotel 的 searchHotels：必填 originQuery / place / placeType（取值「城市」等中文），
+    日期-晚数-人数在 checkInParam 里，星级筛选在 filterOptions 里，条数在 size 里。
+    """
+    stars = _STAR_RATINGS[_level_of(price_level)]
+    return {
+        "originQuery": f"{city} {price_level}酒店 {nights}晚 {guest_count}人",
+        "place": city, "placeType": "城市",
+        "checkInParam": {
+            "checkInDate": check_in_date, "stayNights": nights, "adultCount": guest_count,
+        },
+        "filterOptions": {"starRatings": stars},
+        "size": max_options,
+    }
+
+__all__ = [
+    "hotels_from_raw",
+    "brand_fallback",
+    "resolve_hotel_tool",
+    "build_args",
+    "stay_nights",
+]

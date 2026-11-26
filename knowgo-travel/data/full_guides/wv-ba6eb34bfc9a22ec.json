@@ -1,0 +1,21 @@
+{
+  "city": "敦煌",
+  "title": "敦煌景点资料 · Dunhuang",
+  "source_url": "https://en.wikivoyage.org/wiki/Dunhuang",
+  "text": "资料城市：敦煌。本文是历史开放景点资料，不提供实时开放时间或价格；出行前需要核实。\n\nMogao Caves\nA UNESCO World Heritage Site filled with exquisite Buddhist art and manuscripts.  Although the city had an early connection with Buddhism due to the passage of monks traveling the Silk Road, it was not until a monk had a vision of a thousand Buddhas above the desert at Dunhuang in 4th century that the famous caves were excavated and filled with the manuscripts and treasures. Nearby is the ''White Horse Pagoda'', built by a monk from India in honor of his horse, which died in the process of bringing the monk to China. It is not possible to tour the caves on your own and all visitors are assigned to different guides (included in the ticket price). The tour takes about two hours and about 15 caves will be visited; all the rest are closed. The tours are different from group to group with every group visiting the main caves. You can arrange to visit closed caves; it will cost you ¥200 per person per cave. Note that It can be handy to bring your own flashlight (torch).\n\nSand Dunes\nWorth a trip. If you're not interested in seeing the lake from up close and just want to walk among the dunes just follow the fence to the right from Charlie Jongh's Dune Guesthouse. After a couple of minutes you will find an open gate and a path leading up to the dunes. From the top of the one on the left, you can see the lake.\n\nHuyang Forest\nIt consist of a small forest of rare poplares (Populus Divesifolia). Some are more than 600 years old. Can give an opportunity for a walk far from town.\n\nWhite Horse Pagoda\nThe construction of this 12 meters stuppa has been ordered by Kunarajiva, a Buddhist translator, in 384.\n\nPiper bounce statue\nRebound Pipa statue is the symbol of Dunhuang, is located in the urban circle Flower Island Center, bar, and an even Highway South Road intersection in this. The statue through about 5 meters high, very graceful indeed, plump body, dance a benevolent and kind countenance, focus on the right leg, left leg lift back toward the front, Pipa behind the palm faces on the rebound.\n\nYadan Land-forms National Park\nThe Land-forms are an area in the Gobi Desert where wind erosion has left striking rock formations 10-20 meters high. The area contains named formations resembling fleets of ships, The Sphinx, as well as camels, birds, and many others. The land-forms are an interesting contrast to the sand dunes at Dunhuang in terms of the terrain of the Gobi Desert. Tours of the area will likely also include stops at an ancient section of the Great Wall, a Han Dynasty fortress, and a small set of caves similar to Mogao.\n\nSummer of Dunhuang Variety Show\nPerformances of singing and dancing in the Silk Road traditions.\n\nCamel Trek, arranged by Charlie Johng's Cafe\nGet to know the desert firsthand on a 2 to 7 day camel trek across spectacular sand dunes. A typical trek goes for 3 days and includes a visit to the Mogao Cave. Alternately, just camp out in the desert for a night to experience the Gobi Desert's night sky, sunset and sunrise. If you don't have much time you can have a one day tour with staying in the desert and riding to the Mogao Cave in the morning (400 RMB p.P.).",
+  "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+  "license": "CC BY-SA 3.0",
+  "attribution": "Wikivoyage contributors; https://en.wikivoyage.org/wiki/Dunhuang",
+  "sha256": "594b6610643ba9af50cd2391208178fed827dceb8e2900544d47e0f0326fa640",
+  "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+  "poi_count": 8,
+  "source_dataset": "https://github.com/wikivoyage/wikivoyage.github.io",
+  "excluded_fields": [
+    "price",
+    "hours",
+    "phone",
+    "email",
+    "hotel",
+    "restaurant"
+  ]
+}

@@ -1,0 +1,20 @@
+..............................................F.                         [100%]
+=================================== FAILURES ===================================
+________________________ test_mentions_follow_chunk_acl ________________________
+
+    async def test_mentions_follow_chunk_acl():
+        """红线 8  调用方标签和块的权限标签不相交，一条提及都拿不到；相交则能拿到。"""
+        async with acquire() as conn:
+            coll_id = await conn.fetchval(
+                "SELECT id FROM collections WHERE slug = 'travel-guide'")
+            ids = [r["chunk_id"] for r in await conn.fetch(
+                "SELECT DISTINCT chunk_id FROM fact_mentions WHERE collection_id = $1 LIMIT 20",
+                coll_id)]
+>           assert ids, "fact_mentions 是空的，先跑 6.3 的抽取"
+E           AssertionError: fact_mentions 是空的，先跑 6.3 的抽取
+E           assert []
+
+tests/redlines/test_facts_acl.py:26: AssertionError
+=========================== short test summary info ============================
+FAILED tests/redlines/test_facts_acl.py::test_mentions_follow_chunk_acl - Ass...
+1 failed, 47 passed in 4.92s

@@ -1,0 +1,1 @@
+docker compose exec postgres psql -U quarry -d quarry -c "SELECT q.query, r.judge, r.judge_reason FROM eval_results r JOIN eval_queries q ON q.qid = r.qid WHERE r.run_id = '把上面的 run_id 粘这里' AND r.judge IS NOT NULL ORDER BY random() LIMIT 10;"

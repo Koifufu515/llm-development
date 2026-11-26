@@ -1,0 +1,14 @@
+"""_pick_hotel 演示：评分≥4.5 里挑最低价；低于 25 元的异常价先剔掉（纯函数，无需密钥）"""
+import json
+
+from app.services.express_planning_service import _pick_hotel
+
+raw = json.dumps({"hotelInformationList": [
+    {"name": "西湖景观酒店", "price": {"message": "688CNY/晚"}, "starRating": 4.8, "address": "西湖区"},
+    {"name": "湖滨精选酒店", "price": {"message": "358CNY/晚"}, "starRating": 4.6, "address": "上城区"},
+    {"name": "车站快捷酒店", "price": {"message": "199CNY/晚"}, "starRating": 4.1, "address": "拱墅区"},
+    {"name": "离谱低价房", "price": {"message": "14CNY/晚"}, "starRating": 4.9, "address": "未知"},
+]}, ensure_ascii=False)
+
+print(_pick_hotel(raw))            # 湖滨精选酒店 358：4.5 分以上里最便宜；14 元那条当异常剔掉
+print(_pick_hotel("不是JSON"))      # None → 该城按"经济型估算"降级

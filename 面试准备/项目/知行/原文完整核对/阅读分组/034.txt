@@ -1,0 +1,461 @@
+
+
+===== block 381 61b4cfc19227 lines 1-74 source 知行旅行助手-v2#381 =====
+# ============== 2️.目的地选择工具 ==============
+
+@tool
+def select_destination_tool(
+        destination: str,
+        runtime: ToolRuntime[None, TravelState] = None
+) -> Command:
+    """
+    确认用户选择的目的地，并转换到交通规划步骤。
+
+    参数说明：
+    - destination: 目的地名称。单目的地如 "西安"；多目的地按游览顺序用顿号连接，
+      如 "杭州、深圳"（多城串联时**必须传完整城市串**，只传第一个城市会导致丢城）
+    """
+
+    app_logger.info(f"用户选择目的地: {destination}")
+
+    return Command(update={
+        "messages": [
+            ToolMessage(
+                content=f"目的地已确认：{destination}",
+                tool_call_id=runtime.tool_call_id
+            )
+        ],
+        "selected_destination": destination,
+        "current_step": "transport_planning"  # 跳转到步骤3
+    })
+
+# ============== 5️.餐饮偏好选择工具 ==============
+
+@tool
+def select_food_tool(
+        food_types: list[str],  # 可多选
+        runtime: ToolRuntime[None, TravelState] = None
+) -> Command:
+    """
+    确认用户选择的餐饮偏好（可多选），并转换到行程生成步骤。
+
+    参数说明：
+    - food_types: 餐饮类型列表，可选值：["specialty", "chain", "local"]
+    """
+
+    app_logger.info(f"用户选择餐饮类型: {food_types}")
+
+    # 验证枚举值
+    valid_types = {"specialty", "chain", "local"}
+    if not all(t in valid_types for t in food_types):
+        return Command(update={
+            "messages": [
+                ToolMessage(
+                    content=f"❌ 餐饮类型无效，请从以下选择：{', '.join(valid_types)}",
+                    tool_call_id=runtime.tool_call_id
+                )
+            ]
+        })
+
+    type_labels = {
+        "specialty": "🍽️ 特色美食",
+        "chain": "🍔 连锁快餐",
+        "local": "🥘 本地小吃"
+    }
+
+    selected_labels = [type_labels[t] for t in food_types]
+
+    return Command(update={
+        "messages": [
+            ToolMessage(
+                content=f"餐饮偏好已确认：{', '.join(selected_labels)}",
+                tool_call_id=runtime.tool_call_id
+            )
+        ],
+        "selected_food_types": food_types,
+        "current_step": "itinerary_generation"  # 跳转到步骤6
+    })
+
+
+===== block 382 5c7dce2299dd lines 1-3 source 知行旅行助手-v2#382 =====
+1.（可选）枚举校验：参数不在合法集合里就返错误 ToolMessage、不写状态、不推进
+2. 写业务字段：selected_destination / selected_food_types
+3. 推进 current_step：到下一步
+
+
+===== block 383 3ecf3b2de7d0 lines 1-18 source 知行旅行助手-v2#383 =====
+"""两个薄推进器：目的地直接写入推进；餐饮先校验枚举，不合法就只回错误、原地不动（直接调真实工具，纯逻辑，无需密钥）"""
+from langchain.tools import ToolRuntime
+
+from app.tools.state_transition import select_destination_tool, select_food_tool
+
+def runtime(step):
+    state = {"messages": [], "current_step": step}
+    return ToolRuntime(state=state, context=None, config={}, stream_writer=None, tool_call_id="call_1", store=None)
+
+up = select_destination_tool.func(destination="天津、上海", runtime=runtime("destination_recommendation")).update
+print("目的地       →", {k: v for k, v in up.items() if k != "messages"})
+
+bad = select_food_tool.func(food_types=["火锅"], runtime=runtime("food_planning")).update
+print("餐饮·非法值  →", [k for k in bad if k != "messages"] or "只有一条错误消息，不写字段、不推进",
+      "|", bad["messages"][0].content[:40])
+
+ok = select_food_tool.func(food_types=["local", "specialty"], runtime=runtime("food_planning")).update
+print("餐饮·合法值  →", {k: v for k, v in ok.items() if k != "messages"})
+
+
+===== block 384 b7a91fdf2589 lines 1-3 source 知行旅行助手-v2#384 =====
+目的地       → {'selected_destination': '天津、上海', 'current_step': 'transport_planning'}
+餐饮·非法值  → 只有一条错误消息，不写字段、不推进 | ❌ 餐饮类型无效，请从以下选择：specialty, chain, local
+餐饮·合法值  → {'selected_food_types': ['local', 'specialty'], 'current_step': 'itinerary_generation'}
+
+
+===== block 385 a1bca84fd98e lines 1-52 source 知行旅行助手-v2#385 =====
+# ============== 多目的地覆盖校验 ==============
+
+def _multi_city_names(state) -> list[str]:
+    """多目的地城市列表（按游览顺序）；单目的地返回空列表（调用方跳过校验）
+
+    单城返回空列表是刻意设计：单目的地流程保持完全不变，不引入任何新校验
+    """
+    from app.services.express_planning_service import _split_cities
+    cities = _split_cities(state.get("selected_destination") or "")
+    return cities if len(cities) > 1 else []
+
+def _expected_legs(state) -> list[str]:
+    """应有的交通段：出发地→第一城 + 城际转场 + 末城→出发地返程（节点相邻城市不同才生成）。
+
+ 单目的地同样纳入段级校验（此前单城返回空列表跳过校验）。
+ （用户规格）：按 _build_legs 口径——末城→出发地返程段一并计入，
+    北京→上海 = 2 段、北京→天津→上海 = 3 段、北京→北京 = 0 段；出发地缺失时返回空列表
+    """
+    from app.services.express_planning_service import _build_legs, _split_cities
+    departure = ((state.get("user_requirement") or {}).get("departure_city") or "").strip()
+    if not departure:
+        return []
+    cities = _split_cities(state.get("selected_destination") or "")
+    # ★ "应有几段"的唯一口径：交通步和第 12 章的执行器都认它
+    return [f"{a}→{b}" for a, b in _build_legs(departure, cities)]
+
+# 正文完整性守卫（`_itinerary_text_guard`）已按用户要求删除——
+# 正文改由代码渲染后，模型自由正文一律作废重推，守卫已无可校验的对象。
+# 此处仅保留天序号解析器：它仍被早期的"正文覆盖 1~N 天即推进状态机"兜底复用
+# （那是流程推进保证，不是内容格式校验）
+_DAY_MARK_RE = re.compile(r"第\s*(\d+|[一二三四五六七八九十]+)\s*天|Day\s*(\d+)", re.IGNORECASE)
+_CN_DIGIT = {"一": 1, "二": 2, "三": 3, "四": 4, "五": 5, "六": 6, "七": 7, "八": 8, "九": 9}
+
+def _day_numbers(text: str) -> set[int]:
+    """ 提取正文里出现过的天序号（第3天 / 第三天 / Day 3）"""
+    nums: set[int] = set()
+    for m in _DAY_MARK_RE.finditer(text or ""):
+        if m.group(2):                                  # Day 4 / day 12
+            nums.add(int(m.group(2)))
+            continue
+        g1 = m.group(1)                                 # 第3天 / 第1天 / 第三天
+        if g1.isdigit():
+            nums.add(int(g1))
+            continue
+        cn = g1
+        if len(cn) == 1:
+            nums.add(10 if cn == "十" else _CN_DIGIT.get(cn, 0))
+        elif cn.startswith("十"):
+            nums.add(10 + _CN_DIGIT.get(cn[1], 0))
+        elif cn.endswith("十"):
+            nums.add(_CN_DIGIT.get(cn[0], 0) * 10)
+    return {n for n in nums if n > 0}
+
+
+===== block 386 4c486c187b3f lines 1-5 source 知行旅行助手-v2#386 =====
+"""_multi_city_names 演示：多城返回城市列表；单城故意返回空列表，让老的"整步确认"路径零改动（纯函数，无需密钥）"""
+from app.tools.state_transition import _multi_city_names
+
+for dest in ["天津、上海", "北京, 天津 上海", "上海", ""]:
+    print(f"{dest!r:16} → {_multi_city_names({'selected_destination': dest})}")
+
+
+===== block 387 fc6d9f6c3ac4 lines 1-4 source 知行旅行助手-v2#387 =====
+'天津、上海'          → ['天津', '上海']
+'北京, 天津 上海'      → ['北京', '天津', '上海']
+'上海'             → []
+''               → []
+
+
+===== block 388 4ffddbc02235 lines 1-8 source 知行旅行助手-v2#388 =====
+"""天序号提取：第3天 / 第三天 / Day 3 都能认出（导入真实 _day_numbers，纯逻辑无需密钥）"""
+from app.tools.state_transition import _day_numbers
+
+print("阿拉伯数字 →", sorted(_day_numbers("第1天上午…第2天…第3天晚上返程")))   # [1,2,3]
+print("中文数字   →", sorted(_day_numbers("第一天…第十天…第十二天")))          # [1,10,12]
+print("Day N      →", sorted(_day_numbers("Day 1 … day 5")))                    # [1,5]
+assert _day_numbers("第一天…第十二天") == {1, 12}
+print("✅ 阿拉伯/中文/Day 三种写法都能提取天序号")
+
+
+===== block 389 0cc1caff8934 lines 1-4 source 知行旅行助手-v2#389 =====
+阿拉伯数字 → [1, 2, 3]
+中文数字   → [1, 10, 12]
+Day N      → [1, 5]
+✅ 阿拉伯/中文/Day 三种写法都能提取天序号
+
+
+===== block 390 e344d633bbae lines 1-51 source 知行旅行助手-v2#390 =====
+# ============== 段级循环：当前段的结构化选择 ==============
+class LegChoice(BaseModel):
+    """模型提交的"一段交通选择"。
+
+    关键在于它是**一组字段**，不是一句话。早期实现里 legs 是 list[str]，每项形如
+    "天津→石家庄 G6279 05:40-07:07 二等座105.5元"，于是代码要干三件苦差事：
+      ① 判断"这条是不是当前待确认的那一段" → 拿起讫城市去做子串匹配；
+      ② 取出车次号 → 上一条正则；
+      ③ 取出票价给预算用 → 又一条正则。
+    三件事全是"从一串自由文本里抠字段"，抠一次错一次（4.7 会看到子串匹配怎么把返程段
+    认成去程段）。字段化之后：段靠字段相等匹配，车次直接读，票价直接进数字账本
+    """
+
+    from_city: str = Field(min_length=1, description='出发城市，如"北京"；必须与当前待确认段一致')
+    to_city: str = Field(min_length=1, description='到达城市，如"天津"；必须与当前待确认段一致')
+    vehicle_no: str = Field(default="", description='车次号或航班号，如"G1197"/"CA4105"；自驾留空')
+    depart_time: str = Field(default="", description='出发时刻 HH:MM，如"05:40"')
+    arrive_time: str = Field(default="", description='到达时刻 HH:MM，如"07:07"')
+    seat_class: str = Field(default="", description='席别或舱位，如"二等座"')
+    price: float = Field(default=0.0, ge=0, description="人均票价（元）；查不到填 0，**不要编造**")
+
+    def summary(self) -> str:
+        """段账本里的展示文本（给人看的那一份；数字另走 price 字段）"""
+        span = f"{self.depart_time}-{self.arrive_time}".strip("-")
+        fare = f"{self.seat_class}{self.price:g}元" if self.price > 0 else self.seat_class
+        # ★ 空字段自动跳过：自驾什么都没有时退化成"已确认"，不会拼出一串空格
+        return " ".join(p for p in (self.vehicle_no, span, fare) if p) or "已确认"
+
+def _parse_leg_choices(legs) -> tuple[list["LegChoice"], list[str]]:
+    """逐条过 schema；返回（合法条目, 中文错误说明）。坏的那条不连累好的那条"""
+    picked: list[LegChoice] = []
+    errors: list[str] = []
+    for index, raw in enumerate(legs or [], start=1):
+        try:
+            picked.append(LegChoice.model_validate(raw))
+        except ValidationError as exc:
+            detail = "；".join(
+                f"{'.'.join(str(x) for x in item['loc'])} → {item['msg']}"
+                for item in exc.errors()[:3]
+            )
+            errors.append(f"第 {index} 条：{detail}")
+    return picked, errors
+
+def _match_leg(picked: list["LegChoice"], pending: str) -> "LegChoice | None":
+    """按**字段相等**找出当前待确认段的那一条（不做任何子串匹配）"""
+    frm, _, to = pending.partition("→")
+    for choice in picked:
+        # ★ 相等，不是包含：'天津→北京' 不会被当成 '北京→天津'
+        if choice.from_city.strip() == frm.strip() and choice.to_city.strip() == to.strip():
+            return choice
+    return None
+
+
+===== block 391 3bd9045f8c18 lines 1-17 source 知行旅行助手-v2#391 =====
+"""LegChoice 演示：模型交的是字段不是一句话；缺字段、负票价当场被拦（纯逻辑，无需密钥）"""
+from app.tools.state_transition import _parse_leg_choices
+
+CASES = {
+    "完整一段（高铁）": {"from_city": "北京", "to_city": "天津", "vehicle_no": "G1197",
+                  "depart_time": "08:00", "arrive_time": "08:35", "seat_class": "二等座", "price": 54.5},
+    "只给车次号    ": {"from_city": "北京", "to_city": "天津", "vehicle_no": "G1197"},
+    "漏了到达城市  ": {"from_city": "北京", "vehicle_no": "G1197", "price": 54.5},
+    "多给了无关字段": {"from_city": "北京", "to_city": "上海", "vehicle_no": "CA1501",
+                  "depart_time": "09:00", "arrive_time": "11:10", "price": 0, "航司": "国航"},
+    "票价写成负数  ": {"from_city": "北京", "to_city": "天津", "price": -1},
+    "自驾（无班次）": {"from_city": "北京", "to_city": "天津"},
+}
+for label, raw in CASES.items():
+    picked, errors = _parse_leg_choices([raw])
+    print(f"{label} → " + (f"✅ {picked[0].from_city}→{picked[0].to_city}｜{picked[0].summary()}"
+                          if picked else f"❌ {errors[0]}"))
+
+
+===== block 392 00445d085bf7 lines 1-6 source 知行旅行助手-v2#392 =====
+完整一段（高铁） → ✅ 北京→天津｜G1197 08:00-08:35 二等座54.5元
+只给车次号     → ✅ 北京→天津｜G1197
+漏了到达城市   → ❌ 第 1 条：to_city → Field required
+多给了无关字段 → ✅ 北京→上海｜CA1501 09:00-11:10
+票价写成负数   → ❌ 第 1 条：price → Input should be greater than or equal to 0
+自驾（无班次） → ✅ 北京→天津｜已确认
+
+
+===== block 393 7122cddf374c lines 1-14 source 知行旅行助手-v2#393 =====
+"""_match_leg 演示：子串匹配会把返程段认成去程段，字段相等不会（纯逻辑，无需密钥）"""
+from app.tools.state_transition import _match_leg, _parse_leg_choices
+
+pending = "北京→天津"                      # 当前待确认：去程
+picked, _ = _parse_leg_choices([{"from_city": "天津", "to_city": "北京",   # 模型交的是返程
+                                 "vehicle_no": "G339", "depart_time": "18:00"}])
+print("待确认段：", pending, "｜ 模型提交的是：天津→北京 G339")
+
+hit = _match_leg(picked, pending)
+print("字段相等匹配 →", hit.summary() if hit else None)
+
+frm, to = pending.split("→")               # 对照组：早期的子串匹配
+old = next((g for g in ["天津→北京 G339 18:00"] if frm in g and to in g), None)
+print("旧的子串匹配 →", repr(old))
+
+
+===== block 394 f9a9f5c881e3 lines 1-3 source 知行旅行助手-v2#394 =====
+待确认段： 北京→天津 ｜ 模型提交的是：天津→北京 G339
+字段相等匹配 → None
+旧的子串匹配 → '天津→北京 G339 18:00'
+
+
+===== block 395 ce14dd811546 lines 1-104 source 知行旅行助手-v2#395 =====
+# ============== 交通方式选择工具 ==============
+@tool
+def select_transport_tool(
+        transport_type: str,  # "flight" | "train" | "driving"
+        legs: Optional[list[LegChoice]] = None,
+        runtime: ToolRuntime[None, TravelState] = None
+) -> Command:
+    """
+    确认用户选择的交通方式，并转换到住宿规划步骤。
+
+    参数说明：
+    - transport_type: 交通方式，可选值：flight（航班）、train（高铁）、driving（自驾）
+    - legs: 多目的地必传（单目的地可省略）：仅传入当前正在确认的一段，
+      每段为结构化对象，示例：
+      [{"from_city": "天津", "to_city": "石家庄", "vehicle_no": "G6279",
+        "depart_time": "05:40", "arrive_time": "07:07",
+        "seat_class": "二等座", "price": 105.5}]
+      from_city / to_city 必填，必须与当前待确认段保持一致；price填所选班次人均票价，
+      无数据填0，禁止编造。全部路段确认完成后，才会推进至住宿步骤。
+    """
+    app_logger.info(f"[LEGACY] select_transport_tool 被调用：type={transport_type} legs={legs}")
+
+    # 校验交通方式枚举
+    if transport_type not in ["flight", "train", "driving"]:
+        return Command(update={
+            "messages": [
+                ToolMessage(
+                    content="❌交通方式无效，请选择：flight、train 或 driving",
+                    tool_call_id=runtime.tool_call_id
+                )
+            ]
+        })
+
+    picked, errors = _parse_leg_choices(legs)
+    expected = _expected_legs(runtime.state)
+    leg_texts = [f"{c.from_city}→{c.to_city} {c.summary()}" for c in picked]
+    leg_state: dict = {}
+
+    if expected:
+        recorded = dict(runtime.state.get("leg_selections") or {})
+        prices = dict(runtime.state.get("leg_prices") or {})
+        cursor = max(0, min(int(runtime.state.get("leg_cursor") or 0), len(expected) - 1))
+        pending = expected[cursor]
+        hit = _match_leg(picked, pending)
+
+        if hit is None:
+            app_logger.info(f"[guard] 段级循环：待确认段 {pending} 未出现在 legs={legs}")
+            _frm, _, _to = pending.partition("→")
+            err_msg = f"❌ 当前待确认的是第 {cursor + 1}/{len(expected)} 段「{pending}」。"
+            if errors:
+                err_msg += f"提交的 legs 有格式问题：{'；'.join(errors)}。"
+            else:
+                err_msg += "本次 legs 里没有这一段。"
+            err_msg += (f"请先查询并展示「{pending}」的班次，等用户挑选后，把该段写成对象传进 legs："
+                        f'{{"from_city": "{_frm}", "to_city": "{_to}", "vehicle_no": "车次号", '
+                        f'"depart_time": "HH:MM", "arrive_time": "HH:MM", '
+                        f'"seat_class": "席别", "price": 票价数字}}'
+                        f"（其余段不要提前展示）")
+            return Command(update={"messages": [ToolMessage(
+                content=err_msg,
+                tool_call_id=runtime.tool_call_id)]})
+
+        shown = hit.summary()
+        recorded[pending] = shown
+        if hit.price > 0:
+            prices[pending] = float(hit.price)
+
+        if cursor + 1 < len(expected):
+            nxt = expected[cursor + 1]
+            app_logger.info(
+                f"[legs] 第 {cursor + 1}/{len(expected)} 段已确认 {pending}｜{shown}，待确认 {nxt}"
+            )
+            return Command(update={
+                "messages": [ToolMessage(
+                    content=(f"✅ 第 {cursor + 1}/{len(expected)} 段已确认：{pending}｜{shown}\n"
+                             f"请立即查询并展示下一段「{nxt}」的班次供用户挑选"
+                             f"（只展示这一段，禁止提前展示其它段，也不要再说已确认该段）"),
+                    tool_call_id=runtime.tool_call_id)],
+                "leg_selections": recorded,
+                "leg_prices": prices,
+                "leg_cursor": cursor + 1,
+            })
+
+        leg_texts = [f"{k} {v}" for k, v in recorded.items()]
+        leg_state = {"leg_selections": recorded, "leg_prices": prices, "leg_cursor": cursor + 1}
+
+    transport_labels = {
+        "flight": "航班",
+        "train": "高铁",
+        "driving": "自驾"
+    }
+
+    return Command(update={
+        "messages": [
+            ToolMessage(
+                content=f"交通方式已确认：{transport_labels[transport_type]}",
+                tool_call_id=runtime.tool_call_id
+            )
+        ],
+        "selected_transport": transport_type,
+        "selected_transport_legs": leg_texts,
+        "current_step": "accommodation_planning",
+        **leg_state,
+    })
+
+
+===== block 396 107d14c495ec lines 1-2 source 知行旅行助手-v2#396 =====
+cursor = max(0, min(int(runtime.state.get("leg_cursor") or 0), len(expected) - 1))
+pending = expected[cursor]        # 当前待确认段
+
+
+===== block 397 926f57fabb2f lines 1-35 source 知行旅行助手-v2#397 =====
+"""select_transport_tool 段级循环：段对不上 / 格式不合规 / 记下一段 / 最后一段推进（直接调真实工具，纯逻辑，无需密钥）"""
+from langchain.tools import ToolRuntime
+from langchain_core.messages import HumanMessage
+
+from app.tools.state_transition import select_transport_tool
+
+state = {"messages": [HumanMessage(content="好的")], "current_step": "transport_planning",
+         "user_requirement": {"departure_city": "北京", "travel_days": 4}, "selected_destination": "天津、上海",
+         "leg_cursor": 0, "leg_selections": {}, "leg_prices": {}}
+
+def call(**kwargs):
+    """测试驱动：用当前 state 调一次真实工具，返回它的 Command.update"""
+    rt = ToolRuntime(state=state, context=None, config={}, stream_writer=None, tool_call_id="call_1", store=None)
+    return select_transport_tool.func(runtime=rt, **kwargs).update
+
+# 出口 A①：当前该确认"北京→天津"，交上来的却是第 2 段
+up = call(transport_type="train", legs=[{"from_city": "天津", "to_city": "上海", "vehicle_no": "G7512"}])
+print("出口 A 段对不上   →", [k for k in up if k != "messages"] or "不写任何字段", "|", up["messages"][0].content[:34], "…")
+
+# 出口 A②：段是对的，但漏了 to_city —— 报错里会带上具体哪个字段不合规
+up = call(transport_type="train", legs=[{"from_city": "北京", "vehicle_no": "G1197"}])
+print("出口 A 格式不合规 →", [k for k in up if k != "messages"] or "不写任何字段", "|", up["messages"][0].content[:52], "…")
+
+# 出口 B：交对了当前段 → 展示文本 + 票价进数字账本，游标 +1，current_step 不动
+up = call(transport_type="train", legs=[{"from_city": "北京", "to_city": "天津", "vehicle_no": "G1197",
+                                         "depart_time": "08:00", "arrive_time": "08:35",
+                                         "seat_class": "二等座", "price": 54.5}])
+print("出口 B 记下第 1 段 →", {k: v for k, v in up.items() if k != "messages"})
+state.update({k: v for k, v in up.items() if k != "messages"})          # 测试驱动：像 LangGraph 一样合并回 state
+
+# 出口 C：最后一段确认 → 一次写入全部字段，推进到住宿步
+up = call(transport_type="train", legs=[{"from_city": "天津", "to_city": "上海", "vehicle_no": "G7512",
+                                         "depart_time": "09:05", "arrive_time": "13:20",
+                                         "seat_class": "二等座", "price": 553}])
+print("出口 C 最后一段   →", {k: v for k, v in up.items() if k != "messages"})
+
+
+===== block 398 da676043dd76 lines 1-4 source 知行旅行助手-v2#398 =====
+出口 A 段对不上   → 不写任何字段 | ❌ 当前待确认的是第 1/2 段「北京→天津」。本次 legs 里没 …
+出口 A 格式不合规 → 不写任何字段 | ❌ 当前待确认的是第 1/2 段「北京→天津」。提交的 legs 有格式问题：第 1 条：to_city …
+出口 B 记下第 1 段 → {'leg_selections': {'北京→天津': 'G1197 08:00-08:35 二等座54.5元'}, 'leg_prices': {'北京→天津': 54.5}, 'leg_cursor': 1}
+出口 C 最后一段   → {'selected_transport': 'train', 'selected_transport_legs': ['北京→天津 G1197 08:00-08:35 二等座54.5元', '天津→上海 G7512 09:05-13:20 二等座553元'], 'current_step': 'accommodation_planning', 'leg_selections': {'北京→天津': 'G1197 08:00-08:35 二等座54.5元', '天津→上海': 'G7512 09:05-13:20 二等座553元'}, 'leg_prices': {'北京→天津': 54.5, '天津→上海': 553.0}, 'leg_cursor': 2}

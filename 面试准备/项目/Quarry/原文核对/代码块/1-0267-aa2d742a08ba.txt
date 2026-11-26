@@ -1,0 +1,6 @@
+tests/redlines/test_permission_redlines.py::test_public_caller_cannot_see_corp_policy PASSED
+tests/redlines/test_permission_redlines.py::test_corp_caller_can_see_own_content PASSED
+tests/redlines/test_permission_redlines.py::test_empty_labels_returns_nothing PASSED
+tests/redlines/test_permission_redlines.py::test_wrong_org_cannot_see_other_org PASSED
+tests/redlines/test_permission_redlines.py::test_manager_only_content_needs_role PASSED
+============================== 5 passed ==============================

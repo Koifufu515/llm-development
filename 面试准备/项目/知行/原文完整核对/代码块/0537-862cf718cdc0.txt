@@ -1,0 +1,2 @@
+转发了 3 帧： ['assistant', 'skill_ui', 'assistant']
+顺手记下的卡片： {'skill_name': 'train_multi_segment', 'data': {'segments': 2}}

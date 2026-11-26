@@ -1,0 +1,30 @@
+Agent 七步主流程•从需求到预算的一条直线
+整个旅游Agent 由7个环节串成一条从“用户开口”到”预算落地"的流水线，每一环对应一组工具、一个 current_step 值。本章（质量检查）挂在这条主线的下
+游—第6步"行程生成"落库之后异步启动。
+5
+需求收集
+目的地推荐
+交通规划
+住宿规划
+餐饮规划
+行程生成
+预算汇总
+问天数/预算/风
+选城市/定顺序
+高铁/航班/自
+逐城选酒店
+逐城选餐厅
+DayXN 正文
+按项累加对账
+格
+驾
+->
+requirement
+destination
+transport
+accommodation
+food
+itinerary
+budget
+START —> requirement - destination - transport —accommodation - food - itinerary - budget —• END
+状态机字段：每一步走完，current_step 被推进到下一个值；本章质量检查的入口挂在 step 6 itinerary 落库之后，异步跑 run_quality_check（plan），不阻塞主线继续走到 step 7 budget。

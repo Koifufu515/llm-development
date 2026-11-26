@@ -1,0 +1,21 @@
+{
+  "city": "北京",
+  "title": "北京景点资料 · Beijing/Northern Suburbs",
+  "source_url": "https://en.wikivoyage.org/wiki/Beijing/Northern%20Suburbs",
+  "text": "资料城市：北京。本文是历史开放景点资料，不提供实时开放时间或价格；出行前需要核实。\n\nMing Dynasty Imperial tombs\nA part of the UNESCO World Heritage Site \"Imperial Tombs of the Ming and Qing Dynasties\". This is the final resting place of 13 of the 16 emperors the Ming Dynasty. The largest and most impressive of them is Changling (长陵), the tomb of Emperor Yongle (永乐皇帝), the 3rd emperor of the Ming Dynasty. Another notable one is Dingling (定陵), the tomb of Emperor Wanli (万历皇帝), and the only one whose burial chamber has been excavated and is open to the public.\n\nChina Aviation Museum\nA must see for all aviation fans. It is probably better known by the name Datangshan. The museum hosts over 200 exhibits, many of them very rare.\n\nDynasty Wax Works Palace\nHere you can see China's historical and cultural figures in wax.\n\nHappy Land Arts and Crafts Center\nThe center offers pottery, painting, paper folding, jewelry making and other.\n\nTianyi Farm Strawberry Emporium\nA large strawberry farm in the countryside of Changping.  From December to May you can pick your own strawberries for purchase.  The strawberries are expensive so remember to pick only the best ones you can find.",
+  "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+  "license": "CC BY-SA 3.0",
+  "attribution": "Wikivoyage contributors; https://en.wikivoyage.org/wiki/Beijing/Northern%20Suburbs",
+  "sha256": "24dc777bb20cb7b77bb7fa15c27f60abb148e1b0d984d6701a1ccbaedb08e079",
+  "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+  "poi_count": 5,
+  "source_dataset": "https://github.com/wikivoyage/wikivoyage.github.io",
+  "excluded_fields": [
+    "price",
+    "hours",
+    "phone",
+    "email",
+    "hotel",
+    "restaurant"
+  ]
+}

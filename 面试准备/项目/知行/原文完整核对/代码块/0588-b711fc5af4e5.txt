@@ -1,0 +1,9 @@
+"""_fold_restatements 演示：跨轮折叠"换措辞重述"和重复的预告语，列表行一律保留（纯函数，无需密钥）"""
+from app.services.chat_stream_executor import _fold_restatements
+
+state = {"paras": [], "notice": False}      # 跨轮共享的折叠状态（_stream_agent 里一回合一份）
+round1 = "预算超出了您的上限，我将自动调整住宿选择，以降低总成本。\n\n请稍等片刻，我将为您重新计算。"
+round2 = ("考虑到预算，我们需要自动调整住宿选择，以降低总成本，请您放心。\n\n"
+          "请稍候，马上为您生成新的预算。\n\n- 住宿：经济型 199 元/晚")
+print("第 1 轮 →", repr(_fold_restatements(round1, state)))
+print("第 2 轮 →", repr(_fold_restatements(round2, state)))   # 重述段、第二次预告都被删，列表行留下

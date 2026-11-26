@@ -1,0 +1,1 @@
+../../../../../../quarry-rag/docs/sql/query_logs.sql

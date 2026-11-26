@@ -1,0 +1,62 @@
+class HotelSubmitSelection(BaseModel):
+    """【提交】前端回传的单段选中结果（单选：门店 或 品牌）"""
+
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
+    segment_id: str = Field(description="段标识，必须存在于下发 payload 的 segments 中")
+    mode: HotelMode = Field(default="hotel", description="该段模式，必须与下发 payload 一致")
+    hotel_id: str = Field(default="", description='mode="hotel" 时必填，如 h1-1')
+    brand_id: str = Field(default="", description='mode="brand" 时必填，如 b2-1')
+
+class HotelMultiSegmentSubmitPayload(BaseModel):
+    """【提交】前端一次性全局提交的 payload（不做逐段确认，只在预览页提交一次）"""
+
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
+    skill_name: Literal["hotel_multi_segment"] = HOTEL_MULTI_SEGMENT_SKILL
+    segments: list[HotelSubmitSelection] = Field(
+        description="全部住宿段的选中结果，顺序不限（后端按 segment_id 归位）"
+    )
+
+class HotelMultiSegmentSubmitResult(BaseModel):
+    """【提交回执】只反映基础合法性校验结果（不含任何日期/时间校验）"""
+
+    ok: bool = Field(description="全部段校验通过为 True")
+    code: str = Field(
+        description=(
+            "结果码：OK / NO_PAYLOAD / EMPTY_SELECTION / INVALID_PAYLOAD / SEGMENT_NOT_FOUND / "
+            "MODE_MISMATCH / MISSING_HOTEL_ID / MISSING_BRAND_ID / HOTEL_NOT_FOUND / "
+            "BRAND_NOT_FOUND / INCOMPLETE / STEP_MISMATCH"
+        )
+    )
+    msg: str = Field(description="面向 Agent 的中文说明")
+    accepted: list[HotelSubmitSelection] = Field(
+        default_factory=list, description="校验通过的选中项（原样回显）"
+    )
+    # 已选各段的展示文本（如「石家庄（09-20 至 09-22）：尚客优酒店 151元/晚」）：
+    # 提交成功后由路由侧拼成一条合成发言续跑餐饮/行程步骤，故必须把展示文本带出本模块
+    texts: list[str] = Field(
+        default_factory=list, description="已选定各段的展示文本，按行程段顺序排列"
+    )
+    # 已选各段的**每晚房价**（城市 → 元/晚），与 texts 同一次产出：
+    # texts 给人看、prices 给代码算，预算侧不必再从"358元/晚"这串文案里抠数字。
+    # 品牌兜底段没有实时报价 → 该城不出现在本字典里（"没有"与"0 元"必须可区分）
+    prices: dict[str, float] = Field(
+        default_factory=dict, description="已选定各段的每晚房价（城市 → 元/晚）；品牌兜底段不计入"
+    )
+    # 落库后状态机实际推进到的步骤（food_planning / itinerary_generation）：
+    # 提交路由据此挑"续跑反馈文案"（住宿已确认 → 正在生成行程报告），避免文案与界面自相矛盾
+    next_step: str = Field(default="", description="落库后状态机推进到的下一步骤")
+
+__all__ = [
+    "HOTEL_MULTI_SEGMENT_SKILL",
+    "HotelMode",
+    "HotelSegmentInput",
+    "HotelMultiSegmentItem",
+    "HotelMultiSegmentPayload",
+    "HotelSubmitSelection",
+    "HotelMultiSegmentSubmitPayload",
+    "HotelMultiSegmentSubmitResult",
+    "HotelOption",
+    "HotelBrand",
+]

@@ -1,0 +1,104 @@
+需求与目的地•表单里写了的，以表单为准
+需求收集步的 record_requirement_tool 是状态机的第一把推进键。模型读表单时会读错天数、漏传目的地，所以工具写状态前先用三个字符串助手
+把用户原话重读一遍，读到了就覆盖模型的传参。
+record_requirement_tool 执行顺序L77-205
+做什么
+怎么做
+结果
+① 天数以表单为准
+_form_travel_days 读最近一条用户消息里的「旅行天数：」，和模型传的 travel_days
+不同就覆盖
+覆盖 travel_days
+② 目的地以表单为准
+模型没传 destination 时，_form_destination
+从「我想去…旅行」里取，多城串全量保留
+补进 destination
+③ 日期格式校验
+必狈定 YYYY-MM-DD
+×只回一条错误消息，不改状
+④ 预算等级由代码算
+预算均值<3000 economy；<8000- comfort；其余 luxury
+⑤ 组装需求对象
+UserRequirement，表单预选的交通/ 餐饮/住宿一并写入，没提到的写空列表
+⑥ 返回command
+见下方4个字段
+V推进到目的地推荐
+lessaues
+回执：日期、天数、人数、预算区间与等级、风格
+user_requzrement
+auto_confirm
+current ste
+后面每一步 requires 都要它
+确认模式的唯一真源，中间件据此渲染各步提示词
+destination_recommendation
+三个读表单的字符串助手 不用正则、按行查找；编排层的天数告警也借用这三个，全项目只有一套读表单的写法
+-Leading_int
+_between
+逐行找标签，取冒号后到行尾的值，中英文冒号都认；标签后面不
+取字符串开头的连续数字；开头不是数字就返回 None。
+在同一行里取前缀和它后面最近的后缀之间的文字。
+输入 "5 天"
+输入
+输出 5
+select_destination_tool 目的地推荐步唯一的推进键
+工具表：destination_recommendation - 手动模式：用户回复纯确认语才放出，并被强推too1_choice 一
+写 selected_destination（多城须传完整城市串）
+current_step = transport_planning
+这个字段写下去之后，_expected_Legs、_nulti_city_names 等都从它拆出城市来算交通段和住宿站。
+函数卡 本组7个函数
+record_requirement_tool ［etool
+select_destination_tool ［etool
+L209
+_form_travel_days （fn
+-56
+把收集到的旅行需求落进状态，并推进到目的地推荐步。
+记下用户选定的目的地，推进到交通规划步。
+倒着找最近一条用户消息，读出「旅行天数：」后面的数字。
+何时调用
+record_requirement_tool 一开头
+谁来调用
+谁来调用 本文件 record_requirement_tool
+谁来调用 模型经 TooINode 执行；工具表
+destination_recommendation；确认轮被中间件强推
+结果交给 天数或None；和模型传参不同就覆盖 travel_days
+requirement_Collection
+结果交给
+Command 写 selected_destination、
+结果交给
+Command 写 user_requirement、auto_confirm、
+current_step=transport_planning
+current_step ；auto_confirm 交中间件渲染确认模
+_form_destination （fn
+L65
+-value_after （tn
+L23
+-leading_int （fn）
+L35
+从最近一条用户消息的「我想去⋯旅行」里取出目的地串。
+在多行文本里找「标签：值」，取冒号后到行尾的内容。
+取字符串开头的连续数字，「5 天」变成5。
+何时调用 模型没传 destination 时
+何时调用 读表单里某个带标签的字段时
+何时调用 把「5天」这类值换成整数时
+谁来调用 本文件 record_requirement_tool
+谁来调用 本文件_form_travel_days；
+谁来调用 本文件_form_travel_days；
+结果交给 目的地串或 None，写进 requirement.destination
+chat_contract_service._manual_multi_city_day_
+chat_contract_service 跨模块
+warning（跨模块
+结果交给 整数或 None
+结果交给
+值字符串（找不到返回空串），交_leading_int 取数字
+-between （n
+L44
+读码备注：
+在同一行里取前缀和后缀之间的文字。
+•两个以表单为准的覆盖都只读最近一条用户消息：表单提交那一轮之后再调这个工具（比如用户回了一句”确认”），读到的就不是表单，覆
+盖不会生效，以模型传参为准。
+何时调用 读「我想去⋯旅行」这类夹在两段固定文案之间的值
+•预算等级按预算均值分三档（<3000/<8000/ 其余）；快速通道同步状态时用的是同一张阈值表。
+谁来调用 本文件_form_destination；
+chat_contract_service 跨模块
+结果交给 中间那段文字（找不到返回空串）
+表单是权威，模型只是搬运工：天数和目的地这两个“一错全错”的字段，工具写状态前都会用_value_after/_between 回读用户原话；预算等级也不让模型填，由代码按区间算。

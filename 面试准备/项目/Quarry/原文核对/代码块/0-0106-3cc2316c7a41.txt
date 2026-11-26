@@ -1,0 +1,4 @@
+SELECT chunk_id, content, heading_path, char_start, char_end
+FROM chunks
+WHERE collection_id = $1
+  AND chunk_id = ANY($2::text[]);   -- $2 是命中子块们的 parent_id 列表

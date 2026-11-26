@@ -1,0 +1,1 @@
+../../../../../../quarry-rag/quarry/scripts/hello_retrieval.py

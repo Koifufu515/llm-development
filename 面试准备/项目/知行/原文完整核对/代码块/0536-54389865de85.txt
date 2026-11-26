@@ -1,0 +1,19 @@
+"""_SkillUiRecorder 演示：包一层照常转发，顺手记下最后一张卡片帧（纯逻辑，无需密钥）"""
+import asyncio
+
+from app.core.event_stream import EventStream
+from app.core.events import make_event, ROLE_ASSISTANT, ROLE_SKILL_UI
+from app.services.chat_contract_service import _SkillUiRecorder
+
+async def main():
+    stream = _SkillUiRecorder(EventStream())             # 和 _produce 开头那一行一模一样
+    stream.push(make_event(ROLE_ASSISTANT, "为您查到 2 段高铁，请在卡片里选择："))
+    stream.push(make_event(ROLE_SKILL_UI, {"skill_name": "train_multi_segment", "data": {"segments": 2}}))
+    stream.push(make_event(ROLE_ASSISTANT, "选完点提交即可。"))
+    stream.close()
+    frames = [ev async for ev in stream]                 # 下游照常 async for，感觉不到包了一层
+    print("转发了", len(frames), "帧：", [f["role"] for f in frames])
+    print("顺手记下的卡片：", stream.skill_ui)             # 回合末写进 extra_info["skill_ui"]
+
+if __name__ == "__main__":
+    asyncio.run(main())

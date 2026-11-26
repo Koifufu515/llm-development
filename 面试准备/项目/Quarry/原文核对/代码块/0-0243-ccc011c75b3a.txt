@@ -1,0 +1,7 @@
+SELECT LEFT(content, 30) AS preview,
+       ts_rank(tokens, to_tsquery('simple', '''兵马俑'' | ''门票''')) AS rank,
+       ts_rank_cd(tokens, to_tsquery('simple', '''兵马俑'' | ''门票''')) AS rank_cd
+FROM chunks
+WHERE level = 1 AND tokens @@ to_tsquery('simple', '''兵马俑'' | ''门票''')
+ORDER BY rank_cd DESC
+LIMIT 5;

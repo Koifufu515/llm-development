@@ -1,0 +1,125 @@
+行程结构 •模型交数据，代码补齐、校验、再推进
+行程步的正文已经不让模型写了：模型调 submit_itinerary_body_tool 交逐日结构，工具先补预算、补城市，过 ItineraryBody 校验，不过就由代
+码归一后再校验，最后写进 itinerary_body 并推到预算步。执行器在回执里看到「天行程结构」，就用代码渲染正文。
+submit_itinerary_body_tool 六步L992-1074
+②
+⑤
+多城天数下限
+预算缺失就地补算
+补城市
+第一次校验
+不过就代码归一
+写状态并推进
+ror：目的地不止一个且天数
+_multi_city_day_floor_er - 状态里没有 budget.total， - _day_city_map 算出每天在 ItineraryBody.model_vali
+normalize itinerary day tinerary body、 Ltinerar
+就直接调
+哪座城，_fil1_day_cities
+date，带上 travel_days
+s 补齐后再校验一次
+（只含 day_number）、
+<目的地数×2，只回拒绝消
+summarize_budget_tool.fu
+只给漏填的天补上
+做上下文
+息、不推进
+nc 算一份，和行程同批写入
+budget_summarization
+current Sued：
+回执即开关：工具回执固定写「已接收N天行程结构」（开头另有一个emoji，图中省略）。执行器后处理⑦按“天行程结构”这几个字判断要不要用代码渲染正文，所以这句回执的措辞不能随便改。
+校验什么•归一怎么补 同一份schema 也被快速通道的 _generate.itinerary 借用
+ItineraryBody 的规则（DayPLan +_check_days）
+_normalize_itinerary_days 的补法
+1.每天 morning/ noon/ afternoon / evening 四个时段各至少1条
+1. 丢掉越界和重复的天，补上缺的天
+2.天序号不能重复
+2.没写城市的天，按_day_city_map 补
+3.每天至少1条tips
+3.空时段补一条 _fil1_item（两条文案按天轮换，填入城市）
+4.每条（含tips）不少于15字
+4.不足15字的条目在后面补一句停留建议
+5.恰好覆盖第1~N天，不能超出 N
+5.没有小贴士补一条_fill_tip
+6.第N 天晚上必须含「返程/返回/回程」
+6.末日晚上没返程，补 _back_hint：本地游玩写收尾，否则优先用已确认的返程班次
+原则：只补空缺、只裁非法，模型已经给出的有效内容一字不改。
+老路：generate_itinerary_tool L713-789
+回执「已生成N天详细行程！」里的“已生成"三个字，是执行器判断本轮 committed 的依据。
+被拒时只回一条消息，不推进 current_step。
+L992
+generate_itinerary_tool （etool
+1713
+_multi_city_day_floor_error Fn
+-69
+老的落库工具：查必填字段、卡多城天数下限，写一份占位行
+多城天数硬约束：目的地不止一个、天数又少于目的地数 ×2
+后落库，并推进到预算步。
+程并推进到预算步。
+时，给出拒绝文案；否则返回 None。
+何时调用 行程生成步；本步还没落库正文时，中间件强推
+何时调用 手动模式确认轮，且历史已有 Day X正文时被强推
+谁椠佶用
+谁来调用
+谁来调用 模型经ToolNode 执行；工具表
+itinerary_generation
+itinerary_generation
+结果交给 Command 写占位 itinerary、current_step；回执
+结果交给 Command 写 itinerary_body、itinerary、
+的“已生成"给执行器判 committed
+L815
+_934
+算出第1~N天各在哪座城，口径借自快速通道文件的
+末日返程，一项不合就报错。
+出的有效内容。
+ordered_play_cities + _stay_nights。
+何时调用 每次 ItineraryBody.model_validate
+何时调用 第一次校验没过时
+何时调用 提交结构的第2步
+谁来调用 submit_itinerary_body_tool（2处）；快速通道
+谁兴佶用
+submit_itinerary_body_tool ；快速通道
+谁来调用 本文件 submit_itinerary_body_tool
+_generate_itinerary 蹭模块
+_generate_ltinerary
+结果交给 城市序列，给_fill_day_cities 和归一使用
+结果交给 通过返回自身；不过抛错，调用方转去归一
+结果交给
+（修好的 days，修了哪几处）一再校验一次
+_fill_day_cities 四
+L9ds
+-back_hint En
+L922
+fill_item mn
+L870
+只给没写city 的那几天补上城市，已写的不动。
+写末日晚上的返程句：本地游玩写收尾；否则优先引用已确认
+某天某时段空着时，给一条补位文案；两条按天轮换并填上城
+的返程班次，再不行写「傍晚返程回到X」。
+市，避免多天重复。
+何时调用 第一次校验之前
+谁来调用 本文件submit_itinerary_body_tooL
+何时调用 准备归一参数时
+何时调用 归一时遇到空时段
+给果父给 不好城市的 days
+谣米倜用
+本文件 submit_itinerary_body_tool
+诓架佶用
+本文件_normalize_itinerary_days
+结果交给 文案作为 back_text 传给归一
+结果交给 补位文案
+filltip @n
+LoaL
+_day_numbers ［fn跨模块
+L319
+某天没有小贴士时补一条，同样按天轮换两条文案。
+从一段正文里找出出现过的天序号，认「第3天」「第三天」
+「Day 3」三种写法。
+何时调用 归一时遇到没有tips的天
+谁来调用 本文件_normalize_itinerary_days
+何时调用 执行器判断正文是否覆盖第1~N 天时
+结果交给「城市：贴士」文本
+谁来调用 chat_stream_executor._covers_all_days（后处理
+①）；本文件内无调用
+结果交给 天序号集合；覆盖全了执行器就代码推进到预算步
+模型只负责交数据：校验不过不打回模型重写，而是由_normalize_itinerary_days 补齐后再校验一次—让代码兜底，比让模型重写更稳定。多城天数下限这类业务规则也抽成了一份
+_multi_city_day_floor_error，新旧两个入口共用，不会再一处有、一处没有。

@@ -1,0 +1,16 @@
+Building prefix dict from the default dictionary ...
+Loading model from cache /var/folders/rk/qtxh2ds10vd6_cdg09pdzrbm0000gn/T/jieba.cache
+Loading model cost 0.200 seconds.
+Prefix dict has been built successfully.
+
+并发 4，请求 60 成功 / 0 失败，耗时 3.6 秒，吞吐 16.7 次/秒
+重排 关，事实层 开
+
+  阶段                  P50      P95      P99
+  lookup_ms             1.6      3.9    233.1
+  recall_ms           160.9    504.9    577.7
+  rerank_ms             0.0      0.0      0.0
+  expand_ms             5.0     10.3     22.2
+  facts_ms              2.1      4.1      5.9
+  assemble_ms           0.1      0.3      0.4
+  合计                172.4    575.3    589.4

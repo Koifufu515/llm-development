@@ -1,0 +1,33 @@
+"""异常路径演示：让路由服务"挂掉"，流照样收尾——error 帧 + done(500)，然后 close（需 PG；不调 LLM）"""
+import asyncio
+import uuid
+from unittest.mock import patch
+
+from app.models.base import async_session_maker
+from app.models.user import User
+from app.services.chat_contract_service import run_chat_turn
+from app.services.conversation_service import create_conversation
+from app.utils.security import hash_password
+
+async def main():
+    async with async_session_maker() as db:
+        sfx = uuid.uuid4().hex[:6]
+        user = User(username=f"err_{sfx}", email=f"err_{sfx}@example.com",
+                    password_hash=hash_password("secret123"), preferences={})
+        db.add(user)
+        await db.commit()
+        conv = await create_conversation(db, user.id)
+
+        # ★ patch 目标是 chat_contract_service 里的 chat_route（它 import 进来的那个名字），
+        #   patch app.agents.routers.chat_router.chat_route 不会生效
+        with patch("app.services.chat_contract_service.chat_route",
+                   side_effect=RuntimeError("路由服务不可用")):
+            stream = await run_chat_turn(db, str(user.id), str(conv.id), "随便一条消息")
+            frames = [ev async for ev in stream]         # 能消费到末尾 = finally 里的 close 生效
+    for f in frames:
+        print(f)
+    assert frames[-1]["role"] == "done" and frames[-1]["code"] == 500
+    print("✅ 异常路径：error 帧 + done(500) 收尾，流正常关闭")
+
+if __name__ == "__main__":
+    asyncio.run(main())

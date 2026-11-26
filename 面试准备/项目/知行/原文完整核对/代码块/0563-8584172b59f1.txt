@@ -1,0 +1,21 @@
+"""闲聊直连演示：import 真实 _stream_plain，喂一句闲聊，看它一帧帧 push（需 .env 配 DashScope 密钥）"""
+import asyncio
+
+from app.core.event_stream import EventStream
+from app.services.chat_stream_executor import _stream_plain
+
+async def main():
+    stream = EventStream()
+
+    async def consume():                                 # 消费者：把每一帧打印出来
+        async for ev in stream:
+            print(ev)                                    # {'role': 'assistant', 'content': '…', 'code': None}
+
+    task = asyncio.create_task(consume())
+    text = await _stream_plain("用一句话讲个冷笑话", stream)   # 生产者：边生边 push
+    stream.close()                                       # 生产完宣告结束，消费者随之停
+    await task
+    print("\n聚合全文：", text)                            # push 出去的是流，return 回来的是整段
+
+if __name__ == "__main__":
+    asyncio.run(main())

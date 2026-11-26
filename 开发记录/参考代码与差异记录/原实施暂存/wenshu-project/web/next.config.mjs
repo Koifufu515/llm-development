@@ -1,0 +1,1 @@
+../../../../../wenshu-project/web/next.config.mjs

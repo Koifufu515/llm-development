@@ -1,0 +1,1 @@
+uv run python -c "from pathlib import Path; from quarry.ingest.parsers.markdown import MarkdownParser; p = Path('corpus/corp-policy/travel-reimbursement.md'); t = p.read_text(encoding='utf-8'); [print('OK', s.heading_path) if t[s.char_start:s.char_end] == s.content else print('坏了', s.heading_path) for s in MarkdownParser().parse(p)]"

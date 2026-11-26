@@ -1,0 +1,27 @@
+"""对话流式执行器
+
+【最小桩】只立两个入口的签名骨架，让编排总线（chat_contract_service）
+能按阅读顺序 import 通过、整条链先跑起来。真正的实现——闲聊直连 _stream_plain、
+直查通道、框架流式 _stream_agent、状态机执行总线 execute_turn 的七类后处理——
+环节 12–17 按片①–⑰ 一步步替换进来，两个入口的签名保持不变。
+"""
+from app.core.event_stream import EventStream
+from app.core.events import make_event, ROLE_ASSISTANT
+
+async def try_direct_ticket_query(content: str, stream=None,
+                                  conversation_id: str = "") -> str | None:
+    """【最小桩】直查通道：命中"高铁/航班单点查询"才接管、否则返回 None。
+    桩先一律返回 None（不命中），让分流始终落到 execute_turn。环节 14 写完片⑦后删掉本桩。
+    """
+    return None
+
+async def execute_turn(
+        user_id: str, conversation_id: str, content: str, planning: bool, stream: EventStream
+) -> tuple[str, str | None, bool, list | None]:
+    """【最小桩】执行阶段入口，返回 (完整回复文本, 状态机步骤, 是否落库, 逐日结构)。
+    桩只把用户输入回显一条 assistant 帧、后三项返回 None/False/None；
+    环节 17 写完片⑰后删掉本桩。
+    """
+    reply = f"（执行器桩）已收到：{content}"
+    stream.push(make_event(ROLE_ASSISTANT, reply))
+    return reply, None, False, None

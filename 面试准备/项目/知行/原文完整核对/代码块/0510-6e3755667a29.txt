@@ -1,0 +1,154 @@
+async def _collect_context(req: ExpressRequirement, stream) -> dict:
+    """
+    并行拉取快速通道需要的所有外部数据
+    分段查询交通，每个城市单独查酒店、天气；单个接口报错只降级，不中断整体流程
+    多目的地场景：去程、城际中转、返程分开查询；每个城市酒店天气独立请求，互不影响
+    """
+    # 导入MCP工具集合：航班、火车、酒店、天气查询工具
+    from app.tools.mcp_tools import (
+        _CITY_IATA, flight_price_args, get_flight_tools, get_train_tools,
+        get_hotel_tools, get_weather_tools,
+    )
+
+    # 推送给前端的提示消息，告诉用户正在查询数据
+    stream.push(make_event(ROLE_ASSISTANT, "⚡ 已锁定需求，正在并行查询交通、酒店与天气…\n"))
+
+    # 预先加载各类MCP查询工具实例
+    flight_tools = await get_flight_tools()
+    train_tools = await get_train_tools()
+    hotel_tools = await get_hotel_tools()
+    weather_tools = await get_weather_tools()
+
+    # 生成游玩城市列表和交通路段
+    # 单目的地：cities=[目标城市], legs=[出发地→目的地]
+    # 多目的地：自动生成多段交通，出发地也可以作为游玩城市
+    cities = _plan_cities(req)
+    legs = _build_legs(req.departure_city, cities)
+    app_logger.info(f"[express] 路段规划: cities={cities} legs={legs}")
+
+    async def _safe(name: str, tool, kwargs: dict) -> str:
+        # 工具查询包装函数，做异常兜底，单点失败不打断整体并行任务
+        if tool is None:
+            # 找不到目标工具时打警告日志，直接返回空字符串
+            # 旧版本这里静默返回，日志看不出为什么查不到数据
+            app_logger.warning(f"[express] {name} 未定位到工具，本次查询跳过（检查 _first 关键词）")
+            return ""
+        try:
+            raw = await tool.ainvoke(kwargs)
+            # MCP返回是block列表，提取里面的文本内容拼接
+            if isinstance(raw, list):
+                return "\n".join(
+                    b.get("text", "") for b in raw if isinstance(b, dict)
+                )
+            return str(raw)
+        except Exception as e:
+            # 查询抛出异常，记录警告日志，返回空串降级
+            app_logger.warning(f"[express] {name} 查询失败降级: {e}")
+            return ""
+
+    def _first(tools, keyword: str):
+        # 在工具列表里，按关键词匹配，返回第一个命中的工具
+        # 关键词和工具名称全部转小写再对比，修复大小写不匹配导致找不到工具的bug
+        # 之前只把工具名转小写，关键词不变，航班工具永远匹配失败
+        key = keyword.lower()
+        for t in tools:
+            if key in t.name.lower():
+                return t
+        return None
+
+    # 存放所有并行任务，key标记任务类型+序号，例如train_0 flight_1
+    jobs = {}
+
+    # 复用状态机里的日期计算逻辑，确定每一段交通的查询日期
+    # 去程=出发当天，城际转场=到达下一城市首日，返程=行程最后一天
+    from app.core.middleware import _leg_query_date
+    _leg_state = {
+        "user_requirement": {"departure_city": req.departure_city,
+                             "departure_date": req.departure_date,
+                             "travel_days": req.travel_days},
+        "selected_destination": req.destination,
+    }
+    _leg_names = [f"{a}→{b}" for a, b in legs]
+    leg_dates = [_leg_query_date(_leg_state, _leg_names, i) or req.departure_date
+                 for i in range(len(legs))]
+
+    # 高铁查询：遍历每一段路程，生成异步任务
+    if "train" in req.transport_types:
+        t = _first(train_tools, "get-tickets")
+        for i, (src, dst) in enumerate(legs):
+            jobs[f"train_{i}"] = _safe(f"高铁{i}", t, {
+                "date": leg_dates[i], "fromStation": src, "toStation": dst,
+            })
+
+    # 航班查询：同时拉取航班时刻表+票价两套接口
+    if "flight" in req.transport_types:
+        t = _first(flight_tools, "searchFlightsByDepArr")
+        # 时刻表接口拿航班动态，另一个接口单独拿票价，两个并发执行
+        pt = _first(flight_tools, "getFlightPriceByCities")
+        for i, (src, dst) in enumerate(legs):
+            dep, arr = _iata(src), _iata(dst)   # 航班时刻表使用机场三字码
+            if not (dep and arr):
+                # 城市不在机场码表，直接跳过该段航班查询并写日志
+                # 旧代码会直接传入空码，日志看不出是城市不支持还是无航班
+                missing = "、".join(c for c, code in ((src, dep), (dst, arr)) if not code)
+                app_logger.warning(
+                    f"[express] 航班段 {src}→{dst} 跳过：{missing} 不在 _CITY_AIRPORT 表里"
+                    f"（searchFlightsByDepArr 要机场三字码，不收城市名）"
+                )
+                continue
+            # 加入航班查询任务
+            jobs[f"flight_{i}"] = _safe(f"航班{i}", t, {
+                "date": leg_dates[i], "depcity": dep, "arrcity": arr,
+            })
+            if pt is not None:
+                # 票价接口使用城市IATA码，和上面机场三字码不是同一套，不要混用
+                cdep, carr = _CITY_IATA.get(src), _CITY_IATA.get(dst)
+                if cdep and carr:
+                    jobs[f"flightprice_{i}"] = _safe(
+                        f"航班价{i}", pt, flight_price_args(pt, leg_dates[i], cdep, carr))
+                else:
+                    app_logger.info(
+                        f"[express] 航班价 {src}→{dst} 跳过：城市码缺失（{cdep}/{carr}）"
+                    )
+
+    # 酒店、天气按城市单独查询
+    # 计算每个城市要住几晚，多城场景分摊住宿天数，避免旧逻辑重复统计住宿晚数
+    nights_by_city = _stay_nights(req.travel_days, len(cities))
+    try:
+        start = datetime.fromisoformat(req.departure_date[:10])
+    except ValueError:
+        # 日期解析失败，兜底赋值，打警告日志
+        start = None
+        app_logger.warning(f"[express] 出发日期不可解析，酒店按出发日查询: {req.departure_date!r}")
+
+    offset = 0
+    last_out = max(req.travel_days - 1, 1)
+    for i, city in enumerate(cities):
+        night = nights_by_city[i] if i < len(nights_by_city) else 0
+        cin, cout = offset, min(offset + night, last_out)
+        offset += night
+        # 当天到当天走的城市，不需要查酒店；天气依旧查询
+        if cout > cin:
+            jobs[f"hotel_{i}"] = _safe(f"酒店{i}", _first(hotel_tools, "searchhotels") or _first(hotel_tools, "find-hotels"), {
+                "place": city,
+                "checkIn": (start + timedelta(days=cin)).strftime("%Y-%m-%d") if start else req.departure_date,
+                "stayNights": cout - cin, "adultCount": req.adult_count, "size": 5,
+            })
+        # 查询城市天气预报，不传日期返回全部预报，后续再截取有效天数
+        jobs[f"weather_{i}"] = _safe(f"天气{i}", _first(weather_tools, "get_weather_forecast"), {
+            "city": city,
+        })
+
+    # 收集所有任务key，并发一次性执行全部请求
+    keys = list(jobs)
+    # asyncio.gather等待所有任务完成；_safe内部捕获异常，不会整体崩溃
+    results = await asyncio.gather(*jobs.values())
+    ctx = dict(zip(keys, results))
+
+    # 日志打印：每个任务返回文本长度，方便排查空数据问题
+    app_logger.info(f"[express] 并行收集完成: {[(k, len(v)) for k, v in ctx.items()]}")
+
+    # 把城市列表、路段存入上下文，后面生成行程时复用
+    ctx["_cities"] = cities
+    ctx["_legs"] = legs
+    return ctx

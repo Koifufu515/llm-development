@@ -1,0 +1,4 @@
+CONSTRAINT chunks_level_ck CHECK (level IN (0, 1)),
+CONSTRAINT chunks_parent_ck CHECK (
+  (level = 1 AND parent_id IS NOT NULL) OR (level = 0 AND parent_id IS NULL)
+)

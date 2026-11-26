@@ -1,0 +1,14 @@
+# 让控制台按 UTF-8 显示中文
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+$body = @{ collection = "travel-guide"; query = "兵马俑门票多少钱"; top_k = 3 } | ConvertTo-Json
+
+$resp = Invoke-WebRequest -Method Post -Uri "http://127.0.0.1:8100/v1/search" `
+  -Headers @{ Authorization = "Bearer $env:QUARRY_KEY" } `
+  -ContentType "application/json; charset=utf-8" `
+  -Body ([System.Text.Encoding]::UTF8.GetBytes($body)) `
+  -UseBasicParsing
+
+# 手动按 UTF-8 解码响应，绕过 PowerShell 的默认解码
+$text = [System.Text.Encoding]::UTF8.GetString($resp.RawContentStream.ToArray())
+$text | ConvertFrom-Json | ConvertTo-Json -Depth 6

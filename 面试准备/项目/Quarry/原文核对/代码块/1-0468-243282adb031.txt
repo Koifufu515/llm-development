@@ -1,0 +1,1 @@
+uv run python -m quarry.scripts.create_api_key --caller zhixing-travel --collections travel-guide --labels public --rate-limit 120 --note "知行旅行助手"

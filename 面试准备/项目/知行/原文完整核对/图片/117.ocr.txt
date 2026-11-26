@@ -1,0 +1,109 @@
+回合末后处理工具•判定、改写、渲染，三步换上真数据
+本组10个函数都只服务 execute_turn 的七道后处理（其中两个也借给快速通道）。按职责分三类：判定该不该接管，改写模型的输出，渲染并推送代
+码生成的正文。
+七道后处理用到哪些工具 编号对应图1的后处理①~⑦；同一道后处理通常是“判定一改写一推送”
+① 判定：该不该接管
+2 改写：删假的、补真的
+③ 這染推送：数字来自状态
+只读状态、返回布尔或段名
+动文本，部分会写状态
+也借给快速通道用
+① _covers_all_days 正文写满了没
+⑥ _strip_transport_Lists 删自编班次
+⑦ _render_itinerary_body 逐日正文＋预算
+② _zero_leg_guard 是不是本地游
+③
+_match_hotel_choice 认出用户选的品牌
+⑦ _render_confirmed_block 已确认摘要
+③ _has_hotel_search_tool 酒店工具在不在
+_build_hotel_fallback 出品牌参考
+⑤⑦ _push_rendered 分段推送
+⑥ _Leg_context 当前该确认哪段
+判定类 4个函数 不改任何东西，只回答“这一步要不要由代码接管”
+-covers_all_days tn
+L1118-1124
+-zero_leg_guard Ln
+检查正文是不是从第1天写到了第N天，复用状态机的天数解析器，口径一致。
+判断是不是“出发地=目的地”的本地游：这种行程一段城际交通都没有。
+何时调用 行程步回合结束、但本轮没落库时（后处理①）。
+何时调用 每个规划回合结束都会算，只在交通步生效（后处理②）。
+谁来调用
+execute_turn L1196。
+谁来调用 execute_turn L1210。
+结果交给
+True 时 execute_turn 直接 aupdate_state 推到预算步，省掉一轮确认。
+结果交给（是否零段，出发地）；是零段就调 train_flow.advance_zero_leg 直推住宿步。
+-Leg_context（fn
+-has_hotel_search_tool Lasyns
+一344-334
+查出 “现在该确认哪一段”：返回段名、第几段、一共几段。
+确认酒店 MCP 工具（searchHotels / find-hotels）到底有没有加载上。
+何时调用 交通步回合结束时（后处理⑥）。
+何时调用 住宿步回合结束，且工具结果里没有降级标记时（后处理③）。
+谁来调用 execute_turn L1335。
+谁来调用
+execute_turn L1226
+结果交给 段名交给 ticket_table_from_tail（only_leg=），只画这一段。
+结果交给 布尔值：False 就进入品牌兜底。
+改写类 3 个函数 把模型编的删掉，把代码确定的补上
+-strip_transport_lists （fn
+L908-919
+_match_hotel_choice （tn）
+L801-815
+_build_hotel_fallback（fn
+L818-841
+交通步正文里模型自编的车次、航班号、时刻、票价行一律删
+酒店服务挂了时，看用户这句话选了哪个品牌；说“随便、听
+生成“常见连锁品牌参考”：只列品牌，不编门店和价格；手
+掉，只留一句引导语。
+你的”就替他挑档位里第一个。
+动、自动、已选三种情况结尾不同。
+何时调用
+交通步本轮查到新班次、且不是卡片模式时（后处理
+何时调用
+住宿步进入降级兜底时（后处理③）。
+⑥）。
+谁来调用
+execute_turn L1233。
+何时调用
+住宿步降级兜底时（后处理③）。
+谁来调用
+execute_turn L1360。
+结果交给
+品牌名；非空则写 selected_hotels 并把状态推到餐饮
+谁来调用
+execute_turn L1256。
+结果交给 干净引导语，后面再拼上代码画的班次表。
+步。
+结果交给
+文案拼进本轮文本；非缓冲时直接推 Eventstream。
+渲染推送类 3个函数 正文和预算由代码拼，两个函数被快速通道跨模块借用
+-render_itinerary_body （fn
+L945-1012
+-render_confirmed_block （fn
+_push_rendered ［async
+把逐日结构渲染成 Markdown 正文（每天四个时段＋小贴士）
+在正文最前面放一块“已确认的交通与住宿”摘要；两样都没
+把代码渲染的长正文切成48字一段、每段间隔25ms 推出
+并附预算明细，数字全来自状态，不来自模型。
+有就整块不出。
+去，模拟流式观感。
+何时调用 本回合出现「已接收N天行程结构」回执时（后处理⑦）；
+快速通道拿到逐日结构时。
+谁来调用
+execute_turn L1476，
+express_planning_service.run_express_planning
+何时调用 行程正文、天气段需要推给前端时。
+L849［跨模块）。
+何时调用 每次渲染行程正文时。
+谁来调用
+execute_turn L1329/L1496/ L1505；
+结果交给 正文替换掉模型旁白，经 _push_rendered 推前端，也
+谁来调用 _render_itinerary_body L955。
+express_planning_service L859跨模块
+是清单生成的源料。
+结果交给 摘要块拼到正文开头。
+结果交给
+一串 assistant 帧进 EventStream，经SSE到前端。
+三类工具的分工：判定类 只看状态不动手，改写类删模型编的、补代码定的，渲染推送类把状态里的数字拼成正文推出去。行程正文和预算表因此每个数字都能追溯到状态字段，快速通道直接借用同一
+套渲染，两条通道的正文长得一模一样。

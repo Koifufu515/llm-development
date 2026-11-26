@@ -1,0 +1,21 @@
+{
+  "city": "大连",
+  "title": "大连景点资料 · Dalian/Xigang",
+  "source_url": "https://en.wikivoyage.org/wiki/Dalian/Xigang",
+  "text": "资料城市：大连。本文是历史开放景点资料，不提供实时开放时间或价格；出行前需要核实。\n\nRussian Street\nOne of the few places it's still possible to get a glimpse of Dalian's colonial past. Most of the old Russian and Japanese buildings were razed in the many bursts of redevelopment the city has seen over the years, but the old architecture is \"preserved\" in the sense many of the buildings along the road are actually modern facsimiles of old Russian buildings rather than the genuine article. The old buildings that do remain are worth examining, however, and more genuine examples lie along the side roads to the east of the main street. Stalls and shops along the road sell various trinkets and souvenirs (no affiliation with Russia other than some wooden dolls) but the same items can generally be found for much less elsewhere in the city. A similar Japanese Street exists in the south of the city center, near the Children's Park, but it is almost wholly fake, with empty shells of buildings lining the road. Those interested in real examples of Japanese houses would be better served exploring the area around Gaoerji Lu to the south of People's Square, although much of what exists is in shambles.\n\nDalian Art Gallery\nIn a spectacular old Russian building dating from 1910, the gallery contains a varied and changing selection of works from local artists, ranging from traditional Chinese styles to works of modern art. The gallery also periodically hosts touring shows from prominent artists both Chinese and foreign.\n\nPeople's Square\nThe other main square in the center of Dalian, where the seat municipal government buildings are housed, some in old Russian-style. Like Zhongshan Square, it is may interested some for the architecture alone, but this one has a much larger grassy area where kite flyers and fountains can be viewed (actually setting on the grass is frowned upon so don't expect to be able to throw a frisbee). The best time to see the fountain is probably during the evening show (8PM) when it is illuminated and elders join in dancing.\n\nForest Zoo\nA major attraction for Chinese tourists primarily because of its pandas (both red pandas and great pandas live in the zoo), although many other exotic species are also represented. The zoo is essentially split into two parts, with a walking section at the top of the hill and a safari area at the base near Fujiazhuang. The two sections are joined by cable car and a foot path, with the pandas housed in the upper section. While the exhibits and conditions may disappoint some, it has passed numerous international inspections and is of high quality by Chinese standards. The only crowds are schoolchildren on field trips, otherwise it's very quiet.",
+  "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+  "license": "CC BY-SA 3.0",
+  "attribution": "Wikivoyage contributors; https://en.wikivoyage.org/wiki/Dalian/Xigang",
+  "sha256": "f567238effe9adad3f9cc89aace6519eab2dd64ff93eaf13b6b3ed918055c796",
+  "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+  "poi_count": 4,
+  "source_dataset": "https://github.com/wikivoyage/wikivoyage.github.io",
+  "excluded_fields": [
+    "price",
+    "hours",
+    "phone",
+    "email",
+    "hotel",
+    "restaurant"
+  ]
+}

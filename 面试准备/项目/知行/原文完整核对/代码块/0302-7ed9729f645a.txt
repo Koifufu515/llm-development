@@ -1,0 +1,12 @@
+"""_segments / hotel_card_mode / _accom_types 演示：住宿段的入参全部取自表单，缺省有兜底（纯逻辑，无需密钥）"""
+from app.capabilities.hotel_multi_segment.hotel_flow import _accom_types, _segments, hotel_card_mode
+
+def state(dest: str, days: int = 5, date: str = "2026-10-01", **req) -> dict:
+    return {"user_requirement": {"departure_city": "北京", "departure_date": date, "travel_days": days, **req},
+            "selected_destination": dest}
+
+st = state("杭州、苏州", 5, adult_count=2, children_count=1, accommodation_types=["star_hotel", "villa"])
+for seg in _segments(st):
+    print(seg.city, seg.checkInDate, "→", seg.checkOutDate, "| 人数", seg.guestCount, "| 档位", seg.priceLevel)
+print("表单预选档位（过滤非法值）：", _accom_types(st))
+print("住宿卡片模式：", hotel_card_mode(st), "| 没填出发日期时：", hotel_card_mode(state("杭州", 3, date="")))

@@ -1,0 +1,11 @@
+Python 端
+  content    = "兵马俑博物馆门票 120 元,开放时间 8:30 至 18:00"
+  ↓ normalize
+  ↓ jieba.cut
+  tokens_str = "兵马俑 博物馆 门票 120 元 , 开放 时间 8 : 30 至 18 : 00"
+  ↓ 作为参数传给 SQL
+
+SQL 端
+  to_tsvector('simple', $12)
+  ↓
+  tokens 列   '兵马俑':1 '博物馆':2 '门票':3 '120':4 ...

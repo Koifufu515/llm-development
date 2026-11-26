@@ -1,0 +1,6084 @@
+
+
+
+
+
+FastAPI 从入门到实战
+
+
+
+
+
+🔗 原文链接： FastAPI 从入门到实战
+⏰ 转存时间： 2026/10/22 10:29:35
+✂️ 本文档由 易飞书 整理生成
+
+
+
+课程视频： 
+
+课程代码： 
+
+作业代码： 
+
+引言：为什么大模型应用开发，绕不开 FastAPI？
+
+在学习大模型应用开发时，很多人都会产生一个疑问：为什么课程没有直接从模型开始，而是先学习 FastAPI？
+
+原因在于，大模型只是应用中的一部分，而不是完整的应用本身。真正能够对外提供服务的大模型系统，除了模型之外，还需要具备接口、业务逻辑、数据处理等基础能力。因此，在学习模型之前，需要先建立应用开发的基本框架。
+
+从应用架构来看，大模型应用通常包含两部分：
+
+
+
+一部分负责对外提供服务，接收用户请求并返回结果；
+
+
+
+另一部分负责具体的业务处理，后续会逐步接入 Prompt、RAG、Agent 等大模型能力。
+
+
+
+因此，本章学习 FastAPI 的目的并不是立即调用大模型，而是掌握如何将 Python 程序构建成一个可运行、可调用、可扩展的服务，为后续接入大模型做好准备。
+
+一、FastAPI 是什么？
+
+在这门课里，你可以先这样理解 FastAPI：
+
+
+FastAPI 是一个用 Python 写接口服务的工具，它可以把你的 Python 函数，变成别人可以通过网络调用的接口。
+
+
+
+
+使用 FastAPI 后，开发者编写的仍然是 Python 函数，只是在框架的支持下，这些函数不仅能够在本地运行，还可以通过网络对外提供服务，供其他程序进行调用。
+
+
+
+对于调用者而言，并不需要了解程序的内部实现，只需要按照接口规定传入数据，即可获得对应的处理结果。
+
+
+
+这正是后面所有“大模型应用”的基本形态。
+
+二、从脚本到应用：你缺的不是语法，是「交付方式」
+
+完成 Python 基础学习后，通常已经能够编写函数、类以及各种脚本程序，并在本地完成相应功能。
+
+但这类代码有一个天然限制： 
+
+
+它只适合你自己运行，不适合直接给别人用，也不适合接入系统。
+
+
+在真实场景中，一个能被使用的程序通常需要：
+
+
+
+有固定入口（别人知道从哪里调用）
+
+
+
+输入输出有规范（不容易传错参数）
+
+
+
+能稳定运行（出错可控、可以重复调用）
+
+
+
+FastAPI 解决的，正是这一层问题：
+
+
+把你的 Python 能力，包装成 “可调用、可集成、可测试”的接口服务。
+
+
+三、为什么要在学模型之前学 FastAPI？
+
+因为在后续学习中，你写的程序会从“简单逻辑”，逐步升级为更复杂、更智能的处理过程。
+
+如果这些逻辑只是零散地写在不同的 Python 文件中，你学到的内容就很难组合成一个完整的应用。
+
+而 FastAPI 提供的，正是一个统一的应用外壳：
+
+
+
+我们可以先搭好一个服务结构
+
+
+
+先让接口跑起来（哪怕内部只是返回固定内容）
+
+
+
+后面再不断替换、升级内部逻辑
+
+
+
+你会清楚看到：
+
+
+应用不是一次写完的，而是一层一层长出来的。
+
+
+四、为什么选 FastAPI，而不是 Flask / Django？
+
+在 Python 生态中，常见的 Web 框架主要有 Flask、Django 和 FastAPI。
+ 在当前这个学习阶段，我们更关注的是接口服务本身。
+
+Flask：很轻，很自由，但容易“越写越乱”
+
+
+
+特点是“想怎么写都行”
+
+
+
+灵活，但很多规则需要自己补
+
+
+
+对初学者来说，容易出现：能跑，但不稳定；能用，但不好维护
+
+
+
+Django：功能很全，但对“模型接口服务”来说太重
+
+
+
+像一个大型工具箱，什么都准备好了
+
+
+
+更适合完整网站或管理系统
+
+
+
+但在“先学接口、再接模型”的阶段，学习负担偏重
+
+
+
+FastAPI：轻 + 规则清楚 + 调试方便
+
+
+
+代码量不多，写法接近 Python 函数
+
+
+
+对输入输出的结构要求清晰
+
+
+
+自带接口测试页面，调试直观
+
+
+
+非常适合作为“模型应用服务的起点”
+
+
+
+因此我们选择 FastAPI 的原因很直接：
+
+
+用最少的代码，把 Python 程序变成 稳定、清晰、好调用的接口服务。
+
+
+五、这一阶段你需要达到的学习成果
+
+学完 FastAPI 后，你不需要成为后端工程师，但你应该能够：
+
+
+
+用 Python 写一个对外接口
+
+
+
+清楚定义输入参数和返回结果
+
+
+
+在浏览器中测试你的接口
+
+
+
+把“一个脚本”组织成“一个服务项目”的基本结构
+
+
+
+在此基础上，后续学习的大模型能力将不断接入同一个应用中，最终形成一个完整的大模型应用系统。
+
+第一阶段：基础铺垫与 Hello World
+
+第1章：现代 Python 语法与 HTTP 基础
+
+Python 类型提示 (Type Hints)
+
+Python 是一种动态类型语言，变量类型在运行过程中由解释器自动推断，不需要像 Java、C++ 等静态类型语言一样提前声明变量类型。
+
+例如：
+
+name = "Tom"
+age = 18
+
+
+Python 解释器会根据当前赋值对象确定变量引用的对象类型
+
+但是，随着项目规模不断扩大，仅依靠动态类型会带来一些问题，例如：
+
+def process(data)
+
+
+
+
+代码可读性降低，其他开发者难以快速理解变量类型。
+
+
+
+编辑器无法提供准确的代码提示。
+
+
+
+运行过程中才可能发现类型错误。
+
+
+
+因此，Python 在 3.5 版本引入了 Type Hints（类型提示），提供类型提示信息。
+
+def process(data: dict) -> str
+def add(a: int, b: int) -> int
+
+
+需要注意的是，Type Hints 不会改变 Python 本身动态类型的特性，它主要用于：
+
+def get_user(user_id: int) -> User
+
+
+
+
+提高代码可读性：明确变量和函数参数的数据类型。
+
+
+
+增强编辑器支持：IDE 可以根据类型信息提供代码补全和错误提示。
+
+
+
+支持框架自动处理：例如 FastAPI 会利用类型提示完成参数校验、数据转换以及 API 文档生成。
+
+
+
+FastAPI 能够实现自动接口文档和请求参数校验，其中一个重要基础就是 Python 的类型提示。
+
+语法格式：
+
+变量: 类型 = 值
+name: str = "Tom"
+age: int = 1
+
+def 函数名(参数: 类型) -> 返回类型:
+def add(a: int, b: int) -> int
+
+
+代码示例：
+
+# 传统写法
+def get_full_name(first_name, last_name):
+    return first_name.title() + " " + last_name.title()
+
+# 现代写法 (Type Hints)
+def get_full_name_typed(first_name: str, last_name: str) -> str:
+    #编辑器知道 first_name 是 str，会自动提示 .title() 方法
+    return first_name.title() + " " + last_name.title()
+
+
+类型提示的优势：
+
+
+
+优势
+说明
+
+
+
+代码可读性提升
+通过类型声明可以快速了解变量和函数的数据结构
+
+
+编辑器支持
+IDE（VS Code、PyCharm 等）可以提供更准确的代码补全和检查
+
+
+FastAPI 的基础能力
+FastAPI 根据类型信息实现请求参数解析、校验以及自动生成接口文档
+
+
+
+** 生活化类比：**
+
+
+
+概念
+类比
+
+
+
+无类型提示 def add(a, b)
+一个没有标签的快递单，你不知道哪个格子该填什么
+
+
+有类型提示 def add(a: int, b: int)
+快递单上标明"收件人""电话"，每个格子一眼知道填什么
+
+
+
+复杂类型 (List, Dict, Optional, Union)
+
+在实际开发中，数据通常不会只有简单的字符串、数字类型，还会涉及列表、字典以及可能为空的数据。
+
+Python 提供了 typing 模块来描述这些复杂类型。
+
+常见类型包括：
+
+
+
+List (列表)：List[int] 表示一个只包含整数的列表。
+
+
+
+Dict (字典)：Dict[str, int] 表示键为字符串、值为整数的字典。{"scores":95,"age":18}
+
+
+
+Optional (可选类型)：Optional[str] 表示该值可以是字符串，也可以是 None。
+
+
+
+Union (联合类型)：Union[int, str] 表示该值可以是整数或字符串。
+
+
+
+
+这里需要注意 Python 是区分大小写的：
+
+
+
+List[int]：这是 typing 模块提供的旧式写法
+
+
+
+list[int]：这是 Python 3.9 之后推荐的内置泛型写法
+
+
+
+Dict[str, int] 和 dict[str, int] 同理
+
+
+
+
+Python 3.9 之后，可以直接使用内置泛型语法，不再需要导入 List、Dict。
+
+a: list[int] = [1, 2, 3]
+
+b: dict[str, int] = {
+    "age": 18
+}
+
+c: str | None = None   # 等价于 Optional[str]
+
+d: int | str = 123     # 等价于 Union[int, str]
+
+
+其中：
+
+
+
+list[int] 表示列表中的每一个元素都应该是整数。
+
+
+
+dict[str, int] 表示字典的 key 必须是字符串，value 必须是整数。
+
+
+
+str | None 是 Python 3.10 提供的新写法，用于表示联合类型。
+
+
+
+实际开发中，经常会结合函数使用：
+
+from typing import Optional, List, Dict, Union
+
+# 处理成绩数据 
+def process_scores(scores: list[int]) -> dict[str, float]:
+    return {
+        "average": sum(scores) / len(scores)
+    }
+
+# 查询数据，可以传入字符串，也可以不传
+def search_item(query: str | None = None) -> str | list[str]:
+    if query:
+        return f"Searching for {query}"
+
+    return ["item1", "item2"]
+
+
+在 FastAPI 中，这些复杂类型可以直接用于接口参数定义，例如：
+
+@app.post("/students")
+def create_students(names: list[str]):
+    return names
+
+
+FastAPI 会根据类型提示自动判断请求数据格式，并进行校验。
+
+Pydantic 基础简介
+
+FastAPI 使用 Pydantic 作为数据验证和数据模型定义工具。
+
+在 Web 开发中，客户端发送的数据通常来自用户输入，数据类型和格式可能不符合要求。例如：
+
+
+
+年龄字段应该是整数，但是用户传入字符串。
+
+
+
+邮箱字段格式错误。
+
+
+
+必填字段缺失。
+
+
+
+Pydantic 可以根据定义好的模型自动完成：
+
+
+
+数据格式校验。
+
+
+
+类型转换。
+
+
+
+错误信息生成。
+
+
+
+数据结构管理。
+
+
+
+核心方式是继承 BaseModel 创建数据模型。
+
+代码示例：
+
+from pydantic import BaseModel
+from typing import Optional
+
+class Item(BaseModel):
+    name: str
+    price: float
+    is_offer: bool = False # 可选字段，默认为 False
+    
+def test(
+    name: str = "World",
+    price: float = 0.0,
+    is_offer: bool = False
+) -> Item:
+    return Item(
+        name=name,
+        price=price,
+        is_offer=is_offer
+    )
+
+
+例如：
+
+item = Item(
+    name="Phone",
+    price="1999.9"
+)
+
+
+Pydantic 会自动尝试将符合规则的数据转换为目标类型：
+
+price = 1999.9
+
+
+但是：
+
+item = Item(
+    name="Phone",
+    price="abc"
+)
+
+
+由于字符串无法转换为数字，Pydantic 会返回校验错误。
+
+Pydantic 的工作流程
+
+Python 异步编程基础 (Async/Await)
+
+FastAPI 具有较高性能的重要原因之一，就是它支持异步编程模型。
+
+在 Web 应用中，大量操作并不是消耗 CPU，而是在等待外部资源，例如：
+
+
+
+查询数据库。
+
+
+
+调用第三方 API。
+
+
+
+读取文件。
+
+
+
+等待网络响应。
+
+
+
+如果采用传统同步方式，程序在等待过程中会一直占用线程资源。而异步编程可以让程序在等待期间处理其他任务，提高资源利用率。
+
+同步 vs 异步
+
+
+
+同步 (Sync)：排队点餐。服务员（CPU）在顾客 A 点餐思考时一直等待，不能服务顾客 B。
+
+
+
+异步 (Async)：叫号取餐。顾客 A 点餐思考时，服务员去服务顾客 B，等 A 好了再回来。
+
+
+
+例如：
+
+async 与 await 关键字
+
+Python 通过 async 和 await 实现异步编程。
+
+
+
+async def：定义一个异步函数，也称为协程函数。
+
+
+
+await：等待一个异步任务完成，同时将控制权交给事件循环，让其他任务继续执行。
+
+
+
+例如：
+
+async def get_data():
+    result = await request_data()
+    return result
+
+
+当执行到 await 时，如果数据还没有返回，当前任务会暂停，事件循环可以执行其他协程。
+
+阻塞等待和非阻塞等待
+
+
+
+类别
+具体说明
+
+
+
+阻塞等待（基本概念）
+程序执行被暂停，当前线程完全停止工作直到等待时间结束
+
+
+非阻塞等待（基本概念）
+程序释放控制权给事件循环，允许其他任务并发执行
+
+
+阻塞等待 (time.sleep ())
+使用 time.sleep () 实现完全冻结当前线程的所有操作事件循环被阻止执行其他任务在异步环境中破坏并发性能
+
+
+非阻塞等待 (asyncio.sleep ())
+使用 await asyncio.sleep () 实现将控制权交还给事件循环允许其他协程在此期间运行保持异步程序的并发特性
+
+
+
+例如：
+
+import asyncio
+import time
+
+async def make_coffee():
+    print("开始煮咖啡...")
+    #time.sleep(3)
+    await asyncio.sleep(3)  # 煮咖啡需要 3 秒
+    print("咖啡好了！")
+
+async def make_toast():
+    print("开始烤面包...")
+    await asyncio.sleep(2)  # 烤面包需要 2 秒
+    print("面包好了！")
+
+async def main():
+    # 同时开始煮咖啡和烤面包
+    await asyncio.gather(make_coffee(), make_toast())
+    print("早餐准备完毕！")
+
+asyncio.run(main())
+
+
+两个任务并不是同时执行，而是在遇到 I/O 等待时主动切换，让事件循环调度其他任务。
+
+
+注意：在 async def 函数中，如果调用耗时的同步函数，例如 time.sleep()，会阻塞整个事件循环。异步代码中应该优先使用支持异步的函数，例如 asyncio.sleep()。
+
+
+HTTP 协议
+
+HTTP（HyperText Transfer Protocol，超文本传输协议）是一种用于客户端和服务器之间通信的应用层协议。
+
+在 Web 应用中，浏览器、移动端应用或者其他服务通常作为客户端，通过 HTTP 向服务器发送请求，服务器处理后返回响应。
+
+简单理解：
+
+http://127.0.0.1:8000/users/1
+
+
+
+你在浏览器输入网址，按回车 → 浏览器发送 **HTTP 请求 **
+
+
+
+服务器收到请求，处理后返回数据 → 服务器发送 HTTP 响应
+
+
+
+一个 HTTP 请求由四部分组成：
+
+请求 (Request) 结构
+
+
+Method (方法)：
+
+  
+
+  记忆口诀：增删改查 → POST DELETE PUT GET
+
+
+GET: 获取资源（如：浏览网页）。
+
+POST: 提交数据（如：表单提交）。
+
+PUT: 更新资源。
+
+DELETE: 删除资源。
+
+
+GET /products/100
+POST /products
+PUT /products/100
+DELETE /products/100
+
+
+
+
+URL: 资源地址 (如 /users/1)。
+
+
+
+Headers: 请求头 (如 Content-Type: application/json / Authorization: Bearer xxx)
+
+
+
+Body: 
+  用于携带提交的数据，通常存在于 POST、PUT、PATCH 请求中。
+  例如：
+  POST /users/register
+
+
+
+{
+    "name": "张三",
+    "age": 20
+}
+
+
+** 生活化类比：**
+
+
+
+概念
+类比
+
+
+
+HTTP 请求
+点外卖：告诉店家你要什么
+
+
+HTTP 响应
+外卖送到：店家把菜给你
+
+
+GET
+看菜单（查询）
+
+
+POST
+下单（提交）
+
+
+PUT
+改订单（更新）
+
+
+DELETE
+取消订单（删除）
+
+
+
+HTTP 响应 (Response) 结构
+
+服务器返回的响应也有固定结构：
+
+HTTP/1.1 200 OK                    ← 状态行（状态码 + 状态描述）
+Content-Type: application/json     ← 响应头
+                                   ← 空行
+{"id": 1, "name": "张三"}          ← 响应体（通常是 JSON）
+
+
+
+Status Code (状态码)：
+
+
+
+
+状态码
+含义
+使用场景
+
+
+
+200 OK
+请求成功
+查询、修改成功
+
+
+201 Created
+创建成功
+新资源创建成功
+
+
+400 Bad Request
+请求参数错误
+参数格式不正确
+
+
+401 Unauthorized
+未认证
+缺少身份凭证
+
+
+403 Forbidden
+无权限访问
+用户权限不足
+
+
+404 Not Found
+资源不存在
+请求路径错误
+
+
+500 Internal Server Error
+服务端错误
+后端代码异常
+
+
+
+
+Headers（响应头）
+
+
+用于描述响应信息，例如：
+
+Content-Type: application/json
+
+
+表示返回的数据格式为 JSON。
+
+
+Body（响应体）
+
+
+服务器返回的数据内容，现代 Web API 中通常使用 JSON 格式。
+
+JSON（JavaScript Object Notation）是一种轻量级数据交换格式，结构类似 Python 字典。
+
+例如：
+
+{
+    "id": 1,
+    "name": "张三",
+    "email": "zhangsan@example.com",
+    "is_active": true,
+    "tags": [
+        "学生",
+        "VIP"
+    ],
+    "profile": {
+        "age": 20,
+        "city": "北京"
+    }
+}
+
+
+在 FastAPI 中，接口返回的数据通常会自动转换为 JSON 格式，这也是现代前后端分离开发中最常见的数据交换方式。
+
+
+课堂例子展示（此时如果没有搭建 FastAPI 环境可能无法运行 这里这是辅助课堂讲解作用）：
+
+
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
+
+app = FastAPI()
+
+# 200：正常返回
+@app.get("/users/1")
+def get_user():
+    return {
+        "id": 1,
+        "name": "张三",
+        "email": "zhangsan@example.com",
+        "is_active": True,
+        "tags": ["学生", "VIP"],
+        "profile": {
+            "age": 20,
+            "city": "北京"
+        }
+    }
+
+# 201：创建成功
+@app.post("/users")
+def create_user():
+    return JSONResponse(
+        status_code=201,
+        content={
+            "id": 2,
+            "name": "李四",
+            "message": "用户创建成功"
+        }
+    )
+
+# 400：请求参数错误
+@app.get("/users/400")
+def bad_request():
+    raise HTTPException(
+        status_code=400,
+        detail="请求参数错误"
+    )
+
+# 401：没有身份认证
+@app.get("/users/401")
+def unauthorized():
+    raise HTTPException(
+        status_code=401,
+        detail="未登录，请先进行身份认证"
+    )
+
+# 403：没有访问权限
+@app.get("/users/403")
+def forbidden():
+    raise HTTPException(
+        status_code=403,
+        detail="没有权限访问该资源"
+    )
+
+# 404：资源不存在
+@app.get("/users/404")
+def user_not_found():
+    return JSONResponse(
+        status_code=404,
+        content={
+            "message": "用户不存在"
+        }
+    )
+
+# 错误写法
+# @app.get("/users/404")
+# def user_not_found():
+#     return {
+#         "message": "用户不存在"
+#     }
+
+# 500：服务器内部代码异常
+@app.get("/users/500")
+def server_error():
+    result = 10 / 0
+
+    return {
+        "result": result
+    }
+
+
+uvicorn main:app --reload
+
+
+访问：http://127.0.0.1:8000/docs
+
+
+
+依次访问，查看不同状态码：
+
+GET  /users/1
+POST /users
+GET  /users/400
+GET  /users/401
+GET  /users/403
+GET  /users/404
+GET  /users/500
+
+
+
+
+
+
+第2章：初识 FastAPI
+
+什么是 FastAPI？
+
+FastAPI 是一个用于构建 Web API 的现代 Python 框架，基于 Python 类型提示（Type Hints）设计，能够快速开发高性能、可靠的后端接口服务。
+
+FastAPI 主要依赖两个核心组件：
+
+
+
+**Starlette：**负责 Web 层功能，包括路由、中间件、请求处理、异步支持等。
+
+
+
+**Pydantic：**负责数据校验和数据序列化，通过 Python 类型声明自动完成数据验证。
+
+
+
+FastAPI 支持 Python 3.8+（不同版本要求可能有所变化，建议使用较新的 Python 版本），并且天然兼容异步编程模型。
+
+核心优势：
+
+
+
+高性能
+  FastAPI 基于 ASGI（Asynchronous Server Gateway Interface）标准构建，能够充分利用 Python 异步能力，在高并发场景下拥有较好的性能表现。
+  其性能接近 Node.js 和 Go 等高性能 Web 框架，适用于接口服务、微服务以及 AI 应用后端开发。
+
+
+
+开发效率高
+  FastAPI 通过 Python 类型提示自动完成：
+
+
+
+
+请求参数校验。
+
+数据转换。
+
+接口文档生成。
+
+错误信息提示。
+  开发者只需要关注业务逻辑，可以减少大量重复代码。
+
+
+
+标准支持完善
+  FastAPI 自动生成符合 OpenAPI 标准的接口文档，并支持 JSON Schema 数据结构描述。
+  开发完成后，无需额外编写接口文档，前端开发人员即可通过 Swagger UI 调试接口。
+  ** 生活化类比：**
+
+
+FastAPI
+一个餐厅的厨房：负责接单、做菜、上菜
+
+
+
+Uvicorn
+餐厅的服务员：负责把菜端出去
+
+
+Swagger 文档
+餐厅的菜单：告诉客人有哪些菜可以点
+
+
+
+
+
+环境搭建
+
+安装依赖
+
+在终端（Terminal）或 CMD 中执行以下命令。建议在项目中创建虚拟环境(.venv)，避免不同项目之间的依赖冲突。
+
+# 创建虚拟环境
+python -m venv .venv
+
+# 激活环境
+# powershell：
+.venv\Scripts\Activate.ps1
+
+# cmd:
+.venv\Scripts\activate.bat
+
+# macOS/Linux
+source .venv/bin/activate
+
+# 安装 FastAPI 框架
+pip install fastapi
+
+# 安装 ASGI 服务器 Uvicorn
+# uvicorn[standard] 会额外安装一些推荐依赖，例如 uvloop，提高运行性能
+pip install "uvicorn[standard]"
+
+# 使用清华源安装 FastAPI
+pip install fastapi -i https://pypi.tuna.tsinghua.edu.cn/simple/
+
+# 使用清华源安装 Uvicorn
+pip install "uvicorn[standard]" -i https://pypi.tuna.tsinghua.edu.cn/simple/
+
+
+生活化类比：
+
+
+
+命令
+类比
+
+
+
+uvicorn main:app --reload
+开门营业，客人可以进来了
+
+
+--reload
+店里有改动，自动重新布置
+
+
+
+架构解析
+
+FastAPI 本身并不是一个完整的 Web 服务器，而是一个 Web 应用框架。
+
+在实际运行过程中，FastAPI 通常需要搭配 ASGI 服务器，例如 Uvicorn，由服务器负责接收客户端请求，并将请求交给 FastAPI 处理。
+
+整体流程如下：
+
+其中：
+
+
+
+客户端：可以是浏览器、前端应用、移动端 App 或其他服务。
+
+
+
+Uvicorn：负责网络通信，将 HTTP 请求转换为 Python 可以处理的数据。
+
+
+
+FastAPI：根据请求路径和请求方法匹配对应函数，并返回处理结果。
+
+
+
+在生产环境中，也可以使用 Gunicorn 搭配 Uvicorn Worker 部署 FastAPI 应用，以提高服务稳定性。
+
+最简应用：Hello World
+
+创建一个名为 main.py 的文件，输入以下代码：
+
+from fastapi import FastAPI
+
+# 1. 实例化 FastAPI 对象
+app = FastAPI()
+
+# 2. 定义 GET 请求接口
+# 当客户端访问 GET / 时，会执行下面的函数
+@app.get("/")
+async def read_root() -> dict:
+    # FastAPI 会自动将 Python 字典转换为 JSON 响应
+    return {"message": "Hello World"}
+
+# 3. 直接运行 Python 文件时启动服务
+# if __name__ == "__main__":
+#    import uvicorn
+#
+#    uvicorn.run(
+#        app,
+#        host="127.0.0.1",
+#        port=8000
+#    )
+
+
+代码解析
+
+
+
+app = FastAPI()：
+创建 FastAPI 应用对象。
+后续所有接口都需要通过这个对象进行注册，例如：
+
+@app.get("/")
+
+
+表示向 FastAPI 注册一个 GET 请求接口。
+
+
+
+@app.get("/")：
+路径操作装饰器，用于定义接口信息。
+包含三个部分：
+
+
+@app：FastAPI 应用对象。
+
+.get：HTTP 请求方法。
+
+"/"：接口访问路径。
+当用户访问：
+
+
+GET http://127.0.0.1:8000/
+
+
+FastAPI 会调用下面对应的函数。
+
+
+
+async def：
+用于定义异步函数。
+FastAPI 支持同步函数和异步函数：
+
+def function():
+    pass
+
+
+或：
+
+async def function():
+    pass
+
+
+如果接口内部需要执行异步操作，例如数据库查询、网络请求等，推荐使用 async def。
+如果函数内部没有异步操作，普通 def 同样可以正常运行。
+
+
+
+return dict：
+FastAPI 会自动进行数据序列化：
+接口函数中返回的是 Python 的 dict：
+
+{
+    "message": "Hello World"
+}
+
+
+FastAPI 会自动把这个 Python dict 序列化转换为 JSON：
+
+
+虽然代码与上面的看起来一样，是因为 JSON 的对象语法跟 Python 字典的语法非常接近
+
+
+{
+    "message": "Hello World"
+}
+
+
+同时自动设置响应头：
+
+Content-Type: application/json
+
+
+
+
+运行与调试
+
+启动服务
+
+在终端中，确保处于 main.py 所在目录，运行：
+
+uvicorn main:app --reload
+或者
+uvicorn main:app --host 127.0.0.1 --port 8000 --reload
+
+
+
+
+main: Python 文件名 (main.py)。
+
+
+
+app: FastAPI 实例名 (app = FastAPI())。
+
+
+
+--port: 指定端口启动（默认端口是8000），这里端口只要不要与你本机电脑其它冲突都是ok的，比如说8001，8002都是可以。
+
+
+
+--reload: 代码修改后自动重启服务器（仅用于开发环境）。
+
+
+
+启动成功标志：
+终端显示：Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+
+访问 API
+
+打开浏览器访问 http://127.0.0.1:8000/，可以看到返回结果：
+
+{
+    "message": "Hello World"
+}
+
+
+自动交互式文档
+
+FastAPI 根据代码中的类型提示和路由定义，自动生成符合 OpenAPI 标准的文档。这是 FastAPI 最受欢迎的功能之一。
+
+Swagger UI
+
+
+
+访问地址：http://127.0.0.1:8000/docs
+
+
+
+功能：
+
+
+查看所有接口列表。
+
+查看请求参数和返回数据格式。
+
+在线调用接口。
+
+测试 API 返回结果。
+
+
+
+
+其中：
+
+Try it out
+
+功能可以直接在网页中发送 HTTP 请求，无需额外使用 Postman 等接口测试工具。
+
+
+
+ReDoc
+
+
+
+访问地址：http://127.0.0.1:8000/redoc
+
+
+
+功能：提供另一种风格的、阅读体验更好的接口文档，适合对外发布。
+
+
+
+
+
+实践任务
+
+任务描述：
+
+
+
+修改 main.py，新增一个路由 /info。
+
+
+
+该接口使用 GET 方法。
+
+
+
+返回包含你自己信息的 JSON 对象，结构如下：
+
+
+
+{
+    "name": "Your Name",
+    "role": "Student",
+    "language": "Python 3.10"
+}
+
+
+启动服务，截图 Swagger UI (/docs) 中调用该接口并成功返回结果的界面。
+
+代码如下：
+
+from fastapi import FastAPI
+
+# 1. 实例化 FastAPI 对象
+app = FastAPI()
+
+# 2. 路径操作装饰器
+# 含义：当客户端以 GET 方法访问根路径 "/" 时，运行下方的函数
+@app.get("/")
+async def read_root() -> dict:
+    # 3. 路径操作函数
+    # 直接返回字典，FastAPI 会自动转换为 JSON
+    return {"message": "Hello World"}
+
+# 新增 /info 路由
+@app.get("/info")
+def get_info() -> dict:
+    return {
+        "name": "Your Name",
+        "role": "Student",
+        "language": "Python 3.10"
+    }
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8001)
+
+
+第二阶段：请求与响应——核心交互
+
+第 3 章：参数接收与验证
+
+参数接收概览
+
+在 FastAPI 中，客户端发送的数据主要通过以下几种方式传递给后端接口：
+
+
+
+路径参数（Path Parameters）：用于表示资源路径的一部分，例如根据用户 ID 查询用户信息。例如：/users/{user_id}
+
+
+
+查询参数（Query Parameters）：用于传递过滤条件、分页参数等额外信息，例如搜索关键词、页码。例如：/users?keyword=zhangsan&page=1&size=10
+
+
+
+请求体（Request Body）：用于提交结构化数据，例如创建用户、提交订单、上传表单数据等。例如：{"username":"zhangsan", "password":"123456"}
+
+
+
+FastAPI 会根据函数参数的位置、名称以及类型提示，自动判断参数来源，并结合 Pydantic 完成数据转换和验证。
+
+
+
+从 HTTP 请求中提取数据。
+
+
+
+将字符串形式的数据转换为对应的 Python 类型。
+
+
+
+对数据进行合法性校验。
+
+
+
+将验证后的数据传递给接口函数。
+
+
+
+例如，客户端传递的 URL 参数本质上都是字符串：
+
+/items/123
+
+
+但如果接口中声明：
+
+async def read_item(item_id: int):
+
+
+FastAPI 会自动将 "123" 转换为整数 123，并在类型不匹配时返回错误信息。
+
+核心交互流程图
+
+路径参数 (Path Parameters)
+
+路径参数是 URL 地址的一部分，通常用于定位某一个具体资源。
+
+例如：
+
+GET /users/1001
+
+
+其中 1001 就是用户 ID，后端可以根据这个 ID 查询对应用户。
+
+
+
+语法：在路由路径中使用 {variable_name} 声明参数，并在函数参数中定义同名变量。
+
+
+
+类型转换：FastAPI 会根据函数参数中的类型提示自动完成类型转换。
+
+
+
+数据校验：如果客户端传入的数据无法转换为指定类型，FastAPI 会自动返回参数验证错误。
+
+
+
+from fastapi import FastAPI
+
+app = FastAPI()
+
+# 路径参数 item_id 被定义为 int 类型
+@app.get("/items/{item_id}")
+async def read_item(item_id: int):
+    # 如果访问 /items/pig
+    # FastAPI 会返回参数验证错误，因为 pig 无法转换为 int
+    return {
+        "item_id": item_id,
+        "type": str(type(item_id))
+    }
+
+
+访问：
+
+http://127.0.0.1:8000/items/10
+
+
+返回：
+
+{
+    "item_id": 10,
+    "type": "<class 'int'>"
+}
+
+
+可以看到，虽然 URL 中传递的是字符串 "10"，但是 FastAPI 根据类型提示自动转换成了 Python 中的整数类型。
+
+查询参数 (Query Parameters)
+
+查询参数是 URL 中 ? 后面的参数，通常用于实现筛选、搜索、分页等功能。
+
+例如：
+
+GET /users/?skip=20&limit=5&q=admin
+
+
+其中：
+
+
+
+skip=20 表示跳过前 20 条数据。
+
+
+
+limit=5 表示每次返回 5 条数据。
+
+
+
+q=admin 表示搜索关键词。
+
+
+
+在 FastAPI 中，只要函数参数没有出现在路径 {} 中，就会自动被识别为查询参数。
+
+
+
+**默认值：**通过给参数设置默认值，可以指定参数的默认行为。
+
+
+
+**可选参数：**使用 Optional 或 Union 表示参数可以为空。
+
+
+
+**类型转换：**FastAPI 会自动将参数转换为对应的数据类型。
+
+
+
+from typing import Union
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/users/")
+async def read_users(
+    skip: int = 0,
+    limit: int = 10,
+    q: str | None = None 
+    # q: Optional[str] = None
+):
+    # URL 示例：
+    # /users/?skip=20&limit=5&q=admin
+
+    return {
+        "skip": skip,
+        "limit": limit,
+        "q": q
+    }
+
+
+例如请求：
+
+/users/?skip=20&limit=5&q=admin
+
+
+FastAPI 会自动转换为：
+
+skip = 20
+limit = 5
+q = "admin"
+
+
+对于布尔类型参数，FastAPI 也支持常见字符串转换：
+
+?is_active=true
+?is_active=1
+?is_active=yes
+?is_active=on
+
+
+都会被转换为 True
+
+核心重点：请求体与 Pydantic 模型
+
+在实际开发中，创建或修改资源时通常需要提交一组结构化数据，例如：
+
+
+
+创建用户，需要提交用户名、密码、邮箱。
+
+
+
+创建商品，需要提交名称、价格、库存。
+
+
+
+创建订单，需要提交多个字段。
+
+
+
+这种情况下，单纯使用路径参数或查询参数并不适合，而应该使用 请求体（Request Body）。
+
+FastAPI 通常结合 Pydantic 模型 定义请求数据结构。当接口参数是 BaseModel 类型时，FastAPI 默认会从请求体 JSON 中读取数据。
+
+Pydantic 主要负责：
+
+
+
+定义数据格式。
+
+
+
+自动进行类型转换。
+
+
+
+对字段进行验证。
+
+
+
+提供清晰的数据结构。
+
+
+
+定义 Pydantic 模型 (BaseModel)
+
+FastAPI 新版本默认使用 Pydantic v2，数据转换使用 model_dump()；旧版本中常见的是 dict()。
+
+from fastapi import FastAPI
+from pydantic import BaseModel
+from typing import Optional
+
+app = FastAPI()
+
+# 定义请求数据模型
+class Item(BaseModel):
+    name: str
+    price: float
+    is_offer: bool | None = None
+    description: str | None = None
+    tax: float | None = None
+
+@app.post("/items/")
+async def create_item(item: Item):
+    # item 此时已经是 Item 类的实例
+    # 可以通过属性方式访问数据
+    item_dict = item.model_dump()
+
+    if item.tax is not None:
+        price_with_tax = item.price + item.tax
+        item_dict.update(
+            {
+                "price_with_tax": price_with_tax
+            }
+        )
+
+    return item_dict
+
+
+客户端发送请求：
+
+{
+    "name": "iPhone",
+    "price": 7999,
+    "tax": 500
+}
+
+
+FastAPI 会自动完成：
+
+
+
+接收 JSON 数据。
+
+
+
+根据 Item 模型检查字段。
+
+
+
+将 JSON 转换成 Item 对象。
+
+
+
+将对象传入接口函数。
+
+
+
+因此在函数内部：
+
+item.name
+item.price
+item.tax
+
+
+都可以直接访问对应的数据。
+
+** 生活化类比：**
+
+
+
+参数类型
+类比
+例子
+
+
+
+路径参数
+门牌号
+/books/1（1 号书）
+
+
+查询参数
+填表格
+/books?keyword=三体
+
+
+请求体
+寄包裹（放东西进去）
+POST 提交 JSON
+
+
+
+进阶参数验证
+
+在实际项目中，仅仅定义数据类型通常是不够的。
+
+例如：
+
+
+
+用户年龄不能小于 0。
+
+
+
+商品价格不能超过限制。
+
+
+
+用户名长度需要符合要求。
+
+
+
+查询关键词长度需要限制。
+
+
+
+FastAPI 提供了 Query、Path、Body 等工具进行参数校验，Pydantic 提供 Field 对模型字段进行验证。
+
+常见应用：
+
+
+
+**Path / Query 校验：**用于路径参数和查询参数。
+
+
+
+**Field 校验：**用于 Pydantic 模型中的字段验证。
+
+
+
+from fastapi import Query, Path, FastAPI
+from pydantic import BaseModel, Field
+
+app = FastAPI()
+
+class CalculatorInput(BaseModel):
+    # Field 用于模型内部字段校验
+    # 必须大于 0，小于 10000
+    num_a: float = Field(
+        ...,
+        gt=0,
+        lt=10000,
+        description="第一个数字"
+    )
+
+    num_b: float = Field(
+        ...,
+        description="第二个数字"
+    )
+
+@app.get("/items/{item_id}")
+async def read_items(
+    # Path 用于路径参数校验
+    # item_id 必须大于等于 1
+    item_id: int = Path(
+        ...,
+        ge=1,
+        title="The ID of the item"
+    ),
+
+    # Query 用于查询参数校验
+    # q 最大长度限制为 50
+    q: str | None = Query(
+        None,
+        max_length=50
+    )
+):
+    return {
+        "item_id": item_id,
+        "q": q
+    }
+
+
+一些参数的解释
+
+
+
+gt: greater than (大于)
+
+
+
+lt: less than (小于)
+
+
+
+ge: greater than or equal (大于等于)
+
+
+
+le: less than or equal（小于等于)
+
+
+
+... (Ellipsis): 在 Pydantic 中，如果字段没有默认值，本身也是必填字段；使用 ... 可以显式表示“没有默认值，并且需要进行额外配置”。
+
+
+
+第 4 章：响应模型与错误处理
+
+响应模型 (Response Model)
+
+在 FastAPI 中，可以通过路由装饰器中的 response_model 参数指定接口返回的数据结构。
+
+响应模型不仅可以约束接口返回的数据格式，还可以在实际开发中提升接口安全性和可维护性。
+
+主要作用：
+
+
+
+**数据过滤：**只返回响应模型中定义的字段，可以避免意外暴露敏感信息。例如用户密码、内部状态字段等。
+
+
+
+**数据校验与转换：**FastAPI 会根据响应模型对返回数据进行校验，并自动转换为符合 JSON 标准的数据格式。
+
+
+
+**自动生成接口文档：**Swagger UI 会根据响应模型生成对应的响应 Schema，方便前后端开发人员查看接口返回结构。
+
+
+
+from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+# 接收用户注册信息
+class UserIn(BaseModel):
+    username: str
+    password: str
+    email: str
+
+# 返回给客户端的用户信息
+class UserOut(BaseModel):
+    username: str
+    email: str
+
+@app.post("/user/", response_model=UserOut)
+async def create_user(user: UserIn):
+    # 虽然 user 中包含 password 字段
+    # 但是 response_model 会自动过滤未定义的字段
+    return user
+
+
+在上面的例子中，请求参数使用 UserIn 模型，因为注册用户时需要接收密码。
+
+但是接口返回数据时使用 UserOut 模型，因为密码属于敏感信息，不应该返回给客户端。
+
+因此，即使函数返回的数据中包含 password 字段，FastAPI 也会根据 response_model 自动过滤掉该字段。
+
+实际开发中，通常会为同一个数据对象定义多个模型，例如：
+
+
+
+UserCreate：用于接收创建用户的数据。
+
+
+
+UserUpdate：用于接收修改用户的数据。
+
+
+
+UserResponse：用于返回给客户端的数据。
+
+
+
+通过输入模型和输出模型分离，可以避免接口暴露不必要的数据。
+
+HTTP 状态码的选择艺术
+
+HTTP 状态码是客户端和服务器之间约定的一种通信方式，用于表示一次请求的处理结果。
+
+在开发 API 时，合理选择状态码可以帮助客户端快速判断请求是否成功，以及失败的原因。
+
+
+
+状态码
+含义
+适用场景
+
+
+
+状态码
+含义
+适用场景
+
+
+200 OK
+请求成功
+查询数据、更新数据成功
+
+
+201 Created
+创建成功
+成功创建新的资源，例如注册用户、创建订单
+
+
+202 Accepted
+请求已接受
+请求已经接收，但任务会在后台异步处理，例如文件处理、模型训练任务
+
+
+400 Bad Request
+请求错误
+请求参数符合格式，但业务逻辑不正确，例如参数范围错误、除数为 0
+
+
+401 Unauthorized
+未认证
+用户未登录、Token 无效或过期
+
+
+403 Forbidden
+无权限
+用户身份已验证，但没有访问该资源的权限
+
+
+404 Not Found
+资源不存在
+查询的数据不存在，例如用户 ID 不存在
+
+
+422 Unprocessable Entity
+参数校验失败
+请求数据格式不符合接口要求，例如缺少字段、字段类型错误
+
+
+500 Internal Server Error
+服务器内部错误
+后端代码出现未处理异常
+
+
+
+** 生活化类比：**
+
+
+
+概念
+类比
+
+
+
+200 OK
+点了菜，菜上来了 ✅
+
+
+201 Created
+点了菜，新菜做好了 ✅
+
+
+202 Accepted
+你下单了，厨房说"收到了，正在做"（后台慢慢做）
+
+
+400 Bad Request
+你点错菜了（菜单上没有）
+
+
+401 Unauthorized
+你没出示会员卡，不能进
+
+
+403 Forbidden
+你是普通会员，进不了 VIP 区
+
+
+404 Not Found
+菜单上没有这道菜
+
+
+422 Unprocessable Entity
+你填的表格格式不对（比如手机号填了字母）
+
+
+500 Internal Server Error
+厨房着火了（服务器代码崩了）
+
+
+
+在 FastAPI 中，如果请求参数无法通过 Pydantic 模型校验，默认会返回 422 Unprocessable Entity。
+
+例如：
+
+class User(BaseModel):
+    age: int
+
+
+客户端传入：
+
+{
+    "age": "abc"
+}
+
+
+由于 age 要求是整数类型，FastAPI 会自动进行校验并返回 422 错误。
+
+异常处理 (Exception Handling)
+
+在实际项目中，接口运行过程中经常会遇到各种异常情况，例如：
+
+
+
+查询的数据不存在。
+
+
+
+用户没有登录。
+
+
+
+用户没有操作权限。
+
+
+
+请求参数不符合业务要求。
+
+
+
+FastAPI 推荐通过抛出异常的方式处理错误，而不是手动返回错误字典。
+
+这样可以让异常处理逻辑和正常业务逻辑分离，提高代码可维护性。
+
+使用 HTTPException
+
+FastAPI 提供了 HTTPException 用于主动返回 HTTP 错误响应。
+
+from fastapi import FastAPI, HTTPException
+
+app = FastAPI()
+
+items = {
+    "foo": "The Foo Wrestlers"
+}
+
+@app.get("/items/{item_id}")
+async def read_item(item_id: str):
+    if item_id not in items:
+        raise HTTPException(
+            status_code=404,
+            detail="Item not found"
+        )
+
+    return {
+        "item": items[item_id]
+    }
+
+
+当客户端访问不存在的商品时：
+
+GET /items/bar
+
+
+程序会主动抛出：
+
+HTTPException(status_code=404, detail="Item not found")
+
+
+FastAPI 会自动捕获这个异常，并返回对应的 HTTP 响应：
+
+{
+    "detail": "Item not found"
+}
+
+
+相比直接返回错误信息，使用异常机制可以让代码结构更加清晰。
+
+自定义全局异常处理器
+
+HTTPException 主要用于主动返回业务相关 HTTP 错误，例如 404、403；而数据库异常、代码异常通常需要另外定义异常处理器。
+
+为了保持 API 返回格式的统一（例如无论成功失败都返回 code, msg, data），我们需要自定义异常处理。
+
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
+
+# 1. 初始化 FastAPI 应用
+app = FastAPI()
+
+# 2. 注册 HTTPException 全局异常处理器
+@app.exception_handler(HTTPException)
+async def http_exception_handler(
+        request: Request,
+        exc: HTTPException
+):
+    """
+    统一处理 HTTP 异常响应
+
+    request:
+        当前请求对象，可以获取请求路径、请求方法等信息
+
+    exc:
+        当前捕获到的异常对象，
+        包含 status_code 和 detail 等信息
+    """
+
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "code": exc.status_code,
+            "message": exc.detail,
+            "data": None
+        }
+    )
+
+# 3. 示例接口
+@app.get("/items/{item_id}", summary="根据 ID 获取商品")
+async def read_item(item_id: int):
+
+    if item_id < 1:
+        raise HTTPException(
+            status_code=400,
+            detail="商品 ID 不能小于 1"
+        )
+
+    if item_id >3= 999:
+        raise HTTPException(
+            status_code=404,
+            detail=f"未找到 ID 为 {item_id} 的商品"
+        )
+
+    return {
+        "code": 200,
+        "message": "success",
+        "data": {
+            "item_id": item_id,
+            "name": "测试商品",
+            "price": 99.9
+        }
+    }
+
+
+在这个例子中：
+
+
+
+当商品 ID 小于 1 时，主动抛出 400 异常。
+
+
+
+当商品 ID 为 999 时，抛出 404 异常。
+
+
+
+异常会被 http_exception_handler 捕获，并转换成统一格式返回。
+
+
+
+其中：
+
+
+
+request 参数表示当前客户端请求的信息，例如请求路径、请求方法等。
+
+
+
+exc 参数表示当前发生的异常对象，可以通过 exc.status_code 获取状态码，通过 exc.detail 获取错误描述。
+
+
+
+在大型项目中，除了处理 HTTPException 外，还通常会针对数据库异常、业务异常、自定义异常等情况编写不同的异常处理器，使整个系统的错误管理更加规范。
+
+第三阶段：数据库集成与架构设计
+
+第 5 章：数据库 ORM 集成 (SQLModel)
+
+前置知识： 
+
+为什么我们需要 ORM？
+
+在传统的 Web 开发中，我们通常需要通过 SQL 语句直接操作数据库，也就是所谓的 Raw SQL。对于简单项目来说，这种方式非常直接，也具有很高的灵活性，但是随着项目规模不断扩大，数据库操作会越来越多，代码维护也会逐渐变得复杂。
+
+例如，使用原生 SQL 查询用户信息：
+
+# 传统方式：手写 SQL
+import sqlite3
+
+conn = sqlite3.connect('database.db')
+cursor = conn.cursor()
+
+# 查询用户
+cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+result = cursor.fetchone()
+
+# 手动构造对象
+user = {
+    'id': result[0],
+    'name': result[1],
+    'email': result[2]
+}
+
+
+从这段代码中，我们可以发现一些比较典型的问题：
+
+
+
+**需要手动编写 SQL：**查询、新增、修改、删除等操作都需要自己编写对应的 SQL。一个项目中如果有很多数据表，就会产生大量重复的数据库操作代码。
+
+
+
+数据转换比较繁琐：fetchone() 查询出来的结果通常是元组，需要通过 result[0]、result[1] 这种方式手动取出数据，再转换成 Python 字典或对象。
+
+
+
+**维护成本较高：**如果数据库表增加、删除或修改了字段，不仅 SQL 语句可能需要修改，后面的 result[0]、result[1] 等数据转换逻辑也可能需要同步调整。
+
+
+
+**类型关联较弱：**数据库中的字段和 Python 代码中的类型没有建立明确的对应关系，IDE 很难根据数据库表结构提供完整的类型提示。
+
+
+
+**容易产生安全问题：**如果开发时直接通过字符串拼接 SQL，而没有使用参数化查询，就可能产生 SQL 注入风险。"select * from users where name = ' " + username +  " ' "
+
+
+
+ORM (Object-Relational Mapping，对象关系映射) 是一种技术，它允许开发者使用面向对象编程语言（如 Python）来操作关系型数据库。
+
+
+核心思想：
+类 (Class) ↔数据库表 (Table)
+对象 (Instance) ↔表中的行 (Row)
+属性 (Attribute) ↔ 表中的列 (Column)
+
+
+例如：
+
+数据库中有一张 books 表：
+
+
+
+id
+title
+author
+price
+
+
+
+1
+Python 入门
+Tom
+59.9
+
+
+
+通过 ORM 后，可以映射成 Python 类：
+
+class Book:
+    id: int
+    title: str
+    author: str
+    price: float
+
+
+之后不需要直接编写 SQL，而是通过对象完成数据库操作：
+
+book = Book(
+    title="Python 入门",
+    author="Tom",
+    price=59.9
+)
+
+
+ORM 会自动将对象转换为对应的 SQL：
+
+INSERT INTO books(title, author, price)
+VALUES ('Python 入门', 'Tom', 59.9);
+
+
+在现代 Web 后端开发中，ORM 已经成为常见的数据访问方式。例如 FastAPI、Django、Spring Boot 等框架生态中，都广泛使用 ORM 简化数据库开发。
+
+生活化类比：
+
+
+
+概念
+类比
+
+
+
+手写 SQL
+自己去菜市场买菜、洗菜、炒菜
+
+
+用 ORM
+在 App 上点外卖，平台帮你搞定
+
+
+
+ORM 让你不用写 SQL，只写 Python
+
+工具选择：SQLModel
+
+在 Python ORM 生态中，最成熟、使用最广泛的 ORM 框架之一是 SQLAlchemy。
+
+SQLAlchemy 功能强大，可以支持复杂的数据库操作，但在 FastAPI 项目中，通常还需要配合 Pydantic 定义接口数据模型。
+
+这会产生一个常见问题：
+
+
+数据库模型和接口数据模型需要分别定义，导致大量重复代码。
+
+
+例如：
+
+# 问题示例：重复定义模型
+
+# 1. 定义 SQLAlchemy 模型（用于数据库）
+class UserDB(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    email = Column(String)
+
+# 2. 定义 Pydantic 模型（用于 API 验证）
+class UserSchema(BaseModel):
+    id: int
+    name: str
+    email: str
+
+
+可以看到：
+
+两个模型描述的是同一个用户实体，但需要重复声明字段。这违反了软件开发中的 DRY（Don't Repeat Yourself）原则。
+
+为了减少这种重复，FastAPI 作者 Sebastián Ramírez 开发了 SQLModel。
+
+SQLModel 是一个基于 SQLAlchemy 和 Pydantic 的 ORM 框架，它结合了两者的优势：
+
+
+
+**一次定义，多种用途：**一个模型既可以作为数据库表模型，也可以作为数据验证模型使用。
+
+
+
+完善的类型提示：
+一个模型既可以作为数据库表模型，也可以作为数据验证模型使用。
+
+
+
+SQLModel 的优势：
+
+SQLModel 是 FastAPI 作者专门开发的 ORM 库，它完美融合了 Pydantic 和 SQLAlchemy 的优点：
+
+核心特性：
+
+
+
+一次定义，双重身份：既是 Pydantic 模型又是 SQLAlchemy 模型
+
+
+
+完美类型提示：IDE 智能补全体验极佳
+
+
+
+异步支持：SQLModel 可以与 SQLAlchemy 的异步能力结合使用，在 FastAPI 异步项目中可以通过 SQLAlchemy 提供的 AsyncSession 实现异步数据库操作。
+
+
+
+简洁优雅：减少数据库模型和数据校验模型之间的重复定义，使代码更加简洁。
+
+
+
+** 生活化类比：**
+
+
+
+代码
+类比
+
+
+
+Book(title="三体")
+你对着语音助手说："帮我订张去北京的票"
+
+
+ORM 生成 INSERT INTO ...
+语音助手在背后帮你操作，你不用自己上网选车次付款
+
+
+
+环境搭建与模型定义
+
+安装依赖
+
+我们需要安装 sqlmodel 以及异步 SQLite 驱动 aiosqlite。
+
+# 安装 SQLModel（包含 SQLAlchemy 和 Pydantic）
+pip install sqlmodel
+
+# 安装异步 SQLite 驱动
+pip install aiosqlite
+
+# 安装异步 Pytest-asyncio 插件
+pip install pytest-asyncio
+
+# 如果使用清华源
+pip install sqlmodel aiosqlite -i https://pypi.tuna.tsinghua.edu.cn/simple/
+
+pip install fastmcp -i https://pypi.tuna.tsinghua.edu.cn/simple/
+
+
+定义数据模型 (Model)
+
+在项目中创建一个 models.py 文件。
+
+from typing import Optional
+from sqlmodel import SQLModel, Field
+
+class Book(SQLModel, table=True):
+    """
+    图书模型
+    
+    参数说明：
+    - table=True: 标记这是一个数据库表模型
+    - Field(): SQLModel 专用的字段定义工具
+    """
+    
+    # 主键字段
+    id: Optional[int] = Field(
+        default=None,           # 新建时不需要提供，数据库自动生成
+        primary_key=True,       # 标记为主键
+        description="图书 ID"
+    )
+    
+    # 标题字段
+    title: str = Field(
+        index=True,             # 创建索引，加速查询
+        nullable=False,         # 不允许为空
+        description="图书标题"
+    )
+    
+    # 作者字段
+    author: str = Field(
+        description="作者名称"
+    )
+    
+    # 价格字段
+    price: float = Field(
+        gt=0,                   # 大于 0
+        description="图书价格"
+    )
+    
+    # 描述字段（可选）
+    description: Optional[str] = Field(
+        default=None,
+        description="图书描述"
+    )
+
+
+Field 参数详解
+
+让我详细讲解 Field 的常用参数：
+
+
+
+参数
+说明
+示例
+
+
+
+default
+默认值
+Field(default=None)
+
+
+primary_key
+是否为主键
+Field(primary_key=True)
+
+
+index
+是否创建索引
+Field(index=True)
+
+
+nullable
+是否允许为 NULL
+Field(nullable=False)
+
+
+unique
+是否唯一
+Field(unique=True)
+
+
+gt
+大于（greater than）
+Field(gt=0)
+
+
+ge
+大于等于
+Field(ge=0)
+
+
+lt
+小于
+Field(lt=100)
+
+
+le
+小于等于
+Field(le=100)
+
+
+max_length
+最大长度
+Field(max_length=50)
+
+
+description
+字段描述（用于文档）
+Field(description="用户名")
+
+
+
+生活化类比：
+
+
+
+概念
+类比
+
+
+
+class Book(SQLModel, table=True)
+画一张表的图纸
+
+
+Field(primary_key=True)
+标上"这是门牌号"（唯一标识）
+
+
+Field(index=True)
+装个门牌索引，找起来更快
+
+
+Field(gt=0)
+门牌上写"必须大于 0"（校验规则）
+
+
+
+数据库连接与异步 Session
+
+在现代 FastAPI 开发中，我们推荐使用 异步数据库会话 (Async Session) 以避免阻塞主线程。
+
+为什么使用异步？
+
+在传统的同步编程中，数据库查询会阻塞线程：
+
+而异步编程可以在等待数据库响应时处理其他请求：
+
+配置数据库连接
+
+在项目中创建 database.py 文件，用于管理数据库连接和 Session。
+
+SQLModel 底层使用 SQLAlchemy 的数据库连接机制，因此异步数据库配置主要使用 SQLAlchemy 提供的组件：
+
+
+
+create_async_engine
+
+
+创建异步数据库引擎；
+
+负责管理数据库连接池；
+
+提供执行 SQL 的能力。
+
+
+
+
+AsyncSession
+
+
+异步数据库会话对象；
+
+用于执行查询、新增、修改、删除等数据库操作。
+
+
+
+
+async_sessionmaker
+
+
+Session 工厂；
+
+用于统一创建数据库会话。
+
+
+
+
+代码如下：
+
+from sqlalchemy.ext.asyncio import (
+    create_async_engine,
+    AsyncSession,
+    async_sessionmaker
+)
+
+from sqlmodel import SQLModel
+
+# 数据库连接地址
+DATABASE_URL = "sqlite+aiosqlite:///./books.db"
+
+# 1. 创建异步数据库引擎
+engine = create_async_engine(
+    DATABASE_URL,
+    echo=True
+)
+
+# 2. 创建异步 Session 工厂
+async_session = async_sessionmaker(
+    engine,
+    class_=AsyncSession,
+    expire_on_commit=False
+)
+
+# 3. 初始化数据库表
+async def init_db():
+    """
+    根据 SQLModel 模型创建数据库表
+    """
+
+    async with engine.begin() as conn:
+
+        await conn.run_sync(
+            SQLModel.metadata.create_all
+        )
+
+数据库 URL 说明
+
+SQLAlchemy 的数据库连接地址通常遵循以下格式：
+
+数据库类型+驱动://用户名:密码@主机:端口/数据库名称
+
+
+例如：
+
+# MySQL 数据库
+
+DATABASE_URL = (
+    "mysql+aiomysql://"
+    "root:123456"
+    "@localhost:3306/"
+    "books_db"
+)
+
+
+其中：
+
+mysql 表示数据库类型。
+
+Aiomysql 表示异步数据库驱动。
+
+对于 SQLite：
+
+DATABASE_URL = "sqlite+aiosqlite:///./books.db"
+
+
+表示：sqlite + aiosqlite异步驱动 + 当前目录下 books.db 文件
+init_db() 方法解析
+
+在初始化数据库时：
+
+async with engine.begin() as conn:
+
+
+这里的 engine.begin() 创建的是：
+
+AsyncConnection（异步数据库连接）
+
+
+并自动开启一个事务。
+
+执行流程：获取数据库连接 -> 开启事务 -> 执行数据库操作 -> 成功：自动提交事务 / 失败：自动回滚事务 -> 释放连接
+
+注意：
+
+
+engine.begin() 创建的是 Connection，不是 Session
+
+
+在 SQLAlchemy 中：
+
+
+
+对象
+作用
+使用场景
+
+
+
+Engine
+管理数据库连接池
+项目启动时创建一次
+
+
+Connection
+负责执行底层 SQL
+底层数据库操作
+
+
+Session
+管理 ORM 对象和业务数据库操作
+业务代码中增删改查
+
+
+Transaction
+管理一次数据库事务
+保证多步写操作的原子性
+
+
+
+** 生活化类比：**
+
+
+
+组件
+类比
+
+
+
+DATABASE_URL
+图书馆的地址
+
+
+engine
+图书馆大楼（总机）
+
+
+async_session
+服务台（每次派一个服务员）
+
+
+get_session()
+派服务员给你用
+
+
+init_db()
+布置书架（建表）
+
+
+conn.run_sync()
+
+由于 SQLModel.metadata.create_all 本身是同步方法。
+
+但是当前代码运行在异步环境：
+
+async with engine.begin()
+
+
+所以需要：
+
+await conn.run_sync(
+    SQLModel.metadata.create_all
+)
+
+
+将同步方法放到异步连接中执行。
+
+** 生活化类比：**
+
+
+
+概念
+类比
+
+
+
+engine
+电话总机
+
+
+conn
+一通电话
+
+
+session
+一次对话
+
+
+SQLModel.metadata.create_all
+
+作用：
+
+
+获取所有已经注册的 SQLModel 模型：
+
+
+例如：
+
+class Book(SQLModel, table=True):
+    ...
+
+
+
+根据模型定义生成建表 SQL：
+
+
+例如：
+
+CREATE TABLE book(
+    id INTEGER PRIMARY KEY,
+    title VARCHAR
+);
+
+
+
+执行 SQL 创建数据库表。
+
+
+如果数据库中已经存在对应表：create_all() 不会重复创建。
+
+** 生活化类比：**
+
+
+
+概念
+类比
+
+
+
+metadata
+房屋登记册（记录所有表）
+
+
+create_all
+按册子里的记录，把每套房子盖出来
+
+
+两种方式
+
+数据库连接流程图
+
+CRUD 实战 (增删改查) - Service 文件
+
+在 FastAPI 路径操作函数中，我们将演示如何操作数据库。
+
+Create (新增)
+
+业务流程：
+
+代码实现：
+
+from orm.database import async_session
+from orm.models import Book
+
+async def create_book(book_data: Book) -> Book:
+    """
+    创建图书
+
+    参数:
+        book_data:
+            图书 ORM 对象
+
+    返回:
+        保存成功后的图书对象
+    """
+
+    async with async_session() as session:
+
+        # 添加对象到当前 Session
+        # 注意：add 只是加入内存中的事务管理，
+        # 不会立即发送 SQL 请求
+        session.add(book_data)
+
+        # 提交事务，执行 INSERT SQL
+        await session.commit()
+
+        # 从数据库重新加载对象
+        # 可以获取数据库生成的数据，例如自增 ID、默认时间等
+        await session.refresh(book_data)
+
+        return book_data
+
+
+关键点讲解：
+
+注意： session.add 仅加入内存会话，无 IO 操作；commit/refresh 才是数据库交互，才要加 await
+
+
+
+session.add()：将对象标记为"待保存"
+
+
+
+await session.commit()：执行实际的 INSERT 操作
+
+
+
+await session.refresh()：从数据库重新加载对象，获取自增 ID
+
+
+
+Read (查询)
+
+SQLAlchemy Async 查询通常使用：from sqlalchemy import select
+
+常见查询方式：
+
+
+
+方法
+适用场景
+示例
+
+
+
+session.get()
+根据主键查询
+session.get(Book,1)
+
+
+select(Model)
+查询列表
+select(Book)
+
+
+where()
+条件查询
+where(Book.price>50)
+
+
+limit()
+限制数量
+limit(10)
+
+
+
+
+查询所有图书：
+
+
+async def get_books() -> list[Book]:
+
+    async with async_session() as session:
+
+        statement = select(Book)
+
+        result = await session.execute(statement)
+
+        # scalars() 获取 ORM 对象
+        books = result.scalars().all()
+
+        return books
+
+
+
+根据 ID 查询单个图书：
+
+
+from typing import Optional
+
+async def get_book_by_id(
+    book_id:int
+) -> Optional[Book]:
+
+    async with async_session() as session:
+
+        book = await session.get(
+            Book,
+            book_id
+        )
+
+        return book
+
+
+
+条件查询（按标题搜索）：
+
+
+async def search_books_by_title(
+    keyword:str
+) -> list[Book]:
+
+    async with async_session() as session:
+
+        statement = select(Book).where(
+            Book.title.contains(keyword)
+        )
+
+        result = await session.execute(statement)
+
+        return result.scalars().all()
+
+
+Update (修改)
+
+更新流程：
+
+修改数据的逻辑：先查询 -> 修改属性 -> 保存。
+
+async def update_book(
+    book_id:int,
+    new_data:Book
+) -> Optional[Book]:
+
+    async with async_session() as session:
+
+        book = await session.get(
+            Book,
+            book_id
+        )
+
+        if not book:
+            return None
+
+        book.title = new_data.title
+        book.author = new_data.author
+        book.price = new_data.price
+        book.description = new_data.description
+
+        await session.commit()
+
+        await session.refresh(book)
+
+        return book
+
+
+Delete (删除)
+
+async def delete_book(
+    book_id:int
+) -> bool:
+
+    async with async_session() as session:
+
+        book = await session.get(
+            Book,
+            book_id
+        )
+
+        if not book:
+            return False
+
+        await session.delete(book)
+
+        await session.commit()
+
+        return True
+
+
+完整测试代码
+
+让我们编写一个完整的测试，演示所有 CRUD 操作：
+
+import pytest
+
+from book_service import *
+from database import *
+from models import Book
+
+@pytest.mark.asyncio
+async def test_book_crud_operations():
+
+    await init_db()
+
+    book = Book(
+        title="Python 编程指南",
+        author="Guido van Rossum",
+        price=68.0,
+        description="Python 学习书籍"
+    )
+
+    created_book = await create_book(book)
+
+    assert created_book.id is not None
+
+    books = await get_books()
+
+    assert len(books) > 0
+
+    found_book = await get_book_by_id(
+        created_book.id
+    )
+
+    assert found_book is not None
+
+    update_data = Book(
+        title="Python 编程指南 第二版",
+        author="Guido van Rossum",
+        price=78.0,
+        description="更新版本"
+    )
+
+    updated_book = await update_book(
+        created_book.id,
+        update_data
+    )
+
+    assert updated_book.price == 78.0
+
+    result = await delete_book(
+        created_book.id
+    )
+
+    assert result is True
+
+    deleted_book = await get_book_by_id(
+        created_book.id
+    )
+
+    assert deleted_book is None
+
+
+第 6 章：依赖注入系统 (Dependency Injection)
+
+在实际开发 FastAPI 项目时，随着业务复杂度不断增加，我们会发现很多代码存在重复问题。
+
+例如，一个接口需要操作数据库：
+
+# ❌ 不推荐写法：
+# 每个接口内部自己创建数据库 Session
+
+async def create_book(book: Book):
+
+    async with async_session() as session:
+
+        session.add(book)
+
+        await session.commit()
+
+        await session.refresh(book)
+
+        return book
+
+async def get_book(book_id: int):
+
+    async with async_session() as session:
+
+        return await session.get(Book, book_id)
+
+
+这种写法虽然可以运行，但是随着项目扩大，会带来一些明显的问题：
+
+
+代码重复
+
+
+每个业务函数都需要重复创建数据库 Session：
+
+async with async_session() as session:
+
+
+当项目中存在几十甚至上百个接口时，大量重复代码会导致：
+
+
+
+修改成本增加；
+
+
+
+容易遗漏资源释放；
+
+
+
+项目维护困难。
+
+
+
+
+难以测试
+
+
+实际开发中，我们经常需要进行单元测试。
+
+例如：
+
+测试业务逻辑时：
+
+session = MockSession()
+
+
+希望使用模拟数据库替代真实数据库。
+
+但是如果 Session 在函数内部创建：
+
+async with async_session():
+
+
+那么外部无法方便替换，代码与数据库实现产生强耦合。
+
+导致：
+
+
+
+测试必须连接真实数据库；
+
+
+
+测试速度慢；
+
+
+
+测试环境搭建复杂。
+
+
+
+
+职责混乱
+
+
+一个函数同时负责：
+
+
+
+处理业务逻辑
+
+
+
+创建数据库连接
+
+
+
+管理资源释放
+
+
+
+例如：
+
+async def create_book():
+
+    # 创建资源
+    session = create_session()
+
+    # 业务逻辑
+    save_book()
+
+    # 释放资源
+    close_session()
+
+
+一个函数承担多个职责，导致代码耦合度较高，不符合良好的软件设计原则。
+
+因此，在实际项目中，我们通常会将这些公共资源抽离出来，通过 **依赖注入（Dependency Injection）**统一管理。
+
+什么是依赖注入？
+
+依赖注入 (Dependency Injection, DI) 是软件工程中一种设计模式，也是 FastAPI 的“灵魂”特性。
+
+
+
+核心问题：假如你的函数 A 需要用到数据库连接 B，通常你在 A 内部创建 B。但这会导致代码耦合度高，难以测试。           
+
+
+
+DI 的解法：函数 A 不自己创建 B，而是“声明”它需要 B。框架负责创建 B 并传给 A。
+
+
+
+通俗比喻：
+
+
+
+非 DI：你要吃饭，自己去买菜、做饭、洗碗。
+
+
+
+DI：你要吃饭，只需在订单上备注（声明依赖），外卖员（FastAPI）会把做好的饭（依赖对象）送到你手上。
+
+
+
+基本用法：Depends
+
+Depends 是 FastAPI 提供的依赖声明函数。
+
+它的作用是告诉 FastAPI：
+
+“当前函数需要某个依赖，请在执行接口之前自动调用对应依赖函数，并把结果注入进来。”
+
+from fastapi import Depends, FastAPI
+
+app = FastAPI()
+
+# 定义依赖函数
+async def common_parameters(
+    q: str | None = None,
+    skip: int = 0,
+    limit: int = 100
+):
+    return {
+        "q": q,
+        "skip": skip,
+        "limit": limit
+    }
+
+# 使用依赖
+@app.get("/items/")
+async def read_items(
+    commons: dict = Depends(common_parameters)
+):
+    return commons
+
+
+访问：GET /items/?q=python&skip=10&limit=20
+
+FastAPI 会自动执行：
+
+common_parameters(
+    q="python",
+    skip=10,
+    limit=20
+)
+
+
+然后把返回值：
+
+{
+    "q": "python",
+    "skip": 10,
+    "limit": 20
+}
+
+
+传递给：read_items()
+
+依赖注入流程：
+
+生活化类比：
+
+
+
+步骤
+类比
+
+
+
+客户端发请求
+你下单
+
+
+FastAPI 收到
+平台接单
+
+
+调用依赖
+平台先让配菜员准备配料
+
+
+提取参数
+配菜员按你的要求准备
+
+
+返回结果
+配菜员把配菜给厨师
+
+
+调用路由
+厨师用配菜做菜
+
+
+返回响应
+出餐
+
+
+
+依赖的层级嵌套
+
+FastAPI 的依赖不仅可以被路由使用，依赖本身也可以继续依赖其他依赖。
+
+from fastapi import Depends, Header, FastAPI
+
+app = FastAPI()
+
+# 第一层依赖：获取 Token
+async def get_token(
+    token: str = Header(...)
+):
+    return token
+
+# 第二层依赖：依赖 get_token
+async def get_current_user(
+    token: str = Depends(get_token)
+):
+    # 实际项目中这里通常会：
+    # 1. 校验 Token
+    # 2. 查询用户信息
+
+    user = {
+        "username": "admin",
+        "token": token
+    }
+
+    return user
+
+# 路由依赖第二层
+@app.get("/me")
+async def read_current_user(
+    user: dict = Depends(get_current_user)
+):
+    return user
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(
+        app,
+        host="127.0.0.1",
+        port=8001
+    )
+
+
+** 生活化类比：**
+
+
+
+层级
+类比
+
+
+
+get_token
+洗菜（最底层）
+
+
+get_current_user
+切菜（依赖洗菜）
+
+
+read_me
+炒菜（依赖切菜）
+
+
+
+核心场景：数据库 Session 的生命周期管理
+
+在 FastAPI 项目中，依赖注入最常见的使用场景之一，就是管理数据库 Session。
+
+数据库 Session 属于一种典型的短生命周期资源：
+
+
+
+请求开始时，需要创建 Session；
+
+
+
+请求处理过程中，需要使用 Session 操作数据库；
+
+
+
+请求结束后，需要关闭 Session，释放数据库连接。
+
+
+
+如果每个接口都手动创建和关闭 Session：
+
+async def create_book():
+    async with async_session() as session:
+        ...
+
+
+项目中会出现大量重复代码，同时也容易出现资源释放不及时的问题。
+
+因此，我们通常会将 Session 的创建和销毁交给依赖注入统一管理。
+
+为什么需要管理 Session 生命周期？
+
+一个 HTTP 请求对应一个数据库操作过程。如果没有正确管理生命周期，可能产生以下问题：
+
+
+每个请求需要独立 Session
+
+
+不同请求之间不应该共享同一个数据库 Session。
+
+例如：
+
+请求 A -> Session A
+请求 B -> Session B
+
+
+这样可以避免多个请求之间的数据状态相互影响。
+
+
+请求结束后释放连接
+
+
+数据库连接属于有限资源。
+
+如果创建 Session 后没有关闭：
+
+请求1 → 创建连接
+请求2 → 创建连接
+请求3 → 创建连接
+...
+
+
+随着请求增加，数据库连接可能耗尽，因此请求结束后必须及时释放资源。
+
+
+异常情况下也需要清理资源
+
+
+接口执行过程中可能发生异常：
+
+await session.commit()
+
+
+可能因为数据库错误失败。即使出现异常，也应该保证 Session 能够正常关闭。
+
+使用 yield 实现依赖
+
+FastAPI 支持使用 yield 创建带生命周期管理的依赖。
+
+例如：
+
+async def get_session():
+
+    session = create_session()
+
+    try:
+
+        yield session
+
+    finally:
+
+        await session.close()
+
+
+因此，yield 非常适合处理：
+
+
+
+数据库连接
+
+
+
+文件操作
+
+
+
+网络连接
+
+
+
+锁资源
+
+
+
+等需要“使用前创建，使用后释放”的场景。
+
+** 生活化类比：**
+
+
+
+概念
+类比
+
+
+
+yield 前
+进教室开灯（创建 Session）
+
+
+yield session
+上课（用 Session 做事）
+
+
+yield 后
+离开教室一定关灯（关闭 Session）
+
+
+yield 的执行特点
+
+普通函数：
+
+def func():
+    return value
+
+
+执行到 return 后，函数直接结束。
+
+生成器：
+
+def func():
+    yield value
+
+
+执行到 yield 后：
+
+
+
+暂停函数执行；
+
+
+
+保存当前状态；
+
+
+
+返回值给调用方；
+
+
+
+后续可以继续恢复执行。
+
+
+
+例如：
+
+def get_resource():
+
+    print("创建资源")
+
+    yield "resource"
+
+    print("释放资源")
+
+
+第一次执行：next(generator)
+
+执行：
+
+创建资源
+
+返回 resource
+
+
+再次执行 next(generator)，继续释放资源
+
+** 生活化类比：**
+
+
+
+概念
+类比
+
+
+
+return
+一次性杯子（用完就扔）
+
+
+yield
+可续杯的杯子（每次拿一口，杯子还在）
+
+
+FastAPI 中的 yield 依赖
+
+在 FastAPI 中，我们不需要自己调用 next() 或者 anext()
+
+因为 FastAPI 的依赖系统会自动管理整个生命周期。
+
+例如：
+
+async def get_session():
+
+    session = create_session()
+
+    yield session
+
+    await session.close()
+
+
+生成器类型说明
+
+在 Python 中，根据是否支持异步操作，生成器主要分为两种：
+
+
+
+类型
+定义方式
+使用场景
+
+
+
+Generator
+def + yield
+同步资源管理
+
+
+AsyncGenerator
+async def + yield
+异步资源管理
+
+
+
+FastAPI 异步接口中通常使用 AsyncGenerator
+同步生成器 Generator
+
+类型：
+
+Generator[YieldType, SendType, ReturnType]
+
+
+三个泛型参数：
+
+
+
+参数
+含义
+
+
+
+YieldType
+yield 返回的数据类型
+
+
+SendType
+外部发送给生成器的数据类型
+
+
+ReturnType
+生成器最终返回值类型
+
+
+
+例如：
+
+def get_names():
+    yield "张三"
+    yield "李四"
+    
+def demo():
+    yield "hello"
+    return "结束"
+        
+Generator[str, None, None]
+
+
+表示：
+
+
+
+yield 一个字符串；
+
+
+
+不接收外部数据；
+
+
+
+没有最终返回值。
+
+
+异步生成器 AsyncGenerator
+
+类型：
+
+AsyncGenerator[YieldType, ReturnType]
+
+
+例如：
+
+AsyncGenerator[AsyncSession, None]
+
+
+表示 yield 一个 AsyncSession，没有最终返回值。
+
+一、生成器的暂停与恢复机制
+
+无论同步还是异步生成器，本质都是：
+
+
+遇到 yield 暂停，把数据交给调用方；再次恢复执行时，从 yield 后继续运行。
+
+
+例如：
+
+def generator():
+
+    print("开始")
+
+    yield "数据"
+
+    print("结束")
+
+
+执行 gen = generator()：此时没有输出，因为函数还没有真正执行。第一次唤醒 next(gen) ，输出开始，返回数据。再次唤醒 next(gen)，输出结束
+
+二、同步生成器：用next()唤醒
+
+同步生成器通过 next() 恢复执行
+
+示例：
+
+from typing import Generator
+
+def get_sync_conn() -> Generator[str, None, None]:
+
+    print("1. 创建同步数据库连接")
+
+    conn = "同步连接对象"
+
+    yield conn
+
+    print("2. 关闭同步数据库连接")
+
+gen = get_sync_conn()
+
+# 第一次执行，到 yield 暂停
+conn = next(gen)
+
+print(f"获取资源：{conn}")
+
+# 第二次执行，继续 yield 后代码
+try:
+    next(gen)
+
+except StopIteration:
+    print("生成器结束")
+
+
+三、异步生成器：使用 await anext()
+
+异步生成器通过 await anext(generator) 或者底层方法：await generator.anext() 恢复执行，不能使用 next() 否则会产生错误
+
+示例：
+
+from typing import AsyncGenerator
+import asyncio
+
+async def get_async_conn() -> AsyncGenerator[str, None]:
+
+    print("1. 创建异步数据库连接")
+
+    conn = "异步连接对象"
+
+    yield conn
+
+    print("2. 关闭异步数据库连接")
+
+async def main():
+
+    gen = get_async_conn()
+
+    # 第一次恢复执行
+    conn = await gen.__anext__()
+
+    print(f"获取资源：{conn}")
+
+    # 第二次恢复执行
+    try:
+        await gen.__anext__()
+
+    except StopAsyncIteration:
+        print("生成器结束")
+
+asyncio.run(main())
+
+
+四、同步next()** vs 异步**__anext__()** 极简对比**
+
+
+
+对比项
+同步生成器 next()
+异步生成器 anext()
+
+
+
+定义方式
+def + yield
+async def + yield
+
+
+调用方式
+next(generator)
+await generator.anext()
+
+
+使用环境
+同步代码
+异步代码
+
+
+结束异常
+StopIteration
+StopAsyncIteration
+
+
+常见场景
+普通资源管理
+FastAPI 异步接口、数据库 Session
+
+
+
+五、为什么 FastAPI 不需要手动调用 next()？
+
+核心原因：
+
+FastAPI 会自动管理依赖生成器生命周期。
+
+对于 yield 类型依赖：
+
+
+
+请求开始时执行 yield 前代码，创建资源；
+
+
+
+将 yield 的对象注入接口；
+
+
+
+请求结束后继续执行 yield 后代码，完成资源释放。
+
+
+
+底层实现涉及生成器恢复机制，但开发者不需要手动调用 next() 或 anext()。
+
+优势 1：减少重复代码
+
+接口函数只关注业务逻辑：
+
+async def create_book(
+    session: AsyncSession = Depends(get_session)
+):
+    ...
+
+
+不需要每个接口重复：
+
+async with async_session() as session:
+
+
+优势 2：保证资源安全释放
+
+即使接口发生异常：
+
+raise HTTPException(
+    status_code=400,
+    detail="参数错误"
+)
+
+
+FastAPI 仍然会执行 yield 后面的清理逻辑。
+
+优势 3：统一管理资源生命周期
+
+数据库连接、文件对象、第三方 API 客户端等，都可以使用相同方式管理
+
+创建资源 -> yield 提供资源 -> 释放资源
+
+
+** 使用 FastAPI 依赖管理数据库 Session**
+
+在上一章节中，我们已经实现了 Service 层，并且在 Service 方法中完成数据库操作。
+
+例如：
+
+async def create_book(book_data: Book) -> Book:
+
+    async with async_session() as session:
+
+        session.add(book_data)
+
+        await session.commit()
+
+        await session.refresh(book_data)
+
+        return book_data
+
+
+这种方式虽然可以正常运行，但是存在一个问题：
+
+每一个 Service 方法都需要自己创建 Session，并且负责关闭 Session。如果项目越来越大，会出现大量重复代码。实际企业项目中，一般不会让 Service 自己管理 Session 生命周期，而是交给 FastAPI 的依赖注入系统统一管理。
+
+这样可以让：
+
+
+
+FastAPI 负责资源管理；
+
+
+
+Service 只负责业务逻辑；
+
+
+
+数据库操作代码更加清晰。
+
+
+
+例如：
+
+项目结构：
+
+project/
+│
+├── main.py
+│
+├── orm/
+│   ├── __init__.py
+│   ├── database.py
+│   └── models.py
+│
+└── service/
+    ├── __init__.py
+    └── book_service.py
+
+
+其中：
+
+
+
+main.py
+
+
+定义 FastAPI 路由；
+
+接收请求；
+
+使用 Depends 获取 Session；
+
+调用 Service。
+
+
+
+
+service/
+
+
+编写业务逻辑；
+
+不负责创建 Session；
+
+接收 FastAPI 注入进来的 Session。
+
+
+
+
+orm/database.py
+
+
+创建数据库连接；
+
+创建 Session 工厂；
+
+提供 get_session() 依赖。
+
+
+
+
+orm/models.py
+
+
+定义 SQLModel 数据模型。
+
+
+
+
+** 生活化类比：**
+
+
+
+层
+类比
+
+
+
+main.py（入口）
+服务员（接待客人、传订单）
+
+
+routers/（路由层）
+接线员（接请求、返响应）
+
+
+services/（业务层）
+厨师（做菜）
+
+
+orm/database（数据连接层）
+后厨总管（管理锅具、分配 Session）
+
+
+orm/models/（数据模型层）
+食材清单（说明有什么）
+
+
+
+from typing import AsyncGenerator
+
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    create_async_engine,
+    async_sessionmaker
+)
+
+from sqlmodel import SQLModel
+
+# 数据库连接地址
+DATABASE_URL = "sqlite+aiosqlite:///./books.db"
+
+# 创建异步数据库引擎
+engine = create_async_engine(
+    DATABASE_URL,
+    echo=True
+)
+
+# 创建 Session 工厂
+async_session = async_sessionmaker(
+    engine,
+    class_=AsyncSession,
+    expire_on_commit=False
+)
+
+# FastAPI 数据库依赖
+async def get_session() -> AsyncGenerator[AsyncSession, None]:
+    """
+    提供数据库 Session
+
+    生命周期：
+
+    1. 请求开始时创建 Session
+    2. 注入接口或者 Service
+    3. 请求结束自动关闭 Session
+    """
+
+    async with async_session() as session:
+
+        yield session
+
+# 初始化数据库表
+async def init_db():
+    """
+    根据 SQLModel 模型创建数据库表
+    """
+
+    async with engine.begin() as conn:
+
+        await conn.run_sync(
+            SQLModel.metadata.create_all
+        )
+
+
+这里 async with async_session() as session，负责创建 Session。
+
+而 yield session，负责把 Session 交给接口函数。
+
+当请求结束后，async with 会自动关闭 Session。
+
+在 Service 层中接收 Session
+
+service/book_service.py
+
+from typing import Optional
+
+from sqlmodel import select
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from orm.model import Book
+
+async def create_book(
+    session: AsyncSession,
+    book_data: Book
+) -> Book:
+
+    """
+    创建图书
+
+    参数:
+        session:
+            数据库 Session
+
+        book_data:
+            图书 ORM 对象
+
+    返回:
+        保存成功后的图书对象
+    """
+
+    session.add(book_data)
+
+    await session.commit()
+
+    await session.refresh(book_data)
+
+    return book_data
+
+async def get_books(
+    session: AsyncSession
+) -> list[Book]:
+
+    statement = select(Book)
+
+    result = await session.execute(
+        statement
+    )
+
+    return result.scalars().all()
+
+async def get_book_by_id(
+    session: AsyncSession,
+    book_id: int
+) -> Optional[Book]:
+
+    book = await session.get(
+        Book,
+        book_id
+    )
+
+    return book
+
+async def update_book(
+    session: AsyncSession,
+    book_id: int,
+    book_data: Book
+) -> Optional[Book]:
+
+    book = await session.get(
+        Book,
+        book_id
+    )
+
+    if not book:
+        return None
+
+    book.title = book_data.title
+    book.author = book_data.author
+    book.price = book_data.price
+    book.description = book_data.description
+
+    await session.commit()
+
+    await session.refresh(book)
+
+    return book
+
+async def delete_book(
+    session: AsyncSession,
+    book_id: int
+) -> bool:
+
+    book = await session.get(
+        Book,
+        book_id
+    )
+
+    if not book:
+        return False
+
+    await session.delete(book)
+
+    await session.commit()
+
+    return True
+
+
+在接口中使用 Session 依赖
+
+在main.py写下面代码
+
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI, Depends
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from orm.database import (
+    get_session,
+    init_db
+)
+
+from orm.model import Book
+
+from service.book_service import create_book
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+
+    await init_db()
+
+    yield
+
+app = FastAPI(
+    lifespan=lifespan
+)
+
+@app.post("/books/")
+async def create_book_api(
+    book: Book,
+    session: AsyncSession = Depends(get_session)
+):
+
+    result = await create_book(
+        session,
+        book
+    )
+
+    return result
+
+
+FastAPI 模块化路由神器：APIRouter
+
+在之前的学习中，我们已经掌握了 FastAPI 最基础的路由写法 @app.get("/")。但随着项目功能越来越复杂，接口越来越多，如果所有代码都堆在 main.py 里，会变得非常臃肿、难以维护。
+
+为什么需要 APIRouter
+
+想象一下，你是图书馆管理员：
+
+
+
+混乱的图书馆（只用 @app.xxx）：所有的书（用户接口、书籍接口、订单接口）都堆在一个大书架（main.py）上。读者要找一本关于 “Python” 的书，你需要翻遍整个书架，效率极低。
+
+
+
+整洁的图书馆（使用 APIRouter）：你把书按主题分类，放在不同的书架上：
+
+
+文学区书架：放小说、诗歌相关的书（对应 wenxue_router）。
+
+科技区书架：放编程、科普相关的书（对应 keji_router）。
+
+管理员办公室（main.py）：负责管理这些书架，告诉读者每个书架在哪里。
+
+
+
+
+APIRouter 的作用，就是帮我们创建这些独立的 “主题书架”，让代码按功能模块（如用户、书籍、订单）拆分，结构清晰，维护方便。
+
+APIRouter 核心三步骤
+
+使用 APIRouter 主要分为三个步骤：
+
+
+
+创建路由对象；
+
+
+
+在路由对象中定义接口；
+
+
+
+注册到 FastAPI 主应用。
+
+
+
+步骤 1：创建子路由对象
+
+通过利用依赖注入，我们可以实现控制层 (Controller/Router) 与 服务层 (Service/Logic) 的分离。
+
+
+
+Router 层：负责接收 HTTP 请求，参数校验，调用 Service，返回响应。
+
+
+
+Service 层：负责具体的业务逻辑，数据库操作。
+
+
+
+project/
+│
+├── main.py                  # FastAPI入口文件
+│
+├── orm/                     # 数据库相关
+│   ├── __init__.py
+│   ├── database.py          # 创建数据库连接、Session
+│   └── models.py            # SQLModel数据模型
+│
+├── routers/                 # 路由层
+│   ├── __init__.py
+│   └── book_router.py              # 图书接口
+│
+└── service/                 # 业务层
+    ├── __init__.py
+    └── book_service.py      # 图书业务逻辑
+
+
+首先，我们需要创建一个 APIRouter 实例，它代表一个独立的路由模块（一个 “主题书架”）。这里我们新建一个routers目录，创建book_router 这个书籍路由
+
+# 从 fastapi 中导入 APIRouter
+from fastapi import APIRouter
+
+# 创建一个名为 book_router 的子路由对象
+# 可以把它想象成一个“书籍管理”专属书架
+book_router = APIRouter()
+
+
+步骤 2：在子路由上定义接口
+
+接下来，我们就可以像使用 app 一样，在这个子路由对象上定义各种接口了。
+
+ Router 的职责主要是：
+
+
+
+接收请求参数；
+
+
+
+获取 Session；
+
+
+
+调用 Service；
+
+
+
+返回结果。
+
+
+
+在 book_router.py 中：
+
+from fastapi import APIRouter, Depends
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from orm.database import get_session
+
+from orm.model import Book
+
+from service.book_service import create_book
+
+book_router = APIRouter()
+
+@book_router.post("/books/")
+async def create_book_api(
+        book: Book,
+        session: AsyncSession = Depends(get_session)
+):
+
+    """
+    创建图书接口
+    """
+
+    result = await create_book(
+        session,
+        book
+    )
+
+    return {
+        "message": "创建成功",
+        "data": result
+    }
+
+
+步骤 3：将子路由注册到主应用main.py
+
+这是最关键的一步！创建好的子路由（书架）必须 “告诉” 主应用（图书馆管理员），否则它不会生效。我们通过 app.include_router() 方法完成注册。
+
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+
+from orm.database import (
+    init_db
+)
+
+from routers.book_router import book_router
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await init_db()
+    yield
+
+app = FastAPI(
+    lifespan=lifespan
+)
+
+# 注册图书模块路由
+app.include_router(
+    book_router
+)
+
+@app.get("/")
+async def root():
+
+    return {
+        "message": "FastAPI运行成功"
+    }
+
+
+APIRouter 的高级用法
+
+除了简单拆分路由外，APIRouter 还提供了一些常用配置，可以进一步优化项目结构。
+
+常见参数：
+
+
+
+prefix
+
+
+
+tags
+
+
+
+dependencies
+
+
+
+
+路径前缀（prefix）
+
+
+如果一个模块下的所有接口都有共同的路径前缀（比如都以 /books 开头），我们可以在创建 APIRouter 时统一指定 prefix 参数，避免重复书写。
+
+修改 routers/book_router.py：
+
+from fastapi import APIRouter, Depends
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from orm.database import get_session
+
+from orm.model import Book
+
+from service.book_service import create_book
+
+# 创建子路由时，指定统一的路径前缀 /books
+book_router = APIRouter(prefix="/books")
+
+@book_router.post("/")
+async def create_book_api(
+        book: Book,
+        session: AsyncSession = Depends(get_session)
+):
+
+    """
+    创建图书接口
+    """
+
+    result = await create_book(
+        session,
+        book
+    )
+
+    return {
+        "message": "创建成功",
+        "data": result
+    }
+
+
+这样，我们的代码就更简洁了！
+
+
+接口文档标签（tags）
+
+
+在接口文档（/docs）中，我们可以用 tags 参数将不同模块的接口分组显示，让文档结构更清晰。
+
+修改 routers/book_router.py：
+
+book_router = APIRouter(prefix="/books", tags=["书籍管理"])
+
+
+启动服务器后，访问 /docs，你会看到所有书籍相关的接口都被归类到了 “书籍管理” 标签下。
+
+
+
+
+公共依赖（dependencies）
+
+
+如果一个模块下的所有接口都需要依赖同一个对象（比如都需要用户登录验证），我们可以在 APIRouter 上统一添加 dependencies，避免在每个接口函数中重复写 Depends(...)。
+
+from fastapi import APIRouter, Depends, HTTPException
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from orm.database import get_session
+
+from orm.model import Book
+
+from service.book_service import create_book
+
+# 模拟一个登录验证依赖
+async def verify_token(token: str):
+    if token != "my-secret-token":
+        raise HTTPException(status_code=401, detail="未授权的访问")
+    return True
+
+# 创建子路由时，指定统一的路径前缀 /books
+book_router = APIRouter(prefix="/books", tags=["书籍管理"], dependencies=[Depends(verify_token)])
+
+@book_router.post("/")
+async def create_book_api(
+        book: Book,
+        session: AsyncSession = Depends(get_session)
+):
+
+    """
+    创建图书接口
+    """
+
+    result = await create_book(
+        session,
+        book
+    )
+
+    return {
+        "message": "创建成功",
+        "data": result
+    }
+
+
+
+
+
+两种路由写法对比总结
+
+
+为了让大家彻底搞清楚，我们用一个表格来总结两种路由写法的区别：
+
+
+
+特性
+基础路由 (@app.xxx)
+模块化路由 (APIRouter)
+
+
+
+代码组织
+所有接口集中在一个文件中，适合简单项目
+按业务模块拆分，适合中大型项目
+
+
+创建方式
+直接使用 FastAPI 实例定义接口
+创建 APIRouter 后定义接口，再注册
+
+
+路径管理
+每个接口单独编写完整路径
+使用 prefix 统一管理
+
+
+文档管理
+所有接口混合展示
+使用 tags 分类展示
+
+
+公共逻辑
+每个接口单独添加 Depends
+可以通过 dependencies 统一配置
+
+
+团队协作
+多人修改同一个文件，容易冲突
+不同模块独立开发，更适合团队协作
+
+
+
+第四阶段：安全、进阶
+
+阶段概述：
+本阶段将带领大家深入 FastAPI 的核心高级特性。我们将不再局限于简单的 CRUD 操作，而是构建一个具备用户认证系统的安全应用，学习如何组织大型项目的代码结构，如何处理异步后台任务与文件上传。
+
+第7章：用户认证与安全性
+
+密码安全：不要明文存储密码
+
+在任何涉及用户账号的 Web 应用中，密码安全都是必须重点考虑的问题。
+
+直接将用户输入的密码以明文形式保存到数据库，是非常危险的做法。一旦数据库发生泄露，攻击者可以直接获取所有用户密码，导致账号被盗、隐私泄露等严重问题。
+
+因此，实际项目中不会保存用户原始密码，而是通过密码哈希算法将密码转换为不可逆的哈希值，再将哈希值存储到数据库中。
+
+用户登录时，系统会对用户输入的密码进行相同的哈希处理，并与数据库中保存的哈希值进行比对，从而判断密码是否正确。
+
+密码学核心概念
+
+在理解密码安全之前，需要先了解几个密码学中的基础概念。
+
+
+哈希（Hash）
+
+
+哈希是一种单向函数，可以将任意长度的数据转换成固定长度的字符串。
+
+例如：
+
+hash("hello") → 2cf24dba5fb0a30e26e83b2ac5b9e29e...
+
+
+输入内容经过哈希后会得到一个固定格式的结果。
+
+哈希的特性：
+
+
+
+特性
+说明
+示例
+
+
+
+单向性
+理论上无法根据哈希值反推出原始数据
+可以计算 hash("123456")，但无法根据结果恢复 123456
+
+
+确定性
+相同输入始终产生相同输出
+同一个字符串经过相同算法得到的结果一致
+
+
+雪崩效应
+输入轻微变化会导致输出巨大变化
+hash("abc") 与 hash("abd") 完全不同
+
+
+抗碰撞性
+很难找到两个不同输入产生相同哈希值
+不同密码产生相同结果的概率极低
+
+
+
+
+加盐（Salt）：
+虽然哈希不可逆，但简单哈希仍然存在安全问题。
+例如：
+hash("123456")
+
+这个结果永远固定。
+攻击者可以提前计算大量常见密码的哈希值，并保存成一个数据库，这种预计算的数据集合称为：
+
+彩虹表（Rainbow Table）
+如果用户密码比较简单，例如：
+
+
+123456
+password
+admin123
+
+攻击者可以直接通过查询彩虹表快速破解。
+
+
+**解决方案就是加盐。**加盐指的是在密码哈希之前加入一段随机字符串：
+
+原始密码：
+123456
+
+加入随机盐：
+123456 + random_salt
+
+进行哈希：
+hash("123456random_salt")
+
+
+例如：
+
+# 不加盐
+
+hash("123456")=e10adc3949ba59abbe56e057f20f883e
+
+# 加盐
+
+hash("123456"+"a8f92kd7")=8f3c91d2a8d7e9...
+
+
+每次生成不同的盐，即使两个用户使用相同密码，最终保存的哈希值也不同。
+
+加盐的优势：
+
+
+
+即使两个用户密码相同，加盐后的哈希值也不同
+
+
+
+彩虹表无法破解（因为盐是随机的）
+
+
+
+技术选型
+
+实际开发中，不建议直接使用普通哈希算法（如 MD5、SHA256）保存密码。
+
+虽然 SHA256 本身安全性较高，但它的计算速度非常快。
+
+对于普通数据校验来说，速度快是优点；但对于密码存储来说，速度快反而是缺点。
+
+因为攻击者可以利用 GPU 进行大量密码尝试：
+
+普通哈希：
+每秒尝试数十亿次密码
+
+密码哈希算法：
+每秒只能尝试几百到几千次
+
+
+因此密码存储需要使用专门设计的慢速哈希算法。
+
+常见选择：
+
+
+
+算法
+特点
+推荐度
+
+
+
+MD5
+已被证明不适合作为密码存储算法
+禁止使用
+
+
+SHA-1
+存在安全问题
+禁止使用
+
+
+SHA-256
+安全但计算速度过快，不适合密码存储
+不推荐
+
+
+Bcrypt
+自动加盐、可调整计算成本、广泛应用
+推荐
+
+
+Argon2
+当前密码哈希领域推荐标准之一
+推荐
+
+
+Argon2id
+现代密码哈希推荐方案，抗GPU攻击能力强
+推荐
+
+
+
+Bcrypt 的优势：
+
+
+
+自动加盐：解决「相同密码密文相同」的问题，不用手动管理盐值，大幅降低彩虹表攻击效果
+
+
+
+自适应：可调整计算复杂度（通过 cost factor/成本因子）：让加密难度跟着硬件升级，不用换算法，只调一个参数就能始终保持破解门槛；
+
+
+
+慢速设计：故意让加密过程慢（但对普通用户无感知），黑客暴力枚举（逐个试密码）的速度会极慢，比如每秒只能试几百个，而非简单哈希的每秒上亿个。
+
+
+
+代码实现
+
+安装依赖：
+
+pip install bcrypt
+
+企业级可安装：pip install passlib[argon2]
+
+
+工具类封装 utils/util.py：
+
+import bcrypt  # 导入 bcrypt 加密库
+
+def get_password_hash(password: str) -> str:
+    """
+    功能：将明文密码加密成哈希值（密文）
+    :param password: 传入的明文密码（如用户注册时输入的 123456）
+    :return: 加密后的哈希字符串（可直接存入数据库）
+    """
+    # 1. 将字符串密码转换为字节类型（bcrypt 库只支持字节流处理）
+    password_bytes = password.encode('utf-8')
+    
+    # 2. 生成随机盐值（默认加密难度）
+    salt = bcrypt.gensalt()
+    
+    # 3. bcrypt内部会结合密码、盐值和计算成本生成密码哈希值
+    hashed_password_bytes = bcrypt.hashpw(password_bytes, salt)
+    
+    # 4. 将字节类型的密文转换为字符串，方便存入数据库
+    return hashed_password_bytes.decode('utf-8')
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """
+    功能：验证用户输入的明文密码，与数据库中的密文是否匹配
+    :param plain_password: 用户登录时输入的明文密码
+    :param hashed_password: 从数据库中取出的密文（哈希值）
+    :return: 匹配返回 True，不匹配返回 False
+    """
+    # 1. 将明文密码和密文都转换为字节类型
+    plain_pwd_bytes = plain_password.encode('utf-8')
+    hashed_pwd_bytes = hashed_password.encode('utf-8')
+    
+    # 2. 核心验证：bcrypt 会自动从密文中提取盐值，与明文密码重新哈希对比
+    # 无需手动处理盐值，直接返回对比结果（True/False）
+    return bcrypt.checkpw(plain_pwd_bytes, hashed_pwd_bytes)
+
+# ------------------- 测试代码 -------------------
+if __name__ == "__main__":
+    # 1. 模拟用户注册：加密密码
+    original_password = "my_secure_password"  # 用户设置的明文密码
+    hashed_pwd = get_password_hash(original_password)
+    print(f"加密后的密文：{hashed_pwd}")  # 输出类似：$2b$12$EixZaYb4xU58Gpq1R0yWbeb00LU5qUaK6x6h9s6Q0hW8XQd6cR5u
+    
+    # 2. 模拟用户登录：验证密码
+    # 正确密码验证
+    is_correct = verify_password(original_password, hashed_pwd)
+    print(f"密码验证结果（正确密码）：{is_correct}")  # 输出：True
+    
+    # 错误密码验证
+    wrong_password = "wrong_password"
+    is_wrong = verify_password(wrong_password, hashed_pwd)
+    print(f"密码验证结果（错误密码）：{is_wrong}")  # 输出：False
+
+
+代码详解：
+
+
+为什么要 encode 和 decode？
+
+
+bcrypt 库的所有核心方法（如 hashpw、checkpw）只接受字节（bytes）类型的参数，而我们平时使用的密码是字符串（str）类型，所以需要：
+
+
+
+encode('utf-8')：将字符串转换为字节；
+
+
+
+decode('utf-8')：将字节转换回字符串（方便存储和传输）。
+
+
+
+
+为什么要用 utf-8？
+
+
+UTF-8 是一种通用的字符编码标准，能够表示几乎所有的字符（包括英文、中文、特殊符号等），并且兼容 ASCII。
+
+在处理文本数据时，计算机底层只能处理二进制数据（字节），因此需要将人类可读的字符串转换为字节形式。
+
+使用 utf-8 编码的好处：
+
+
+
+兼容性强：支持全球大多数语言的字符。
+
+
+
+变长编码：对于 ASCII 字符（如英文字母、数字），每个字符只占用 1 个字节；对于其他字符（如中文），则根据需要占用更多字节。
+
+
+
+广泛应用：是互联网和现代系统的默认编码格式。
+
+
+
+假设 password = "你好123"：
+
+password = "你好123"
+password_bytes = password.encode('utf-8')
+print(password_bytes)  # 输出：b'\xe4\xbd\xa0\xe5\xa5\xbd123'
+
+"""
+"你好123" 是一个字符串。
+经过 encode('utf-8') 后，变成字节序列 b'\xe4\xbd\xa0\xe5\xa5\xbd123'，其中：
+\xe4\xbd\xa0 和 \xe5\xa5\xbd 是汉字“你”和“好”的 UTF-8 编码。
+123 是 ASCII 字符，直接对应其 ASCII 值。
+"""
+
+
+
+盐值在哪里？为什么不用存？
+
+
+bcrypt.gensalt() 生成的盐值，会自动嵌入到最终的密文字符串中（就是密文开头的那部分）。验证时，bcrypt.checkpw() 会自动从密文中提取盐值，无需我们手动存储和管理，非常方便！
+
+
+如何在项目中使用？
+
+
+
+
+用户注册时：调用 get_password_hash() 加密用户输入的密码，将密文存入数据库；
+
+
+
+用户登录时：从数据库取出该用户的密文，调用 verify_password() 对比用户输入的明文密码，验证通过则登录成功。
+
+
+
+JWT (JSON Web Token) 详解
+
+什么是 JWT？
+
+在开发带登录的项目时（比如网站、APP），用户登录成功后，后续访问个人中心、我的订单等需要权限的接口，服务器得知道 “当前访问的是谁，是否已登录”。
+
+JWT（JSON Web Token）就是解决这个问题的核心技术：
+
+
+
+用户登录成功后，服务器生成一个 JWT 令牌返回给前端；
+
+
+
+前端后续每次请求，都带着这个令牌；
+
+
+
+服务器验证令牌的有效性，就能确认用户身份，无需反复让用户登录。
+
+
+
+它是一种基于 JSON 格式的开放标准，用于在不同系统之间安全传递信息。
+
+通常用于：
+
+
+
+用户身份认证；
+
+
+
+接口权限控制；
+
+
+
+单点登录（SSO）。
+
+
+
+JWT 本质上是一段字符串：
+
+xxxxx.yyyyy.zzzzz
+
+
+由三个部分组成：
+
+Header.Payload.Signature
+
+
+例如：
+
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+.
+eyJzdWIiOiJhbGljZSIsImV4cCI6MTczNTYwMzIwMH0
+.
+HMAC_SIGNATURE
+
+
+三个部分分别表示：
+
+
+
+Header：描述 Token 类型和算法；
+
+
+
+Payload：保存用户相关信息；
+
+
+
+Signature：验证 Token 是否被篡改。
+
+
+
+JWT 核心特点
+
+
+
+无状态：服务器不用存令牌，每次验证时，服务器使用密钥重新计算签名，并与 Token 中的 Signature 比较，不用查数据库 / 缓存，大大减轻服务器负担。
+
+
+
+防篡改：签名由服务器密钥生成，前端修改令牌后签名会失效，服务器能直接识别；
+
+
+
+有过期时间：可设置令牌有效期（如 30 分钟），过期后自动失效，提升安全性。
+
+
+
+JWT 的结构
+
+结构解析：
+
+
+Header (头部)：Header 用于描述 JWT 的基本信息。
+
+
+{
+  "alg": "HS256",  // 签名算法 表示使用 HMAC SHA256 算法生成签名
+  "typ": "JWT"     // 令牌类型
+}
+
+
+
+Payload (负载)：存放有效信息（如 user_id, 过期时间 exp）。注意：不要存放敏感信息（如密码），因为这部分仅是 Base64 编码，可被解码查看。
+
+
+{
+  "sub": "user123",           // 主题（通常是用户 ID）
+  "username": "alice",         // 用户名
+  "exp": 1735689600,          // 过期时间（Unix 时间戳）
+  "iat": 1735603200           // 签发时间
+}
+
+
+
+Signature (签名)：防止数据被篡改。使用 Header + Payload + Secret Key 生成。如果有人修改了 Payload，签名验证会失败。
+
+
+signature = HMAC-SHA256(
+    base64UrlEncode(header) + "." + base64UrlEncode(payload),
+    secret_key
+)
+
+
+** 生活化类比：**
+
+
+
+概念
+类比
+
+
+
+JWT
+游乐场的防伪手环
+
+
+Header
+手环的材质说明（用什么算法）
+
+
+Payload
+手环上写的你的信息（用户 ID、过期时间）
+
+
+Signature
+手环上的防伪标（防止伪造）
+
+
+
+认证流程图
+
+生成 Token 代码示例
+
+安装依赖：
+
+pip install python-jose[cryptography]
+pip install python-jose
+pip install python-dotenv
+# 注：[cryptography] 是补充加密依赖，避免后续运行报错
+
+
+utils/security.py：
+
+# 导入时间相关模块：处理令牌过期时间
+from datetime import datetime, timedelta, timezone
+
+# 导入 JWT 核心库：生成 JWT 令牌
+from jose import jwt
+
+# 导入环境变量读取工具
+from dotenv import load_dotenv
+import os
+
+# 加载 .env 文件中的环境变量
+load_dotenv()
+
+# 从环境变量中读取 JWT 密钥
+SECRET_KEY = os.getenv("SECRET_KEY")
+
+# JWT 使用的加密算法
+ALGORITHM = "HS256"
+
+# JWT 有效期：30 分钟
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+def create_access_token(data: dict):
+    """
+    生成 JWT 访问令牌
+    :param data: 要存入令牌的用户信息
+    :return: JWT 令牌字符串
+    """
+
+    # 复制原始数据，避免直接修改传入的字典
+    to_encode = data.copy()
+
+    # 获取当前 UTC 时间，并加上 30 分钟作为过期时间
+    expire = datetime.now(timezone.utc) + timedelta(
+        minutes=ACCESS_TOKEN_EXPIRE_MINUTES
+    )
+
+    # 将过期时间写入 JWT 的 exp 字段
+    to_encode.update({"exp": expire})
+
+    # 使用密钥和 HS256 算法生成 JWT
+    encoded_jwt = jwt.encode(
+        to_encode,
+        SECRET_KEY,
+        algorithm=ALGORITHM
+    )
+
+    return encoded_jwt
+
+# 测试代码
+if __name__ == "__main__":
+
+    # 模拟登录成功后的用户信息
+    user_info = {
+        "user_id": 1,
+        "username": "zhangsan"
+    }
+
+    # 生成 JWT
+    token = create_access_token(user_info)
+
+    print("生成的 JWT 令牌：")
+    print(token)
+
+
+路由保护与依赖注入 (Dependency)
+
+OAuth2PasswordBearer 和 Depends
+
+OAuth2PasswordBearer 是 FastAPI 提供的一个工具，它用来帮助我们从 HTTP 请求中提取 Token。Depends 是 FastAPI 的依赖注入工具，它让你能够轻松地将某些函数注入到路由中，从而实现路由保护、认证等功能。
+
+OAuth2PasswordBearer
+
+Bearer Token：前端携带 JWT 令牌的标准方式 —— 将令牌放在 HTTP 请求头的Authorization字段中，格式为Bearer 令牌字符串（如Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...）
+
+工作流程：
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+
+
+
+OAuth2PasswordBearer 是 FastAPI 的认证工具，它负责接收 HTTP 请求中的 Authorization 头，提取出 Bearer Token。
+
+
+
+tokenUrl="token" 这个参数表示你在认证过程中使用的 URL 地址。在实际应用中，你通常会有一个 /token 的路由，用户通过该路由发送用户名和密码，然后返回一个有效的 Token。
+
+
+
+** 生活化类比：**
+
+
+
+概念
+类比
+
+
+
+Authorization: Bearer xxx
+钱包里的会员卡
+
+
+OAuth2PasswordBearer
+保安（从你钱包里拿出卡）
+
+
+verify_token
+验卡机（刷卡验证真伪）
+
+
+401
+保安说"卡无效，请重新办卡"
+
+
+
+实现 get_current_user
+
+在前面的utils/security.py 实现这个方法
+
+这是最核心的依赖函数，用于解析 Token 并获取当前用户对象。
+
+from fastapi.security import OAuth2PasswordBearer
+# 1. 实例化OAuth2PasswordBearer，指定令牌获取接口地址
+# 作用：告诉FastAPI自动从请求头提取Bearer Token，提取失败直接返回401
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")  # tokenUrl为前端登录获取令牌的接口（如/token）
+
+async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
+    """
+    核心功能：FastAPI依赖注入函数，验证JWT令牌并解析当前用户信息
+    :param token: 由Depends(oauth2_scheme)自动注入的JWT令牌字符串
+    :return: 解析出的用户信息字典（真实场景返回数据库查询的用户对象）
+    :raise: 令牌无效/解析失败时，抛出401未授权异常
+    """
+    # 定义标准化的401异常：令牌验证失败时统一抛出此异常
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,  # 401未授权状态码
+        detail="无法验证凭据",  # 错误提示信息
+        headers={"WWW-Authenticate": "Bearer"},  # 告诉前端需要携带Bearer Token
+    )
+    try:
+        # 核心步骤1：解析JWT令牌，验证其有效性
+        # 参数说明：令牌字符串 + 服务器密钥 + 允许的加密算法（与生成时一致）
+        # 验证逻辑：自动检查签名是否被篡改、令牌是否过期、算法是否匹配
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+
+        # 核心步骤2：从令牌的载荷（payload）中提取用户名（key为"sub"，JWT规范字段）
+        # "sub"是JWT通用规范字段，代表“主题”，通常存储用户唯一标识（用户名/用户ID）
+        username: str = payload.get("sub")
+
+        # 校验：如果载荷中没有用户名，说明令牌无效，抛出401异常
+        if username is None:
+            raise credentials_exception
+
+    # 捕获所有JWT相关异常：令牌篡改、过期、密钥错误、格式错误等
+    except JWTError:
+        raise credentials_exception
+
+    # 打印当前用户（调试用），返回用户信息（供路由函数使用）
+    print("当前访问用户：", username)
+    return {"username": username}  # 真实场景返回查询到的user对象
+
+
+完整的代码如下：
+
+# 导入时间相关模块：处理令牌过期时间
+from datetime import datetime, timedelta, timezone
+
+from fastapi import Depends, HTTPException
+# 导入 JWT 核心库：生成 JWT 令牌
+from jose import jwt, JWTError
+
+# 导入环境变量读取工具
+from dotenv import load_dotenv
+import os
+
+from starlette import status
+
+# 加载 .env 文件中的环境变量
+load_dotenv()
+
+# 从环境变量中读取 JWT 密钥
+SECRET_KEY = os.getenv("SECRET_KEY")
+
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+def create_access_token(data: dict):
+    to_encode = data.copy()
+
+    expire = datetime.now(timezone.utc) + timedelta(
+        minutes=ACCESS_TOKEN_EXPIRE_MINUTES
+    )
+
+    to_encode.update({"exp": expire})
+
+    encoded_jwt = jwt.encode(
+        to_encode,
+        SECRET_KEY,
+        algorithm=ALGORITHM
+    )
+
+    return encoded_jwt
+
+from fastapi.security import OAuth2PasswordBearer
+# 1. 实例化OAuth2PasswordBearer，指定令牌获取接口地址
+# 作用：告诉FastAPI自动从请求头提取Bearer Token，提取失败直接返回401
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")  # tokenUrl为前端登录获取令牌的接口（如/token）
+
+async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
+    """
+    核心功能：FastAPI依赖注入函数，验证JWT令牌并解析当前用户信息
+    :param token: 由Depends(oauth2_scheme)自动注入的JWT令牌字符串
+    :return: 解析出的用户信息字典（真实场景返回数据库查询的用户对象）
+    :raise: 令牌无效/解析失败时，抛出401未授权异常
+    """
+    # 定义标准化的401异常：令牌验证失败时统一抛出此异常
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,  # 401未授权状态码
+        detail="无法验证凭据",  # 错误提示信息
+        headers={"WWW-Authenticate": "Bearer"},  # 告诉前端需要携带Bearer Token
+    )
+    try:
+        # 核心步骤1：解析JWT令牌，验证其有效性
+        # 参数说明：令牌字符串 + 服务器密钥 + 允许的加密算法（与生成时一致）
+        # 验证逻辑：自动检查签名是否被篡改、令牌是否过期、算法是否匹配
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+
+        # 核心步骤2：从令牌的载荷（payload）中提取用户名（key为"sub"，JWT规范字段）
+        # "sub"是JWT通用规范字段，代表“主题”，通常存储用户唯一标识（用户名/用户ID）
+        username: str = payload.get("sub")
+
+        # 校验：如果载荷中没有用户名，说明令牌无效，抛出401异常
+        if username is None:
+            raise credentials_exception
+
+    # 捕获所有JWT相关异常：令牌篡改、过期、密钥错误、格式错误等
+    except JWTError:
+        raise credentials_exception
+
+    # 打印当前用户（调试用），返回用户信息（供路由函数使用）
+    print("当前访问用户：", username)
+    return {"username": username}  # 真实场景返回查询到的user对象
+
+
+** 生活化类比：**
+
+
+
+概念
+类比
+
+
+
+get_current_user
+门卫（检查通行证）
+
+
+Token 验证通过
+放行
+
+
+Token 无效
+举"禁止通行"牌子
+
+
+
+模拟完整 demo 代码流程
+
+这里测试需要借助 APIfoxs 这个软件进行测试，不然无法填充Header 中的 Authenticate
+
+# main.py
+from fastapi import FastAPI, Depends
+from fastapi.security import OAuth2PasswordRequestForm
+from utils.security import create_access_token, get_current_user
+
+# 创建FastAPI实例
+app = FastAPI(title="JWT令牌验证示例", version="1.0")
+
+# ==================== 模拟用户数据库（真实场景替换为数据库查询） ====================
+fake_users_db = {
+    "zhangsan": {
+        "user_id": 1,
+        "username": "zhangsan",
+        "password": "123456"  # 生产环境务必加密存储（如bcrypt）
+    },
+    "lisi": {
+        "user_id": 2,
+        "username": "lisi",
+        "password": "654321"
+    }
+}
+
+# ==================== 登录接口（生成令牌） ====================
+@app.post("/token", summary="用户登录，获取JWT令牌")
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    """
+    接收用户名密码，验证通过后返回JWT令牌
+    OAuth2PasswordRequestForm会自动解析表单格式的用户名（username）和密码（password）
+    """
+    # 1. 验证用户是否存在
+    user = fake_users_db.get(form_data.username)
+    if not user:
+        return {"code": 400, "message": "用户名不存在"}
+
+    # 2. 验证密码（真实场景用加密算法验证，如bcrypt.checkpw）
+    if form_data.password != user["password"]:
+        return {"code": 400, "message": "密码错误"}
+
+    # 3. 生成JWT令牌（必须包含"sub"字段，值为用户名）
+    access_token = create_access_token(
+        data={"sub": user["username"], "user_id": user["user_id"]}
+    )
+
+    # 4. 返回令牌（符合OAuth2规范，key为access_token和token_type）
+    return {
+        "code": 200,
+        "message": "登录成功",
+        "data": {
+            "access_token": access_token,
+            "token_type": "bearer",  # 固定为bearer，前端请求时需拼接为 Bearer <token>
+            "expires_in": 30 * 60  # 过期时间（秒）
+        }
+    }
+
+# ==================== 受保护的接口（需要验证令牌） ====================
+@app.get("/protected", summary="受保护的接口（需携带有效JWT令牌）")
+async def protected_route(current_user: dict = Depends(get_current_user)):
+    """
+    依赖get_current_user函数，只有令牌有效时才能访问
+    current_user会自动接收解析后的用户信息
+    """
+    return {
+        "code": 200,
+        "message": "访问受保护接口成功",
+        "data": {
+            "current_user": current_user,
+            "content": "这是只有登录用户才能看到的内容"
+        }
+    }
+
+# ==================== 主函数（运行服务） ====================
+if __name__ == "__main__":
+    import uvicorn
+
+    # 启动服务：地址0.0.0.0，端口8000，自动重载
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+
+
+第8章：进阶功能 (Router, Middleware, Background)
+
+Router：大型项目结构重构
+
+为什么大型项目需要 Router
+
+在实际项目开发中，如果所有接口都集中写在 main.py 文件中，随着项目规模不断扩大，代码会变得难以维护。
+
+FastAPI 提供了 APIRouter 来帮助我们按照业务模块拆分接口，例如用户相关接口放在 users.py，商品相关接口放在 items.py。这种模块化设计能够让项目结构更加清晰，也方便后续多人协作开发。
+
+大型项目中的 Router 设计
+
+在前面的章节中，我们已经学习过 APIRouter 的基本使用，所以这里重点关注实际项目中的组织方式。
+
+例如 在 app/routers/users.py 中：
+
+from fastapi import APIRouter
+
+router = APIRouter(
+    prefix="/users",
+    tags=["用户"]
+)
+
+@router.get("/")
+async def get_users():
+    return [
+        {"username": "Rick"},
+        {"username": "Morty"}
+    ]
+
+@router.get("/{user_id}")
+async def get_user(user_id: int):
+    return {
+        "user_id": user_id
+    }
+
+
+商品模块：
+
+from fastapi import APIRouter
+
+router = APIRouter(
+    prefix="/products",
+    tags=["商品"]
+)
+
+@router.get("/")
+async def get_products():
+    return []
+
+@router.get("/{product_id}")
+async def get_product(product_id: int):
+    return {
+        "product_id": product_id
+    }
+
+
+然后在 main.py 中统一注册：
+
+rom fastapi import FastAPI
+
+from app.routers import users, products
+
+app = FastAPI()
+
+app.include_router(users.router)
+app.include_router(products.router)
+
+
+这样 main.py 的职责就非常明确：创建 FastAPI 应用，并负责组装各个模块。具体业务接口则放在对应的 Router 中。
+
+** 生活化类比：**
+
+
+
+概念
+类比
+
+
+
+所有接口塞 main.py
+所有文件堆在桌面，乱
+
+
+Router 拆分
+按类别分文件夹，清晰
+
+
+
+Router 的进一步工程化
+
+在实际项目中，我们通常还会进一步利用 Router 的一些公共配置。
+
+例如：
+
+from fastapi import APIRouter
+
+router = APIRouter(
+    prefix="/users",
+    tags=["用户"],
+    responses={
+        404: {"description": "用户不存在"}
+    }
+)
+
+
+这样可以把属于整个用户模块的公共配置集中定义。
+
+另外，在需要权限控制的项目中，还可以给 Router 统一添加依赖：
+
+from fastapi import APIRouter, Depends
+
+router = APIRouter(
+    prefix="/admin",
+    tags=["管理员"],
+    dependencies=[Depends(check_admin)]
+)
+
+
+这样管理员模块下的接口就可以统一执行权限检查，而不需要每个接口都重复写一遍。因此，Router 在大型项目中不仅负责接口拆分，也可以负责模块级配置、公共依赖、权限控制以及接口分组。
+
+Middleware：统一处理请求和响应  --- 暂时先不用看
+
+为什么需要 Middleware
+
+在实际项目中，有很多功能并不属于某一个具体接口。
+
+例如：
+
+
+
+记录请求日志
+
+
+
+统计接口执行时间
+
+
+
+添加统一响应头
+
+
+
+进行请求追踪
+
+
+
+处理跨域
+
+
+
+进行一些统一的请求检查
+
+
+
+如果每个接口都自己写：
+
+start_time = time.time()
+
+# 业务代码
+
+duration = time.time() - start_time
+
+print(duration)
+
+
+那么项目中就会出现大量重复代码。
+
+什么是 Middleware
+
+中间件是处理请求和响应过程中的一层额外逻辑。它会在请求进入接口函数之前执行，也可以在接口返回响应之后再次处理响应。
+
+常见应用场景包括：
+
+
+
+跨域处理（CORS）
+
+
+
+请求日志记录
+
+
+
+请求耗时统计
+
+
+
+全局异常处理
+
+
+
+添加统一响应头
+
+
+
+核心流程图
+
+** 生活化类比：**
+
+
+
+概念
+类比
+
+
+
+中间件
+机场安检（每个旅客都要过）
+
+
+依赖注入
+某个房间的钥匙（只管单个接口）
+
+
+中间件
+大楼的安检门（管全部请求）
+
+
+
+常用中间件：CORS 与 耗时统计
+
+CORS (跨域资源共享)：解决前端（如 Vue/React 运行在 3000 端口）访问后端（8000 端口）时的跨域报错问题。
+
+例如：
+
+前端项目运行：http://localhost:3000
+
+后端接口运行：http://localhost:8000
+
+由于端口不同，浏览器会认为这是不同源的请求。
+
+如果后端没有配置 CORS，浏览器会阻止前端访问接口。
+
+FastAPI 可以通过 CORSMiddleware 解决这个问题：
+
+from fastapi.middleware.cors import CORSMiddleware
+
+origins = [
+    "http://localhost:3000",
+    "http://localhost:8080",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+参数说明：
+
+
+
+allow_origins：允许访问后端的前端地址。
+
+
+
+allow_credentials：是否允许携带 Cookie、认证信息。
+
+
+
+allow_methods：允许的 HTTP 请求方法。
+
+
+
+allow_headers：允许携带的请求头。
+
+
+
+除了使用 FastAPI 内置中间件，也可以自定义中间件实现额外功能。
+
+例如统计接口响应时间：
+
+import time
+from fastapi import Request, FastAPI
+
+app = FastAPI()
+
+@app.middleware("http")
+async def add_process_time_header(
+        request: Request,
+        call_next
+):
+    start_time = time.time()
+
+    # 执行后续请求处理流程
+    response = await call_next(request)
+
+    process_time = time.time() - start_time
+
+    # 添加响应头
+    response.headers["X-Process-Time"] = str(process_time)
+
+    return response
+
+@app.get("/")
+async def root():
+    return {"message": "Hello FastAPI"}
+
+
+访问接口后，可以在响应头中看到：
+
+x-process-time: 0.0019330978393554688 
+
+
+实际项目中可以利用这种方式监控接口性能。
+
+Background Tasks：后台任务
+
+在接口开发过程中，有些任务执行时间较长，如果直接在接口函数中执行，会导致用户必须等待任务完成后才能收到响应。比如用户注册之后需要发送邮件、记录操作日志、更新一些非核心数据等，这些操作并不一定需要用户等待它执行完成，这时候就可以考虑使用 FastAPI 提供的 BackgroundTasks。
+
+BackgroundTasks 的核心思想其实很简单：先把用户真正关心的响应返回，然后再执行一些不影响当前响应的任务。 例如用户点击“发送通知”，接口只需要告诉用户“请求已经提交”，至于写日志、发送通知等后续操作，可以放到后台执行。
+
+BackgroundTasks 的基本使用方式
+
+使用 BackgroundTasks 主要分为两步。
+
+第一步，导入 BackgroundTasks：
+
+from fastapi import BackgroundTasks, FastAPI
+
+
+第二步，在接口函数中声明 BackgroundTasks 参数，然后通过 add_task() 添加后台任务：
+
+background_tasks.add_task(
+    write_log,
+    "Notification sent"
+)
+
+
+这里的第一个参数 write_log 表示需要执行的函数，后面的参数表示传递给这个函数的参数。注意这里传的是函数本身，而不是提前调用函数，所以应该写成 write_log，而不是 write_log()。
+
+完整示例
+
+from fastapi import FastAPI
+import time
+
+app = FastAPI()
+
+def write_log(message: str):
+    print("开始写日志")
+    time.sleep(3)
+    print("日志写入完成")
+
+@app.post("/send-notification/{email}")
+async def send_notification(email: str):
+    write_log(f"Notification sent to {email}")
+
+    return {
+        "message": "Notification sent"
+    }
+
+
+from fastapi import BackgroundTasks, FastAPI
+import time
+
+app = FastAPI()
+
+def write_log(message: str):
+    print("开始写日志")
+    time.sleep(3)
+
+    with open("log.txt", "a") as log:
+        log.write(message + "\n")
+
+    print("日志写入完成")
+
+@app.post("/send-notification/{email}")
+async def send_notification(
+    email: str,
+    background_tasks: BackgroundTasks
+):
+    background_tasks.add_task(
+        write_log,
+        f"Notification sent to {email}"
+    )
+
+    return {
+        "message": "Notification sent in the background"
+    }
+
+
+调用接口以后，可以把整个过程理解成：
+
+
+
+用户发送 POST /send-notification/{email} 请求。
+
+
+
+FastAPI 执行 send_notification()。
+
+
+
+background_tasks.add_task() 将 write_log() 添加到后台任务中。
+
+
+
+接口立即返回响应。
+
+
+
+当前请求完成后，FastAPI 执行 write_log()。
+
+
+
+write_log() 将日志写入 log.txt。
+
+
+
+所以这里最重要的一点就是：add_task() 并不是立即执行函数，而是先把任务添加起来，等响应发送之后再执行。
+
+** 生活化类比：**
+
+
+
+概念
+类比
+
+
+
+无 BackgroundTasks
+点餐 → 厨师做菜 → 洗碗 → 擦桌子 → 才上菜
+
+
+有 BackgroundTasks
+点餐 → 厨师做菜 → 立即上菜，服务员后台去洗碗
+
+
+
+先给你上菜（响应），其他事后台做。
+
+BackgroundTasks 适用场景
+
+比较适合一些简单、耗时不长、不是当前接口核心结果的任务，例如：
+
+
+
+记录操作日志
+
+
+
+发送邮件
+
+
+
+发送通知
+
+
+
+更新一些非核心数据
+
+
+
+执行简单的数据处理
+
+
+
+比如用户注册时，“把用户保存到数据库”属于核心业务，通常需要处理完成后再返回注册成功；但是“记录一条注册日志”就不一定需要用户等待，这种任务就比较适合放到 BackgroundTasks 中。
+
+BackgroundTasks 注意事项
+
+需要注意的是，BackgroundTasks 并不是专业的分布式任务队列，它更适合简单的后台任务。如果任务非常耗时、任务非常重要，或者需要失败重试、任务持久化、多个 Worker 协同处理等能力，就不建议只依赖 BackgroundTasks。
+
+例如视频转码、大规模数据处理、复杂模型推理等任务，通常应该使用 Celery、RQ 等专业的任务队列。
+
+所以工程上可以简单理解为：小型、简单的后置任务可以使用 BackgroundTasks；复杂、耗时、对可靠性要求高的任务，则应该使用专门的任务队列。
+
+Router + Middleware + Background Tasks 综合使用
+
+这三个功能单独理解之后，更重要的是理解它们在项目中的配合。
+
+这里三个功能分别解决不同问题：
+
+
+
+功能
+解决的问题
+典型用途
+
+
+
+Router
+项目如何拆分
+用户、商品、订单模块
+
+
+Middleware
+公共逻辑如何统一处理
+日志、耗时、请求追踪
+
+
+BackgroundTasks
+非核心任务如何异步执行
+通知、日志、简单邮件
+
+
+
+Router 负责组织，Middleware 负责拦截和统一处理，BackgroundTasks 负责后台执行。
+
+文件上传
+
+FastAPI 使用 File() 声明文件上传参数，并可以通过 bytes 或 UploadFile 两种类型来接收上传的文件。
+
+UploadFile vs bytes
+
+
+
+bytes: 
+
+
+会一次性读取整个文件内容。
+
+文件数据直接存储在内存中。
+
+适合上传小文件，例如配置文件、小图片。
+
+
+
+
+UploadFile: 
+
+
+基于 Python 的 SpooledTemporaryFile。
+
+小文件暂存在内存。
+
+文件较大时自动写入临时磁盘。
+
+提供文件对象操作方式，例如 read()、seek()、close()。
+
+
+
+
+** 生活化类比：**
+
+
+
+概念
+类比
+
+
+
+bytes
+把整本书一次性复印下来，全放桌上
+
+
+UploadFile
+书放在书架，你需要哪页翻哪页
+
+
+
+小书无所谓，大书必须用书架。
+
+实践任务：头像上传
+
+安装依赖：pip install python-multipart
+
+from fastapi import File, UploadFile
+import shutil
+import os
+
+UPLOAD_DIR = "static/avatars"
+
+os.makedirs(
+    UPLOAD_DIR,
+    exist_ok=True
+)
+
+@app.post("/upload/avatar/")
+async def upload_avatar(
+    file: UploadFile = File(...)
+):
+    # 文件保存路径
+    file_location = f"{UPLOAD_DIR}/{file.filename}"
+
+    # 保存文件
+    with open(file_location, "wb") as buffer:
+        shutil.copyfileobj(
+            file.file,
+            buffer
+        )
+
+    return {
+        "info": f"file '{file.filename}' saved"
+    }
+
+
+

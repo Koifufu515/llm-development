@@ -1,0 +1,1 @@
+uv run alembic revision -m "api keys and query logs" --rev-id 0006

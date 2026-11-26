@@ -1,0 +1,11 @@
+"""表单权威值解析：从本轮表单文本里抠出天数与目的地（导入真实解析函数，纯逻辑无需密钥）"""
+from langchain_core.messages import HumanMessage
+from app.tools.state_transition import _form_travel_days, _form_destination
+
+# TripForm 模板恒含"旅行天数：N 天"与"我想去X旅行"两行，故按表单文本抠权威值
+state = {"messages": [HumanMessage(content="我想去北京、天津旅行\n旅行天数：5 天\n预算：中等")]}
+print("表单天数 →", _form_travel_days(state))       # 5
+print("表单目的地 →", _form_destination(state))     # 北京、天津
+print("无表单行 →", _form_travel_days({"messages": [HumanMessage(content="随便聊聊")]}))  # None
+assert _form_travel_days(state) == 5 and _form_destination(state) == "北京、天津"
+print("✅ 表单权威值解析正常（有则覆盖模型传参、无则 None 不干预）")

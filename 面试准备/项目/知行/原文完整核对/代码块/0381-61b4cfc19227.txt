@@ -1,0 +1,74 @@
+# ============== 2️.目的地选择工具 ==============
+
+@tool
+def select_destination_tool(
+        destination: str,
+        runtime: ToolRuntime[None, TravelState] = None
+) -> Command:
+    """
+    确认用户选择的目的地，并转换到交通规划步骤。
+
+    参数说明：
+    - destination: 目的地名称。单目的地如 "西安"；多目的地按游览顺序用顿号连接，
+      如 "杭州、深圳"（多城串联时**必须传完整城市串**，只传第一个城市会导致丢城）
+    """
+
+    app_logger.info(f"用户选择目的地: {destination}")
+
+    return Command(update={
+        "messages": [
+            ToolMessage(
+                content=f"目的地已确认：{destination}",
+                tool_call_id=runtime.tool_call_id
+            )
+        ],
+        "selected_destination": destination,
+        "current_step": "transport_planning"  # 跳转到步骤3
+    })
+
+# ============== 5️.餐饮偏好选择工具 ==============
+
+@tool
+def select_food_tool(
+        food_types: list[str],  # 可多选
+        runtime: ToolRuntime[None, TravelState] = None
+) -> Command:
+    """
+    确认用户选择的餐饮偏好（可多选），并转换到行程生成步骤。
+
+    参数说明：
+    - food_types: 餐饮类型列表，可选值：["specialty", "chain", "local"]
+    """
+
+    app_logger.info(f"用户选择餐饮类型: {food_types}")
+
+    # 验证枚举值
+    valid_types = {"specialty", "chain", "local"}
+    if not all(t in valid_types for t in food_types):
+        return Command(update={
+            "messages": [
+                ToolMessage(
+                    content=f"❌ 餐饮类型无效，请从以下选择：{', '.join(valid_types)}",
+                    tool_call_id=runtime.tool_call_id
+                )
+            ]
+        })
+
+    type_labels = {
+        "specialty": "🍽️ 特色美食",
+        "chain": "🍔 连锁快餐",
+        "local": "🥘 本地小吃"
+    }
+
+    selected_labels = [type_labels[t] for t in food_types]
+
+    return Command(update={
+        "messages": [
+            ToolMessage(
+                content=f"餐饮偏好已确认：{', '.join(selected_labels)}",
+                tool_call_id=runtime.tool_call_id
+            )
+        ],
+        "selected_food_types": food_types,
+        "current_step": "itinerary_generation"  # 跳转到步骤6
+    })

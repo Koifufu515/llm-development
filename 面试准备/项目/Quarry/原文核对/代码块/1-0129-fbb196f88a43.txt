@@ -1,0 +1,1 @@
+from quarry.common.ids import make_chunk_id

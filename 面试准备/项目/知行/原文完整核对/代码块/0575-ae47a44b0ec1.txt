@@ -1,0 +1,76 @@
+# 直查多轮槽位补全：缓存待收集的起讫城市/日期，最多 _PENDING_TTL 轮，过期释放
+_PENDING_QUERY: dict[str, dict] = {}
+_PENDING_TTL = 2
+
+def _cities_in(text: str) -> list[str]:
+    """按原文出现顺序提取文本内匹配到的城市名称"""
+    try:
+        from app.data.cities import CITY_PROVINCE
+        return sorted({n for n in CITY_PROVINCE if n in text}, key=text.index)
+    except Exception:
+        return []
+
+_MONTH_DAY_RE = re.compile(r"\d{1,2}\s*月\s*\d{1,2}\s*[日号]")
+
+def _fill_slots(slot: dict, text: str, intent) -> None:
+    """填充查询槽位；已存在字段不会被覆盖，一次性完整起讫对可直接覆盖"""
+    pair = _parse_city_pair(text)
+    if pair:
+        slot["frm"], slot["to"] = pair
+    else:
+        cities = _cities_in(text)
+        if cities:
+            city = cities[0]
+            if "出发" in text or f"从{city}" in text:
+                slot["frm"] = city
+            elif not slot.get("to"):
+                slot["to"] = city
+            elif not slot.get("frm"):
+                slot["frm"] = city
+    if intent.date_word or _MONTH_DAY_RE.search(text):
+        slot["date"] = _parse_query_date(text)
+    if intent.flight_object:
+        slot["kind"] = "flight"
+    elif intent.train_object:
+        slot["kind"] = "train"
+
+def _missing_slot_text(slot: dict) -> str:
+    """根据缺失的槽位生成固定追问文本，不调用LLM"""
+    kind = "航班" if slot.get("kind") == "flight" else "班次"
+    frm, to = slot.get("frm"), slot.get("to")
+    if frm and not to:
+        return f"好的，从 **{frm}** 出发。您要到哪个城市？告诉我目的地（和日期）我就直接查{kind}。"
+    if to and not frm:
+        return f"好的，到 **{to}**。您从哪个城市出发？告诉我出发地（和日期）我就直接查{kind}。"
+    return (f"您是想查{kind}吗？只要给我**出发地、到达地和日期**就行，"
+            f"例如：「查明天福州到深圳的高铁」。")
+
+def _parse_city_pair(text: str) -> tuple[str, str] | None:
+    """解析起讫城市：优先城市库匹配，不足再用正则匹配「X到Y」格式"""
+    names: list[str] = []
+    try:
+        from app.data.cities import CITY_PROVINCE
+        names = sorted({n for n in CITY_PROVINCE if n in text}, key=text.index)
+    except Exception:
+        names = []
+    if len(names) >= 2:
+        return names[0], names[1]
+    m = re.search(r"([\u4e00-\u9fa5]{2,4})\s*(?:到|去|往|至|→)\s*([\u4e00-\u9fa5]{2,4})", text)
+    return (m.group(1), m.group(2)) if m else None
+
+def _parse_query_date(text: str) -> str:
+    """解析查询日期：优先月日，再相对日期词，无匹配默认取今日"""
+    from datetime import date as _date, timedelta as _td
+    today = _date.today()
+    m = re.search(r"(\d{1,2})\s*月\s*(\d{1,2})\s*[日号]", text) or re.search(
+        r"(\d{1,2})\s*[-/]\s*(\d{1,2})", text
+    )
+    if m:
+        try:
+            return _date(today.year, int(m.group(1)), int(m.group(2))).isoformat()
+        except ValueError:
+            pass
+    for word, off in _DAY_OFFSET:
+        if word in text:
+            return (today + _td(days=off)).isoformat()
+    return today.isoformat()

@@ -1,0 +1,1 @@
+uv run python -c "import fastapi, uvicorn, redis, multipart; print('deps OK')"

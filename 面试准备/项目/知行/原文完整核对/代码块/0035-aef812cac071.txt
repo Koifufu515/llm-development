@@ -1,0 +1,10 @@
+# 朴素方案（勿模仿）
+resp = client.chat.completions.create(
+    model="qwen-max",
+    messages=[
+        {"role": "system", "content": "你是旅行顾问，请把用户需求整理成 JSON 返回。"},
+        {"role": "user", "content": user_message},
+    ],
+)
+requirement_json = json.loads(resp.choices[0].message.content)  # 🤞 但愿它真返回了 JSON
+save_to_db(requirement_json)

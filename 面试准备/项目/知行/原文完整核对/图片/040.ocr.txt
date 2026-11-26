@@ -1,0 +1,43 @@
+第三章• Agent 核心结构
+Z
+Agent能力三阶段演进
+1
+本章：单步骤＋单工具
+create_agent（
+mode L=lim，
+tools=［record_requirement_tool］，
+prompt="需求收集提示词."，
+state_schema=Trave LState，
+Checkpointer=Cp，
+store=store，
+第04 章：加中间件
+中间版：8步＋中间件动态注入
+Create_agent（
+model=Llm，
+too Ls=［record_requirement_tooL,seLect_destination_tooL，•.8步工具］，
+# prompt 已由 middleware 按 current_step 注入，此处不传
+state_schema=TraveLState，
+middleware=［create_step_config_middleware（...）］，
+checkpointer=cp，
+第06 章＋第08 章：加真实能力
+3
+终版：8步＋中间件+MCP+多段并行
+create_agent（
+model=Llm，
+tools=［
+*state_transition_tools，
+# 8 步跳转
+*ALL_ROLLBACK_TOOLS，
+# 回退工具（第05章）
+*memory_tools，
+# 长期记忆工具（第05章）
+query_destination_info，
+# RAG 目的地查询（第07章）
+*all_mcp_tools，
+#9个MCP 服务（第06章）
+］，
+state_schema=TravelState，
+midd Leware=［step_config_midd Leware」，
+checkpointer=cp，
+store=store，
+1*从单工具到完整体系，核心清架 creale.aeent（）的孩口保持不变-一只是 Lo0Ls列表越来越丰富，中间件逐步接管Prompt注入。

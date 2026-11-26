@@ -1,0 +1,1 @@
+../../../../../knowgo-travel/tests/test_full_integrity.py

@@ -1,0 +1,1 @@
+uv run python -c "from quarry.common.text import normalize; a = normalize('  门票 １２０ 元  '); b = normalize('门票 120 元'); print(repr(a)); print(repr(b)); print(a == b)"

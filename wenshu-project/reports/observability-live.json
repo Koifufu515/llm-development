@@ -1,0 +1,269 @@
+{
+  "prometheus_targets": {
+    "status": "success",
+    "data": {
+      "resultType": "vector",
+      "result": [
+        {
+          "metric": {
+            "__name__": "up",
+            "instance": "10.42.0.117:8000",
+            "job": "wenshu-agents",
+            "namespace": "wenshu",
+            "pod": "repro-wenshu-backend-5bff59d7dd-5sgzt"
+          },
+          "value": [
+            1794215126.801,
+            "1"
+          ]
+        },
+        {
+          "metric": {
+            "__name__": "up",
+            "department": "dept_zfxy",
+            "instance": "10.42.0.116:8000",
+            "job": "wenshu-agents",
+            "namespace": "wenshu",
+            "pod": "dept-agent-zfxy-79696b4698-682lz"
+          },
+          "value": [
+            1794215126.801,
+            "1"
+          ]
+        },
+        {
+          "metric": {
+            "__name__": "up",
+            "department": "dept_hqaq",
+            "instance": "10.42.0.118:8000",
+            "job": "wenshu-agents",
+            "namespace": "wenshu",
+            "pod": "dept-agent-hqaq-564dd9976d-pxvtj"
+          },
+          "value": [
+            1794215126.801,
+            "1"
+          ]
+        },
+        {
+          "metric": {
+            "__name__": "up",
+            "instance": "10.42.0.119:8000",
+            "job": "wenshu-agents",
+            "namespace": "wenshu",
+            "pod": "repro-wenshu-backend-5bff59d7dd-9tcx5"
+          },
+          "value": [
+            1794215126.801,
+            "1"
+          ]
+        },
+        {
+          "metric": {
+            "__name__": "up",
+            "instance": "10.42.0.120:8000",
+            "job": "wenshu-agents",
+            "namespace": "wenshu",
+            "pod": "repro-wenshu-backend-5bff59d7dd-mf7qj"
+          },
+          "value": [
+            1794215126.801,
+            "1"
+          ]
+        }
+      ]
+    }
+  },
+  "prometheus_http": {
+    "status": "success",
+    "data": {
+      "resultType": "vector",
+      "result": [
+        {
+          "metric": {},
+          "value": [
+            1794215126.806,
+            "920"
+          ]
+        }
+      ]
+    }
+  },
+  "loki_labels": {
+    "status": "success",
+    "data": [
+      "__stream_shard__",
+      "container",
+      "filename",
+      "job",
+      "namespace",
+      "pod",
+      "service_name",
+      "stream"
+    ]
+  },
+  "tempo_search": {
+    "traces": [
+      {
+        "traceID": "325ec9e509c33ac2e3054910333e9048",
+        "rootServiceName": "wenshu-backend",
+        "rootTraceName": "http.request",
+        "startTimeUnixNano": "1794214225066880019",
+        "durationMs": 6
+      },
+      {
+        "traceID": "4163fde99a5acf74945f679d44e0c390",
+        "rootServiceName": "wenshu-backend",
+        "rootTraceName": "GET /metrics",
+        "startTimeUnixNano": "1794214225065769477",
+        "durationMs": 7
+      },
+      {
+        "traceID": "37a33e4c1236402936ce99fdf7c78097",
+        "rootServiceName": "wenshu-backend",
+        "rootTraceName": "GET /metrics",
+        "startTimeUnixNano": "1794214223807145768",
+        "durationMs": 7
+      },
+      {
+        "traceID": "4eccc7da221d1b85b6a4d75d9cb1d0d2",
+        "rootServiceName": "wenshu-backend",
+        "rootTraceName": "http.request",
+        "startTimeUnixNano": "1794214221643432809",
+        "durationMs": 3
+      },
+      {
+        "traceID": "3d5001fcddfa5172da0c098ebb357997",
+        "rootServiceName": "wenshu-backend",
+        "rootTraceName": "GET /healthz",
+        "startTimeUnixNano": "1794214221317396392",
+        "durationMs": 2
+      },
+      {
+        "traceID": "37835c696288f38d48addbe4b9c86329",
+        "rootServiceName": "wenshu-backend",
+        "rootTraceName": "http.request",
+        "startTimeUnixNano": "1794214220067304308",
+        "durationMs": 74
+      },
+      {
+        "traceID": "3800b2535309a6394f764d623fa6274d",
+        "rootServiceName": "wenshu-backend",
+        "rootTraceName": "GET /metrics",
+        "startTimeUnixNano": "1794214220066991308",
+        "durationMs": 73
+      },
+      {
+        "traceID": "446d92b63d6eb2bd3a3bdc1347d99226",
+        "rootServiceName": "wenshu-backend",
+        "rootTraceName": "http.request",
+        "startTimeUnixNano": "1794214220057770058",
+        "durationMs": 73
+      },
+      {
+        "traceID": "e21c478096ca95705a137ce2cd60e54",
+        "rootServiceName": "wenshu-backend",
+        "rootTraceName": "http.request",
+        "startTimeUnixNano": "1794214218842248349",
+        "durationMs": 255
+      },
+      {
+        "traceID": "19c5bc8f2cf15e5a5c61d0b00319d612",
+        "rootServiceName": "wenshu-backend",
+        "rootTraceName": "http.request",
+        "startTimeUnixNano": "1794214217496381057",
+        "durationMs": 2246
+      }
+    ],
+    "metrics": {
+      "inspectedTraces": 22,
+      "inspectedBytes": "18707",
+      "completedJobs": 1,
+      "totalJobs": 1
+    }
+  },
+  "grafana_health": {
+    "commit": "03f502a94d17f7dc4e6c34acdf8428aedd986e4c",
+    "database": "ok",
+    "version": "10.4.0"
+  },
+  "grafana_datasources": [
+    {
+      "id": 2,
+      "uid": "loki",
+      "orgId": 1,
+      "name": "Loki",
+      "type": "loki",
+      "typeName": "Loki",
+      "typeLogoUrl": "public/app/plugins/datasource/loki/img/loki_icon.svg",
+      "access": "proxy",
+      "url": "http://loki:3100",
+      "user": "",
+      "database": "",
+      "basicAuth": false,
+      "isDefault": false,
+      "jsonData": {
+        "derivedFields": [
+          {
+            "datasourceUid": "tempo",
+            "matcherRegex": "\"trace_id\":\\s*\"([a-f0-9]{32})\"",
+            "name": "TraceID",
+            "url": ""
+          }
+        ]
+      },
+      "readOnly": true
+    },
+    {
+      "id": 1,
+      "uid": "prometheus",
+      "orgId": 1,
+      "name": "Prometheus",
+      "type": "prometheus",
+      "typeName": "Prometheus",
+      "typeLogoUrl": "public/app/plugins/datasource/prometheus/img/prometheus_logo.svg",
+      "access": "proxy",
+      "url": "http://prometheus:9090",
+      "user": "",
+      "database": "",
+      "basicAuth": false,
+      "isDefault": true,
+      "jsonData": {},
+      "readOnly": true
+    },
+    {
+      "id": 3,
+      "uid": "tempo",
+      "orgId": 1,
+      "name": "Tempo",
+      "type": "tempo",
+      "typeName": "Tempo",
+      "typeLogoUrl": "public/app/plugins/datasource/tempo/img/tempo_logo.svg",
+      "access": "proxy",
+      "url": "http://tempo:3200",
+      "user": "",
+      "database": "",
+      "basicAuth": false,
+      "isDefault": false,
+      "jsonData": {},
+      "readOnly": true
+    }
+  ],
+  "grafana_dashboards": [
+    {
+      "id": 1,
+      "uid": "wenshu-overview",
+      "title": "文枢运行与Agent观测",
+      "uri": "db/c4bbec51-10ef-5834-bc51-3bd039c4e39f",
+      "url": "/d/wenshu-overview/c4bbec51-10ef-5834-bc51-3bd039c4e39f",
+      "slug": "",
+      "type": "dash-db",
+      "tags": [],
+      "isStarred": false,
+      "sortMeta": 0
+    }
+  ],
+  "loki_stream_count": 1,
+  "loki_line_count": 3,
+  "loki_status": "success"
+}

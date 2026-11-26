@@ -1,0 +1,5 @@
+"""_multi_city_names 演示：多目的地返回按游览顺序的城市列表；单目的地刻意返回空列表（纯函数，无需密钥）"""
+from app.tools.state_transition import _multi_city_names
+
+for dest in ["天津、上海", "杭州，苏州，杭州", "上海", ""]:
+    print(f"{dest!r:12} → {_multi_city_names({'selected_destination': dest})}")

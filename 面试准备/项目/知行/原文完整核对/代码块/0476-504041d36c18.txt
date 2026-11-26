@@ -1,0 +1,33 @@
+"""
+意图路由
+
+早期实现：非流式调用 + 正则抠 JSON + try/except 容错。
+现在：ChatTongyi.with_structured_output 强类型输出，无解析容错负担。
+路由结果仅用于：① 前端 skills 状态帧 ② 是否走规划 Agent 的分流。
+"""
+from pydantic import BaseModel, Field
+from langchain_community.chat_models import ChatTongyi
+
+from app.config import settings
+from app.utils.logger import app_logger
+
+# 技能目录（= 前端 skills 帧的可选值，与 travel agent 的工具能力对应）
+SKILL_CATALOG = [
+    "search_destination_guide(目的地攻略)", "flight_query(航班查询)",
+    "train_query(高铁查询)", "hotel_query(酒店住宿)",
+    "food_recommendation(美食推荐)", "weather_query(天气查询)",
+    "map_navigation(地图导航)", "itinerary_planning(行程规划)",
+]
+
+class SelectedSkill(BaseModel):
+    """前端 skills 帧的单项结构（契约字段，不得改名）"""
+    skill_name: str = Field(description="技能唯一标识，取自技能目录括号前的英文名")
+    title: str = Field(description="技能展示标题，中文")
+    desc: str = Field(description="一句话说明本轮用该技能做什么，中文")
+
+class RouterResult(BaseModel):
+    """路由结果（强类型，替代原手写 JSON）"""
+    # ★ description 会被塞进 prompt：它是写给 LLM 的判定指令，不是写给人看的注释
+    is_itinerary_planning: bool = Field(description="用户是否在请求生成/修改行程规划")
+    inference_log: str = Field(description="意图判断的推导过程，中文，供前端展示")
+    skills: list[SelectedSkill] = Field(description="本轮预计用到的技能，闲聊时为空列表")

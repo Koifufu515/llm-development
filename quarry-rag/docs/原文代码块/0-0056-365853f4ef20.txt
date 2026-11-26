@@ -1,0 +1,3 @@
+# macOS / Linux
+mkdir -p quarry/infra quarry/api quarry/scripts
+touch quarry/__init__.py quarry/infra/__init__.py quarry/api/__init__.py quarry/scripts/__init__.py

@@ -1,0 +1,645 @@
+
+
+===== block 66 f07ba0e8ac66 lines 1-357 source 知行旅行助手-v2#66 =====
+"""
+Handoffs 步骤配置（本章升级：加入回退工具与记忆工具）
+"""
+from app.tools.state_transition import (
+    record_requirement_tool,
+    select_destination_tool,
+    select_transport_tool,
+    select_accommodation_tool,
+    select_food_tool,
+    generate_itinerary_tool,
+    summarize_budget_tool,
+    # 本章新增
+    go_back_to_requirement,
+    go_back_to_destination,
+    go_back_to_transport,
+    go_back_to_accommodation,
+    go_back_to_food,
+    go_back_to_itinerary,
+    go_back_to_budget,
+    check_current_progress,
+)
+from app.tools.memory_tools import (
+    update_travel_style_tool,
+    update_dietary_restriction_tool,
+    update_food_preference_tool,
+    update_accommodation_preference_tool,
+    add_travel_record_tool,
+)
+
+async def get_step_config() -> dict:
+    """返回 8 步的完整配置（含记忆与回退工具）"""
+    return {
+
+        # ═══════════════════════════════════════════════════════
+        # 步骤 1：需求收集
+        # ═══════════════════════════════════════════════════════
+        "requirement_collection": {
+            "prompt": """你是专业的旅行规划顾问，负责收集用户的旅行需求。
+
+**当前阶段**：需求收集
+
+{{ user_memory }}
+
+**🔑 智能记忆管理**：
+系统已自动为你加载用户的历史偏好信息（如果有的话，见上方）。
+在对话过程中，如果用户提到任何**新的**个人偏好，请主动调用相应的记忆工具保存：
+- 旅行风格偏好（如"我喜欢文化探索"）→ `update_travel_style_tool`
+- 提到去过某地（如"我之前去过成都"）→ `add_travel_record_tool`
+
+**任务**：
+1. 友好地询问以下信息：
+   - 🏠 出发城市
+   - 📅 出发日期（YYYY-MM-DD）
+   - 🗓️ 出行天数
+   - 👨‍👩‍👧‍👦 成人 / 儿童数量
+   - 💰 预算范围（元/人）
+   - 🎨 旅行风格（可多选）：relaxation / culture / adventure / food
+   - 📝 特殊需求（可选）
+2. 信息齐了 + 用户做出简短确认 → **立即调用 `record_requirement_tool`**
+3. 信息不全时继续用自然语言追问
+4. 一次问 1-2 个问题，避免像填表
+
+**注意**：如果你能从上方历史偏好推出用户的风格，可以主动询问"这次也按您喜欢的文化探索来安排吗？"减少用户回答负担
+""",
+            "tools": [
+                record_requirement_tool,
+                update_travel_style_tool,
+                add_travel_record_tool,
+                check_current_progress,
+            ],
+            "requires": [],
+        },
+
+        # ═══════════════════════════════════════════════════════
+        # 步骤 2：目的地推荐
+        # ═══════════════════════════════════════════════════════
+        "destination_recommendation": {
+            "prompt": """你是目的地推荐专家。
+
+**当前阶段**：目的地推荐
+
+{{ user_memory }}
+
+**已确定的用户需求**：
+- 出发地：{{ user_requirement.departure_city }}
+- 出发日期：{{ user_requirement.departure_date }}
+- 出行天数：{{ user_requirement.travel_days }} 天
+- 人数：{{ user_requirement.adult_count }} 成人 + {{ user_requirement.children_count }} 儿童
+- 预算：{{ user_requirement.budget_min }}-{{ user_requirement.budget_max }} 元/人（{{ user_requirement.budget_level }} 级）
+- 风格：{{ user_requirement.travel_styles }}
+
+**个性化推荐要点**（如果上方有历史偏好，务必遵守）：
+- **避免推荐用户去过的目的地**
+- **避免推荐用户游玩过的景点**
+- 参考用户的旅行风格偏好
+
+**任务**：
+- 用户已指定目的地 → 简短点评并询问确认 → 调用 `select_destination_tool`
+- 用户请你推荐 → 基于地理知识给 3-4 个候选，结尾问"您对哪个感兴趣"
+- 用户想换个方向 → 调用 `go_back_to_requirement` 回到需求收集
+
+**智能记忆**：如果用户提到"我去过 XX" → 调 `add_travel_record_tool` 记下
+""",
+            "tools": [
+                select_destination_tool,
+                go_back_to_requirement,
+                update_travel_style_tool,
+                add_travel_record_tool,
+                check_current_progress,
+            ],
+            "requires": ["user_requirement"],
+        },
+
+        # ═══════════════════════════════════════════════════════
+        # 步骤 3：交通规划
+        # ═══════════════════════════════════════════════════════
+        "transport_planning": {
+            "prompt": """你是交通规划专家。
+
+**当前阶段**：交通规划
+
+{{ user_memory }}
+
+**已确定信息**：
+- 出发地：{{ user_requirement.departure_city }}
+- 目的地：{{ selected_destination }}
+- 出发日期：{{ user_requirement.departure_date }}
+- 人数：{{ user_requirement.adult_count }} + {{ user_requirement.children_count }}
+
+**任务**：
+1. 根据出发地-目的地的距离给出交通方式建议：
+   - < 300km → 优先高铁
+   - 300-1000km → 高铁或航班均可
+   - > 1000km → 优先航班
+2. 用户选定后调用 `select_transport_tool`
+3. 用户想换目的地 → `go_back_to_destination`
+4. 用户想改需求（改日期/人数/预算）→ `go_back_to_requirement`
+""",
+            "tools": [
+                select_transport_tool,
+                go_back_to_destination,
+                go_back_to_requirement,
+                check_current_progress,
+            ],
+            "requires": ["user_requirement", "selected_destination"],
+        },
+
+        # ═══════════════════════════════════════════════════════
+        # 步骤 4：住宿规划
+        # ═══════════════════════════════════════════════════════
+        "accommodation_planning": {
+            "prompt": """你是住宿规划专家。
+
+**当前阶段**：住宿规划
+
+{{ user_memory }}
+
+**已确定信息**：
+- 目的地：{{ selected_destination }}
+- 出发日期：{{ user_requirement.departure_date }}
+- 出行天数：{{ user_requirement.travel_days }} 天
+- 预算等级：{{ user_requirement.budget_level }}
+
+**智能记忆管理**：
+- 用户表达**新的**住宿偏好（如"我喜欢住民宿"）→ `update_accommodation_preference_tool`
+
+**任务**：
+1. 结合预算等级 + 用户历史住宿偏好给出建议：
+   - economy → economy_hotel / youth_hostel
+   - comfort → economy_hotel / star_hotel / hostel
+   - luxury  → star_hotel
+2. 询问用户希望的住宿类型
+3. 用户选定后调用 `select_accommodation_tool`
+4. 用户想换交通/目的地 → `go_back_to_transport` / `go_back_to_destination`
+""",
+            "tools": [
+                select_accommodation_tool,
+                go_back_to_transport,
+                go_back_to_destination,
+                go_back_to_requirement,
+                update_accommodation_preference_tool,
+                check_current_progress,
+            ],
+            "requires": ["user_requirement", "selected_destination", "selected_transport"],
+        },
+
+        # ═══════════════════════════════════════════════════════
+        # 步骤 5：餐饮规划
+        # ═══════════════════════════════════════════════════════
+        "food_planning": {
+            "prompt": """你是餐饮规划专家。
+
+**当前阶段**：餐饮规划
+
+{{ user_memory }}
+
+**已确定信息**：
+- 目的地：{{ selected_destination }}
+- 出行天数：{{ user_requirement.travel_days }} 天
+- 旅行风格：{{ user_requirement.travel_styles }}
+- 已选住宿：{{ selected_accommodation_types }}
+
+**智能记忆管理（必读）**：
+- 用户提到**新的**饮食禁忌（如"我对海鲜过敏"）→ 立即调 `update_dietary_restriction_tool`
+- 用户表达**新的**饮食偏好（如"我喜欢吃辣"）→ 立即调 `update_food_preference_tool`
+- 这些工具应当**在询问偏好的同一轮内调用**，不能拖到下一轮
+
+**任务**：
+1. 简要介绍目的地餐饮特色（一段话，不超过 100 字）
+2. 询问用户希望的餐饮类型偏好（可多选）：
+   - specialty / chain / local
+3. 用户选定后调用 `select_food_tool`
+4. 用户想改上游 → `go_back_to_accommodation` / `go_back_to_transport` / `go_back_to_destination`
+""",
+            "tools": [
+                select_food_tool,
+                go_back_to_accommodation,
+                go_back_to_transport,
+                go_back_to_destination,
+                go_back_to_requirement,
+                update_dietary_restriction_tool,
+                update_food_preference_tool,
+                check_current_progress,
+            ],
+            "requires": [
+                "user_requirement", "selected_destination",
+                "selected_transport", "selected_accommodation_types",
+            ],
+        },
+
+        # ═══════════════════════════════════════════════════════
+        # 步骤 6：行程生成
+        # ═══════════════════════════════════════════════════════
+        "itinerary_generation": {
+            "prompt": """你是行程规划专家。
+
+**当前阶段**：行程生成
+
+{{ user_memory }}
+
+**已确定信息**：
+- 目的地：{{ selected_destination }}
+- 天数：{{ user_requirement.travel_days }} 天
+- 交通：{{ selected_transport }}
+- 住宿：{{ selected_accommodation_types }}
+- 餐饮偏好：{{ selected_food_types }}
+- 旅行风格：{{ user_requirement.travel_styles }}
+
+**个性化提示**：如果历史偏好里显示用户去过该目的地某些景点，**避免重复**
+
+**任务**：
+1. 为用户拟一份逐日活动清单：
+   - 每天 2-4 项活动，符合目的地实际景点
+   - 与旅行风格契合（culture 侧重博物馆/古迹、food 侧重美食街等）
+   - 第 1 天预留抵达时间、最后一天预留返程时间
+2. 拟完调用 `generate_itinerary_tool`
+3. 用户觉得不合理 → `go_back_to_food` / `go_back_to_accommodation`
+""",
+            "tools": [
+                generate_itinerary_tool,
+                go_back_to_food,
+                go_back_to_accommodation,
+                go_back_to_transport,
+                go_back_to_destination,
+                go_back_to_requirement,
+                check_current_progress,
+            ],
+            "requires": [
+                "user_requirement", "selected_destination",
+                "selected_transport", "selected_accommodation_types",
+                "selected_food_types",
+            ],
+        },
+
+        # ═══════════════════════════════════════════════════════
+        # 步骤 7：预算汇总
+        # ═══════════════════════════════════════════════════════
+        "budget_summarization": {
+            "prompt": """你是预算汇总专家。
+
+**当前阶段**：预算汇总
+
+**已确定信息**：
+- 出发地 → 目的地：{{ user_requirement.departure_city }} → {{ selected_destination }}
+- 天数 / 人数：{{ user_requirement.travel_days }} 天 / {{ user_requirement.adult_count }}+{{ user_requirement.children_count }}
+- 交通：{{ selected_transport }}
+- 住宿：{{ selected_accommodation_types }}
+- 预算范围：{{ user_requirement.budget_min }}-{{ user_requirement.budget_max }} 元/人（{{ user_requirement.budget_level }}）
+
+**任务**：
+1. 基于选定档位估算各分项（元/人/全程）：
+   transport / accommodation / food / attractions / misc
+2. 调用 `summarize_budget_tool` 落库
+3. 总额超预算 → 用一句话提示 + 建议是否 `go_back_to_accommodation` 换更便宜档位
+""",
+            "tools": [
+                summarize_budget_tool,
+                go_back_to_itinerary,
+                go_back_to_food,
+                go_back_to_accommodation,
+                go_back_to_transport,
+                go_back_to_destination,
+                go_back_to_requirement,
+                check_current_progress,
+            ],
+            "requires": [
+                "user_requirement", "selected_destination",
+                "selected_transport", "selected_accommodation_types",
+                "selected_food_types", "itinerary",
+            ],
+        },
+
+        # ═══════════════════════════════════════════════════════
+        # 步骤 8：报告生成（终点）
+        # ═══════════════════════════════════════════════════════
+        "report_generation": {
+            "prompt": """你是旅行报告生成专家。
+
+**当前阶段**：报告生成（最终步骤）
+
+**已确定信息**：
+- 出发地：{{ user_requirement.departure_city }}
+- 目的地：{{ selected_destination }}
+- 天数：{{ user_requirement.travel_days }}
+- 交通：{{ selected_transport }}
+- 住宿：{{ selected_accommodation_types }}
+- 餐饮：{{ selected_food_types }}
+- 逐日行程：{{ itinerary }}
+- 预算合计：{{ budget.total }} 元/人
+
+**任务**：
+把以上信息整理成一份 Markdown 格式的旅行报告，包含：
+1. 一段简短总体介绍
+2. 逐日行程表
+3. 交通/住宿/餐饮小结
+4. 预算明细
+5. 结尾一句祝愿
+
+用户想局部调整 → `go_back_to_budget` / `go_back_to_itinerary`
+""",
+            "tools": [
+                go_back_to_budget,
+                go_back_to_itinerary,
+                go_back_to_food,
+                go_back_to_accommodation,
+                go_back_to_transport,
+                go_back_to_destination,
+                go_back_to_requirement,
+                check_current_progress,
+            ],
+            "requires": [
+                "user_requirement", "selected_destination",
+                "selected_transport", "selected_accommodation_types",
+                "selected_food_types", "itinerary", "budget",
+            ],
+        },
+    }
+
+
+===== block 67 675a2558c4f5 lines 1-63 source 知行旅行助手-v2#67 =====
+"""
+Handoffs 主 Agent（本章升级：注册回退工具 + 记忆工具）
+"""
+from langchain.agents import create_agent
+
+from app.core.state import TravelState
+from app.core.checkpointer import get_checkpointer
+from app.core.store import get_store
+from app.core.middleware import create_step_config_middleware
+from app.utils.llm_factory import get_qwen_llm
+from app.tools.state_transition import (
+    record_requirement_tool,
+    select_destination_tool,
+    select_transport_tool,
+    select_accommodation_tool,
+    select_food_tool,
+    generate_itinerary_tool,
+    summarize_budget_tool,
+    # 本章新增
+    ALL_ROLLBACK_TOOLS,
+)
+from app.tools.memory_tools import MEMORY_TOOLS   # 本章新增
+from app.utils.logger import app_logger
+
+async def create_travel_agent():
+    """
+    创建 Handoffs 旅行规划 Agent（8 步 + 中间件 + 回退 + 记忆）
+    """
+    app_logger.info("创建 Travel Agent（8 步 + 回退 + 记忆）...")
+
+    llm = get_qwen_llm(streaming=True)
+
+    # 总工具表：状态转换 + 回退 + 记忆
+    all_tools = [
+        # 状态转换（第 03-04 章）
+        record_requirement_tool,
+        select_destination_tool,
+        select_transport_tool,
+        select_accommodation_tool,
+        select_food_tool,
+        generate_itinerary_tool,
+        summarize_budget_tool,
+        # 回退（本章新增）
+        *ALL_ROLLBACK_TOOLS,
+        # 记忆（本章新增）
+        *MEMORY_TOOLS,
+    ]
+
+    step_config_middleware = await create_step_config_middleware()
+    checkpointer = await get_checkpointer()
+    store = await get_store()
+
+    agent = create_agent(
+        model=llm,
+        tools=all_tools,
+        state_schema=TravelState,
+        middleware=[step_config_middleware],
+        checkpointer=checkpointer,
+        store=store,
+    )
+
+    app_logger.info(f"✅ Travel Agent 创建完成，注册了 {len(all_tools)} 把总工具")
+    return agent
+
+
+===== block 68 df703214f174 lines 1-14 source 知行旅行助手-v2#68 =====
+[会话 1]
+  用户: 我从北京出发 10 月 1 日玩 4 天去武汉，两人 5000 预算，喜欢文化和美食
+  Agent: 需求已记录...（req → dest）
+  用户: 我上个月刚去过武汉，换成杭州吧 【期待：识别到"去过武汉"→ add_travel_record + go_back_to_destination】
+  Agent: 已记录您去过武汉，已回退到目的地推荐...
+  用户: 选杭州  → 选高铁 → 民宿  → 我不吃海鲜 【期待：调 update_dietary_restriction】
+  Agent: ✅ 已记录饮食禁忌...
+  ... 走完全流程
+
+[会话 2] （新 thread_id，模拟第二天来）
+  用户: 帮我规划一次成都之旅
+  期待：Agent 一开始就"读到"用户偏好——避免推荐武汉，
+       不再询问"喜欢什么风格"（已知 culture+food），
+       在餐饮步不提海鲜（已知海鲜禁忌）
+
+
+===== block 69 ed3897c38bc5 lines 1-174 source 知行旅行助手-v2#69 =====
+"""
+第 05 章冒烟测试：回退 + 长期记忆 综合场景
+
+用法：
+    uv run python scripts/test_ch05_rollback_and_memory.py
+
+看点：
+- 会话 1 中触发 go_back_to_destination + add_travel_record + update_dietary_restriction
+- 观察级联清空：selected_transport / selected_accommodation_types 是否被清空
+- 会话 2 中（新 thread_id）打开 Prompt，看 memory_prompt 里是否有偏好文本
+"""
+# Windows 事件循环兼容
+import sys
+import asyncio
+import selectors
+
+if sys.platform == "win32":
+    selector = selectors.SelectSelector()
+    loop = asyncio.SelectorEventLoop(selector)
+    asyncio.set_event_loop(loop)
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
+
+from app.core.checkpointer import checkpointer_lifespan
+from app.core.store import store_lifespan, get_user_memory_service
+from app.agents.handoffs.travel_agent import create_travel_agent
+
+USER_ID = "ch05_smoke_user_001"
+THREAD_1 = "ch05_smoke_thread_001"
+THREAD_2 = "ch05_smoke_thread_002"
+
+def _short(text: str, n: int = 220) -> str:
+    if not isinstance(text, str):
+        text = str(text)
+    return text if len(text) <= n else text[:n] + "..."
+
+def _print_turn(agent_result: dict, user_text: str, i: int):
+    print("\n" + "─" * 60)
+    print(f"[第 {i} 轮]")
+    print(f"  用户: {user_text}")
+    last_msg = agent_result["messages"][-1]
+    if isinstance(last_msg, AIMessage):
+        print(f"  Agent: {_short(last_msg.content)}")
+        for tc in (last_msg.tool_calls or []):
+            print(f"    🔧 {tc['name']}({list(tc['args'].keys())})")
+    elif isinstance(last_msg, ToolMessage):
+        print(f"  🛠️  {_short(last_msg.content)}")
+    print(f"  📌 current_step = {agent_result.get('current_step')}")
+
+async def session_1(agent):
+    """会话 1：走一半 → 回退换目的地 → 说饮食禁忌 → 走完"""
+    print("\n" + "=" * 60)
+    print(" 会话 1：中途回退 + 沉淀偏好")
+    print("=" * 60)
+
+    config = {"configurable": {"thread_id": THREAD_1, "user_id": USER_ID}}
+    turns = [
+        "我从北京出发 10 月 1 号，玩 4 天去武汉，两人 5000 预算，喜欢文化和美食。",
+        "确认，按这个记录。",
+        # 到 destination 步：用户说"去过武汉"并想换地方
+        # 期待模型调 add_travel_record_tool + go_back_to_destination（或直接换成杭州）
+        "我上个月刚去过武汉，换成杭州吧。",
+        # 走完剩余流程
+        "选杭州。",
+        "高铁。",
+        "民宿吧。",
+        # 到 food 步说饮食禁忌
+        "我不吃海鲜。特色美食和本地小吃都要。",
+        "帮我把行程排出来。",
+        "汇总下预算。",
+        "给我一份完整的报告。",
+    ]
+
+    for i, text in enumerate(turns, start=1):
+        input_state = {"messages": [HumanMessage(content=text)]}
+        try:
+            result = await agent.ainvoke(input_state, config=config)
+        except Exception as e:
+            print(f"  ❌ 出错: {type(e).__name__}: {e}")
+            break
+        _print_turn(result, text, i)
+
+async def verify_rollback(agent):
+    """核对：级联清空生效"""
+    print("\n" + "=" * 60)
+    print(" 校验 1：级联清空")
+    print("=" * 60)
+
+    config = {"configurable": {"thread_id": THREAD_1}}
+    state = await agent.aget_state(config)
+    values = state.values
+
+    dest = values.get("selected_destination")
+    print(f"  最终目的地: {dest}")
+    if dest and "杭州" in dest:
+        print("  ✅ 级联清空后成功切到杭州")
+    else:
+        print(f"  ⚠️ 目的地不是杭州（也可能是模型没执行回退）: {dest}")
+
+async def verify_memory_written():
+    """核对：饮食禁忌 & 去过武汉 是否写进 Store"""
+    print("\n" + "=" * 60)
+    print(" 校验 2：长期记忆已写入 Store")
+    print("=" * 60)
+
+    service = await get_user_memory_service()
+    memory = await service.get_user_memory(USER_ID)
+
+    print(f"  用户 ID: {USER_ID}")
+    print(f"  travel_styles       = {memory.profile.travel_styles}")
+    print(f"  dietary_restrictions = {memory.profile.dietary_restrictions}")
+    print(f"  food_preferences    = {memory.profile.food_preferences}")
+    print(f"  completed_trips     = "
+          f"{[t.destination for t in memory.history.completed_trips]}")
+
+    # 严格判定
+    has_seafood_avoid = any("海鲜" in x for x in memory.profile.dietary_restrictions)
+    has_wuhan_history = any("武汉" in t.destination for t in memory.history.completed_trips)
+
+    print()
+    print(f"  ✅ 海鲜禁忌已记录: {has_seafood_avoid}")
+    print(f"  ✅ 武汉出行历史已记录: {has_wuhan_history}")
+
+async def session_2(agent):
+    """会话 2：新对话，看 Agent 是否会读到偏好"""
+    print("\n" + "=" * 60)
+    print(" 会话 2：新对话，验证记忆生效")
+    print("=" * 60)
+    print("  注意看第一轮 Agent 是否主动提及历史偏好")
+    print("  （比如\"我看您之前喜欢文化探索\"或\"注意避开海鲜\"）")
+
+    config = {"configurable": {"thread_id": THREAD_2, "user_id": USER_ID}}
+    turns = [
+        "帮我规划一次成都之旅，就我一个人，5 天，预算 6000。",
+        "10 月 15 日出发。",
+        "确认。",
+    ]
+
+    for i, text in enumerate(turns, start=1):
+        input_state = {"messages": [HumanMessage(content=text)]}
+        result = await agent.ainvoke(input_state, config=config)
+        _print_turn(result, text, i)
+
+async def cleanup():
+    """清理测试数据（可选）"""
+    from app.core.store import get_store
+    store = await get_store()
+    await store.adelete(namespace=("user_profiles", USER_ID), key="profile")
+    await store.adelete(namespace=("travel_history", USER_ID), key="history")
+    print(f"\n🧹 已清理 {USER_ID} 的长期记忆")
+
+async def main():
+    print("╔" + "═" * 58 + "╗")
+    print("║" + " 第 05 章 · 回退 + 记忆 综合冒烟".center(58) + "║")
+    print("╚" + "═" * 58 + "╝")
+
+    async with checkpointer_lifespan():
+        async with store_lifespan():
+            agent = await create_travel_agent()
+
+            await session_1(agent)
+            await verify_rollback(agent)
+            await verify_memory_written()
+            await session_2(agent)
+            # 保留数据供你手动看数据库，取消注释可自动清理
+            # await cleanup()
+
+    print("\n" + "🎉" * 20)
+    print("  第 05 章冒烟完成！")
+    print("🎉" * 20 + "\n")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+
+===== block 70 90d1b649f94b lines 1-2 source 知行旅行助手-v2#70 =====
+[回退] destination_recommendation → destination_recommendation, ...
+[回退] 清空字段: ['selected_destination', 'destination_options', 'selected_transport', ...]
+
+
+===== block 71 c526deba1c7d lines 1-4 source 知行旅行助手-v2#71 =====
+用户: 武汉这周去合不合适？
+
+Agent: 好的！本周武汉平均气温 22-28°C，晴朗少雨，非常适合外出旅行 ☀️
+       建议景点：黄鹤楼、东湖、湖北省博物馆、武汉大学樱花...
+
+
+===== block 72 03592352487d lines 1-10 source 知行旅行助手-v2#72 =====
+from fastmcp import FastMCP
+mcp = FastMCP("service-name")
+
+@mcp.tool()
+async def some_tool(arg: str) -> str:
+    """docstring 就是给模型的工具说明"""
+    ...
+
+if __name__ == "__main__":
+    mcp.run(transport="stdio")

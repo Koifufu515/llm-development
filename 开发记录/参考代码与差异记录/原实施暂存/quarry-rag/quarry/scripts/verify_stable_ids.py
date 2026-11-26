@@ -1,0 +1,1 @@
+../../../../../../quarry-rag/quarry/scripts/verify_stable_ids.py

@@ -1,0 +1,951 @@
+{
+  "hotel": [
+    {
+      "name": "getHotelDetail",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "dateParam": {
+            "type": "object",
+            "properties": {
+              "checkInDate": {
+                "type": "string",
+                "description": "入住日期，格式 YYYY-MM-DD。建议传合法未来日期"
+              },
+              "checkOutDate": {
+                "type": "string",
+                "description": "离店日期，格式 YYYY-MM-DD，必须晚于 checkInDate"
+              }
+            },
+            "description": "入离店日期对象"
+          },
+          "filter": {
+            "type": "object",
+            "properties": {
+              "cancelPolicy": {
+                "type": "string",
+                "enum": [
+                  "CANCELABLE",
+                  "NON_CANCELABLE"
+                ],
+                "description": "取消政策筛选。CANCELABLE：仅可免费取消房型；NON_CANCELABLE：仅不可取消房型。非法值忽略。"
+              },
+              "mealType": {
+                "type": "string",
+                "enum": [
+                  "WITH_BREAKFAST",
+                  "SINGLE_BREAKFAST",
+                  "DOUBLE_BREAKFAST",
+                  "NO_MEAL"
+                ],
+                "description": "餐食类别枚举。WITH_BREAKFAST（含早餐，mealAmount>0）/ SINGLE_BREAKFAST（单份早餐，mealAmount=1）/ DOUBLE_BREAKFAST（双份早餐，mealAmount=2）/ NO_MEAL（不含餐食，mealAmount=0）。非法值忽略。"
+              }
+            },
+            "description": "房型筛选条件对象。未传或为空时返回全部房型；多条件 AND 组合。"
+          },
+          "hotelId": {
+            "type": "integer",
+            "format": "int32",
+            "description": "酒店唯一ID。与 name 二选一；若同时传入，优先使用 hotelId（从searchHotels工具获取）"
+          },
+          "name": {
+            "type": "string",
+            "description": "酒店名称（模糊匹配）。仅在没有 hotelId 时使用"
+          },
+          "occupancyParam": {
+            "type": "object",
+            "properties": {
+              "adultCount": {
+                "type": "integer",
+                "format": "int32",
+                "description": "每间房成人数，整数，>=1，默认2"
+              },
+              "childAgeDetails": {
+                "description": "儿童年龄数组，如 [3,5]；长度应与 childCount 一致",
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              },
+              "childCount": {
+                "type": "integer",
+                "format": "int32",
+                "description": "每间房儿童数，整数，>=0，默认0"
+              },
+              "roomCount": {
+                "type": "integer",
+                "format": "int32",
+                "description": "房间数，整数，>=1，默认1"
+              }
+            },
+            "description": "入住人数与房间数量对象"
+          }
+        }
+      }
+    },
+    {
+      "name": "getHotelSearchTags",
+      "schema": {
+        "type": "object"
+      }
+    },
+    {
+      "name": "searchHotels",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "checkInParam": {
+            "type": "object",
+            "properties": {
+              "adultCount": {
+                "type": "integer",
+                "format": "int32",
+                "description": "每间房入住的成人数量，默认两成人"
+              },
+              "checkInDate": {
+                "type": "string",
+                "description": "入住日期，格式：YYYY-MM-DD，例如：2026-02-01。可不传；未传或早于今天时，自动使用明天；格式错误会返回参数错误"
+              },
+              "stayNights": {
+                "type": "integer",
+                "format": "int32",
+                "description": "入住天数（晚数），可不传，默认 1 晚。最多 28 晚，超出限制将返回参数错误。"
+              }
+            },
+            "description": "入住信息参数，包括入住日期、入住天数和每间房成人数量"
+          },
+          "filterOptions": {
+            "type": "object",
+            "properties": {
+              "distanceInMeter": {
+                "type": "integer",
+                "format": "int32",
+                "description": "直线距离，单位（米），当地点是一个POI位置时生效，生效时默认设定值为2000"
+              },
+              "starRatings": {
+                "description": "酒店星级(0.0-5.0, 梯度为0.5)，默认[0.0, 5.0]以上，例如 [4.5, 5.0]，[0.0, 2.0]",
+                "type": "array",
+                "items": {
+                  "type": "number",
+                  "format": "double"
+                }
+              }
+            },
+            "description": "酒店筛选选项，例如酒店星级、每间房成人数、距离等"
+          },
+          "hotelTags": {
+            "type": "object",
+            "properties": {
+              "maxPricePerNight": {
+                "type": "number",
+                "format": "double",
+                "description": "每晚价格上限（人民币，数值）"
+              },
+              "preferredBrands": {
+                "description": "偏好品牌",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "requiredTags": {
+                "description": "必须命中标签（硬约束，未命中应被过滤）",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "酒店筛选标签参数（可选）。当传入此参数时，将直接使用这些标签进行筛选和排序，无需服务端额外解析。包含字段：requiredTags（必须标签）、preferredBrands（偏好品牌）、maxPricePerNight（每晚最高预算）"
+          },
+          "nextPageToken": {
+            "type": "string",
+            "description": "分页游标。仅当获取下一页(换一批)时,原样回传上一页返回的 nextPageToken;首页查询不传。传入有效 Token 时,核心检索条件以 Token 内快照为准。"
+          },
+          "originQuery": {
+            "type": "string",
+            "description": "综合多轮对话，归纳用户的完整住宿/预订意图。"
+          },
+          "place": {
+            "type": "string",
+            "description": "搜索地点关键词/酒店名称。具体酒店直接填入酒店名称；位置或区县需用空格补齐城市，填入 位置 城市；仅查询城市需补齐国家，填入 城市 国家。"
+          },
+          "placeType": {
+            "type": "string",
+            "description": "place 的类型，必须与 place 的实际内容一致。可选值：城市、机场、景点、火车站、地铁站、酒店、区/县、详细地址。"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32",
+            "description": "返回酒店结果数量，默认5个酒店，最大不超过10个"
+          }
+        },
+        "required": [
+          "originQuery",
+          "place",
+          "placeType"
+        ]
+      }
+    }
+  ],
+  "flight": [
+    {
+      "name": "searchFlightsByDepArr",
+      "schema": {
+        "properties": {
+          "date": {
+            "description": "Flight date in YYYY-MM-DD format. IMPORTANT: If the user input contains only month and day, use getTodayDate to determine the year. For today's date, use getTodayDate instead of hardcoding.",
+            "title": "Date",
+            "type": "string"
+          },
+          "dep": {
+            "anyOf": [
+              {
+                "description": "Departure airport IATA 3-letter code (e.g. PEK for Beijing, CAN for Guangzhou)",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Dep"
+          },
+          "depcity": {
+            "anyOf": [
+              {
+                "description": "Departure city IATA 3-letter code (e.g. BJS for Beijing, CAN for Guangzhou)",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Depcity"
+          },
+          "arr": {
+            "anyOf": [
+              {
+                "description": "Arrival airport IATA 3-letter code (e.g. SHA for Shanghai, HFE for Hefei)",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Arr"
+          },
+          "arrcity": {
+            "anyOf": [
+              {
+                "description": "Arrival city IATA 3-letter code (e.g. SHA for Shanghai, BJS for Beijing)",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Arrcity"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "description": "Optional. Maximum number of results to return. Omit to return all results.",
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Limit"
+          },
+          "offset": {
+            "anyOf": [
+              {
+                "description": "Optional. Number of results to skip, for fetching the next page. Use next_offset from the previous response. Each page is a separate billed call.",
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Offset"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "description": "Optional. 'summary' returns only the core fields of each result; 'full' returns every field. Defaults to 'full'.",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Detail"
+          }
+        },
+        "required": [
+          "date"
+        ],
+        "title": "searchFlightsByDepArrArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "searchFlightsByNumber",
+      "schema": {
+        "properties": {
+          "fnum": {
+            "description": "Flight number including airline code (e.g. MU2157, CZ3969)",
+            "title": "Fnum",
+            "type": "string"
+          },
+          "date": {
+            "description": "Flight date in YYYY-MM-DD format. IMPORTANT: If the user input contains only month and day, use getTodayDate to determine the year. For today's date, use getTodayDate instead of hardcoding.",
+            "title": "Date",
+            "type": "string"
+          },
+          "dep": {
+            "anyOf": [
+              {
+                "description": "Departure airport IATA 3-letter code (e.g. HFE for Hefei)",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Dep"
+          },
+          "arr": {
+            "anyOf": [
+              {
+                "description": "Arrival airport IATA 3-letter code (e.g. CAN for Guangzhou)",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Arr"
+          }
+        },
+        "required": [
+          "fnum",
+          "date"
+        ],
+        "title": "searchFlightsByNumberArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "getFlightTransferInfo",
+      "schema": {
+        "properties": {
+          "depdate": {
+            "description": "Departure date in YYYY-MM-DD format. IMPORTANT: If the user input contains only month and day, use getTodayDate to determine the year. For today's date, use getTodayDate instead of hardcoding.",
+            "title": "Depdate",
+            "type": "string"
+          },
+          "depcity": {
+            "description": "Departure city IATA 3-letter code (e.g. BJS for Beijing, CAN for Guangzhou)",
+            "title": "Depcity",
+            "type": "string"
+          },
+          "arrcity": {
+            "description": "Arrival city IATA 3-letter code (e.g. SHA for Shanghai, LAX for Los Angeles)",
+            "title": "Arrcity",
+            "type": "string"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "description": "Optional. Maximum number of results to return. Omit to return all results.",
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Limit"
+          },
+          "offset": {
+            "anyOf": [
+              {
+                "description": "Optional. Number of results to skip, for fetching the next page. Use next_offset from the previous response. Each page is a separate billed call.",
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Offset"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "description": "Optional. 'summary' returns only the core fields of each result; 'full' returns every field. Defaults to 'full'.",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Detail"
+          }
+        },
+        "required": [
+          "depdate",
+          "depcity",
+          "arrcity"
+        ],
+        "title": "getFlightTransferInfoArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "flightHappinessIndex",
+      "schema": {
+        "properties": {
+          "fnum": {
+            "description": "Flight number including airline code (e.g. MU2157, CZ3969)",
+            "title": "Fnum",
+            "type": "string"
+          },
+          "date": {
+            "description": "Flight date in YYYY-MM-DD format. IMPORTANT: If the user input contains only month and day, use getTodayDate to determine the year. For today's date, use getTodayDate instead of hardcoding.",
+            "title": "Date",
+            "type": "string"
+          },
+          "dep": {
+            "anyOf": [
+              {
+                "description": "Departure airport IATA 3-letter code (e.g. HFE for Hefei)",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Dep"
+          },
+          "arr": {
+            "anyOf": [
+              {
+                "description": "Arrival airport IATA 3-letter code (e.g. CAN for Guangzhou)",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Arr"
+          }
+        },
+        "required": [
+          "fnum",
+          "date"
+        ],
+        "title": "flightHappinessIndexArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "getRealtimeLocationByAnum",
+      "schema": {
+        "properties": {
+          "anum": {
+            "description": "Aircraft registration number, also called tail number, such as B2021, B2022, or B2023.",
+            "title": "Anum",
+            "type": "string"
+          }
+        },
+        "required": [
+          "anum"
+        ],
+        "title": "getRealtimeLocationByAnumArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "getTodayDate",
+      "schema": {
+        "properties": {
+          "random_string": {
+            "anyOf": [
+              {
+                "description": "Optional placeholder parameter. Normally omit it.",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Random String"
+          }
+        },
+        "title": "getTodayDateArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "getFutureWeatherByAirport",
+      "schema": {
+        "properties": {
+          "airport": {
+            "description": "Airport IATA 3-letter code (e.g. PEK for Beijing, SHA for Shanghai, CAN for Guangzhou, HFE for Hefei)",
+            "title": "Airport",
+            "type": "string"
+          }
+        },
+        "required": [
+          "airport"
+        ],
+        "title": "getFutureWeatherByAirportArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "searchFlightItineraries",
+      "schema": {
+        "properties": {
+          "depCityCode": {
+            "description": "Departure city 3-letter code (e.g. BJS for Beijing, SHA for Shanghai, CAN for Guangzhou, HFE for Hefei)",
+            "title": "Depcitycode",
+            "type": "string"
+          },
+          "depDate": {
+            "description": "Departure date in YYYY-MM-DD format, for example 2025-07-04. IMPORTANT: If the user input contains only month and day, use getTodayDate to determine the year. For today's date, use getTodayDate instead of hardcoding.",
+            "title": "Depdate",
+            "type": "string"
+          },
+          "arrCityCode": {
+            "description": "Arrival city 3-letter code (e.g. BJS for Beijing, SHA for Shanghai, CAN for Guangzhou, HFE for Hefei)",
+            "title": "Arrcitycode",
+            "type": "string"
+          }
+        },
+        "required": [
+          "depCityCode",
+          "depDate",
+          "arrCityCode"
+        ],
+        "title": "searchFlightItinerariesArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "getFlightPriceByCities",
+      "schema": {
+        "properties": {
+          "dep_city": {
+            "description": "Departure city 3-letter code (e.g. BJS for Beijing, SHA for Shanghai, CAN for Guangzhou, HFE for Hefei)",
+            "title": "Dep City",
+            "type": "string"
+          },
+          "arr_city": {
+            "description": "Arrival city 3-letter code (e.g. BJS for Beijing, SHA for Shanghai, CAN for Guangzhou, HFE for Hefei)",
+            "title": "Arr City",
+            "type": "string"
+          },
+          "dep_date": {
+            "description": "Departure date in YYYY-MM-DD format, for example 2026-04-20. IMPORTANT: If the user input contains only month and day, use getTodayDate to determine the year. For today's date, use getTodayDate instead of hardcoding.",
+            "title": "Dep Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "dep_city",
+          "arr_city",
+          "dep_date"
+        ],
+        "title": "getFlightPriceByCitiesArguments",
+        "type": "object"
+      }
+    }
+  ],
+  "amap": [
+    {
+      "name": "maps_direction_bicycling",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "origin": {
+            "type": "string",
+            "description": "出发点经纬度，坐标格式为：经度，纬度"
+          },
+          "destination": {
+            "type": "string",
+            "description": "目的地经纬度，坐标格式为：经度，纬度"
+          }
+        },
+        "required": [
+          "origin",
+          "destination"
+        ]
+      }
+    },
+    {
+      "name": "maps_direction_driving",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "origin": {
+            "type": "string",
+            "description": "出发点经纬度，坐标格式为：经度，纬度"
+          },
+          "destination": {
+            "type": "string",
+            "description": "目的地经纬度，坐标格式为：经度，纬度"
+          }
+        },
+        "required": [
+          "origin",
+          "destination"
+        ]
+      }
+    },
+    {
+      "name": "maps_direction_transit_integrated",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "origin": {
+            "type": "string",
+            "description": "出发点经纬度，坐标格式为：经度，纬度"
+          },
+          "destination": {
+            "type": "string",
+            "description": "目的地经纬度，坐标格式为：经度，纬度"
+          },
+          "city": {
+            "type": "string",
+            "description": "公共交通规划起点城市"
+          },
+          "cityd": {
+            "type": "string",
+            "description": "公共交通规划终点城市"
+          }
+        },
+        "required": [
+          "origin",
+          "destination",
+          "city",
+          "cityd"
+        ]
+      }
+    },
+    {
+      "name": "maps_direction_walking",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "origin": {
+            "type": "string",
+            "description": "出发点经度，纬度，坐标格式为：经度，纬度"
+          },
+          "destination": {
+            "type": "string",
+            "description": "目的地经度，纬度，坐标格式为：经度，纬度"
+          }
+        },
+        "required": [
+          "origin",
+          "destination"
+        ]
+      }
+    },
+    {
+      "name": "maps_distance",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "origins": {
+            "type": "string",
+            "description": "起点经度，纬度，可以传多个坐标，使用竖线隔离，比如120,30|120,31，坐标格式为：经度，纬度"
+          },
+          "destination": {
+            "type": "string",
+            "description": "终点经度，纬度，坐标格式为：经度，纬度"
+          },
+          "type": {
+            "type": "string",
+            "description": "距离测量类型,1代表驾车距离测量，0代表直线距离测量，3步行距离测量"
+          }
+        },
+        "required": [
+          "origins",
+          "destination"
+        ]
+      }
+    },
+    {
+      "name": "maps_geo",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "description": "待解析的结构化地址信息"
+          },
+          "city": {
+            "type": "string",
+            "description": "指定查询的城市"
+          }
+        },
+        "required": [
+          "address"
+        ]
+      }
+    },
+    {
+      "name": "maps_regeocode",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "string",
+            "description": "经纬度"
+          }
+        },
+        "required": [
+          "location"
+        ]
+      }
+    },
+    {
+      "name": "maps_ip_location",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "ip": {
+            "type": "string",
+            "description": "IP地址"
+          }
+        },
+        "required": [
+          "ip"
+        ]
+      }
+    },
+    {
+      "name": "maps_schema_personal_map",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "orgName": {
+            "type": "string",
+            "description": "行程规划地图小程序名称"
+          },
+          "lineList": {
+            "type": "array",
+            "description": "行程列表",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "description": "行程名称描述（按行程顺序）"
+                },
+                "pointInfoList": {
+                  "type": "array",
+                  "description": "行程目标位置点描述",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "description": "行程目标位置点名称"
+                      },
+                      "lon": {
+                        "type": "number",
+                        "description": "行程目标位置点经度"
+                      },
+                      "lat": {
+                        "type": "number",
+                        "description": "行程目标位置点纬度"
+                      },
+                      "poiId": {
+                        "type": "string",
+                        "description": "行程目标位置点POIID"
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "lon",
+                      "lat",
+                      "poiId"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "title",
+                "pointInfoList"
+              ]
+            }
+          }
+        },
+        "required": [
+          "orgName",
+          "lineList"
+        ]
+      }
+    },
+    {
+      "name": "maps_around_search",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "keywords": {
+            "type": "string",
+            "description": "搜索关键词"
+          },
+          "location": {
+            "type": "string",
+            "description": "中心点经度纬度"
+          },
+          "radius": {
+            "type": "string",
+            "description": "搜索半径"
+          },
+          "strategy": {
+            "type": "integer",
+            "description": "召回策略，0=默认召回策略，1=优先召回扫街榜POI",
+            "default": 0
+          }
+        },
+        "required": [
+          "keywords",
+          "location"
+        ]
+      }
+    },
+    {
+      "name": "maps_search_detail",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "关键词搜或者周边搜获取到的POI ID"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    },
+    {
+      "name": "maps_text_search",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "keywords": {
+            "type": "string",
+            "description": "查询关键字"
+          },
+          "city": {
+            "type": "string",
+            "description": "查询城市"
+          },
+          "citylimit": {
+            "type": "boolean",
+            "default": false,
+            "description": "是否限制城市范围内搜索，默认不限制"
+          }
+        },
+        "required": [
+          "keywords"
+        ]
+      }
+    },
+    {
+      "name": "maps_schema_navi",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "lon": {
+            "type": "string",
+            "description": "终点经度"
+          },
+          "lat": {
+            "type": "string",
+            "description": "终点纬度"
+          }
+        },
+        "required": [
+          "lon",
+          "lat"
+        ]
+      }
+    },
+    {
+      "name": "maps_schema_take_taxi",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "slon": {
+            "type": "string",
+            "description": "起点经度"
+          },
+          "slat": {
+            "type": "string",
+            "description": "起点纬度"
+          },
+          "sname": {
+            "type": "string",
+            "description": "起点名称"
+          },
+          "dlon": {
+            "type": "string",
+            "description": "终点经度"
+          },
+          "dlat": {
+            "type": "string",
+            "description": "终点纬度"
+          },
+          "dname": {
+            "type": "string",
+            "description": "终点名称"
+          }
+        },
+        "required": [
+          "dlon",
+          "dlat",
+          "dname"
+        ]
+      }
+    },
+    {
+      "name": "maps_weather",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "city": {
+            "type": "string",
+            "description": "城市名称或者adcode"
+          }
+        },
+        "required": [
+          "city"
+        ]
+      }
+    }
+  ]
+}

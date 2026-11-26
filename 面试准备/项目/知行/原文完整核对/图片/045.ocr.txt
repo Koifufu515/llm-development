@@ -1,0 +1,26 @@
+第五章•回退与记忆
+A
+回退时的脏数据问题
+◎用户说"换成杭州"
+把 current_step 改成 "destination_recommendation"
+中间件按 StepConfig［ "destination_recommendation" ］装配 Prompt
+但 State 里还残留脏数据
+selected_transport =1
+"train"
+脏数据
+itinerary
+= ［武汉景点］
+脏数据
+用户选完杭州、Agent 走到 transport_planning时
+Middleware 校验
+requires=［"user_requirement"，"selected_destination"］
+丷通过
+但 selected_transport 里还是 "train"
+（可能不适合杭州）
+问题
+itinerary 也还有武汉景点残余
+问题
+校验只检查了前置依赖字段是否存在，但没有清理后续步骤产生的"过期数据”—这就是回退工具需要解決的核心问题：
+回退
+current_step
+时，必须同时清空该步之后所有步骤写入 State 的字段。

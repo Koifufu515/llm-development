@@ -1,0 +1,32 @@
+"""mark_skill_ui_submitted 演示：把"已提交 + 各段选中"写回卡片帧所在的那条消息（需 PG）"""
+import asyncio
+import uuid
+
+from app.models.base import async_session_maker
+from app.models.message import Message
+from app.models.user import User
+from app.services.chat_contract_service import mark_skill_ui_submitted
+from app.services.conversation_service import create_conversation
+from app.utils.security import hash_password
+
+async def main():
+    async with async_session_maker() as db:
+        sfx = uuid.uuid4().hex[:6]
+        user = User(username=f"ui_{sfx}", email=f"ui_{sfx}@example.com",
+                    password_hash=hash_password("secret123"), preferences={})
+        db.add(user)
+        await db.commit()
+        conv = await create_conversation(db, user.id)
+        msg = Message(conversation_id=conv.id, role="assistant", content="请在卡片里选择车次",
+                      extra_info={"skill_ui": {"skill_name": "train_multi_segment", "data": {}}})
+        db.add(msg)
+        await db.commit()
+
+        payload = {"segments": [{"segment_id": "seg_0", "option_id": "G1650"},
+                                {"segment_id": "seg_1", "option_id": "G7512"}]}
+        await mark_skill_ui_submitted(db, conv.id, "train_multi_segment", payload)
+        await db.refresh(msg)
+        print(msg.extra_info["skill_ui"])   # 多出 submitted.selections：前端据此渲染"已提交锁定态"
+
+if __name__ == "__main__":
+    asyncio.run(main())

@@ -1,0 +1,33 @@
+{
+  "facts": [
+    {
+      "ref": "F1",
+      "entity": "秦始皇帝陵博物院",
+      "attribute": "ticket_price",
+      "label": "门票价格",
+      "qualifier": "旺季",
+      "value": "120",
+      "status": "verified",
+      "verified_at": "2026-11-07",
+      "source_url": "https://www.bmy.com.cn/jingtai/bmyweb/ticketing.html",
+      "written_values": [
+        "150"
+      ]
+    },
+    {
+      "ref": "F2",
+      "entity": "秦始皇帝陵博物院",
+      "attribute": "ticket_price",
+      "label": "门票价格",
+      "qualifier": "淡季",
+      "value": "120",
+      "status": "verified",
+      "verified_at": "2026-11-07",
+      "source_url": "https://www.bmy.com.cn/jingtai/bmyweb/ticketing.html",
+      "written_values": [
+        "120"
+      ]
+    }
+  ],
+  "quote_text_unchanged": true
+}

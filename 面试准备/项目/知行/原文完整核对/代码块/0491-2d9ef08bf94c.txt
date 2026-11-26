@@ -1,0 +1,16 @@
+"""_plan_from_structure 演示：不经任何 LLM，用已校验的逐日结构直接拼出前端清单（纯函数，无需密钥）"""
+import json
+
+from app.services.itinerary_plan_service import _plan_from_structure
+
+days = [   # 形如状态机里的 itinerary_body（第 11 章 submit_itinerary_body_tool 校验通过后写入）
+    {"day": 1, "city": "杭州", "morning": ["西湖断桥，沿白堤慢慢走"], "noon": ["知味观，尝片儿川"],
+     "afternoon": ["灵隐寺（需提前预约）"], "evening": ["河坊街夜市"]},
+    {"day": 2, "city": "杭州", "morning": ["西溪湿地摇橹船"], "afternoon": ["中国茶叶博物馆"],
+     "evening": ["返程：杭州东站 G1653"]},
+]
+plan = _plan_from_structure(days, "### 杭州 2 日轻松游\n……")
+print("标题：", plan.title)
+for d in plan.itinerary_list:
+    print(d.day, [(i.time, [s.toponym for s in i.scenic_spots_list]) for i in d.itinerary])
+print(json.dumps(plan.model_dump()["itinerary_list"][0]["itinerary"][0], ensure_ascii=False))

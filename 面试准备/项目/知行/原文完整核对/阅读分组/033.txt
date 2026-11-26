@@ -1,0 +1,548 @@
+
+
+===== block 365 fea066853fde lines 1-56 source 知行旅行助手-v2#365 =====
+"""会话接口：最小 app 挂 users + conversations 路由，走一遍增、查、改、软删和越权（需 PG）"""
+import asyncio
+import sys
+import uuid
+
+import httpx
+from fastapi import FastAPI
+from sqlalchemy import delete
+
+from app.api.v1 import conversations, users
+from app.models import User
+from app.models.base import async_session_maker, engine
+
+if sys.platform.startswith("win"):
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+app = FastAPI()
+app.include_router(users.router, prefix="/api/v1")
+app.include_router(conversations.router, prefix="/api/v1")
+SFX = uuid.uuid4().hex[:6]
+
+async def register(c: httpx.AsyncClient, tag: str) -> dict:
+    r = await c.post("/api/v1/users/register",
+                     json={"username": f"demo_{tag}_{SFX}", "email": f"demo_{tag}_{SFX}@example.com", "password": "secret123"})
+    return {"Authorization": f"Bearer {r.json()['access_token']}"}
+
+async def main() -> None:
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as c:
+        alice, bob = await register(c, "a"), await register(c, "b")
+        first = (await c.post("/api/v1/conversations", json={}, headers=alice)).json()
+        second = (await c.post("/api/v1/conversations", json={"title": "五一去杭州"}, headers=alice)).json()
+        print("建会话 → 默认标题", first["title"], "| 状态", first["status"], "| 字段", sorted(first))
+        listed = (await c.get("/api/v1/conversations", headers=alice)).json()
+        print("列表 →", [x["title"] for x in listed], "（按更新时间倒序）")
+        cid = first["id"]
+        r = await c.patch(f"/api/v1/conversations/{cid}", json={"title": "国庆去成都"}, headers=alice)
+        print("改标题 →", r.status_code, r.json()["title"], "| 状态没传就不动:", r.json()["status"])
+        r = await c.get(f"/api/v1/conversations/{cid}", headers=bob)
+        print("bob 查 alice 的会话 →", r.status_code, r.json())
+        r = await c.delete(f"/api/v1/conversations/{cid}", headers=bob)
+        print("bob 删 alice 的会话 →", r.status_code, r.json())
+        r = await c.get(f"/api/v1/conversations/{uuid.uuid4()}", headers=alice)
+        print("不存在的 id →", r.status_code, r.json())
+        r = await c.delete(f"/api/v1/conversations/{cid}", headers=alice)
+        print("alice 软删 →", r.status_code, r.json())
+        listed = (await c.get("/api/v1/conversations", headers=alice)).json()
+        print("软删后列表 →", [x["title"] for x in listed])
+        r = await c.get(f"/api/v1/conversations/{cid}", headers=alice)
+        print("按 id 还能查到 →", r.status_code, r.json()["status"])
+        assert second["title"] == "五一去杭州"
+    async with async_session_maker() as db:
+        await db.execute(delete(User).where(User.username.like(f"%{SFX}")))
+        await db.commit()
+    await engine.dispose()
+
+asyncio.run(main())
+
+
+===== block 366 10be404c7543 lines 1-9 source 知行旅行助手-v2#366 =====
+建会话 → 默认标题 新对话 | 状态 active | 字段 ['created_at', 'extra_info', 'id', 'status', 'title', 'updated_at', 'user_id']
+列表 → ['五一去杭州', '新对话'] （按更新时间倒序）
+改标题 → 200 国庆去成都 | 状态没传就不动: active
+bob 查 alice 的会话 → 404 {'detail': '会话不存在'}
+bob 删 alice 的会话 → 404 {'detail': '会话不存在'}
+不存在的 id → 404 {'detail': '会话不存在'}
+alice 软删 → 200 {'message': '会话已删除'}
+软删后列表 → ['五一去杭州']
+按 id 还能查到 → 200 deleted
+
+
+===== block 367 607fd6619206 lines 1-84 source 知行旅行助手-v2#367 =====
+"""
+FastAPI 应用入口
+"""
+import os
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles  # ★ 本章新增
+
+from app.config import settings
+from app.utils.logger import app_logger
+from app.api.v1 import users, cities, conversations  # ★ 本章新增
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """应用生命周期管理
+
+    启动顺序：Checkpointer → Store → MCP
+    关闭顺序：反过来（Python 上下文管理器自然保证）
+    """
+    import asyncio
+
+    loop = asyncio.get_running_loop()
+    app_logger.info(f"FastAPI 使用的事件循环: {type(loop).__name__}")
+
+    # 延迟 import：Checkpointer/Store/MCP 会创建 psycopg 连接池或 stdio 子进程，
+    # 必须在事件循环切换到 SelectorEventLoop 之后再 import
+    from app.core.checkpointer import checkpointer_lifespan
+    from app.core.store import store_lifespan
+    from app.mcp_core.client import MCPClientManager
+
+    app_logger.info("🚀 启动应用...")
+
+    async with checkpointer_lifespan():
+        app_logger.info("✅ Checkpointer 已就绪")
+
+        async with store_lifespan():
+            app_logger.info("✅ Store 已就绪")
+
+            # 初始化 MCP（第 6 章加的）
+            mcp = await MCPClientManager.get_instance()
+            app_logger.info("✅ MCP 服务初始化成功")
+
+            yield  # ← FastAPI 在这里处理请求
+
+            # 关闭流程（反序）
+            await mcp.close()
+            app_logger.info("MCP 服务已关闭")
+
+    app_logger.info("应用已关闭")
+
+app = FastAPI(
+    title="LangGraph 旅行规划系统",
+    description="企业级 Agent 旅行规划服务",
+    version="1.0.0",
+    lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ★ 本章新增：全部接口统一收编到 /api/v1（资源式扁平命名）
+app.include_router(users.router, prefix="/api/v1")
+app.include_router(cities.router, prefix="/api/v1")  # 全国城市（出发地单选/目的地多选）
+app.include_router(conversations.router, prefix="/api/v1")
+
+# ★ 本章新增：项目根的 image/ 目录挂成静态资源，浏览器可直接访问 /image/xxx
+image_folder = os.path.join(os.getcwd(), "image")
+os.makedirs(image_folder, exist_ok=True)
+app.mount("/image", StaticFiles(directory=image_folder))
+
+@app.get("/")
+async def root():
+    return {
+        "status": "healthy",
+        "service": "LangGraph Travel Planner",
+        "version": "1.0.0",
+        "docs": "/docs",
+    }
+
+
+===== block 368 0cd22e7b9fb6 lines 1-37 source 知行旅行助手-v2#368 =====
+"""
+启动脚本 - Windows 兼容版本（强制 SelectorEventLoop）
+"""
+import sys
+import asyncio
+import selectors
+import os
+# 限制OpenBLAS单线程运行，解决内存抢占问题
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+# 必须在导入任何其他模块之前设置！
+if sys.platform == "win32":
+    # 创建 selector
+    selector = selectors.SelectSelector()
+    # 创建基于 selector 的事件循环
+    loop = asyncio.SelectorEventLoop(selector)
+    # 设置为当前事件循环
+    asyncio.set_event_loop(loop)
+    # 设置策略（防止后续代码创建新的 ProactorEventLoop）
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+import uvicorn
+
+if __name__ == "__main__":
+    # 关键：使用 uvicorn.Server 手动运行，而不是 uvicorn.run()
+    config = uvicorn.Config(
+        "app.main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=False,
+        loop="none",  # 关键！告诉 uvicorn 不要创建新的事件循环
+    )
+    server = uvicorn.Server(config)
+
+    # 使用我们创建的 SelectorEventLoop 运行
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(server.serve())
+
+
+===== block 369 2a6ca86eb77d lines 1-1 source 知行旅行助手-v2#369 =====
+uv run python -m app.run --reload
+
+
+===== block 370 1cc67be3c2bc lines 1-43 source 知行旅行助手-v2#370 =====
+"""第 10 章冒烟：服务起着的情况下，走真实 HTTP 把 9 个接口串一遍（需服务已启动 + PG）"""
+import uuid
+
+import httpx
+
+BASE = "http://localhost:8000"
+sfx = uuid.uuid4().hex[:6]
+
+def check(name: str, ok: bool) -> None:
+    print(f"{'✅' if ok else '❌'} {name}")
+    assert ok, name
+
+with httpx.Client(base_url=BASE, timeout=30) as c:
+    check("健康检查 GET /", c.get("/").json().get("status") == "healthy")
+    paths = c.get("/openapi.json").json()["paths"]
+    check("/docs 里能看到 users / conversations / cities 三组接口",
+          {"/api/v1/users/register", "/api/v1/conversations", "/api/v1/cities"} <= set(paths))
+
+    r = c.post("/api/v1/users/register",
+               json={"username": f"smoke_{sfx}", "email": f"smoke_{sfx}@example.com", "password": "secret123"})
+    check("注册即登录：拿到令牌", r.status_code == 200 and bool(r.json()["access_token"]))
+    alice = {"Authorization": f"Bearer {r.json()['access_token']}"}
+    r = c.post("/api/v1/users/login", json={"username": f"smoke_{sfx}", "password": "secret123"})
+    check("登录成功", r.status_code == 200)
+    check("/me 返回本人", c.get("/api/v1/users/me", headers=alice).json()["username"] == f"smoke_{sfx}")
+    check("不带令牌 → 401", c.get("/api/v1/users/me").status_code == 401)
+
+    conv = c.post("/api/v1/conversations", json={"title": "冒烟会话"}, headers=alice).json()
+    check("建会话", conv["title"] == "冒烟会话" and conv["status"] == "active")
+    check("列会话能看到它", any(x["id"] == conv["id"] for x in c.get("/api/v1/conversations", headers=alice).json()))
+    r = c.patch(f"/api/v1/conversations/{conv['id']}", json={"title": "改过的标题"}, headers=alice)
+    check("改标题", r.json()["title"] == "改过的标题")
+
+    r = c.post("/api/v1/users/register",
+               json={"username": f"smoke_b_{sfx}", "email": f"smoke_b_{sfx}@example.com", "password": "secret123"})
+    bob = {"Authorization": f"Bearer {r.json()['access_token']}"}
+    check("越权：bob 查 alice 的会话 → 404", c.get(f"/api/v1/conversations/{conv['id']}", headers=bob).status_code == 404)
+
+    check("软删", c.delete(f"/api/v1/conversations/{conv['id']}", headers=alice).status_code == 200)
+    check("软删后列表里没有了", all(x["id"] != conv["id"] for x in c.get("/api/v1/conversations", headers=alice).json()))
+    check("城市接口不用登录：全量 342 个", len(c.get("/api/v1/cities").json()) == 342)
+    check("城市接口按省份过滤", len(c.get("/api/v1/cities", params={"q": "福建"}).json()) == 9)
+print("冒烟通过：用户、会话、城市三组接口全部走通")
+
+
+===== block 371 8aaa497b7351 lines 1-15 source 知行旅行助手-v2#371 =====
+✅ 健康检查 GET /
+✅ /docs 里能看到 users / conversations / cities 三组接口
+✅ 注册即登录：拿到令牌
+✅ 登录成功
+✅ /me 返回本人
+✅ 不带令牌 → 401
+✅ 建会话
+✅ 列会话能看到它
+✅ 改标题
+✅ 越权：bob 查 alice 的会话 → 404
+✅ 软删
+✅ 软删后列表里没有了
+✅ 城市接口不用登录：全量 342 个
+✅ 城市接口按省份过滤
+冒烟通过：用户、会话、城市三组接口全部走通
+
+
+===== block 372 c4ab9d37df4a lines 1-4 source 知行旅行助手-v2#372 =====
+return Command(update={
+    "user_requirement": requirement,               # 写业务数据
+    "current_step": "destination_recommendation"   # 推进到下一步
+})
+
+
+===== block 373 d7effb7be913 lines 1-1 source 知行旅行助手-v2#373 =====
+NameError: name '_CITY_DELIM' is not defined
+
+
+===== block 374 bd627621a89c lines 1-17 source 知行旅行助手-v2#374 =====
+"""
+状态转换工具
+用于 Handoffs 流程中的步骤跳转和数据记录
+"""
+from datetime import datetime
+from langchain.tools import tool, ToolRuntime
+from langchain_core.messages import ToolMessage
+from langgraph.types import Command  # ★ Command(update=…)：写 state + 推进步骤的唯一手段
+from app.core.state import (
+    TravelState,
+    UserRequirement,
+    CLEAR,  # 合并器哨兵：写 CLEAR 才真正清空（写 None 会被 _keep_last_non_none 保留）
+)
+from app.utils.logger import app_logger
+from typing import Annotated, Literal, Optional
+# 行程正文结构化校验（Pydantic v2，校验上下文传 travel_days）
+from pydantic import BaseModel, Field, ValidationError, ValidationInfo, model_validator
+
+
+===== block 375 2038cad6eefb lines 1-54 source 知行旅行助手-v2#375 =====
+_FORM_DAYS_LABEL = "旅行天数"
+_FORM_DEST_PREFIX = "我想去"
+_FORM_DEST_SUFFIX = "旅行"
+
+def _value_after(text: str, label: str) -> str:
+    """取「…{label}：值」冒号后到行尾的内容，无匹配行返回空串"""
+    for line in str(text or "").splitlines():
+        pos = line.find(label)
+        if pos < 0:
+            continue
+        rest = line[pos + len(label):].lstrip()
+        # 兼容中英文冒号，标签后非冒号则忽略该行
+        if rest[:1] in ("：", ":"):
+            return rest[1:].strip()
+    return ""
+
+def _leading_int(text: str) -> int | None:
+    """提取字符串开头整数，如"5 天"→5；开头非数字返回None"""
+    digits = ""
+    for ch in str(text or "").strip():
+        if not ch.isdecimal():
+            break
+        digits += ch
+    return int(digits) if digits else None
+
+def _between(text: str, prefix: str, suffix: str) -> str:
+    """提取同一行内prefix与其后最近suffix之间的文本，找不到返回空串"""
+    for line in str(text or "").splitlines():
+        start = line.find(prefix)
+        if start < 0:
+            continue
+        start += len(prefix)
+        end = line.find(suffix, start + 1)
+        if end > start:
+            return line[start:end]
+    return ""
+
+def _form_travel_days(state) -> int | None:
+    """从本轮用户表单消息读取旅行天数，无表单行返回None，不干预原有逻辑"""
+    # 倒序遍历消息，取本轮最新人类消息作为表单提交文本
+    for m in reversed((state or {}).get("messages") or []):
+        if getattr(m, "type", None) == "human":
+            return _leading_int(_value_after(
+                str(getattr(m, "content", "") or ""), _FORM_DAYS_LABEL))
+    return None
+
+def _form_destination(state) -> str | None:
+    """从本轮用户表单消息读取目的地，无表单行返回None"""
+    for m in reversed((state or {}).get("messages") or []):
+        if getattr(m, "type", None) == "human":
+            found = _between(str(getattr(m, "content", "") or ""),
+                             _FORM_DEST_PREFIX, _FORM_DEST_SUFFIX).strip()
+            return found or None
+    return None
+
+
+===== block 376 474b4ce70d57 lines 1-11 source 知行旅行助手-v2#376 =====
+"""表单权威值解析：从本轮表单文本里抠出天数与目的地（导入真实解析函数，纯逻辑无需密钥）"""
+from langchain_core.messages import HumanMessage
+from app.tools.state_transition import _form_travel_days, _form_destination
+
+# TripForm 模板恒含"旅行天数：N 天"与"我想去X旅行"两行，故按表单文本抠权威值
+state = {"messages": [HumanMessage(content="我想去北京、天津旅行\n旅行天数：5 天\n预算：中等")]}
+print("表单天数 →", _form_travel_days(state))       # 5
+print("表单目的地 →", _form_destination(state))     # 北京、天津
+print("无表单行 →", _form_travel_days({"messages": [HumanMessage(content="随便聊聊")]}))  # None
+assert _form_travel_days(state) == 5 and _form_destination(state) == "北京、天津"
+print("✅ 表单权威值解析正常（有则覆盖模型传参、无则 None 不干预）")
+
+
+===== block 377 31bc86fecc0b lines 1-4 source 知行旅行助手-v2#377 =====
+表单天数 → 5
+表单目的地 → 北京、天津
+无表单行 → None
+✅ 表单权威值解析正常（有则覆盖模型传参、无则 None 不干预）
+
+
+===== block 378 73002754e85f lines 1-132 source 知行旅行助手-v2#378 =====
+# ============== 1️.需求收集工具 ==============
+
+@tool
+def record_requirement_tool(
+        # 出发城市
+        departure_city: str,
+        # 出发日期
+        departure_date: str,
+        # 旅行天数
+        travel_days: int,
+        # 预算下限（元/人）
+        budget_min: float,
+        # 预算上限（元/人）
+        budget_max: float,
+        # 旅行风格偏好
+        travel_styles: list[str],  # 传入字符串列表，工具内转换
+        # 特殊需求（可选）
+        special_needs: str = "",
+        # 成人数量（默认1）
+        adult_count: Optional[int] = 1,
+        # 儿童数量（< 12 岁）
+        children_count: Optional[int] = 0,
+        # 目的地（可选）
+        destination: Optional[str] = None,
+        # 确认模式：表单勾选"全程交给 AI 自动确认"时为 True，未勾选保持 False
+        auto_confirm: bool = False,
+        # 表单预选交通方式（可多选，可为空）
+        transport_types: Optional[list[str]] = None,
+        # 表单预选餐饮偏好（可多选，可为空）
+        food_preferences: Optional[list[str]] = None,
+        # 表单预选住宿偏好（可多选，可为空）
+        accommodation_types: Optional[list[str]] = None,
+
+        runtime: ToolRuntime[None, TravelState] = None
+) -> Command:
+    """
+    记录用户旅行需求，并转换到目的地推荐步骤。
+
+    参数(可为空)说明：
+    - destination 目的地
+    - departure_city 出发地
+    - departure_date: 出发日期，格式 YYYY-MM-DD，如 "2025-08-01"
+    - travel_days: 出行天数，如 5
+    - adult_count: 成人数量
+    - children_count: 儿童数量（< 12 岁）
+    - budget_min: 预算下限（元/人）
+    - budget_max: 预算上限（元/人）
+    - travel_styles: 旅行风格列表，可选值：["relaxation", "culture", "adventure", "food"]
+    - special_needs: 特殊需求（可选），如 "需要无障碍设施"
+    """
+
+    # 天数锁定——表单给了值就以表单为准，模型读错也不污染后续全部步骤
+    # ★ 表单天数是权威值：存在就覆盖模型传参（天数一错，住宿/餐饮/预算/正文全跟着漂移）
+    _form_days = _form_travel_days(runtime.state)
+    if _form_days and int(travel_days or 0) != _form_days:
+        app_logger.warning(f"⚠️ 天数以表单为准：模型传 {travel_days} 天 → 表单 {_form_days} 天")
+        travel_days = _form_days
+
+    # 目的地锁定——模型不传 destination 时以表单 head 为准（多城串全量保留）
+    if not str(destination or "").strip():
+        _form_dest = _form_destination(runtime.state)
+        if _form_dest:
+            app_logger.warning(f"⚠️ 目的地以表单为准：模型未传 → 表单 {_form_dest}")
+            destination = _form_dest
+
+    app_logger.info(f"记录用户需求: {departure_date}, {travel_days}天, 预算 {budget_min}-{budget_max}")
+
+    # 验证日期格式
+    try:
+        datetime.strptime(departure_date, "%Y-%m-%d")
+    except ValueError:
+        return Command(update={
+            "messages": [
+                ToolMessage(
+                    content="❌ 日期格式错误，请使用 YYYY-MM-DD 格式，如 2025-08-01",
+                    tool_call_id=runtime.tool_call_id
+                )
+            ]
+        })
+
+    # 推断预算等级
+    avg_budget = (budget_min + budget_max) / 2
+    if avg_budget < 3000:
+        # ★ 预算等级按区间由代码算，不让模型填
+        budget_level = "economy"
+    elif avg_budget < 8000:
+        budget_level = "comfort"
+    else:
+        budget_level = "luxury"
+
+    # 构建需求对象
+    requirement = UserRequirement(
+        departure_city=departure_city,
+        destination=destination,
+        departure_date=departure_date,
+        travel_days=travel_days,
+        adult_count=adult_count,
+        children_count=children_count,
+        budget_min=budget_min,
+        budget_max=budget_max,
+        budget_level=budget_level,
+        travel_styles=travel_styles,
+        special_needs=special_needs if special_needs else None,
+        # 表单预选项一并落库，供后续步骤判断"是否已选过、免重复询问"
+        transport_types=transport_types or [],
+        food_preferences=food_preferences or [],
+        accommodation_types=accommodation_types or [],
+    )
+
+    app_logger.info(
+        f"需求预选项: auto_confirm={auto_confirm} "
+        f"transport={transport_types} food={food_preferences} hotel={accommodation_types}"
+    )
+
+    # 返回 Command：更新状态并跳转到下一步
+    return Command(update={
+        "messages": [
+            ToolMessage(
+                content=f"需求已记录！\n"
+                        f"出发日期：{departure_date}\n"
+                        f"{travel_days} 天 | {adult_count + children_count} 人\n"
+                        f"预算：{budget_min}-{budget_max} 元/人（{budget_level}级）\n"
+                        f"风格：{', '.join(travel_styles)}",
+                tool_call_id=runtime.tool_call_id
+            )
+        ],
+        "user_requirement": requirement,
+        # 确认模式真源写入状态：middleware 据此渲染 {{ auto_confirm_mode }}，
+        # 各步骤 prompt 直接读模式变量，不再靠"清单里没有自动确认文案"反推手动模式
+        "auto_confirm": auto_confirm,  # ★ 模式开关写进 state：后面的 middleware、编排层、一站式工具都读这一份
+        "current_step": "destination_recommendation"  # 跳转到步骤2
+    })
+
+
+===== block 379 4eab2e3df2d4 lines 1-22 source 知行旅行助手-v2#379 =====
+"""record_requirement_tool 演示：模型把天数读成 3，表单写的是 4——入库的以表单为准（直接调真实工具，纯逻辑，无需密钥）"""
+from langchain.tools import ToolRuntime
+from langchain_core.messages import HumanMessage
+
+from app.tools.state_transition import record_requirement_tool
+
+FORM = ("我想去天津、上海旅行\n- 出发地：北京\n- 出发日期：2026-10-01\n- 旅行天数：4 天\n"
+        "- 出行人数：2 成人 0 儿童\n- 人均预算：3000 元\n- 全程交给 AI 自动确认，无需逐步询问")
+state = {"messages": [HumanMessage(content=FORM)], "current_step": "requirement_collection"}
+runtime = ToolRuntime(state=state, context=None, config={}, stream_writer=None, tool_call_id="call_1", store=None)
+
+cmd = record_requirement_tool.func(          # 模拟模型的一次工具调用：它把天数读成了 3，也没传目的地
+    departure_city="北京", departure_date="2026-10-01", travel_days=3, budget_min=2000, budget_max=3000,
+    travel_styles=["culture"], adult_count=2, auto_confirm=True, runtime=runtime)
+up = cmd.update
+req = up["user_requirement"]
+print("写进 state 的键：", [k for k in up if k != "messages"])
+print("travel_days  →", req["travel_days"], "（模型传 3，表单是 4）")
+print("destination  →", req.get("destination"), "（模型没传，从表单 head 抠出来）")
+print("budget_level →", req.get("budget_level"), "（按预算区间由代码算）")
+print("auto_confirm →", up.get("auto_confirm"), "| current_step →", up["current_step"])
+print("回给模型的话：", up["messages"][0].content[:60], "…")
+
+
+===== block 380 44823c797188 lines 1-10 source 知行旅行助手-v2#380 =====
+写进 state 的键： ['user_requirement', 'auto_confirm', 'current_step']
+travel_days  → 4 （模型传 3，表单是 4）
+destination  → 天津、上海 （模型没传，从表单 head 抠出来）
+budget_level → economy （按预算区间由代码算）
+auto_confirm → True | current_step → destination_recommendation
+回给模型的话： 需求已记录！
+出发日期：2026-10-01
+4 天 | 2 人
+预算：2000-3000 元/人（economy级）
+ …

@@ -1,0 +1,179 @@
+交通步接线train_flow•三条推进路线，写同一批状态字段
+train_flow.py 把高铁卡片接进状态机的交通步：判断要不要走卡片，算出每段哪天出发，按确认模式下发卡片或直接代选，接收提交后落库推进。自
+动代选、前端提交、零段直通三条路线最后写的是同一批字段，后续步骤不用关心交通是怎么定下来的。
+执行器里怎么分流 chat stream_executorexecute tumn 的后处理②⑥；条件按顺序判断
+零段直通
+自动确认
+手动确认
+后处埋（②•出友地=目的地，沒有城际段
+• advance_zero_Leg 直接推到住宿步
+后处埋⑥• multi Leg train 为具且 auto confir
+•auto_select_train_Legs 每段代选一趟，写状态推进
+后处埋⑥• multi Leg train 刀具、非目可
+•emit_train_skill_ui 推卡片，等用户提交
+• 父通力工正刀 Local，段义本不全，票价账本有工
+• 上又外出 台改耗的价格综合最优元正 的各段
+• 唯出卡片的上又换成 puiLd Lead text 的5年1
+• 正文改成 本次为本地游坏，自楼为您安排住佰
+• 有一段没候选就不推进，返口罕外表，交回原流样
+• 全部段都罕时不推卡片，正又如实告知查间个全
+已下发卡片，payload 非空
+pushed
+各段都没有候洗，不推空卡片
+skipped
+没勾高铁，或段数为0
+emit_train_skill_ui 的三种返回状态。卡片每轮都会重推：历史消息不带卡片帧，刷新页面后若不重推，交通步就成了死路；候选走签名缓存，不会重复查 12306
+三条路线写的字段 都经 Get_Bent_and_state拿到agent，一次 aupdate.state 写完
+字殷
+目动代选 auto_select_train_legs
+前端提交 apply_train_selectior
+零段自通 advance zero led
+ceg_seLectLons
+每段代选车次的文本
+每段选中车次的文本；空段写“实时班次暂不可用“占位
+不写
+Lea prices
+崇价大士07与
+崇价大士0才与，空段个与，祯算对区走估草
+清空为 ｛｝
+Leg curson
+段数
+不写
+seLected transport
+traii
+train
+local
+seLected_transport Legs
+各段“起一止＋车次文本"
+同左
+current ster
+accommodation_planning（三条路线一致）
+apply_train_selection 的步骤守卫 校验通过后先看当前步，只看状态、不看模型怎么说
+们任交用市
+口任任佰衣取二后
+其它步骤
+按 option_id 回查每段选中的那趟，写账本、推进到住宿步
+按幂等成功处理，回显已存的段文本，不再改状态—防止前端连点把
+返回 STEP_MISMATCH ：不在交通确认阶段，不能提交车次
+函数卡 本组13个：train_flow.py的12个，加train_agent.tool.py的train_score
+train_mode_requested ［n 跨模块
+multi_leg_train ［n 跨模块
+_legs_with_dates fn
+判断是不是要走高铁：已选定train，或表单交通万式里有高铁
+判断要不要走高铁卡片：要走高铁，而且至少有1段。
+把状态机的段列表加上每段的乘车日期，变成 TrainLeg
+大牛/现牛
+何阿调用 交通步每次调模型前、每轮回复后
+何时调用 任何地方要判断”这次是不是高铁“时
+谁来调用 本文件 multi leg train、
+谁来调用
+middleware.awrap_model_call（第⑨关）：
+何时调用 判断、推卡片、代选、落库之前
+chat stream executor.execute turn（后处理（6）
+谁来调用 本文件 multi lea train.
+transport switcn_ service
+emit_train_skill_ui；航班、自驾的卡片判断？
+结果交给 为真时中间件摘交通工具，执行器走卡片分支
+emit_train_skill_ui、
+auto seLect train Legs.
+结果交给 True/False：勾了高铁时航班、自驾卡片计路
+apply_train_selection
+结果交给 段列表；段来自
+state transition. expected Leas，日期米目
+middleware._leg_query_date
+-payload_for coyng
+LL5.
+_all_have_options Fn
+LL2
+emit_train_skil1_ui psyne 棋块
+这自号开仃宜
+同一会话同一批段只真查一次：签名缓存里有完整的就复用，
+高铁的缓存标准：每一段都有候选才算完整，值得缓存和复
+沉里道染迹悴卡片
+手动模式下拿到全部段候选，推一帧 skil1_ui，前端在聊天
+何时调用 推卡片或代选之前
+何时调用 读写签名缓存时
+何时调用 交通步、走高铁卡片、非自动确认时，每轮都推
+雄米调用
+本文件 emit_train_skill_ui、
+谁来调用作为 is_complete 传给 SignatureCache
+auto seLect traun Legs
+（_payload_for 里2处）
+谁来调用 chat_stream_executor.execute_turn（后处理⑥，
+结祟交给
+本批段的候选payload；真查时调
+结果交给 True/False：False 时不缓存，下次试新杏
+结果交给 帧进 EventStream 经 SSE 到前端；返回 （pavload.》
+态）给执行翠决定正文
+build_train_multi_segment_payload
+build_lead_text 1n跨模块
+L114
+pick best 四
+train_score n跨棋块
+卡片上方的一句固定引导语：“已为您并行查询到全部 N段高
+铁…请一次提交。
+自动模式给一段挑车：先排除无票（候补算可选，全无票就退
+回全体），再按综合分 train score 取最低
+约等于0.1元）。
+给一趟车打综合分：历时分钟+票价 - 10，越低越好（1分钟
+何时调用 卡片推出（pushed） 之后
+何的调用 三动代选每一段的
+何时调用 自动代选给每趟候选排序时
+build_train_lead_text 导入）
+雄来调用 本文件 auto_select_train_Legs
+谁采调用 train_flow._pick_best（定义在
+结果交给 替换本轮正文，不让模型自由发挥
+结果父绀
+洗中的候洗或 None：耗时借
+train_agent_tool.py）
+base.duration to minutes， 打分借 train score
+结果交给 分数作为挑最小值的排序键；快速通道_pick_train 用
+的是同一个公式
+_fnt_option 固
+auto_select_train_Legs lasyna 跨棋块
+L151
+advance_zero_Leg lasyne棋块
+把一趟车写成段账本文本「G10109:00-14:10二等座515
+自动模式不弹卡片：每段代选一趟，全部段都选到了才写状
+本地游玩没有城际段时，由代码直接把交通步推到住宿步，不
+T」，与 seLect transport tooL 洛座位一型
+念、推进到任佰少。
+絟过俣丝c
+何时调用 代选或提交写账本时
+何时调用 交通步、走高铁卡片、自动确认时
+何时调用 交通步、出发地与目的地同城时
+难米调用
+本文件 auto_select_train_Legs、
+唯米倜片
+chat_stream_executor.execute_turn（后处理⑥）
+谁来调用
+chat stream executor.execute turn（后处埕（2））
+appwy_train seLect1ol
+结果交给
+结果交给 写状态6个字段；返回段文本给执行器拼正文，空列表表
+leg_selections 和段文本，行程步直接可读
+示没推州
+结果交给 写状态并返回 True；写失败只记告警、返回 False
+apply train selection|async|
+账恋、推进到任佰衣。
+接收前端提交：校验一 步骤守卫一按 option_id 回查一写
+何时调用 用户在卡片上点提交时
+谁来调用 api/v1/skills.submit_train_multi_segment
+结果交给 回执给提交接口：成功时 texts用干回显和合成续跑发
+自动代选怎么打分 先排除无票，再按 train_score取综合分最低；和快速通道是同一个公式
+历时。票价
+余票
+综合分=分钟+票价=10
+结果
+02:00•900 元
+有崇
+120+90=210
+02:10•300元
+130+30=160
+v造中
+01:50•1000元
+不参与
+先被排除
+示例数据，用上传代码实际跑出。只比耗时会选G1，综合分让多10分钟、省600元的G2胜出
+三条路线，一个出口：零段直通、自动代选、前端提交最后都写同一批段账本字段，并把 current_step推到accommodation_planning；提交还加了一道步骤守卫，重复提交按幂等成功处理。后续
+的住宿、行程、预算步只读这批字段，不需要知道交通是哪条路线定下来的。

@@ -1,0 +1,35 @@
+双重检查锁•锁内再查一次，才挡得住重复创建
+两个协程同时来取单例：锁外的第一重检查，A、B都看到「还没建」；A先进 async with cls._lock 把实例建好，B随后拿到锁再查一次，发现已经
+建好，于是跳过创建—一全程只有一个买例。
+时间轴•两个协程同时取单例
+a协程A
+时间
+B
+协程B
+协程A 锁外检查 第一重
+CLs._instance is None True：
+还没建
+乙
+协程 B
+锁外检查 第一重
+cLs._instance is None
+True
+还没建
+个 如果没有锁，A和B都会去创建实例！
+协程 A
+进锁
+async with cls._lock：拿到锁
+〇 第二重
+cls._instance is None True
+◎创建实例
+O 释放锁
+协程 B
+进锁 此时A已经建好
+async with cls._Lock：（拿到锁
+O
+第二重 Cls._instance is None
+— False
+个 第二重检查发挥作用！
+跳过创建，直接返回
+为什么要查两次：锁外的第一重检查挡不住并发—A、B都看到True；拿到锁后再查一次，B 才看到A已经建好（False），于是跳过创建、直接返回。第一重检查也不多余：实例建好以后，后面的
+调用在锁外就直接返回，不必每次都抢锁。

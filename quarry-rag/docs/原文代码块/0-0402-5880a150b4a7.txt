@@ -1,0 +1,2 @@
+New-Item -ItemType Directory -Force -Path quarry/eval, eval | Out-Null
+New-Item -ItemType File -Force -Path quarry/eval/__init__.py | Out-Null

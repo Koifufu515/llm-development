@@ -1,0 +1,24 @@
+"""validate_driving_submission 演示：自驾没有可选项，提交只做"段存在、每段都确认了"的只读校验（纯逻辑，无需密钥）"""
+import asyncio
+import json
+
+from app.capabilities.driving_multi_segment import driving_agent_tool
+from app.capabilities.driving_multi_segment.driving_agent_tool import build_driving_multi_segment_payload, validate_driving_submission
+from app.capabilities.driving_multi_segment.driving_skill_schema import DrivingSubmitPayload
+
+AMAP = json.dumps({"status": "1", "route": {"paths": [{"distance": "137000", "duration": "6120", "tolls": "65",
+                                                         "traffic_lights": "12", "steps": [{"instruction": "沿京津塘高速行驶"}]}]}})
+
+class FakeAmapTool:          # 测试驱动：假装是高德驾车工具
+    async def ainvoke(self, args: dict):
+        return AMAP
+
+async def main():
+    driving_agent_tool._QUERY_TOOL = FakeAmapTool()      # 测试驱动：把高德工具换成假的，其余全是真实代码
+    await build_driving_multi_segment_payload([{"from": "北京", "to": "天津"}, {"from": "天津", "to": "上海"}], cache_key="conv-1")
+    for name, segs in {"两段都确认": [{"segment_id": "s1"}, {"segment_id": "s2"}], "漏了一段  ": [{"segment_id": "s1"}],
+                       "段不存在  ": [{"segment_id": "s7"}], "什么都没交": []}.items():
+        r = validate_driving_submission(DrivingSubmitPayload.model_validate({"segments": segs}), cache_key="conv-1")
+        print(f"{name} → {r.code:17} {r.msg}")
+
+asyncio.run(main())

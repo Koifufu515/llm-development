@@ -1,0 +1,8 @@
+[1] 需求收集   requirement_collection       → ['user_requirement']
+[2] 目的地推荐  destination_recommendation   → ['selected_destination', 'destination_options']
+[3] 交通规划   transport_planning           → ['selected_transport', 'transport_options', 'selected_transport_legs', 'leg_cursor', 'leg_selections']
+[4] 住宿规划   accommodation_planning       → ['selected_accommodation_types', 'accommodation_options', 'selected_hotels', 'stay_cursor']
+[5] 餐饮规划   food_planning                → ['selected_food_types', 'food_options']
+[6] 行程生成   itinerary_generation         → ['itinerary', 'itinerary_body']
+[7] 预算汇总   budget_summarization         → ['budget']
+[8] 订单生成   order_generation             → ['order_id']

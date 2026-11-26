@@ -1,0 +1,5 @@
+INSERT INTO tenants (slug, name) VALUES ('test-tenant', '测试租户');
+
+INSERT INTO collections (tenant_id, slug, name, embed_model, embed_dim, status)
+SELECT id, 'test-coll', '版本 1', 'text-embedding-v4', 1024, 'active'
+FROM tenants WHERE slug = 'test-tenant';

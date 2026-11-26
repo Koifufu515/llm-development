@@ -1,0 +1,5 @@
+Building prefix dict from the default dictionary ...
+Loading model from cache /var/folders/rk/qtxh2ds10vd6_cdg09pdzrbm0000gn/T/jieba.cache
+Loading model cost 0.241 seconds.
+Prefix dict has been built successfully.
+{'same_slug_same_labels_same_ids_isolated': [{'tenant': 0, 'matching_evidence_title': 'tenant-0', 'same_chunk_id': 'same-child'}, {'tenant': 1, 'matching_evidence_title': 'tenant-1', 'same_chunk_id': 'same-child'}], 'tenant_upload_paths_distinct': True, 'foreign_document_status': 404}

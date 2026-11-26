@@ -1,0 +1,147 @@
+场景2
+单城原地。北京 北京
+O
+1
+相邻节点相同被跳过，有效交通段为0—代码直接把 current_step 推到住宿步，交通轮整块不执行
+高铁全部跳过
+次酒店查询
+C 本场景经过的节点
+本场景不经过（虚化）
+mn调用对应业务函数/提交节点
+1
+2
+3
+5
+用户发起行程请求
+判断行程交通类型
+判断是否 AI 帮忙确认
+行程节点预处理
+统计有效交通段、停留城市段
+出发地
+北京
+V高铁
+航班 自驾
+AI 帮忙确认。有目的地
+北京 北京
+目的地
+北京
+本场景勾选高铁。优先级 高铁＞航班＞自驾，
+词表快筛＋结构化提取复核，走快速通道
+0
+1 北京 ->北京
+×相邻相同，跳过
+两个都勾只走高铁，另一种一次都不查
+有效交通段
+停留城市
+AI 帮忙确认。无目的地
+交通方式
+高铁
+route=［北京，北京，北京］，三个节点两两相同，一段都不生成
+AI 自动选1座城市，再走快速通道
+停留城市：北京。出发地本身写进了目的地，
+Al帮忙确认
+未勾选
+所以仍算1站，住宿照常查
+用户手动选择
+本场景
+解析用户输入：北京一北京，
+目的地步仍会经过，只是没有城际段
+_proaucel
+train mode reouestea（）
+flight_card_mode（）
+detect_intent（） select_destination_tooL（）
+_build_legs（）
+_expected_legs（）
+ordereo_pLay_CLtLes（
+Stay wLndowS（）
+是否存在有效交通段？
+×不经过 交通候选卡片轮。高铁 本场景没有有效交通段
+train_multi_segment
+V存在
+选卡片轮
+交节点。调用对应业务函数
+调用对应业务函数
+凋用对应业务续跑函数
+进入交通候选卡片轮
+推送高铁候选卡片
+用户提交车次选择
+下发确认回执帧
+生成用户口吻续跑消息
+× 不存在
+代码一次并行查全部段，推 skill_ui 帧
+卡片上为每段选1趟，
+---一一～活后仍锁定
+合成发言不落库，由代码指定进规划状态机
+0段一跳过交通轮
+段日期：去程=出发日、城际=下一城首日、返程=末日
+POST /api/v1/skills/：
+每段都有候选才写签名缓存；全段为空— empty 不推
+步骤守卫：不在交通头
+本场景跳过交通轮
+force_planning=True 。persist_user=False
+resume_stage="accommodation_planning"
+代码写入
+空卡片
+北京 —北京 相邻相同，有效交通段为0，不生成任何交通候选
+selected_transport="local"、
+清空 leg_prices，不经模型直接推进
+multi_leg_train（）
+用户
+apply_train_selection（）
+confirmed content（）
+_resume_content（）
+_zero_leg_guard（）
+emit_train_skill_ui（）
+产出
+mark_skill_ui_submitted（）
+run_chat_turn（）
+advance_zero_leg（）
+无有效交通段：直接跳过交通轮，同一轮进入住宿推荐环节
+advance_zero_leg（）
+V进入住宿轮 多段住宿候选卡片轮 本场景1站：北京
+hotel_multi_segment
+END
+直接生成完整行程报告
+候选卡片轮
+fn 提交节点•调用对应业务函数
+fn调用对应业务函数
+fn调用住宿业务续跑函数
+北京一北京
+推送住宿候选卡片
+用户提交住宿选择
+下发确认回执帧
+生成住宿续跑消息
+模型只提交结构化数据，逐日行程与预算明细表
+全部由代码渲染；清单落库，流程结束
+零段直通后同一轮就推住宿卡片
+每站选1家门店或1个品牌，一次提交
+单城只有1站，入住=出发日、离店=末日
+回显住宿（按行程站顺序）
+住宿是最后一个人工选择项
+POST
+查不到门店降级为 mode=brand 品牌候选
+/api/v1/skills/hotel_multi_segment/submit
+1.北京
+_next_step（）跳过餐饮轮，餐饮取表单预选
+逐日行程
+预算明细表
+行程清单
+直接要求生成完整行程报告
+校验通过后写住宿账本与 stay_prices
+回显已选门店/品牌，并回填卡片提交态
+summarize budget tooL（）
+hotel_card mode（）
+用户
+apply_hotel_selection（）
+_confirmed_content（）
+_hotel_resume_content（）
+submit_itinerary_body_tool（）
+emit_hotel_skill_ui（）
+产出
+HotelMuLtiSegmentSubmitResult
+mark_skill_ui_submitted（）
+run_chat_turn（）
+_render_itinerary_body（）
+generate_plan（）
+一句话记住
+单城原地：北京一北京 相邻相同被跳过，有效交通段为0，交通轮整块跳过，只查1站酒店

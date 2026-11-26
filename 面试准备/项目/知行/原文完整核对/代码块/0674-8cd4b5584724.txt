@@ -1,0 +1,227 @@
+# ===== 航班直查所需的机场码表与结果解析 =====
+# searchFlightsByDepArr 的 dep/arr 必须是**机场**三字码：实测 dep=BJS 返回"暂无数据"、
+# dep=PEK 正常（75k 字/多条），故不能复用按城市码的工具口径。未收录城市不放行直查。
+_CITY_AIRPORT = {
+    "北京": "PEK", "上海": "SHA", "广州": "CAN", "深圳": "SZX", "成都": "CTU",
+    "杭州": "HGH", "武汉": "WUH", "西安": "XIY", "南京": "NKG", "重庆": "CKG",
+    "长沙": "CSX", "厦门": "XMN", "福州": "FOC", "青岛": "TAO", "昆明": "KMG",
+    "天津": "TSN", "郑州": "CGO", "哈尔滨": "HRB", "沈阳": "SHE", "大连": "DLC",
+    "三亚": "SYX", "海口": "HAK", "桂林": "KWL", "贵阳": "KWE", "南宁": "NNG",
+    "丽江": "LJG", "大理": "DLU", "西双版纳": "JHG", "张家界": "DYG", "拉萨": "LXA",
+    "乌鲁木齐": "URC", "喀什": "KHG", "敦煌": "DNH", "呼和浩特": "HET", "银川": "INC",
+    "西宁": "XNN", "兰州": "LHW", "太原": "TYN", "大同": "DAT", "石家庄": "SJW",
+    "秦皇岛": "BPE", "济南": "TNA", "烟台": "YNT", "威海": "WEH", "临沂": "LYI",
+    "潍坊": "WEF", "合肥": "HFE", "黄山": "TXN", "南昌": "KHN", "赣州": "KOW",
+    "温州": "WNZ", "宁波": "NGB", "舟山": "HSN", "台州": "HYN", "义乌": "YIW",
+    "无锡": "WUX", "常州": "CZX", "南通": "NTG", "扬州": "YTY", "徐州": "XUZ",
+    "珠海": "ZUH", "佛山": "FUO", "惠州": "HUZ", "汕头": "SWA", "梅州": "MXZ",
+    "湛江": "ZHA", "北海": "BHY", "泉州": "JJN", "武夷山": "WUS", "洛阳": "LYA",
+    "宜昌": "YIH", "衡阳": "HNY", "怀化": "HJJ", "九寨沟": "JZH", "绵阳": "MIG",
+    "长春": "CGQ", "延吉": "YNJ", "包头": "BAV", "鄂尔多斯": "DSN",
+}
+
+# ★ 票价工具（getFlightPriceByCities）要的是**城市**三字码，与上面的**机场**码不是一回事：
+#   北京 城市码 BJS / 机场码 PEK、上海 城市码 SHA（恰好同名）/ 机场码 SHA|PVG。
+#   两张表必须分开维护，混用会让票价查询整段查空。
+_CITY_IATA = {
+    "北京": "BJS", "上海": "SHA", "广州": "CAN", "深圳": "SZX", "成都": "CTU",
+    "杭州": "HGH", "武汉": "WUH", "西安": "SIA", "南京": "NKG", "重庆": "CKG",
+    "长沙": "CSX", "厦门": "XMN", "福州": "FOC", "青岛": "TAO", "昆明": "KMG",
+    "天津": "TSN", "郑州": "CGO", "哈尔滨": "HRB", "沈阳": "SHE", "大连": "DLC",
+    "海口": "HAK", "三亚": "SYX", "贵阳": "KWE", "济南": "TNA", "合肥": "HFE",
+    "南昌": "KHN", "南宁": "NNG", "太原": "TYN", "兰州": "LHW", "乌鲁木齐": "URC",
+}
+
+# ★ 票价字段候选名：不同接口/不同版本叫法不一（实测同一家 MCP 换版本就改名），
+#   故按候选表逐个试，谁先命中用谁；**一个都没命中就留空，绝不编造**。
+_FLIGHT_PRICE_KEYS = (
+    "FlightYPrice", "FlightPrice", "LowestPrice", "MinPrice", "TicketPrice",
+    "CabinPrice", "Price", "lowestPrice", "minPrice", "ticketPrice", "price",
+)
+# 航班号形态：两位航司码 + 2~4 位数字（CA1501 / MU5104 / 9C8891）
+_FLIGHT_NO_RE = re.compile(r"\b([A-Z0-9]{2}\d{2,4})\b")
+# 合理票价区间：低于 80 元多半是"燃油费/机建费"等零头，高于 20000 多半是里程/积分，
+# 两头都不收，避免把非票价数字当票价写进卡片
+_PRICE_MIN, _PRICE_MAX = 80.0, 20000.0
+
+def _sane_price(value: Any) -> float:
+    """宽松取票价并做区间过滤；不合理或转不出一律返回 0（调用方按"价格未知"处理）"""
+    try:
+        num = float(re.sub(r"[^\d.]", "", str(value)) or 0)
+    except (TypeError, ValueError):
+        return 0.0
+    return num if _PRICE_MIN <= num <= _PRICE_MAX else 0.0
+
+def parse_flight_rows(raw: Any) -> list[dict]:
+    """解析航班查询结果（VariFlight 返回的是 Python dict 文本，非严格 JSON）：每班一条
+
+    取值两级（与 parse_flight_prices 同口径）：① 严格 JSON → ② 文本里的 dict 字面量
+    （单引号 repr，json.loads 解析不了、ast.literal_eval 可以）；两级都取不到即返回空表。
+    error_code=10（暂无数据）返回空表，由调用方给出确定性兜底话术
+
+    ★ price：searchFlightsByDepArr 是**航班动态**接口，多数航线不返回票价，此处按
+    _FLIGHT_PRICE_KEYS 候选键尽力抠一次，抠不到记 0，由上层再去问票价接口补。
+    """
+    text = _raw_text(raw)
+
+    def _row(rec: dict) -> dict | None:
+        """从一条航班记录 dict 按字段名取值；缺航班号/时刻返回 None（与旧口径一致）"""
+        code = str(rec.get("FlightNo") or "").strip()
+        dep_at = str(rec.get("FlightDeptimePlanDate") or "")
+        if not code or len(dep_at) < 16:
+            return None
+        price = 0.0
+        for key in _FLIGHT_PRICE_KEYS:            # ★ 抠不到就是 0，绝不编造
+            if rec.get(key) not in (None, ""):
+                price = _sane_price(rec[key])
+                if price:
+                    break
+        return {
+            "code": code, "airline": re.sub(r"(股份)?有限公司$", "", str(rec.get("FlightCompany") or "")),
+            "from": str(rec.get("FlightDepAirport") or rec.get("FlightDep") or ""),
+            "to": str(rec.get("FlightArrAirport") or rec.get("FlightArr") or ""),
+            "date": dep_at[:10], "dep": dep_at[11:16],
+            "arr": str(rec.get("FlightArrtimePlanDate") or "")[11:16],
+            "terminal": str(rec.get("FlightHTerminal") or ""), "ontime": str(rec.get("OntimeRate") or ""),
+            "stop": str(rec.get("StopCity") or ""), "state": str(rec.get("FlightState") or ""),
+            "price": price,
+        }
+
+    # ① JSON / ② 文本里的 Python 字面量：都取 data 列表，逐条按字段名取值
+    obj = _loads_first_json(text)
+    if obj is None:
+        start = text.find("{")
+        try:
+            obj = ast.literal_eval(text[start:]) if start != -1 else None
+        except (ValueError, SyntaxError):
+            obj = None
+    recs = obj.get("data") if isinstance(obj, dict) else obj
+    rows: list[dict] = []
+    for rec in (recs if isinstance(recs, list) else []):
+        if isinstance(rec, dict):
+            row = _row(rec)
+            if row:
+                rows.append(row)
+    uniq: dict[tuple, dict] = {}
+    for r in sorted(rows, key=lambda x: x["dep"]):   # 同时刻同号只留一条
+        # ★ 同航班号、同起飞时刻只留一条
+        uniq.setdefault((r["code"], r["dep"]), r)
+    return sorted(uniq.values(), key=lambda x: x["dep"])
+
+def parse_flight_prices(raw: Any) -> tuple[dict[str, float], float]:
+    """
+    解析票价接口返回 → (按航班号的票价表, 该航线最低价)
+
+    票价接口的返回形态实测有两种，两种都要认（与 parse_driving_rows 的三段式同口径）：
+      ① 严格 JSON：[{"flightNo": "CA1501", "price": 1280}] 或 {"data": [...]} 嵌一层
+      ② VariFlight 舱位形态（实测主力）：每班价格在 cabins 里按舱位给出，只认经济舱
+
+    返回值两项各有用途：
+      by_flight —— 能对上航班号的票价，直接写进对应候选航班的 price
+      lowest    —— 该航线最低价；接口只给"XX元起"时用它做**段级参考价**，
+                   **绝不**把它当成每一班的票价挨个填（那就是编造）
+    任何解析不出的情况一律返回 ({}, 0.0)，调用方按"价格未知"处理。
+    """
+    text = _raw_text(raw[0] if isinstance(raw, tuple) and raw else raw)
+    if not text:
+        return {}, 0.0
+    by_flight: dict[str, float] = {}
+
+    def _walk(node: Any) -> None:
+        """递归遍历 JSON：遇到同时含"航班号 + 票价"的 dict 就收录（取同号最低价）"""
+        if isinstance(node, list):
+            for item in node:
+                _walk(item)
+            return
+        if not isinstance(node, dict):
+            return
+        no = ""
+        for key in ("flightNo", "FlightNo", "flightNumber", "flight_no", "fnum", "no"):
+            if str(node.get(key) or "").strip():
+                no = str(node[key]).strip().upper()
+                break
+        price = 0.0
+        for key in _FLIGHT_PRICE_KEYS:
+            if node.get(key) not in (None, ""):
+                price = _sane_price(node[key])
+                if price:
+                    break
+        if no and price and _FLIGHT_NO_RE.fullmatch(no):
+            by_flight[no] = min(by_flight.get(no, price), price)
+        for value in node.values():          # 继续往下钻（data/list/flights 等嵌套层）
+            if isinstance(value, (list, dict)):
+                _walk(value)
+
+    _walk(_loads_first_json(text))
+
+    if not by_flight:                        # ② VariFlight 舱位形态：剥前缀后按 Python 字面量取值
+        # ★ 原始返回是 "Flight prices: {'code': 200, 'data': [{'flightno': 'MU5160', …,
+        #   'cabins': [{'cabinclass': 'Y', …, 'price': 665}]}]}"（单引号 repr，非 JSON）——
+        #   json.loads 解析不了，故从首个 '{' 起 ast.literal_eval，再按字段名取号/取价；
+        start = text.find("{")
+        try:
+            obj = ast.literal_eval(text[start:]) if start != -1 else None
+        except (ValueError, SyntaxError):
+            obj = None
+        recs = obj.get("data") if isinstance(obj, dict) else obj
+        for rec in (recs if isinstance(recs, list) else []):
+            if not isinstance(rec, dict):
+                continue
+            no = str(rec.get("flightno") or "").upper()
+            # 只认经济舱（cabinclass='Y'）的 'price' 并取最低；无经济舱价的班次留空，不拿公务舱充数
+            econ = [_sane_price(c.get("price")) for c in (rec.get("cabins") or [])
+                    if isinstance(c, dict) and str(c.get("cabinclass") or "").upper() == "Y"]
+            econ = [p for p in econ if p]
+            if no and econ:
+                price = min(econ)
+                by_flight[no] = min(by_flight.get(no, price), price)
+   
+    # 航线级最低价：优先取按航班号表的最小值；表为空时从正文抓"最低/起 XXX 元"
+    lowest = min(by_flight.values()) if by_flight else 0.0
+    return by_flight, lowest
+
+def flight_price_args(tool: Any, date: str, dep_city: str, arr_city: str) -> dict:
+    """按票价工具**自己声明的**入参名组装入参（没声明到的名字不猜、不传）
+
+    ★ 为什么需要它：票价接口的入参名各家/各版本不一——线上核对 schema 是
+      dep_city/arr_city/dep_date，而项目内的演示脚本按 depCityCode/arrCityCode/depDate 写。
+      写死一套名字换个版本就整段查空，故按关键词归类。
+      直查通道（chat_stream_executor）与快速通道（express_planning_service）都调这里；
+      航班卡片另有同源实现 flight_agent_tool._price_args（多一步必填项校验）。
+    传进来的两个码是**城市码**（北京 BJS），不是机场码（北京 PEK）——两套码不能混用。
+    """
+    schema = tool.args_schema if isinstance(tool.args_schema, dict) else {}
+    args: dict = {}
+    for name in (schema.get("properties") or {}):
+        low = name.lower()
+        # ★ 先判到达：arrCity/destCity 里也可能含 "to"，顺序颠倒会把航线查反
+        if "date" in low:
+            args[name] = date
+        elif "arr" in low or "dest" in low or low in ("to", "dst"):
+            args[name] = arr_city
+        elif "dep" in low or "from" in low or "orig" in low or low in ("src",):
+            args[name] = dep_city
+    return args
+
+def _loads_first_json(text: str) -> Any:
+    """先整体 json.loads；失败则扫出首个括号配平的 {...} 再解析；都没有返回 None"""
+    try:
+        return json.loads(text)
+    except Exception:
+        pass
+    # 正则兜底，基本遇不上
+    start = text.find("{")
+    while start != -1:
+        depth = 0
+        for end in range(start, len(text)):
+            if text[end] == "{":
+                depth += 1
+            elif text[end] == "}":
+                depth -= 1
+                if depth == 0:
+                    try:
+                        return json.loads(text[start:end + 1])
+                    except Exception:
+                        break
+        start = text.find("{", start + 1)
+    return None

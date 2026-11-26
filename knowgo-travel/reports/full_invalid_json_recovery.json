@@ -1,0 +1,54 @@
+{
+  "scope": "原先含非法工具JSON的真实失败测试会话恢复",
+  "events": [
+    {
+      "role": "assistant",
+      "content": "✅ 已为您记录本次旅行需求摘要如下：\n\n- 🚆 出发城市：上海  \n- 🌆 目的地：苏州（已指定）  \n- 📅 出发日期：2026-10-31（周五）  \n- 🕒 行程天数：2天（含出发日，建议返程为11月1日）  \n- 👤 人数：1位成人（无儿童）  \n- 💰 预算：最高3000元（人均，含交通、住宿、餐饮、门票等）  \n- 🚄 交通偏好：高铁（已确认）  \n- 🏨 住宿倾向：经济型酒店（默认，后续可细化）  \n- 🍜 餐饮偏好：本地风味 + 特色小吃（已记录）  \n\n🔍 下一步：我将立即查询**苏州**的旅行亮点、经典景点、天气与实用贴士，供您快速了解并确认是否满意该目的地。\n\n是否现在查询苏州详情？（输入“是”或直接说“查苏州”即可）",
+      "code": null
+    },
+    {
+      "role": "done",
+      "content": "finish",
+      "code": 200
+    }
+  ],
+  "state": {
+    "user_id": "c685774e-4608-4b96-9f84-23706976e07d",
+    "current_step": "destination_recommendation",
+    "requirement": {
+      "departure_city": "上海",
+      "destinations": [
+        "苏州"
+      ],
+      "departure_date": "2026-10-31",
+      "travel_days": 2,
+      "adult_count": 1,
+      "children_count": 0,
+      "budget_max": 3000.0,
+      "transport_types": [
+        "train"
+      ],
+      "accommodation_types": [
+        "economy_hotel"
+      ],
+      "food_preferences": [
+        "local",
+        "specialty"
+      ],
+      "travel_styles": [],
+      "special_needs": "",
+      "auto_confirm": false,
+      "city_days": null
+    },
+    "revision": 1,
+    "confirmed_revision": null,
+    "destination_info": null,
+    "selected_transport": [],
+    "selected_hotels": [],
+    "food_preferences": [],
+    "itinerary_body": "__KNOWGO_CLEAR__",
+    "budget": "__KNOWGO_CLEAR__",
+    "plan_id": null,
+    "active_card": null
+  }
+}

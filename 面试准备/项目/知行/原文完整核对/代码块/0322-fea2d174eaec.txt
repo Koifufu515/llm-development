@@ -1,0 +1,1 @@
+mkdir -p app/api/v1 && touch app/api/v1/__init__.py

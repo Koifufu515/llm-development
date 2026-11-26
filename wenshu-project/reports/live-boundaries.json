@@ -1,0 +1,12 @@
+{
+  "redis_instances": 2,
+  "concurrent_requests": 12,
+  "allowed": 3,
+  "limit": 3,
+  "pi_timeout_status": 502,
+  "pi_timeout_seconds": 0.286,
+  "active_after_abort": 0,
+  "milvus_logical_rows": 34,
+  "mongo_active_chunks": 34,
+  "orphan_vector_ids": []
+}

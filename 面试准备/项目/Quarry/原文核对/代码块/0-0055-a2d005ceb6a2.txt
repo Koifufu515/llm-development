@@ -1,0 +1,2 @@
+New-Item -ItemType Directory -Force -Path quarry/infra, quarry/api, quarry/scripts | Out-Null
+New-Item -ItemType File -Force -Path quarry/__init__.py, quarry/infra/__init__.py, quarry/api/__init__.py, quarry/scripts/__init__.py | Out-Null

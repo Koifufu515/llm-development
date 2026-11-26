@@ -1,0 +1,20 @@
+"""_collect_context 演示：多段多城一次性并行查询，看总耗时与每项返回长度（需 .env 配好 MCP 相关密钥）"""
+import asyncio
+import time
+from datetime import date, timedelta
+
+from app.core.event_stream import EventStream
+from app.services.express_planning_service import ExpressRequirement, _collect_context
+
+async def main():
+    req = ExpressRequirement(departure_city="福州", destination="杭州、上海",
+                             departure_date=(date.today() + timedelta(days=5)).isoformat(),
+                             travel_days=4, auto_confirm=True, transport_types=["train"])
+    t0 = time.perf_counter()
+    ctx = await _collect_context(req, EventStream())
+    print(f"并行收集完成，用时 {time.perf_counter() - t0:.1f}s（≈ 最慢那一项，而不是各项之和）")
+    for k, v in ctx.items():
+        print(f"  {k:10s} → {v if k.startswith('_') else f'{len(v)} 字'}")   # 某项失败就是 0 字，不影响别的
+
+if __name__ == "__main__":
+    asyncio.run(main())

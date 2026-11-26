@@ -1,0 +1,1 @@
+uv run python -m quarry.scripts.review_facts --n 20

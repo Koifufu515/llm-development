@@ -1,0 +1,69 @@
+async def _enrich_spots(plan: TravelItinerary) -> None:
+    """高德 POI 补全坐标与图片
+
+    DeepSeek 只能从 RAG 文本提取，图片/经纬度经常缺失；用高德地点搜索补全。
+    高德返回 GCJ-02 坐标，与腾讯地图渲染直接兼容，无需转换。
+ 两段式关键词（清洗名→原始名）+ 静态地图兜底，尽量保证坐标与封面不缺失
+    """
+    url = "https://restapi.amap.com/v3/place/text"
+    async with httpx.AsyncClient(timeout=8) as client:
+        for day in plan.itinerary_list:
+            for item in day.itinerary:
+                for spot in item.scenic_spots_list:
+                    if spot.longitude is not None and spot.toponym_image:
+                        continue
+                    cleaned = _clean_keyword(spot.toponym)
+                    poi = None
+                    # 两段式搜索：先清洗名（高），再退回原始名；任一命中即用
+                    for kw in dict.fromkeys([cleaned, spot.toponym]):
+                        if not kw:
+                            continue
+                        try:
+                            res = await client.get(url, params={
+                                "keywords": kw,
+                                "key": settings.amap_api_key,
+                                "offset": 1,
+                            })
+                            data = res.json()
+                            pois = data.get("pois") or []
+                            if not pois:
+                                # 区分"真无结果"与"限流拒答"：高德个人 key QPS 有限，
+                                # 超速请求 status!=1 被静默拒答，打日志便于诊断
+                                if data.get("status") != "1":
+                                    app_logger.warning(
+                                        f"高德POI限流/异常: {kw} -> {data.get('infocode')} {data.get('info')}"
+                                    )
+                                await asyncio.sleep(0.25)  # 限流疑虑时也控速后再试下一关键词
+                                continue
+                            poi = pois[0]
+                            break
+                        except Exception:
+                            app_logger.warning(f"POI 补全失败: {spot.toponym}")
+                    # QPS 控速：每次成功请求后间隔，避免后续 spot 全部被限流静默拒答
+                    if poi is not None:
+                        await asyncio.sleep(0.25)
+                    if poi is None:
+                        continue
+                    if spot.longitude is None and poi.get("location"):
+                        try:
+                            lng, lat = poi["location"].split(",")[:2]
+                            spot.longitude, spot.latitude = float(lng), float(lat)
+                        except (ValueError, IndexError):
+                            pass
+                    photos = [
+                        p["url"].replace("http://", "https://")  # 统一 https，避免混合内容
+                        for p in (poi.get("photos") or []) if p.get("url")
+                    ]
+                    if not spot.toponym_image and photos:
+                        spot.toponym_image = photos[0]
+                    if not spot.toponym_image_list and photos:
+                        spot.toponym_image_list = photos
+                    # 静态地图兜底：无实景图但坐标已补全 → 生成带定位标记的地图缩略图当封面，
+                    # 保证前端每个景点至少有一张可展示的图（替代灰色占位图标）
+                    if not spot.toponym_image and spot.longitude is not None:
+                        lng, lat = spot.longitude, spot.latitude
+                        spot.toponym_image = (
+                            f"https://restapi.amap.com/v3/staticmap?location={lng},{lat}"
+                            f"&zoom=14&size=750*400&markers=mid,0xFF6E4E,:{lng},{lat}"
+                            f"&key={settings.amap_api_key}"
+                        )

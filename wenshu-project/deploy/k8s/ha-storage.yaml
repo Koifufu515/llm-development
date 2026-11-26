@@ -1,0 +1,144 @@
+apiVersion: v1
+kind: Service
+metadata: {name: mongodb-headless, namespace: wenshu}
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true
+  selector: {app: wenshu-mongodb}
+  ports: [{name: mongo, port: 27017}]
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata: {name: mongodb, namespace: wenshu}
+spec:
+  serviceName: mongodb-headless
+  replicas: 3
+  podManagementPolicy: Parallel
+  selector: {matchLabels: {app: wenshu-mongodb}}
+  template:
+    metadata: {labels: {app: wenshu-mongodb}}
+    spec:
+      initContainers:
+        - name: key-permission
+          image: redis:7-alpine
+          command: [sh,-c,'cp /source/key /keys/key; chmod 400 /keys/key; chown 999:999 /keys/key']
+          volumeMounts: [{name: source-key, mountPath: /source}, {name: key, mountPath: /keys}]
+      containers:
+        - name: mongodb
+          image: mongo:8.0
+          args: [mongod,--replSet,rs0,--bind_ip_all,--keyFile,/keys/key,--wiredTigerCacheSizeGB,'0.25']
+          env:
+            - {name: MONGO_INITDB_ROOT_USERNAME, value: wenshu}
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom: {secretKeyRef: {name: wenshu-ha-auth, key: mongo-password}}
+          ports: [{containerPort: 27017}]
+          readinessProbe:
+            tcpSocket: {port: 27017}
+            periodSeconds: 5
+          resources:
+            requests: {cpu: 50m, memory: 160Mi}
+            limits: {cpu: '1', memory: 600Mi}
+          volumeMounts: [{name: data, mountPath: /data/db}, {name: key, mountPath: /keys}]
+      volumes:
+        - {name: source-key, secret: {secretName: wenshu-mongo-key}}
+        - {name: key, emptyDir: {}}
+  volumeClaimTemplates:
+    - metadata: {name: data}
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources: {requests: {storage: 1Gi}}
+---
+apiVersion: batch/v1
+kind: Job
+metadata: {name: mongodb-init, namespace: wenshu}
+spec:
+  backoffLimit: 6
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: initialize
+          image: mongo:8.0
+          env:
+            - name: MONGO_PASSWORD
+              valueFrom: {secretKeyRef: {name: wenshu-ha-auth, key: mongo-password}}
+          command:
+            - bash
+            - -c
+            - |
+              for i in $(seq 1 90); do
+                mongosh --host mongodb-0.mongodb-headless -u wenshu -p "$MONGO_PASSWORD" --authenticationDatabase admin --quiet --eval 'try {rs.status()} catch(e) {rs.initiate({_id:"rs0",members:[{_id:0,host:"mongodb-0.mongodb-headless:27017"},{_id:1,host:"mongodb-1.mongodb-headless:27017"},{_id:2,host:"mongodb-2.mongodb-headless:27017"}]})}' && exit 0
+                sleep 2
+              done
+              exit 1
+---
+apiVersion: v1
+kind: Service
+metadata: {name: redis-headless, namespace: wenshu}
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true
+  selector: {app: wenshu-redis}
+  ports: [{name: redis,port: 6379}, {name: sentinel,port: 26379}]
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata: {name: redis, namespace: wenshu}
+spec:
+  serviceName: redis-headless
+  replicas: 3
+  podManagementPolicy: Parallel
+  selector: {matchLabels: {app: wenshu-redis}}
+  template:
+    metadata: {labels: {app: wenshu-redis}}
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom: {secretKeyRef: {name: wenshu-ha-auth, key: redis-password}}
+          command: [sh,-c]
+          args:
+            - |
+              set -- redis-server --appendonly yes --requirepass "$REDIS_PASSWORD" --masterauth "$REDIS_PASSWORD"
+              if [ "$HOSTNAME" != redis-0 ]; then set -- "$@" --replicaof redis-0.redis-headless 6379; fi
+              exec "$@"
+          ports: [{containerPort: 6379}]
+          readinessProbe:
+            exec: {command: [sh,-c,'redis-cli --no-auth-warning -a "$REDIS_PASSWORD" ping']}
+          resources:
+            requests: {cpu: 10m,memory: 24Mi}
+            limits: {cpu: 250m,memory: 128Mi}
+          volumeMounts: [{name: data,mountPath: /data}]
+        - name: sentinel
+          image: redis:7-alpine
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom: {secretKeyRef: {name: wenshu-ha-auth, key: redis-password}}
+          command: [sh,-c]
+          args:
+            - |
+              cat > /tmp/sentinel.conf <<EOF
+              port 26379
+              bind 0.0.0.0
+              protected-mode no
+              requirepass $REDIS_PASSWORD
+              sentinel resolve-hostnames yes
+              sentinel announce-hostnames yes
+              sentinel monitor wenshu-master redis-0.redis-headless 6379 2
+              sentinel auth-pass wenshu-master $REDIS_PASSWORD
+              sentinel down-after-milliseconds wenshu-master 3000
+              sentinel failover-timeout wenshu-master 10000
+              sentinel parallel-syncs wenshu-master 1
+              EOF
+              exec redis-sentinel /tmp/sentinel.conf
+          ports: [{containerPort: 26379}]
+          resources:
+            requests: {cpu: 5m,memory: 16Mi}
+            limits: {cpu: 150m,memory: 64Mi}
+  volumeClaimTemplates:
+    - metadata: {name: data}
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources: {requests: {storage: 256Mi}}

@@ -1,0 +1,1 @@
+uv run python -c "from pathlib import Path; p = Path('corpus/travel-guide/x.md').relative_to('corpus'); print(repr(str(p)), repr(p.as_posix()))"

@@ -1,0 +1,48 @@
+def _manual_multi_city_day_warning(content: str) -> str | None:
+    """手动模式 + 多目的地 → 天数 < 目的地数×2 时返回告警文案；否则 None 不打扰"""
+    from app.services.express_planning_service import _split_cities
+    # ★ 复用第 11 章的三个字符串助手：全项目只有一套"读表单"的写法
+    from app.tools.state_transition import _between, _leading_int, _value_after
+    head = _between(content, _HEAD_DEST_PREFIX, _HEAD_DEST_SUFFIX).strip()
+    if not head:
+        return None
+    cities = _split_cities(head)
+    if len(cities) <= 1:
+        return None
+    needed = len(cities) * 2  # 多目的地天数下限：每个目的地 2 天
+    days = _leading_int(_value_after(content, _HEAD_DAYS_LABEL))
+    if days is None or days >= needed:
+        return None
+    return (f"⚠️ 您选择了 {len(cities)} 个目的地，行程时间紧凑，至少需要 {needed} 天"
+            f"，否则无法为您生成完整报告。"
+            f"请将旅行天数调整为 {needed} 天及以上（或减少目的地）。")
+
+def _looks_like_itinerary(text: str) -> bool:
+    """多日行程看'第X天'标记；单日行程看时段块（上午/中午/下午/晚上，≥3 个）"""
+    if not text or len(text) <= 150:
+        return False
+    if _DAY_MARK.search(text):
+        return True
+    # ★ 单日行程没有"第X天"，就数时段词够不够 3 个
+    return len(re.findall(r"上午|中午|下午|晚上", text)) >= 3
+
+async def _recent_itinerary_text(db: AsyncSession, conversation_id) -> str | None:
+    """ 取历史里最近一条"像行程"的助手消息作为清单提炼源料
+
+    场景：确认轮只回一句话（防重复输出），该文本无法作为提炼源料，
+    真正的行程正文在上一轮的助手消息里（可能还含预算明细表，一并作为源料无妨）。
+    只回看最近 8 条助手消息，找不到则返回 None（调用方据此不生成清单）
+    """
+    rows = (await db.execute(
+        select(Message.content, Message.extra_info)
+        .where(Message.conversation_id == conversation_id, Message.role == "assistant")
+        .order_by(Message.created_at.desc())
+        .limit(8)
+    )).all()
+    for content, extra in rows:
+        # content 超出压缩阈值时只存摘要（列表预览用），全文在 extra_info["original"]，
+        # 清单提炼必须用全文，否则源料不足会提炼出残缺行程
+        text = (extra or {}).get("original") or content or ""
+        if _looks_like_itinerary(text):
+            return text
+    return None

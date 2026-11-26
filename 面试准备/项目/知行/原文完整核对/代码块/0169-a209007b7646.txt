@@ -1,0 +1,8 @@
+"""_driving_summary 演示：路段摘要优先取 steps 的前几条指引，取不到再从原文正则兜底（纯函数，无需密钥）"""
+from app.tools.mcp_tools import _driving_summary
+
+path = {"steps": [{"instruction": "向东出发，沿长安街行驶 2 公里"}, {"road_name": "京津塘高速"},
+                  {"instruction": "进入天津市区"}, {"instruction": "到达终点"}, {"instruction": "（多出来的不要）"}]}
+print("有 steps：", _driving_summary(path, ""))
+text = '{"steps": [{"instruction": "沿G2京沪高速行驶"}, {"instruction": "在沧州出口下"}]}'
+print("只有原文：", _driving_summary({}, text))

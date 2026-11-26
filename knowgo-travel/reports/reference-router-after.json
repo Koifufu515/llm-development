@@ -1,0 +1,506 @@
+{
+  "scope": "原0650全部路由样本；真实Qwen输出，用原确定性RouterCorrectnessMetric评分，不调用LLM作裁判。",
+  "model": "qwen-plus",
+  "rows": [
+    {
+      "index": 0,
+      "message": "你好呀",
+      "history": [],
+      "expected_planning": false,
+      "expected_skills_any": [],
+      "expect_empty_skills": true,
+      "actual": {
+        "is_itinerary_planning": false,
+        "inference_log": "用户消息为问候语，无任何旅行相关意图或需求，不属于行程规划请求，也不涉及任何技能调用。",
+        "skills": []
+      },
+      "score": 1.0,
+      "reason": "planning正确，技能列表为空",
+      "seconds": 1.6029279581271112
+    },
+    {
+      "index": 1,
+      "message": "今天天气不错啊",
+      "history": [],
+      "expected_planning": false,
+      "expected_skills_any": [],
+      "expect_empty_skills": true,
+      "actual": {
+        "is_itinerary_planning": false,
+        "inference_log": "用户消息是闲聊性质，表达对天气的主观感受，并未提出任何旅行相关需求或查询，不属于行程规划请求，也不涉及技能目录中的任何能力。",
+        "skills": []
+      },
+      "score": 1.0,
+      "reason": "planning正确，技能列表为空",
+      "seconds": 1.7324197497218847
+    },
+    {
+      "index": 2,
+      "message": "你会做什么？",
+      "history": [],
+      "expected_planning": false,
+      "expected_skills_any": [],
+      "expect_empty_skills": true,
+      "actual": {
+        "is_itinerary_planning": false,
+        "inference_log": "用户消息是通用功能询问，属于闲聊类，未表达任何旅行意图或需求，不涉及行程规划，也不需要调用任何技能。",
+        "skills": []
+      },
+      "score": 1.0,
+      "reason": "planning正确，技能列表为空",
+      "seconds": 1.5898986249230802
+    },
+    {
+      "index": 3,
+      "message": "帮我规划一次杭州3日游，2个大人",
+      "history": [],
+      "expected_planning": true,
+      "expected_skills_any": [
+        "itinerary_planning"
+      ],
+      "expect_empty_skills": false,
+      "actual": {
+        "is_itinerary_planning": true,
+        "inference_log": "用户明确使用'帮我规划一次杭州3日游'，动词'规划' + '3日游'表明需要生成完整行程，且指定了人数（2个大人），属于典型的行程规划请求。非单点查询，非闲聊，需调用itinerary_planning技能主导。",
+        "skills": [
+          {
+            "skill_name": "itinerary_planning",
+            "title": "杭州3日游行程规划",
+            "desc": "行程规划"
+          }
+        ]
+      },
+      "score": 1.0,
+      "reason": "planning正确，命中技能 ['itinerary_planning']",
+      "seconds": 3.2039667502976954
+    },
+    {
+      "index": 4,
+      "message": "查一下明天杭州的天气",
+      "history": [],
+      "expected_planning": false,
+      "expected_skills_any": [
+        "weather_query"
+      ],
+      "expect_empty_skills": false,
+      "actual": {
+        "is_itinerary_planning": false,
+        "inference_log": "用户仅查询明天杭州的天气，属于单点信息查询，不涉及行程生成或修改，也未在收集旅行需求或制定行程。因此不是行程规划请求。",
+        "skills": [
+          {
+            "skill_name": "weather_query",
+            "title": "天气查询",
+            "desc": "查询目的地当前及未来天气情况"
+          }
+        ]
+      },
+      "score": 1.0,
+      "reason": "planning正确，命中技能 ['weather_query']",
+      "seconds": 2.5724948747083545
+    },
+    {
+      "index": 5,
+      "message": "帮我查上海到杭州的高铁票",
+      "history": [],
+      "expected_planning": false,
+      "expected_skills_any": [
+        "train_query"
+      ],
+      "expect_empty_skills": false,
+      "actual": {
+        "is_itinerary_planning": false,
+        "inference_log": "用户明确查询上海到杭州的高铁票，属于单点交通信息查询，不涉及生成或修改完整行程，也未在收集旅行需求或制定行程的上下文中。因此 is_itinerary_planning = false。",
+        "skills": [
+          {
+            "skill_name": "train_query",
+            "title": "高铁票查询",
+            "desc": "高铁查询"
+          }
+        ]
+      },
+      "score": 1.0,
+      "reason": "planning正确，命中技能 ['train_query']",
+      "seconds": 2.6743774581700563
+    },
+    {
+      "index": 6,
+      "message": "杭州有哪些酒店推荐",
+      "history": [],
+      "expected_planning": false,
+      "expected_skills_any": [
+        "hotel_query"
+      ],
+      "expect_empty_skills": false,
+      "actual": {
+        "is_itinerary_planning": false,
+        "inference_log": "用户仅查询杭州的酒店推荐，属于单点信息查询（酒店住宿），未涉及生成/修改完整行程，也未在收集旅行需求或制定行程。因此不是行程规划请求。",
+        "skills": [
+          {
+            "skill_name": "hotel_query",
+            "title": "酒店推荐",
+            "desc": "酒店住宿"
+          }
+        ]
+      },
+      "score": 1.0,
+      "reason": "planning正确，命中技能 ['hotel_query']",
+      "seconds": 2.5653086667880416
+    },
+    {
+      "index": 7,
+      "message": "帮我查上海到北京的航班",
+      "history": [],
+      "expected_planning": false,
+      "expected_skills_any": [
+        "flight_query"
+      ],
+      "expect_empty_skills": false,
+      "actual": {
+        "is_itinerary_planning": false,
+        "inference_log": "用户明确请求查询上海到北京的航班，属于单点交通信息查询，不涉及生成或修改完整行程，也未在收集旅行需求或制定行程的上下文中。因此，is_itinerary_planning = false。",
+        "skills": [
+          {
+            "skill_name": "flight_query",
+            "title": "航班查询",
+            "desc": "航班查询"
+          }
+        ]
+      },
+      "score": 1.0,
+      "reason": "planning正确，命中技能 ['flight_query']",
+      "seconds": 2.7321457909420133
+    },
+    {
+      "index": 8,
+      "message": "杭州有什么好吃的推荐",
+      "history": [],
+      "expected_planning": false,
+      "expected_skills_any": [
+        "food_recommendation"
+      ],
+      "expect_empty_skills": false,
+      "actual": {
+        "is_itinerary_planning": false,
+        "inference_log": "用户询问杭州的美食推荐，属于单点信息查询，不涉及生成或修改完整行程，也未在收集旅行需求或制定行程的上下文中。因此不是行程规划请求。",
+        "skills": [
+          {
+            "skill_name": "food_recommendation",
+            "title": "杭州美食推荐",
+            "desc": "美食推荐"
+          }
+        ]
+      },
+      "score": 1.0,
+      "reason": "planning正确，命中技能 ['food_recommendation']",
+      "seconds": 2.9099162090569735
+    },
+    {
+      "index": 9,
+      "message": "从杭州东站怎么到西湖",
+      "history": [],
+      "expected_planning": false,
+      "expected_skills_any": [
+        "map_navigation"
+      ],
+      "expect_empty_skills": false,
+      "actual": {
+        "is_itinerary_planning": false,
+        "inference_log": "用户询问从杭州东站到西湖的交通方式，属于两点之间的路径导航需求，不涉及生成或修改完整行程，也不在收集旅行需求阶段。因此 is_itinerary_planning = false。",
+        "skills": [
+          {
+            "skill_name": "map_navigation",
+            "title": "地图导航",
+            "desc": "提供实时地图导航与路线规划（含公交、打车、步行、骑行等）"
+          }
+        ]
+      },
+      "score": 1.0,
+      "reason": "planning正确，命中技能 ['map_navigation']",
+      "seconds": 2.9397703330032527
+    },
+    {
+      "index": 10,
+      "message": "杭州有什么值得去的景点",
+      "history": [],
+      "expected_planning": false,
+      "expected_skills_any": [
+        "search_destination_guide"
+      ],
+      "expect_empty_skills": false,
+      "actual": {
+        "is_itinerary_planning": false,
+        "inference_log": "用户询问杭州的景点，属于单点信息查询（景点推荐），未涉及生成/修改完整行程，也未在收集旅行需求或确认行程细节。因此不属于行程规划请求。",
+        "skills": []
+      },
+      "score": 0.0,
+      "reason": "skills需要命中 ['search_destination_guide'] 其中一个，实际 []",
+      "seconds": 1.760755917057395
+    },
+    {
+      "index": 11,
+      "message": "杭州",
+      "history": [
+        "assistant: 请问您想去哪里旅游？"
+      ],
+      "expected_planning": true,
+      "expected_skills_any": [],
+      "expect_empty_skills": false,
+      "actual": {
+        "is_itinerary_planning": true,
+        "inference_log": "用户回复'杭州'，这是对上一轮'请问您想去哪里旅游？'的直接回应，属于行程规划对话中确认目的地的关键步骤。根据规则：'对正在收集需求/制定行程的对话中的回答（如确认、补充信息、选择目的地等），必须视为行程规划的延续，is_itinerary_planning 应为 true'。",
+        "skills": [
+          {
+            "skill_name": "search_destination_guide",
+            "title": "杭州攻略",
+            "desc": "目的地攻略"
+          },
+          {
+            "skill_name": "itinerary_planning",
+            "title": "行程规划",
+            "desc": "按需求组织或调整逐日行程"
+          }
+        ]
+      },
+      "score": 1.0,
+      "reason": "planning正确（skills=['search_destination_guide', 'itinerary_planning']）",
+      "seconds": 3.474678040947765
+    },
+    {
+      "index": 12,
+      "message": "2个大人1个小孩",
+      "history": [
+        "assistant: 请问几个人出行？"
+      ],
+      "expected_planning": true,
+      "expected_skills_any": [],
+      "expect_empty_skills": false,
+      "actual": {
+        "is_itinerary_planning": true,
+        "inference_log": "用户回答出行人数（2大1小），这是在响应之前assistant关于'几个人出行'的提问，属于行程规划过程中收集旅行需求的环节。根据规则：'对正在收集需求/制定行程的对话中的回答（如确认、补充信息、选择目的地等），必须视为行程规划的延续，is_itinerary_planning 应为 true'。",
+        "skills": [
+          {
+            "skill_name": "itinerary_planning",
+            "title": "行程规划",
+            "desc": "按需求组织或调整逐日行程"
+          }
+        ]
+      },
+      "score": 1.0,
+      "reason": "planning正确（skills=['itinerary_planning']）",
+      "seconds": 2.72433766676113
+    },
+    {
+      "index": 13,
+      "message": "预算3000左右",
+      "history": [
+        "assistant: 请问您的预算是多少？"
+      ],
+      "expected_planning": true,
+      "expected_skills_any": [],
+      "expect_empty_skills": false,
+      "actual": {
+        "is_itinerary_planning": true,
+        "inference_log": "用户正在回应之前关于预算的提问，属于行程规划过程中收集旅行需求的环节。根据规则，对正在收集需求/制定行程的对话中的回答（如确认、补充信息、选择目的地等），必须视为行程规划的延续，因此 is_itinerary_planning = true。",
+        "skills": [
+          {
+            "skill_name": "itinerary_planning",
+            "title": "行程规划",
+            "desc": "按需求组织或调整逐日行程"
+          }
+        ]
+      },
+      "score": 1.0,
+      "reason": "planning正确（skills=['itinerary_planning']）",
+      "seconds": 2.265151083935052
+    },
+    {
+      "index": 14,
+      "message": "高铁吧",
+      "history": [
+        "assistant: 您想坐什么交通？",
+        "user: 高铁或自驾犹豫"
+      ],
+      "expected_planning": true,
+      "expected_skills_any": [],
+      "expect_empty_skills": false,
+      "actual": {
+        "is_itinerary_planning": true,
+        "inference_log": "用户正在回应上一轮关于交通方式的选择，明确选择了'高铁'。此前对话已进入行程规划流程（assistant询问交通方式，user表示犹豫，现确认选择），属于行程规划的延续，需继续收集或确认行程要素。因此 is_itinerary_planning = true。",
+        "skills": [
+          {
+            "skill_name": "itinerary_planning",
+            "title": "行程规划",
+            "desc": "按需求组织或调整逐日行程"
+          }
+        ]
+      },
+      "score": 1.0,
+      "reason": "planning正确（skills=['itinerary_planning']）",
+      "seconds": 2.3875070000067353
+    },
+    {
+      "index": 15,
+      "message": "特色美食",
+      "history": [
+        "assistant: 您对哪种餐饮类型感兴趣？"
+      ],
+      "expected_planning": true,
+      "expected_skills_any": [],
+      "expect_empty_skills": false,
+      "actual": {
+        "is_itinerary_planning": true,
+        "inference_log": "用户消息'特色美食'是针对上一轮assistant提问'您对哪种餐饮类型感兴趣？'的回应，属于行程规划过程中正在收集旅行需求的环节（即确认餐饮偏好），因此符合规则中'对正在收集需求/制定行程的对话中的回答，必须视为行程规划的延续'，is_itinerary_planning = true。该回复虽未直接请求生成完整行程，但属于行程规划流程中关键的需求确认步骤；技能方面，需推荐符合'特色美食'偏好的本地餐饮，对应技能 food_recommendation。",
+        "skills": [
+          {
+            "skill_name": "food_recommendation",
+            "title": "美食推荐",
+            "desc": "美食推荐"
+          },
+          {
+            "skill_name": "itinerary_planning",
+            "title": "行程规划",
+            "desc": "按需求组织或调整逐日行程"
+          }
+        ]
+      },
+      "score": 1.0,
+      "reason": "planning正确（skills=['food_recommendation', 'itinerary_planning']）",
+      "seconds": 4.175467791967094
+    },
+    {
+      "index": 16,
+      "message": "可以，就这样",
+      "history": [
+        "assistant: 已为您生成杭州3日游行程，是否确认？"
+      ],
+      "expected_planning": true,
+      "expected_skills_any": [],
+      "expect_empty_skills": false,
+      "actual": {
+        "is_itinerary_planning": true,
+        "inference_log": "用户确认已生成的杭州3日游行程，属于行程规划流程中的确认环节，是行程规划的延续，因此 is_itinerary_planning = true。无需新增技能，因行程已生成完毕，当前动作仅为确认，不触发新查询类技能。",
+        "skills": [
+          {
+            "skill_name": "itinerary_planning",
+            "title": "行程规划",
+            "desc": "按需求组织或调整逐日行程"
+          }
+        ]
+      },
+      "score": 1.0,
+      "reason": "planning正确（skills=['itinerary_planning']）",
+      "seconds": 2.074357667006552
+    },
+    {
+      "index": 17,
+      "message": "把第三天换成西湖",
+      "history": [
+        "assistant: 已为您生成杭州3日游行程"
+      ],
+      "expected_planning": true,
+      "expected_skills_any": [
+        "itinerary_planning"
+      ],
+      "expect_empty_skills": false,
+      "actual": {
+        "is_itinerary_planning": true,
+        "inference_log": "用户消息'把第三天换成西湖'是对已生成的杭州3日游行程的修改指令，属于对已有行程的调整，符合'生成/修改完整行程'的定义。因此是行程规划请求。",
+        "skills": [
+          {
+            "skill_name": "itinerary_planning",
+            "title": "行程规划",
+            "desc": "按需求组织或调整逐日行程"
+          }
+        ]
+      },
+      "score": 1.0,
+      "reason": "planning正确，命中技能 ['itinerary_planning']",
+      "seconds": 1.9921910827979445
+    },
+    {
+      "index": 18,
+      "message": "哈哈你真有意思",
+      "history": [
+        "assistant: 你好呀，我是您的旅行助手"
+      ],
+      "expected_planning": false,
+      "expected_skills_any": [],
+      "expect_empty_skills": true,
+      "actual": {
+        "is_itinerary_planning": false,
+        "inference_log": "用户消息是闲聊和轻松的互动（'哈哈你真有意思'），没有表达任何旅行需求、查询或行程规划意图，也不涉及正在收集需求/制定行程的对话延续。",
+        "skills": []
+      },
+      "score": 1.0,
+      "reason": "planning正确，技能列表为空",
+      "seconds": 1.8081804998219013
+    },
+    {
+      "index": 19,
+      "message": "谢谢你",
+      "history": [
+        "assistant: 祝您旅途愉快！"
+      ],
+      "expected_planning": false,
+      "expected_skills_any": [],
+      "expect_empty_skills": true,
+      "actual": {
+        "is_itinerary_planning": false,
+        "inference_log": "用户消息为礼貌性致谢，属于闲聊范畴，不涉及任何旅行需求或行程规划意图。",
+        "skills": []
+      },
+      "score": 1.0,
+      "reason": "planning正确，技能列表为空",
+      "seconds": 1.598481584340334
+    },
+    {
+      "index": 20,
+      "message": "我想去苏州旅行，出发地福州，9月20日出发，3天2人，预算人均3000，坐高铁，喜欢文化探索",
+      "history": [],
+      "expected_planning": true,
+      "expected_skills_any": [
+        "itinerary_planning"
+      ],
+      "expect_empty_skills": false,
+      "actual": {
+        "is_itinerary_planning": true,
+        "inference_log": "用户明确表达了旅行意图（去苏州）、出发地（福州）、时间（9月20日出发）、时长（3天）、人数（2人）、预算（人均3000）、交通方式（高铁）、兴趣偏好（文化探索）。这些是行程规划的关键输入要素，属于典型的行程规划初始请求——正在收集/提供基础旅行需求，尚未生成具体日程但已进入规划启动阶段。根据规则：'对正在收集需求/制定行程的对话中的回答（如确认、补充信息、选择目的地等），必须视为行程规划的延续，is_itinerary_planning 应为 true'。因此 planning=true。所需技能需支撑后续行程生成：需查高铁（train_query）、查苏州目的地攻略（search_destination_guide）、查适合文化探索的酒店（hotel_query）、查当地特色美食（food_recommendation）、查天气保障出行安排（weather_query）。注意：map_navigation 和 flight_query 不适用（明确坐高铁，无两地点导航指令）；itinerary_planning 是顶层规划技能，但当前为需求输入阶段，实际执行需依赖上述查询类技能协同，故不直接调用 itineray_planning（该技能用于最终编排日程，非本阶段必需）。",
+        "skills": [
+          {
+            "skill_name": "train_query",
+            "title": "高铁查询",
+            "desc": "查询福州至苏州高铁班次、时间、票价等信息"
+          },
+          {
+            "skill_name": "search_destination_guide",
+            "title": "目的地攻略",
+            "desc": "获取苏州景点、文化地标、博物馆、园林、历史街区等深度文化体验攻略"
+          },
+          {
+            "skill_name": "hotel_query",
+            "title": "酒店住宿",
+            "desc": "筛选符合文化氛围、位置便利（近平江路/拙政园/苏州博物馆等）、适配双人入住的酒店"
+          },
+          {
+            "skill_name": "food_recommendation",
+            "title": "美食推荐",
+            "desc": "推荐苏州本帮菜、苏式点心、非遗美食及文化主题餐厅（如评弹茶馆、园林私宴）"
+          },
+          {
+            "skill_name": "weather_query",
+            "title": "天气查询",
+            "desc": "查询9月20日前后苏州天气（温度、降水、舒适度），辅助行程细节调整"
+          },
+          {
+            "skill_name": "itinerary_planning",
+            "title": "行程规划",
+            "desc": "按需求组织或调整逐日行程"
+          }
+        ]
+      },
+      "score": 1.0,
+      "reason": "planning正确，命中技能 ['itinerary_planning']",
+      "seconds": 11.558813707903028
+    }
+  ]
+}

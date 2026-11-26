@@ -1,0 +1,7 @@
+"""_covers_all_days 演示：正文是否覆盖第 1~N 天（复用第 11 章 _day_numbers 的口径）（纯函数，无需密钥）"""
+from app.services.chat_stream_executor import _covers_all_days
+
+full = "#### Day 1 杭州 …… #### Day 2 杭州 …… 第三天：返程"
+print("要 3 天，覆盖了吗？", _covers_all_days(full, 3))    # Day 1 / Day 2 / 第三天 → True
+print("要 4 天，覆盖了吗？", _covers_all_days(full, 4))    # 缺第 4 天 → False
+print("天数未知（0）    ？", _covers_all_days(full, 0))    # 没有天数就不推进 → False

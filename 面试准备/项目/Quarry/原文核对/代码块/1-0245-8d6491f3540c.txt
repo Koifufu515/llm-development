@@ -1,0 +1,12 @@
+EXPLAIN
+WITH filtered AS (
+  SELECT chunk_id, embedding FROM chunks
+  WHERE collection_id = (SELECT id FROM collections WHERE slug = 'travel-guide' AND status = 'active')
+    AND level = 1
+)
+SELECT chunk_id FROM (
+  SELECT chunk_id FROM filtered
+  ORDER BY embedding <=> (SELECT embedding FROM chunks WHERE level = 1 LIMIT 1) LIMIT 10
+) a
+UNION ALL
+SELECT chunk_id FROM filtered LIMIT 1;

@@ -1,0 +1,49 @@
+"""行程质量在线质检服务
+
+把 evaluation/ 里的评测核心（Qwen 裁判 + 三维度 GEval）收编为业务服务，
+供两处复用：
+1. generate_plan 落库成功后异步质检（本文件 run_quality_check）；
+2. evaluation/ 评测集（保持离线回归能力，依赖方向：评测 → 业务服务）。
+
+三维度标准与历史修复对齐：
+- 完整性（行程正文被精简规则挤没）
+- 需求匹配度（文化探索风格却推游乐园类问题）
+- 真实性（编造票价/景点）
+"""
+import asyncio
+
+from deepeval.metrics import GEval
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from langchain_community.chat_models.tongyi import ChatTongyi
+from langchain_core.messages import BaseMessage
+
+from app.config import settings
+from app.utils.logger import app_logger
+from deepeval.models import DeepEvalBaseLLM
+
+class QwenJudge(DeepEvalBaseLLM):
+    """用 Qwen 作为 GEval 裁判（项目无 OpenAI key，替代默认 gpt-4o）"""
+
+    def __init__(self, model_name: str | None = None):
+        self._model_name = model_name or settings.qwen_model_name
+        super().__init__()  # 基类在此自动 self.model = self.load_model()
+
+    def load_model(self) -> ChatTongyi:
+        # 裁判温度 0：打分稳定可复现
+        return ChatTongyi(
+            model=self._model_name,
+            temperature=0,  # ★ 裁判温度 0：打分可复现
+            dashscope_api_key=settings.dashscope_api_key,
+        )
+
+    def generate(self, prompt: str) -> str:
+        result: BaseMessage = self.model.invoke(prompt)
+        return result.content
+
+    async def a_generate(self, prompt: str) -> str:
+        result: BaseMessage = await self.model.ainvoke(prompt)
+        return result.content
+
+    def get_model_name(self) -> str:
+        return f"qwen-judge({self._model_name})"
+    # 注意：不可重写 model property——基类 __init__ 会 self.model = load_model()

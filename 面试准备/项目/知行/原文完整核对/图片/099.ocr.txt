@@ -1,0 +1,88 @@
+Pg
+KB
+knowgo_travel_backend
+Y masterv
+12_forget_close_demo v
+@
+•
+Q
+试用
+X
+口
+项目
+心 travel_agent.py
+event_stream.py
+12_event_stream_demo.py
+12_forget_close_demo.py
+e response.py
+main.py x
+59 ①
+app = FastAPI（
+A1
+A2
+rag
+title="LangGraph 旅行规划系统”，
+委 schemas
+61
+description="企业级 Agent 旅行规划腺务”，
+o scripts
+version="1.0.0°，
+回
+z semceS
+Lifespan=lifespan，
+Dtodls
+64
+utils
+66
+app.add_middleware（
+init__：py
+CORSMiddleware，
+心 config.py
+68
+alLow_origins=［**"］，
+>心 main.py
+69
+allow_credentials=irue，
+之 run.py
+allow_methods=［"*"］，
+Ta data
+71
+allow_headers=［*"］，
+72
+• evaluation
+app.middleware（"http"） （gLobal_http_middLeware）
+I image
+app.middleware（'http"）（wrap-json_middleware）
+# * 最后注册=最外层：兜底产出的包裹体不会被再包一次
+>ologs
+app.add_exception_handler（RequestvalidationError, validation_exception_handler）
+v Co scripts
+76
+# * 本章新增：全部接口统一收编到 /api/v1（资源式扁平命名）
+> Ia data
+＜/api1/users
+> 第一草
+77 曲.
+app.include_router（users.router, prefix="/ap1/V1"）
+>•第七章
+</api/1/cities
+78 ①.
+app.include_router（cities.router,prefix="/api/v1"） ＃ 全国城市（出发地单选/目的地多选〉
+> 第二
+运行
+o 12_ forget_close_demo x
+苷
+C：\Users\Administrator\.Local\bin\uv.exe run E:/knowgo_travel_backend/.venv/Scripts/python.exe E：\knowgo_travel_backend\scripts\第十二章\12_forget_close_demo.py
+有 close + ［｛'role'：'assistant".
+'content'：“推一帧'，
+'code'： None｝］
+没 close +等了 2 秒还没结束：消费者卡在 await queue.get（），前端就是一直转圈圈
+进程已结束，退出代码为 日
+i
+｝
+• knowgo_travel_backend >app>
+main.py
+75:80
+回TRAE
+knowgo_travel_backend M Islands Dark•
+CRLF UTF-8 艮 4个空格 wv （knowgo_travel_backend） ［Python 3.13.13］2

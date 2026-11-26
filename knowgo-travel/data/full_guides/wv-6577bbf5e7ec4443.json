@@ -1,0 +1,21 @@
+{
+  "city": "扬州",
+  "title": "扬州景点资料 · Yangzhou",
+  "source_url": "https://en.wikivoyage.org/wiki/Yangzhou",
+  "text": "资料城市：扬州。本文是历史开放景点资料，不提供实时开放时间或价格；出行前需要核实。\n\nDaming Temple\nRebuilt after being destroyed in the Taiping Rebellion, this temple originally dated from the 5th century AD. There is a spring next to the tea house.\n\nHanlinyuan Museum\nA magnificent tomb for Liu Xu, ruler of the Guangling Kingdom. It is five stories deep, with different levels housing things like a warehouse, living quarters, and a coffin on wheels.\n\nSlender West Lake 瘦西湖\nVery slim lake winding through the park area just northwest of the city center. Several pavilions dot the park around the lake that was designed to mimic the west lake in Hangzhou.\n\nYangzhou Museum\nThe Yangzhou Museum has splendid displays of things like a boat salvaged from the Grand Canal that crosses through eastern China. The museum used to be housed in Tianning Temple downtown (see above), but now it is on the west side, in a new purpose-built building, known as the \"Double Museum\" (''Shuang Bowuguan''). It is \"double\" because the other tenant in the building is a museum of traditional Chinese book printing.\n\nShi Kefa Memorial\nThe memorial/temple honors a Ming general who refused to surrender the city to the Qing invaders in 1645.\n\nThe Grand Canal\nThe old route of the Grand Canal runs along the southern and eastern edge of the historic center city. The new Grand Canal, with a continuous stream of cargo boats and barges, is a few kilometer east of city center, and is accessible by city bus.",
+  "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+  "license": "CC BY-SA 3.0",
+  "attribution": "Wikivoyage contributors; https://en.wikivoyage.org/wiki/Yangzhou",
+  "sha256": "d3f25c217a1849721d02886326a7c881bb6e6911d6bb256fcb74848d8d062fce",
+  "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+  "poi_count": 6,
+  "source_dataset": "https://github.com/wikivoyage/wikivoyage.github.io",
+  "excluded_fields": [
+    "price",
+    "hours",
+    "phone",
+    "email",
+    "hotel",
+    "restaurant"
+  ]
+}

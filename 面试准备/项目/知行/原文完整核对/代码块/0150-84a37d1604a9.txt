@@ -1,0 +1,10 @@
+"""parse_compact_rows 演示：把"一行一趟"的紧凑班次行读回成记录（纯函数，无需密钥）"""
+from app.tools.mcp_tools import parse_compact_rows
+
+TEXT = """实时班次（共 2 趟，按发车时间排序，仅列前 2 趟）：
+格式：车次|区间|出发→到达|历时|票价
+G7|北京南→上海|07:00→11:35|04:35|二等座 候补 669元
+G1234|北京南→上海虹桥|08:00→12:28|04:28|二等座 有票 662元"""
+for row in parse_compact_rows(TEXT):
+    print(row)
+print("表头、说明行不会被当成班次：", len(parse_compact_rows(TEXT)), "条")

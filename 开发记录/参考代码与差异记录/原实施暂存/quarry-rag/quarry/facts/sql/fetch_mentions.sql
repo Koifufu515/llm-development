@@ -1,0 +1,1 @@
+../../../../../../../quarry-rag/quarry/facts/sql/fetch_mentions.sql

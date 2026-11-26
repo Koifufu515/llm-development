@@ -1,0 +1,10 @@
+from pathlib import Path          # ← 加在 import 区
+
+def upgrade() -> None:
+    sql = (Path(__file__).parent / "0001_core_tables.sql").read_text(encoding="utf-8")
+    op.get_bind().exec_driver_sql(sql)
+
+def downgrade() -> None:
+    op.get_bind().exec_driver_sql(
+        "DROP TABLE IF EXISTS chunks, documents, collections, tenants CASCADE"
+    )

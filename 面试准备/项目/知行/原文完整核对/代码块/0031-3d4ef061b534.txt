@@ -1,0 +1,6 @@
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # ...
+    # 延迟 import：Checkpointer/Store 会创建 psycopg 连接池
+    from app.core.checkpointer import checkpointer_lifespan
+    from app.core.store import store_lifespan

@@ -1,0 +1,1 @@
+uv run python -m quarry.scripts.try_parse corpus/travel-guide/西安.md

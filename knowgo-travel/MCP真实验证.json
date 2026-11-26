@@ -1,0 +1,103 @@
+{
+  "transport": "stdio MCP",
+  "tools": [
+    "get_city_location",
+    "get_weather_forecast"
+  ],
+  "location": {
+    "status": "ok",
+    "city": "杭州",
+    "province": "浙江",
+    "latitude": 30.29365,
+    "longitude": 120.16142,
+    "timezone": "Asia/Shanghai",
+    "source": "Open-Meteo / GeoNames",
+    "queried_at": "2026-10-26T12:28:48.845486+00:00",
+    "source_url": "https://geocoding-api.open-meteo.com/v1/search"
+  },
+  "forecast": {
+    "status": "ok",
+    "city": "杭州",
+    "province": "浙江",
+    "timezone": "Asia/Shanghai",
+    "available_window": {
+      "start": "2026-10-26",
+      "end": "2026-11-01"
+    },
+    "forecast": [
+      {
+        "date": "2026-10-26",
+        "weather_code": 3,
+        "weather_description": "阴",
+        "temperature_max_c": 23.9,
+        "temperature_min_c": 14.9,
+        "rain_probability_percent": 5
+      },
+      {
+        "date": "2026-10-27",
+        "weather_code": 3,
+        "weather_description": "阴",
+        "temperature_max_c": 21.5,
+        "temperature_min_c": 14.1,
+        "rain_probability_percent": 2
+      },
+      {
+        "date": "2026-10-28",
+        "weather_code": 0,
+        "weather_description": "晴",
+        "temperature_max_c": 20.6,
+        "temperature_min_c": 11.6,
+        "rain_probability_percent": 0
+      },
+      {
+        "date": "2026-10-29",
+        "weather_code": 3,
+        "weather_description": "阴",
+        "temperature_max_c": 24.4,
+        "temperature_min_c": 13.3,
+        "rain_probability_percent": 12
+      },
+      {
+        "date": "2026-10-30",
+        "weather_code": 51,
+        "weather_description": "轻微毛毛雨",
+        "temperature_max_c": 24.0,
+        "temperature_min_c": 14.2,
+        "rain_probability_percent": 10
+      },
+      {
+        "date": "2026-10-31",
+        "weather_code": 45,
+        "weather_description": "雾",
+        "temperature_max_c": 25.0,
+        "temperature_min_c": 13.0,
+        "rain_probability_percent": 6
+      },
+      {
+        "date": "2026-11-01",
+        "weather_code": 51,
+        "weather_description": "轻微毛毛雨",
+        "temperature_max_c": 28.4,
+        "temperature_min_c": 15.0,
+        "rain_probability_percent": 51
+      }
+    ],
+    "weather_code_standard": "WMO",
+    "source": "Open-Meteo / GeoNames",
+    "queried_at": "2026-10-26T12:28:52.387955+00:00",
+    "source_url": "https://api.open-meteo.com/v1/forecast"
+  },
+  "out_of_range": {
+    "status": "unavailable",
+    "code": "date_out_of_range",
+    "message": "所选日期超出当前可查询预报窗口；暂不能提供当天预报",
+    "source": "Open-Meteo / GeoNames",
+    "queried_at": "2026-10-26T12:28:55.218867+00:00",
+    "city": "杭州",
+    "requested_date": "2099-01-01",
+    "available_window": {
+      "start": "2026-10-26",
+      "end": "2026-11-01"
+    }
+  }
+}

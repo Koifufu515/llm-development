@@ -1,0 +1,2 @@
+# macOS / Linux
+curl -s http://localhost:8100/healthz | python -m json.tool

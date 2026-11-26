@@ -1,0 +1,21 @@
+{
+  "city": "上海",
+  "title": "上海景点资料 · Shanghai/Minhang",
+  "source_url": "https://en.wikivoyage.org/wiki/Shanghai/Minhang",
+  "text": "资料城市：上海。本文是历史开放景点资料，不提供实时开放时间或价格；出行前需要核实。\n\nQibao ancient town\nQibao is a small town about two square kilometers in size which is crossed by two canals. Around the canals, a large number of traditional houses, shops and restaurants are found. Recently tourism has been actively encouraged and it makes a good daytrip from central Shanghai. Although Qibao can be touristy, prices are comparatively cheap. '''Qibao temple and pagoda''' (七宝教寺, 七宝塔), only ¥5 to enter and not very touristy, is in the the east of the town, and the '''Qibao distillery''' (七宝酒坊) is at the center of the city. Embroidery from Mrs. Xie Ju Fang, who moved from the embroidery capital Suzhou, and is now making her lovely artwork in her shop, No.70 Fuqiang Rd.\n\nShanghai Aerospace Enthusiast's Center\nA small museum with a selection of Chinese military planes (mostly from the 50's and 60's), Mao Tze Tung's personal plane as well as a complete DC-8 plane to walk through. (It had a small crash when landing here in the 80's). There are a couple of exhibition halls containing some small model airplanes that you probably wish you were seeing here in real life. There are also some simulators that you have to pay extra for. The museum is in a good state but unless you are an enthusiast then you will probably be underwhelmed.",
+  "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+  "license": "CC BY-SA 3.0",
+  "attribution": "Wikivoyage contributors; https://en.wikivoyage.org/wiki/Shanghai/Minhang",
+  "sha256": "69c5ee78f774718969d405931a7158d688b1012f39227e8dfbb46354c4b7f731",
+  "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+  "poi_count": 2,
+  "source_dataset": "https://github.com/wikivoyage/wikivoyage.github.io",
+  "excluded_fields": [
+    "price",
+    "hours",
+    "phone",
+    "email",
+    "hotel",
+    "restaurant"
+  ]
+}

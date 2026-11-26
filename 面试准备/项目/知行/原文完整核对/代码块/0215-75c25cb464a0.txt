@@ -1,0 +1,54 @@
+async def emit_train_skill_ui(
+    stream: Any, conversation_id: str, state: dict
+) -> tuple[Optional[TrainMultiSegmentPayload], str]:
+    """手动确认模式：并行查全部段 → 推 skill_ui 帧
+
+    返回 (payload, status)，status 供调用方决定正文怎么写：
+      pushed    —— 已下发卡片（payload 非空）
+      empty     —— 各段都没查到候选，未下发卡片（调用方须如实告知，不能静默）
+      skipped   —— 不走高铁卡片路线（未选高铁 / 0 段）
+    """
+    if not train_mode_requested(state):
+        return None, "skipped"
+    legs = _legs_with_dates(state)
+    if len(legs) < 1:                        # 0 段（出发地=目的地）走零段直通，不推空卡片
+        return None, "skipped"
+    payload = await _payload_for(conversation_id, legs)
+    # ★ 全部段都为空就不推：宁可不推，也不推一张空卡片
+    if not any(seg.train_list for seg in payload.segments):
+        app_logger.warning("⚠️ 交通步多段班次全部为空，本次不下发选择卡片（避免空卡片）")
+        return None, "empty"
+    # ★ 一帧 skill_ui：前端按 skill_name 把卡片渲染在聊天流里
+    stream.push(make_event(ROLE_SKILL_UI, {
+        "skill_name": TRAIN_MULTI_SEGMENT_SKILL,
+        "data": payload.model_dump(by_alias=True),
+    }))
+    app_logger.info(
+        f"🚄 已下发多段高铁选择卡片：{len(payload.segments)} 段"
+        f"（各段候选 {[len(s.train_list) for s in payload.segments]}）"
+    )
+    return payload, "pushed"
+
+def build_lead_text(payload: Optional[TrainMultiSegmentPayload]) -> str:
+    """卡片上方的一句引导语（确定性文案，不用模型自由发挥）"""
+    n = len(payload.segments) if payload else 0
+    return (f"已为您**并行查询**到全部 {n} 段高铁的真实班次（段与段同时查询，未做先后校验）。"
+            f"请在下方卡片中依次选定每一段车次，确认无误后一次提交。\n")
+
+# 本批段的签名缓存：同一会话、同一批段的后续轮次直接复用，避免同一批段被反复查 12306
+_SIG_CACHE: SignatureCache[TrainMultiSegmentPayload] = SignatureCache("train")
+
+def _all_have_options(payload: TrainMultiSegmentPayload) -> bool:
+    """高铁的缓存口径：每一段都有候选才缓存（某段偶发为空就不缓存，下次重试会重新查询）"""
+    # ★ 高铁口径：每一段都要有候选
+    return all(seg.train_list for seg in payload.segments)
+
+async def _payload_for(conversation_id: str, legs: list[TrainLeg]) -> TrainMultiSegmentPayload:
+    """同一会话同一批段只查一次：命中完整快照直接复用，否则并行查询，并按高铁口径决定写不写缓存"""
+    sig = leg_signature(legs)
+    cached = _SIG_CACHE.get(conversation_id, sig, is_complete=_all_have_options)
+    if cached is not None:
+        return cached
+    payload = await build_train_multi_segment_payload(legs, cache_key=conversation_id)
+    _SIG_CACHE.store(conversation_id, sig, payload, is_complete=_all_have_options)
+    return payload

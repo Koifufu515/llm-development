@@ -1,0 +1,7 @@
+工具名： TravelItinerary
+  ScenicSpot.toponym              景点名称
+  ScenicSpot.toponym_desc         景点介绍，50-100字
+  ScenicSpot.toponym_image        封面图 URL，无则空字符串
+  ScenicSpot.toponym_image_list   图片列表，无则空数组
+  ScenicSpot.longitude            经度
+  ScenicSpot.latitude             纬度

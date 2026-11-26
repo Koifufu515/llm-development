@@ -1,0 +1,1 @@
+../../../../wenshu-project/查看状态.command

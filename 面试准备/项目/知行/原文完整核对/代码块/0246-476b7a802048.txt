@@ -1,0 +1,78 @@
+_LEG_UNAVAILABLE = "实时班次暂不可用（可现场购票/改期）"
+
+async def apply_flight_selection(
+    conversation_id: str, payload: FlightSubmitPayload
+) -> FlightSubmitResult:
+    """前端一次性提交 → 校验 + 写段账本 + 推进到住宿步（**全程不做航班时间校验**）"""
+    result = validate_flight_submission(payload, cache_key=conversation_id)
+    if not result.ok:
+        return result
+    agent, config, state = await get_agent_and_state(conversation_id)
+    # 步骤守卫（代码层，不看模型措辞）：只有仍停在交通步才允许落库推进——
+    # 重复提交（前端连点/已确认过）按幂等成功处理，避免把已推进的状态机拉回来
+    step = str(state.get("current_step") or "")
+    if step != "transport_planning":
+        if step in _AFTER_TRANSPORT:
+            return FlightSubmitResult(
+                ok=True, code="OK", msg="该批航班已确认，无需重复提交",
+                accepted=list(payload.segments),
+                texts=list(state.get("selected_transport_legs") or []),
+            )
+        return FlightSubmitResult(
+            ok=False, code="STEP_MISMATCH",
+            msg=f"当前流程步骤为 {step or '未知'}，不在交通确认阶段，无法提交航班",
+        )
+    legs = _legs_with_dates(state)
+    cached = get_cached_payload(conversation_id)
+    by_id = {seg.segment_id: seg for seg in (cached.segments if cached else [])}
+    # 按 option_id 定位选中航班（航班号可能不唯一，不能按 flight_no 取首条）
+    chosen = {item.segment_id: item.option_id for item in payload.segments}
+    selections: dict[str, str] = {}
+    prices: dict[str, float] = {}
+    texts: list[str] = []
+    for index, leg in enumerate(legs):
+        seg = by_id.get(f"s{index + 1}")
+        want = chosen.get(f"s{index + 1}")
+        opt = next((o for o in (seg.flight_list if seg else []) if o.option_id == want), None)
+        key = f"{leg.from_}→{leg.to}"
+        if opt is not None:
+            selections[key] = _fmt_option(opt)
+            if float(getattr(opt, "price", 0) or 0) > 0:
+                prices[key] = float(opt.price)
+            texts.append(f"{key} {_fmt_option(opt)}")
+        elif seg is not None and not seg.flight_list:
+            # ★ 该段实时无候选（卡片里置灰、无从选择）：占位放行（与高铁/自驾同口径），
+            #   预算侧对无价段按估算兜底，不再卡死在交通步
+            selections[key] = _LEG_UNAVAILABLE
+            texts.append(f"{key} {_LEG_UNAVAILABLE}")
+        # else：该段有候选却没选中 —— 不占位（validate 已拦），保持"有票必须选"
+    if not legs or len(selections) != len(legs):
+        return FlightSubmitResult(
+            ok=False, code="INCOMPLETE",
+            msg=f"提交的航班未能覆盖全部行程段（应 {len(legs)} 段，匹配 {len(selections)} 段），"
+                f"请在卡片里重新选择后提交",
+        )
+    await agent.aupdate_state(config, {
+        "leg_selections": selections,
+        "leg_prices": prices,
+        "leg_cursor": len(legs),
+        "selected_transport": "flight",
+        "selected_transport_legs": texts,
+        "current_step": "accommodation_planning",
+    })
+    app_logger.info(f"✅ 多段航班已提交并落库：{len(selections)} 段，推进到住宿步")
+    return FlightSubmitResult(
+        ok=True, code="OK",
+        msg=f"已确认 {len(selections)} 段航班，继续为您规划住宿与行程",
+        accepted=list(payload.segments),
+        texts=texts,  # 段文本回传：路由侧据此合成"我已选定航班…"发言续跑住宿步
+    )
+
+__all__ = [
+    "flight_mode_requested",
+    "flight_card_mode",
+    "emit_flight_skill_ui",
+    "auto_select_flights",
+    "apply_flight_selection",
+    "build_lead_text",
+]

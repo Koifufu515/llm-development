@@ -1,0 +1,27 @@
+"""try_express_planning 双层门禁演示（场景 1 纯逻辑、0 次 LLM；场景 2 需 DashScope 密钥）"""
+import asyncio
+from datetime import date, timedelta
+
+from app.core.event_stream import EventStream
+from app.services.express_planning_service import try_express_planning
+
+FORM = f"""我想去杭州旅行
+- 出发地：福州
+- 出发日期：{(date.today() + timedelta(days=5)).isoformat()}
+- 旅行天数：3 天
+- 出行人数：2 成人 0 儿童
+- 人均预算：3000 元
+- 交通方式：高铁
+- 住宿偏好：经济型
+- 餐饮偏好：本地小吃
+- 全程交给 AI 自动确认，无需逐步询问"""
+
+async def main():
+    # 场景 1：普通规划请求——没有"全程交给 AI 自动确认"，第一层正则直接挡掉
+    print("普通消息 →", await try_express_planning("u1", "帮我规划杭州三日游", EventStream()))
+    # 场景 2：表单文本——命中正则，再用一次 LLM 结构化提取做复核
+    req = await try_express_planning("u1", FORM, EventStream())
+    print("表单消息 →", req.model_dump() if req else None)
+
+if __name__ == "__main__":
+    asyncio.run(main())

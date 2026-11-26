@@ -1,0 +1,10 @@
+{
+  "archive": "知行旅行助手_原方案复现_2026-10-31.zip",
+  "bytes": 27222286,
+  "sha256": "943d78e7ae350bcdaded760c5018175d99a5a44356742eef82b0a2a390b929d3",
+  "files": 297,
+  "crc_and_file_hash_verified": true,
+  "credential_scan_passed": true,
+  "actual_credentials_embedded": false,
+  "scope": "包包含代码/冻结依赖/攻略/Chroma/报告；不携带现有PG用户数据和真实env。需按README配置本机环境，不冒称已在另一台机器部署。"
+}

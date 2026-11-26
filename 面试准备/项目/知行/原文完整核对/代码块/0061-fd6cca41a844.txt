@@ -1,0 +1,157 @@
+# ============== 快捷回退工具 ==============
+
+@tool
+def go_back_to_requirement(
+        reason: str = "用户希望重新规划",
+        runtime: ToolRuntime[None, TravelState] = None
+) -> Command:
+    """
+    快捷回退：返回到需求收集步骤，重新开始规划。
+
+    使用场景：
+    - 用户说"我想重新规划"
+    - 用户说"出发日期要改"
+    - 用户说"预算变了"
+    - 用户说"人数不对"
+    - 用户说"从头开始"
+
+    效果：
+    - 清除所有已收集的数据
+    - 返回到最初的需求收集阶段
+    """
+    app_logger.info(f"[快捷回退→需求] {reason}")
+    return go_back_to_step.invoke({
+        "target_step": "requirement_collection",
+        "reason": reason,
+        "clear_subsequent_data": True,
+        "runtime": runtime,
+    })
+
+@tool
+def go_back_to_destination(
+        reason: str = "用户希望更换目的地",
+        runtime: ToolRuntime[None, TravelState] = None
+) -> Command:
+    """
+    快捷回退：返回到目的地推荐步骤。
+
+    使用场景：
+    - 用户说"换个目的地"
+    - 用户说"这个地方不想去了"
+    - 用户说"有没有其他推荐"
+    - 用户说"目的地选错了"
+
+    效果：
+    - 保留用户需求
+    - 清除目的地及后续所有数据
+    """
+    app_logger.info(f"[快捷回退→目的地] {reason}")
+    return go_back_to_step.invoke({
+        "target_step": "destination_recommendation",
+        "reason": reason,
+        "clear_subsequent_data": True,
+        "runtime": runtime,
+    })
+
+@tool
+def go_back_to_transport(
+        reason: str = "用户希望更换交通方式",
+        runtime: ToolRuntime[None, TravelState] = None
+) -> Command:
+    """
+    快捷回退：返回到交通规划步骤。
+
+    使用场景：
+    - 用户说"不坐飞机了"
+    - 用户说"改成高铁"
+    - 用户说"还是自驾吧"
+    """
+    app_logger.info(f"[快捷回退→交通] {reason}")
+    return go_back_to_step.invoke({
+        "target_step": "transport_planning",
+        "reason": reason,
+        "clear_subsequent_data": True,
+        "runtime": runtime,
+    })
+
+@tool
+def go_back_to_accommodation(
+        reason: str = "用户希望调整住宿",
+        runtime: ToolRuntime[None, TravelState] = None
+) -> Command:
+    """
+    快捷回退：返回到住宿规划步骤。
+
+    使用场景：
+    - 用户说"住宿要求改一下"
+    - 用户说"想住民宿"
+    - 用户说"酒店太贵了"
+    """
+    app_logger.info(f"[快捷回退→住宿] {reason}")
+    return go_back_to_step.invoke({
+        "target_step": "accommodation_planning",
+        "reason": reason,
+        "clear_subsequent_data": True,
+        "runtime": runtime,
+    })
+
+@tool
+def go_back_to_food(
+        reason: str = "用户希望调整餐饮偏好",
+        runtime: ToolRuntime[None, TravelState] = None
+) -> Command:
+    """
+    快捷回退：返回到餐饮规划步骤。
+
+    使用场景：
+    - 用户说"餐饮偏好改一下"
+    - 用户说"想多吃特色美食"
+    """
+    app_logger.info(f"[快捷回退→餐饮] {reason}")
+    return go_back_to_step.invoke({
+        "target_step": "food_planning",
+        "reason": reason,
+        "clear_subsequent_data": True,
+        "runtime": runtime,
+    })
+
+@tool
+def go_back_to_itinerary(
+        reason: str = "用户希望调整行程",
+        runtime: ToolRuntime[None, TravelState] = None
+) -> Command:
+    """
+    快捷回退：返回到行程生成步骤。
+
+    使用场景：
+    - 用户说"行程安排不合理"
+    - 用户说"想加点景点"
+    - 用户说"太累了，减少活动"
+    """
+    app_logger.info(f"[快捷回退→行程] {reason}")
+    return go_back_to_step.invoke({
+        "target_step": "itinerary_generation",
+        "reason": reason,
+        "clear_subsequent_data": True,
+        "runtime": runtime,
+    })
+
+@tool
+def go_back_to_budget(
+        reason: str = "用户希望重新计算预算",
+        runtime: ToolRuntime[None, TravelState] = None
+) -> Command:
+    """
+    快捷回退：返回到预算汇总步骤。
+
+    使用场景：
+    - 用户说"预算超了"
+    - 用户说"重新算一下费用"
+    """
+    app_logger.info(f"[快捷回退→预算] {reason}")
+    return go_back_to_step.invoke({
+        "target_step": "budget_summarization",
+        "reason": reason,
+        "clear_subsequent_data": True,
+        "runtime": runtime,
+    })

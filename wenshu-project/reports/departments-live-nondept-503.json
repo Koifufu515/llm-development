@@ -1,0 +1,260 @@
+{
+  "scope": "真实本机内部部门HTTP与Qwen，另一部门故障注入连接拒绝；不是两节点物理故障",
+  "queries": [
+    {
+      "departments": [
+        "dept_hqaq",
+        "dept_unavailable"
+      ],
+      "seconds": 7.099294624757022,
+      "session_id": "5caa30d092ae4a30b7ad54c917fcb838",
+      "answer": "部门服务暂不可用，以下使用共享制度检索回退回答：\n不可以。强降雨天气禁止在校园骑行 [来源1]；大风暴雨天气请勿骑行 [来源2]；Cycling is prohibited in strong rain [来源3]。",
+      "citations": [
+        {
+          "doc_id": "462a55cc9b734893b5ff93120bf42811",
+          "doc_title": "关于校园防汛应急响应措施的通知",
+          "dept_id": "dept_hqaq",
+          "chunk_index": 0,
+          "section_path": [],
+          "snippet": "关于校园防汛应急响应措施的通知 / Notice on Emergency Response Measures for Flood Control on Campus\n受短时强降雨及东苕溪上游来水影响,东苕溪流域水位回涨。近24小时,全余杭区面雨量59.2毫米,叠加前期持续强降雨,山区山洪地质灾害风险大。根据《杭州市余杭区防汛防台抗旱抗雪防冻应急预案》,区防指于14日15:30将瓶窑镇等5个镇街防"
+        },
+        {
+          "doc_id": "0ff610154d5a4c6480b776f93600fc81",
+          "doc_title": "暴雨天气致全体师生的温馨提醒",
+          "dept_id": "dept_hqaq",
+          "chunk_index": 0,
+          "section_path": [],
+          "snippet": "暴雨天气致全体师生的温馨提醒 /Reminder During Heavy Rainfall\n余杭区气象台已发布暴雨红色预警,预计本地将出现短时强降雨,易发生短时积水、山体滑坡、树木倒伏等次生灾害。为切实做好暴雨防范工作,保障全体师生生命财产安全,现将有关注意事项温馨提醒如下:\n密切关注预警,非必要不外出\n请及时关注气象发布的雨情、预警信息,合理安排出行,非必要不外出。确需外出时避开低洼积水、边坡"
+        },
+        {
+          "doc_id": "462a55cc9b734893b5ff93120bf42811",
+          "doc_title": "关于校园防汛应急响应措施的通知",
+          "dept_id": "dept_hqaq",
+          "chunk_index": 4,
+          "section_path": [],
+          "snippet": "Follow warning information; avoid going out unless necessary.​ Closely monitor rainfall updates and alerts issued by meteorological authorities, and plan your schedule accordingly. Do not go out unles"
+        },
+        {
+          "doc_id": "462a55cc9b734893b5ff93120bf42811",
+          "doc_title": "关于校园防汛应急响应措施的通知",
+          "dept_id": "dept_hqaq",
+          "chunk_index": 1,
+          "section_path": [],
+          "snippet": "注意居家安全,避开危险区域:检查电、自来水、燃气等设施安全,及时关闭电器设备,切断不必要电源;远离河道、树木、广告牌、电线杆、建筑工地等,若发现电线低垂或折断,立即远离,切勿触碰。请勿随意敞开楼道、楼梯间公共窗户,强降雨易造成雨水倒灌,请大家随手关窗,共同守护校园公共设施。\n如遇公寓漏水、积水、设施损坏、电路故障等,请保持冷静并立即拨打校园110(28881110)报警电话,切勿自行处理;强降雨后"
+        },
+        {
+          "doc_id": "462a55cc9b734893b5ff93120bf42811",
+          "doc_title": "关于校园防汛应急响应措施的通知",
+          "dept_id": "dept_hqaq",
+          "chunk_index": 9,
+          "section_path": [],
+          "snippet": "Temporary closure of sports and cultural venues.​ On-campus sports and cultural venues (swimming pool, badminton hall, gym, outdoor courts, etc.) and the library shall suspend opening from 08:00 on Au"
+        }
+      ],
+      "dept_ids": [
+        "dept_hqaq"
+      ],
+      "confidence": 0.7,
+      "intent_type": "regulation_consult",
+      "verification": {
+        "passed": true,
+        "score": 1.0,
+        "issues": [],
+        "partial": true,
+        "degraded_departments": [
+          "dept_hqaq",
+          "dept_unavailable"
+        ]
+      },
+      "retrieved_count": 5,
+      "route": null,
+      "queue_wait_ms": 0.002,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "intent",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 265,
+              "output": 68,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 1928
+          },
+          {
+            "kind": "rewrite",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 177,
+              "output": 37,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 1349
+          },
+          {
+            "kind": "embedding",
+            "model": "text-embedding-v4",
+            "usage": {
+              "prompt_tokens": 17,
+              "total_tokens": 17
+            }
+          },
+          {
+            "kind": "embedding",
+            "model": "text-embedding-v4",
+            "usage": {
+              "prompt_tokens": 15,
+              "total_tokens": 15
+            }
+          },
+          {
+            "kind": "rerank",
+            "model": "qwen3-rerank",
+            "usage": {
+              "total_tokens": 2183
+            }
+          },
+          {
+            "kind": "rerank",
+            "model": "qwen3-rerank",
+            "usage": {
+              "total_tokens": 2126
+            }
+          },
+          {
+            "kind": "answer",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 155,
+              "output": 38,
+              "cacheRead": 1408,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 1099
+          },
+          {
+            "kind": "verify",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 165,
+              "output": 18,
+              "cacheRead": 1408,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 709
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null,
+        "estimated_cost": {
+          "currency": "CNY",
+          "lower_yuan": 0.00355266,
+          "upper_yuan": 0.0063209,
+          "complete": true,
+          "unknown_calls": [],
+          "price_date": "2026-11-09",
+          "region": "百炼北京",
+          "billing_cost_yuan": null,
+          "basis": "实际返回的usage×公开原价，区分缓存及未知思考模式；未计免费额度/活动/合同优惠，非实际账单",
+          "sources": {
+            "qwen-plus": "https://help.aliyun.com/zh/model-studio/qwen-plus",
+            "text-embedding-v4": "https://help.aliyun.com/zh/model-studio/text-embedding-v4",
+            "qwen3-rerank": "https://help.aliyun.com/zh/model-studio/model-pricing"
+          }
+        }
+      }
+    },
+    {
+      "departments": [
+        "dept_unavailable"
+      ],
+      "seconds": 3.4190119584091008,
+      "session_id": "eb6a40a14ca14d488a05284abbf62c2a",
+      "answer": "部门服务暂不可用，以下使用共享制度检索回退回答：\n制度依据已失效或不足，建议咨询相关部门。",
+      "citations": [],
+      "dept_ids": [],
+      "confidence": 0.2,
+      "intent_type": "regulation_consult",
+      "verification": {
+        "passed": false,
+        "score": 0.0,
+        "issues": [
+          "无可验证的官方证据，不能确认事实结论"
+        ],
+        "degraded_to_quotes": true,
+        "partial": true,
+        "degraded_departments": [
+          "dept_unavailable"
+        ]
+      },
+      "retrieved_count": 0,
+      "route": null,
+      "queue_wait_ms": 0.009,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "intent",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 265,
+              "output": 68,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 1912
+          },
+          {
+            "kind": "rewrite",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 177,
+              "output": 37,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 1448
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null,
+        "estimated_cost": {
+          "currency": "CNY",
+          "lower_yuan": 0.0005636,
+          "upper_yuan": 0.0011936,
+          "complete": true,
+          "unknown_calls": [],
+          "price_date": "2026-11-09",
+          "region": "百炼北京",
+          "billing_cost_yuan": null,
+          "basis": "实际返回的usage×公开原价，区分缓存及未知思考模式；未计免费额度/活动/合同优惠，非实际账单",
+          "sources": {
+            "qwen-plus": "https://help.aliyun.com/zh/model-studio/qwen-plus",
+            "text-embedding-v4": "https://help.aliyun.com/zh/model-studio/text-embedding-v4",
+            "qwen3-rerank": "https://help.aliyun.com/zh/model-studio/model-pricing"
+          }
+        }
+      }
+    }
+  ],
+  "partial_failure_explicit": true
+}

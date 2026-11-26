@@ -1,0 +1,14 @@
+{
+  "pytest_passed": 120,
+  "pytest_log_sha256": "2dc9236ba523408d6b0f920f83ea1a732824e1ccaad3a64e1d6daa3dfb067855",
+  "python_compileall_exit": 0,
+  "node_syntax_check_exit": 0,
+  "health_config_http": 200,
+  "travel_http": 200,
+  "restart_persistence": true,
+  "map_final_dom": {
+    "museum": 1,
+    "parking": 0
+  },
+  "note": "pytest不是120次真实供应商查询；真实API、性能、模型裁判、回放故障分别见专项报告。"
+}

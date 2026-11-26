@@ -1,0 +1,84 @@
+@tool
+def submit_itinerary_body_tool(
+        days: list[dict],
+        runtime: ToolRuntime[None, TravelState] = None
+) -> Command:
+    """提交结构化逐日行程；校验通过后由系统渲染正文与预算表。
+    仅提交数据，禁止自行编写行程正文或预算表格，正文、预算明细表由系统按结构渲染。
+
+    参数说明：
+    - days: 逐日行程列表，单条样例
+      {"day": 1, "city": "北京",
+       "morning": ["09:00 天安门广场观升旗（提前1小时到，安检排队约20分钟；广场免费，故宫需提前7天预约）"],
+       "noon": ["12:00 前门大街「四季民福」烤鸭，招牌酥皮烤鸭+芥末鸭掌，人均约150元"],
+       "afternoon": ["14:00 故宫博物院中轴线游览（午门进、神武门出，重点看太和殿与珍宝馆，建议停留3小时，门票60元）"],
+       "evening": ["18:00 什刹海「烤肉季」铜锅涮肉，人均约120元，2人铜锅+麻酱烧饼"],
+       "tips": ["故宫、国博需实名预约，建议出发前7天在官方小程序抢票", "地铁1号线天安门东站出站最便捷，天安门周边不可停车"]}
+    硬约束：每个时段至少1条，每条不少于15字（建议写到25~60字）；每天至少1条tips；天序号覆盖1~旅行天数、不重不漏；最后一天晚上必须包含返程。
+    """
+    state = runtime.state
+    # 多目的地天数硬约束：与 generate_itinerary_tool 同源（结构化提交入口此前漏检——
+    # 正文改走本工具时，天数不足的多城需求会被放行、产出不完整报告）
+    _floor_err = _multi_city_day_floor_error(state)
+    if _floor_err:
+        app_logger.info(f"[guard] 多目的地天数不足，拒绝提交行程结构：{_floor_err}")
+        return Command(update={
+            "messages": [ToolMessage(content=_floor_err, tool_call_id=runtime.tool_call_id)]
+        })
+    need = int(((state.get("user_requirement") or {}).get("travel_days")) or 0)
+
+    auto_budget: dict = {}
+    if not (state.get("budget") or {}).get("total"):
+        _raw = getattr(summarize_budget_tool, "func", None)
+        if _raw is not None:
+            extra = dict(_raw(runtime=runtime).update or {})
+            extra.pop("messages", None)
+            auto_budget = extra
+            auto_budget.pop("user_requirement", None)
+            app_logger.info("预算缺失（与预算工具同轮并行调用）：已由行程提交工具就地补算并同批落库")
+
+    if not (auto_budget.get("budget") or state.get("budget") or {}).get("total"):
+        app_logger.warning("🚫 提交行程结构被拒：预算缺失且就地补算未成功")
+        return Command(update={"messages": [ToolMessage(
+            content=("❌ 预算尚未计算，无法渲染预算明细表。请先调用 `summarize_budget_tool`"
+                     "汇总预算，再调用本工具提交行程结构（顺序：预算 → 行程结构）。"),
+            tool_call_id=runtime.tool_call_id)]})
+
+    _cities = _day_city_map(state)
+    days = _fill_day_cities(days, _cities)
+
+    try:
+        body = ItineraryBody.model_validate({"days": days}, context={"travel_days": need})
+    except ValidationError as e:
+        err = "；".join(f"{'.'.join(str(x) for x in it['loc'])} → {it['msg']}" for it in e.errors()[:5])
+        app_logger.warning(f"⚠️ 行程结构未过校验，转由代码规范化（{need} 天）：{err}")
+        fixed, fixes = _normalize_itinerary_days(
+            days, need, back_text=_back_hint(state), cities=_cities
+        )
+        try:
+            body = ItineraryBody.model_validate({"days": fixed}, context={"travel_days": need})
+        except ValidationError as e2:
+            err2 = "；".join(f"{'.'.join(str(x) for x in it['loc'])} → {it['msg']}" for it in e2.errors()[:5])
+            app_logger.warning(f"❌ 规范化后仍未通过（不应发生）：{err2}")
+            return Command(update={"messages": [ToolMessage(
+                content=(f"行程结构校验失败（全程 {need} 天）：{err2}\n"
+                         f"请修正后重新调用本工具提交完整结构（只提交数据，不要输出正文）"),
+                tool_call_id=runtime.tool_call_id)]})
+        app_logger.warning(f"⚠️ 已由代码规范化 {len(fixes)} 处：{'；'.join(fixes[:6])}")
+        fixes_note = f"（系统已按 {need} 天规范化 {len(fixes)} 处空缺）" if fixes else ""
+    else:
+        fixes_note = ""
+
+    dumped = [d.model_dump() for d in body.days]
+    app_logger.info(f"✅ 行程结构就绪：{len(dumped)} 天（末日含返程）{fixes_note}，正文交由代码渲染")
+    return Command(update={
+        "messages": [ToolMessage(
+            content=(f"✅ 已接收 {len(dumped)} 天行程结构{fixes_note}。正文与预算表由系统渲染，"
+                     f"本轮不要再输出任何行程正文、时段列表或预算表格，只回一句邀请语："
+                     f"「如需调整（天数/预算/目的地等），直接告诉我即可。」"),
+            tool_call_id=runtime.tool_call_id)],
+        **auto_budget,
+        "itinerary_body": dumped,
+        "itinerary": [{"day_number": d["day"]} for d in dumped],
+        "current_step": "budget_summarization",
+    })

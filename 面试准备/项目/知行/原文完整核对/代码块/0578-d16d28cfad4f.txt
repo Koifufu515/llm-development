@@ -1,0 +1,8 @@
+"""_parse_query_date 演示：显式日期 > 相对日期 > 默认今天；"大后天"必须排在"后天"前面（纯函数，无需密钥）"""
+from datetime import date
+
+from app.services.chat_stream_executor import _DAY_OFFSET, _parse_query_date
+
+print("今天是", date.today().isoformat(), "| 相对日期词表（长词在前）：", [w for w, _ in _DAY_OFFSET])
+for text in ["10月1日福州到深圳", "10-02 的车", "明天的高铁", "后天的", "大后天的票", "查福州到深圳"]:
+    print(f"{text:10s} → {_parse_query_date(text)}")

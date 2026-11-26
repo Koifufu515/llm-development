@@ -1,0 +1,25 @@
+{
+  "scope": "修复真实浏览器发现的景点误匹配停车场，仅更新合成基准账号的地图展示，不改正文/预算/历史版本。",
+  "probe": {
+    "status": "ok",
+    "points": [
+      {
+        "order": 0,
+        "day": 1,
+        "city": "苏州",
+        "name": "苏州博物馆(本馆)",
+        "source_activity": "苏州博物馆参观",
+        "lng": 120.627856,
+        "lat": 31.322948,
+        "coordinate_system": "GCJ02",
+        "address": "东北街204号",
+        "photo_url": "http://store.is.autonavi.com/showpic/aced2ad6e6cebff9f83132f53195b0a5",
+        "source": "高德POI"
+      }
+    ],
+    "routes": [],
+    "coordinate_system": "GCJ02",
+    "notice": "地点按城市检索；无坐标的建议仍保留在正文。"
+  },
+  "matched_main_attraction": true
+}

@@ -1,0 +1,21 @@
+{
+  "city": "上海",
+  "title": "上海景点资料 · Shanghai/Old City",
+  "source_url": "https://en.wikivoyage.org/wiki/Shanghai/Old%20City",
+  "text": "资料城市：上海。本文是历史开放景点资料，不提供实时开放时间或价格；出行前需要核实。\n\nCity God Temple\nA well-known Taoist temple at the centre of the Old City, one of the biggest examples of traditional Chinese architecture in Shanghai. You can find local snacks and food as well as other traditional Chinese decorations in the surrounding commercial area.\n\nOld City Wall\nThe small surviving part of the Shanghai city wall. A prominent feature is '''Dajing Tower'''. If you want to see a larger and better preserved wall, go to nearby Suzhou, or Nanjing.\n\nJiu Qu Qiao Bridge\nA zig-zagging bridge near the City God Temple, the present construction dates from the early 20th century.\n\nDongjiadu Cathedral\nBuilt by Spanish Jesuits in the 19th century, the historic seat of the Bishop of Shanghai. Near the river, outside the old city wall.\n\nYu Garden\nA traditional Chinese Ming-style private garden, originally built in 1559 but ransacked and restored several times since then. Entrance price is worth it for the many exquisite Chinese pavilions, seemingly never-ending paths, and sculpted gardens within. Near the garden, the famous zigzag bridge and its teahouse (see Drink) can be visited. The bazaar near the garden is ''always crowded'' with tourists.\n\nChenxiang Ge Temple\nA historic Buddhist temple, with a statue on the upper floor carved from a rare wood.\n\nBaiyun Guan Temple\nA Taoist temple. Look for the statue of the guardian spirit for your Chinese zodiac.\n\nXiaotayuan Mosque\nA historic mosque that combines Chinese and Islamic architectural styles.\n\nWenmiao Temple\nThe Temple to Confucius, with Shanghai's most famous vintage book market.\n\nOld City God Temple (Lao Cheng Huang Miao)\nThe area around the Old City God Temple and the Yuyuan Gardens has become a large commercial hub, with many restored historical buildings as well as new buildings in a somewhat traditional style. Take photos, shop for souvenirs, and enjoy the many restaurants and eateries. Enjoy an illuminated diorama or other forms of 19th century street side entertainment. Come after 6:30PM when the lights show off the beauty of the buildings in a new way. Eat upstairs at one of the restaurants overlooking the square on Yu Yuan Lu (with a pond criss-crossed by a zigzag bridge and tea room) and see the reflections of the lights. (The City God Temple lies at the southern end of this commercial area, and the Yuyuan Garden at the northern end: the entrance to the Garden is near the zigzag bridge).",
+  "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+  "license": "CC BY-SA 3.0",
+  "attribution": "Wikivoyage contributors; https://en.wikivoyage.org/wiki/Shanghai/Old%20City",
+  "sha256": "65eebc7a52fa5017c39a8e2bd013b347756d461e0f011d444832277794af9a75",
+  "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+  "poi_count": 10,
+  "source_dataset": "https://github.com/wikivoyage/wikivoyage.github.io",
+  "excluded_fields": [
+    "price",
+    "hours",
+    "phone",
+    "email",
+    "hotel",
+    "restaurant"
+  ]
+}

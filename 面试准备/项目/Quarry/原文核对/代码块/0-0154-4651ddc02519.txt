@@ -1,0 +1,1 @@
+Get-Content corpus/travel-guide/西安.md -TotalCount 30 -Encoding UTF8

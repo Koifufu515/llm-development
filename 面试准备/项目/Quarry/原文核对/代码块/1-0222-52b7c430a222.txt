@@ -1,0 +1,2 @@
+14:31:02.118 | WARNING | quarry.ingest.worker:_claim_stale:110 | [1727356215432-0] 认领超时消息，这是第 2 次投递
+14:31:02.119 | INFO    | quarry.ingest.worker:_handle:50 | [1727356215432-0] 文档 8f3c... 阶段 parsing

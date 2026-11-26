@@ -1,0 +1,1 @@
+uv run alembic revision -m "eval tables" --rev-id 0005

@@ -1,0 +1,8 @@
+"""_build_hotel_fallback 演示：酒店服务不可用时，三种模式各自怎么收尾（纯函数，无需密钥）"""
+from app.services.chat_stream_executor import _build_hotel_fallback
+
+req = {"accommodation_types": ["economy_hotel"]}
+print("【手动模式】", _build_hotel_fallback(req))
+print("【自动确认】", _build_hotel_fallback(req, auto_confirm=True).splitlines()[-1])   # 不再向用户索要选择
+print("【用户已选】", _build_hotel_fallback(req, chosen="如家").splitlines()[-1])
+print("【没带偏好】列出", _build_hotel_fallback(None).count("- **"), "个档位")

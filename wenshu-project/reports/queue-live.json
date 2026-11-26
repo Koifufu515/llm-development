@@ -1,0 +1,10 @@
+{
+  "real_mongo_redis": true,
+  "killed_child_exitcode": -9,
+  "expired_claim_recovered": true,
+  "attempts_after_recovery": 2,
+  "completed_ack_pending": 0,
+  "failures_to_dlq": 3,
+  "production_jobs_untouched": true,
+  "models_called": false
+}

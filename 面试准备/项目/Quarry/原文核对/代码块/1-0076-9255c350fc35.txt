@@ -1,0 +1,8 @@
+SELECT chunk_id, heading_path, content, char_start, char_end,
+       1 - (embedding <=> $1::halfvec(1024)) AS score
+FROM chunks
+WHERE collection_id = $2
+  AND level         = 1
+  AND acl_labels   && $3::text[]
+ORDER BY embedding <=> $1::halfvec(1024)
+LIMIT $4;

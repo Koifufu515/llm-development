@@ -1,0 +1,110 @@
+chat_contract_service 总览•两类调用进来，三条通道出去，四处落地
+它是 HTTP 路由和 Agent之间的对话编排层：路由只负责鉴权和逐帧写 SSE，本文件决定「这一轮走哪条路、推哪些帧、产物落哪张表」。真正调模型、查
+班次、渲染正文的活，都在下游的 chat_stream_executor 和 express_planning_service 里。
+① 谁调进来 只有两个 API模块会调用本文件，都在 SSE 生成器 event _generator 里调
+api/V1/messages.py •send_message跨模块
+api/v1/skills.py •submit_*_multi_segment ×4 跨模块
+POST /api/v1/messages• 用户每发一条消息
+POST /api/v1/skills/｛train hotel flight driving｝_multi_segment/submit• 卡片一次性提交
+get_owned_conversation 校验归属一
+run_chat_turn
+apply_*_selection 校验落库
+|mark_skill_ui_submitted - 回是已选
+async for - _sse（event）
+run_chat_turn
+调用位置L55：run_chat_turn（db，str（user.id），conversation_id，content），三个续跑参数
+mark L149/188/226/263•run L155/192/230/267 ：用合成发言续跑，并传
+都用默认值。
+force_planning=True、persist_user=False、resume_stage。
+』 进入本文件（338行，7个函数＋1个类4个方法）』
+FILE app/services/chat_contract_service.py
+大 对话编排层
+入口
+编排核心
+旁路记录器
+判定助手
+被 API 层直接调用
+一轮对话的总调度
+class_SkillUiRecorder L42
+纯判断，全部只被_produce 用
+run_chat_turnasync
+L157
+_produce ［async
+_init
+L50
+_hit_auto_confirm（fn
+L32
+造事件流，把_produce 丟到后台
+八个阶段：准备一路由一直查门
+有没有「全程交给AI 自动确认」
+禁-提示帧-三路执行一清单门
+push
+L54
+mark_skill_ui_submitted
+async
+禁一记忆同步 —收尾落库
+转发每一帧，顺手记下最后一张卡片
+_manual_multi_city_day_warning
+L70
+L106
+把卡片提交态写回历史消息
+close
+L63
+多城天数不够时给一句提醒
+aiter
+L67
+_looks_like_itinerary
+L126
+未被调用
+这段字像不像行程
+-recent_itinerary_text
+|async
+L136
+翻历史找最近一份行程全文
+run_chat_turn —create_task L170 -_produce
+_produce 一第一行 L192 用-_SkilLUiRecorder 包住事件流
+produce — L211•L262 • L278•L279 调一四个判定助手
+② _produce 往外调谁 按调用先后排列；同一时刻只会走直查、快速通道、状态机三路中的一路
+conversation_service
+routers/chatrouter
+chat_stream_executor
+express_planning_service
+itinerary_plan_service
+get_owned_conversation •L194
+chat_route •L222
+try_direct_ticket」
+exkcdicectrt cehsgw92os
+•L225
+try_express_planning •L244
+取会话，首条消息时用前30字改标题
+LLM 结构化意图路由；卡片续跑时跳过
+run express pLanning • L25L
+chat_compress_service
+直查班次表；状态机执行一轮
+sync_express_state •L307
+generate_plan •L291
+compress_content • L317
+快速通道判定、执行、回写记忆
+生成清单落库；超2000字压缩摘要
+③ 结果交给谁 本文件只返回一样东西 （EventStream）），其余全是副作用
+T EventStream SSE 前端
+12 message 表
+3 itinerary_plans表
+4 LangGraph thread
+本文件自己推 assistant skilLs
+user 消息（仅 persist_user=True）；assistant
+清单门禁通过时，经 generate_plan 按会话覆盖
+状态机分支由 execute_turn 读写；快速通道绕
+itinerary_plans done error ；下游经记录
+消息的 extra_info 存 original /
+落库，并起后台质检；plan_id 随
+过状态机，结束后由 sync_express_state 一次
+器再推 skill_ui assistant_reset。路由用
+inference_steps /skill_ui /
+itinerary_plans 帧下发。
+性回写。
+_sse（）逐帧写出。
+itinerary_plans。由 GET
+/api/v1/messages 回放给前端。
+分工：API 层负责「谁能调、怎么写帧」，本文件负责「这一轮走哪条路、产物落到哪」，下游负责「具体怎么做J。本文件自己不直接调模型：意图路由 chat_route、清单提炼 generate_plan、长文
+压缩 compress_content 都委托给下游模块；卡片续跑时，force_planning 连路由这一步也会跳过。

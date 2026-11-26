@@ -1,0 +1,49 @@
+class SignatureCache(Generic[T]):
+    """段签名查询缓存：同一会话、同一批段第二次访问直接复用，避免重复打外部服务
+
+    is_complete 回答"这份 payload 值不值得缓存"，定义权交给调用方，四类的口径并不相同：
+    - 高铁：每一段都有候选才缓存——某段偶发为空若被缓存，用户重试会永远命中这份空快照（"空段死锁"）；
+    - 航班 / 自驾 / 住宿：只要有一段有结果就缓存——没有机场码之类的段本来就查不出来，重试也没用。
+    容量超过 capacity 时，踢掉最早写入的一条。
+    """
+
+    def __init__(self, name: str, capacity: int = 32):
+        self.name = name
+        self.capacity = capacity
+        self._data: dict[str, T] = {}
+
+    def _make_key(self, conversation_id: str, sig: str) -> str:
+        return f"{conversation_id}#{sig}"
+
+    def get(
+            self,
+            conversation_id: str,
+            sig: str,
+            is_complete: Callable[[T], bool] = lambda _p: True,
+    ) -> Optional[T]:
+        """取缓存：命中且 is_complete 判定通过才复用（不通过当没命中，留给重试）"""
+        cached = self._data.get(self._make_key(conversation_id, sig))
+        if cached is None:
+            return None
+        # ★ 读：不值得复用的当没命中，留给重试
+        if not is_complete(cached):
+            app_logger.debug(f"[{self.name}] 缓存命中但不完整，不复用")
+            return None
+        app_logger.info(f"🎯 [{self.name}] 命中段签名缓存")
+        return cached
+
+    def store(
+            self,
+            conversation_id: str,
+            sig: str,
+            payload: T,
+            is_complete: Callable[[T], bool] = lambda _p: True,
+    ) -> None:
+        """写入缓存：只有 is_complete 判定通过才写"""
+        # ★ 写：值不值得缓存由调用方的 is_complete 决定（高铁 all，其余三类 any）
+        if not is_complete(payload):
+            app_logger.warning(f"⚠️ [{self.name}] payload 不值得缓存，不写签名缓存（留给下次重试）")
+            return
+        self._data[self._make_key(conversation_id, sig)] = payload
+        if len(self._data) > self.capacity:      # 简单容量控制：超过时踢掉最早写入的一条
+            self._data.pop(next(iter(self._data)))

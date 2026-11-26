@@ -1,0 +1,15 @@
+{
+  "status": "ok",
+  "env": "development",
+  "backend": {
+    "db": true,
+    "pgvector": "0.8.6",
+    "hnsw_index": true
+  },
+  "switches": {
+    "embed_backend": "api",
+    "embed_model": "text-embedding-v4",
+    "embed_dim": 1024,
+    "default_top_k": 8
+  }
+}

@@ -1,0 +1,521 @@
+
+
+===== block 506 2f8a09825da9 lines 1-57 source 知行旅行助手-v2#508 =====
+# 自动选目的地
+class DestinationPick(BaseModel):
+    # LLM结构化返回模型，替代之前用竖线分割字符串的方案，避免解析翻车
+    city: str = Field(description='目的地城市名，如"杭州"；只写城市，不带省份、不带"市"字')
+    reason: str = Field(description="推荐理由，40 字以内，说明为什么匹配这次出行")
+
+_PICK_DEST_PROMPT = (
+    "你是目的地推荐专家。用户信息：从 {departure_city} 出发，{departure_date} 出行 "
+    "{travel_days} 天，{people} 人，人均预算≤{budget}元，交通方式：{transport}，"
+    "旅行风格：{styles}。\n"
+    "从国内真实城市中选出最匹配的一个目的地。要求：\n"
+    "1. 从出发地乘所选交通方式可达（高铁优先 5 小时内）\n"
+    "2. 匹配{season}的季节特征与旅行风格（如 culture→历史人文名城，food→美食之都）\n"
+    "3. 按 schema 填写 city 与 reason 两个字段，不要输出多余文字"
+)
+
+async def _pick_destination(req: ExpressRequirement) -> DestinationPick | None:
+    # 用户没填目的地时，调用大模型选城市，返回结构化结果，解析失败返回None
+    # 根据出发月份判断季节
+    season = {"3": "春季", "4": "春季", "5": "春季", "6": "夏季", "7": "夏季", "8": "夏季",
+              "9": "秋季", "10": "秋季", "11": "秋季", "12": "冬季", "1": "冬季", "2": "冬季"}.get(
+        req.departure_date[5:7], "")
+
+    # 初始化通义模型，低温度保证结果稳定
+    llm = ChatTongyi(
+        model=settings.qwen_model_name,
+        api_key=settings.dashscope_api_key,
+        temperature=0.3,
+    )
+
+    # 填充prompt变量
+    prompt = _PICK_DEST_PROMPT.format(
+        departure_city=req.departure_city, departure_date=req.departure_date,
+        travel_days=req.travel_days,
+        people=f"{req.adult_count}成人{req.children_count}儿童",
+        budget=req.budget_max or "不限", transport="/".join(req.transport_types) or "高铁",
+        styles="、".join(req.travel_styles) or "不限", season=season,
+    )
+
+    # 绑定Pydantic模型，强制输出结构化数据
+    structured = llm.with_structured_output(DestinationPick)
+
+    try:
+        picked: DestinationPick = await structured.ainvoke(prompt)
+    except Exception:
+        app_logger.warning("[express] 目的地自动选定失败：模型未给出合规结构", exc_info=True)
+        return None
+
+    city = (picked.city or "").strip()
+    # 简单校验城市字段，防止模型瞎写一堆附加信息
+    if not city or len(city) > 10:
+        app_logger.warning(f"[express] 目的地自动选定不合规: city={picked.city!r}")
+        return None
+
+    picked.city = city
+    app_logger.info(f"[express] 自动选定目的地: {city}（{picked.reason}）")
+    return picked
+
+
+===== block 507 5c25b029a97a lines 1-82 source 知行旅行助手-v2#509 =====
+# ============== 步骤 2：并行数据收集 ==============
+
+def _iata(city: str) -> str:
+    """城市名 → 机场三字码（searchFlightsByDepArr 的 depcity/arrcity 必需）；
+    查不到返回空串。码表统一取自 mcp_tools._CITY_AIRPORT（与票价用的城市码分开维护）"""
+    from app.tools.mcp_tools import _CITY_AIRPORT
+    name = (city or "").strip()
+    if not name:
+        return ""
+    for suffix in ("市", "地区", "自治州"):
+        if name.endswith(suffix) and len(name) > len(suffix):
+            name = name[: -len(suffix)]
+            break
+    return _CITY_AIRPORT.get(name, "")
+
+# ============== 多目的地路段构造 ==============
+
+_CITY_DELIMS = "，,、"
+
+def _split_cities(destination: str) -> list[str]:
+    """把 destination 按中/英逗号、顿号切分为城市列表（去空去重保序）"""
+    if not destination:
+        return []
+    flat = destination
+    for ch in _CITY_DELIMS:
+        flat = flat.replace(ch, " ")
+    out: list[str] = []
+    for city in flat.split():
+        if city not in out:
+            out.append(city)
+    return out
+
+def ordered_play_cities(departure: str, destination: str) -> list[str]:
+    """游玩/住宿节点城市序列（去重保序）：出发地仅当本身也在目的地串里才计入，且置于最前。
+    住宿站点 = 目的地城市序列。
+    示例：北京→上海 = [上海]；北京→天津/上海 = [天津,上海]；北京→北京 = [北京]；
+    目的地含出发地（北京→北京/天津）时：[北京,天津]
+    """
+    cities = _split_cities(destination)
+    dep = (departure or "").strip()
+    ordered = (([dep] if dep and dep in cities else []) + cities)
+    out: list[str] = []
+    for c in ordered:
+        if c and c not in out:
+            out.append(c)
+    return out
+
+def _plan_cities(req: ExpressRequirement) -> list[str]:
+    """规划用游玩城市序列（快速通道）——口径与住宿站点完全同源"""
+    return ordered_play_cities(req.departure_city, req.destination)
+
+def _build_legs(departure: str, cities: list[str]) -> list[tuple[str, str]]:
+    """构造交通路段序列：出发→首城、城际转场、末城→出发地返程。
+    剔除自身段：出发地与目的地相同，跳过"北京→北京"无效路段，保留本地游玩。
+    route = [出发地] + [目的地列表] + [出发地(返程)]；仅相邻城市不同才生成路段。
+    示例：北京→上海 = 2段；北京→天津→上海 =3段；北京→北京 =0段；出发地缺失不补返程。
+    """
+    if not cities:
+        return []
+    route = [departure] + cities + ([departure] if departure else [])
+    return [(a, b) for a, b in zip(route[:-1], route[1:]) if a != b]
+
+def _stay_nights(days: int, stations: int) -> list[int]:
+    """住宿晚数分配：出发地固定1晚，剩余天数在其后城市均分，前面城市多分配余数天数。
+    酒店段覆盖全部节点城市（含出发地）。天数不足时每站至少1晚，不自动删除城市。
+    """
+    if stations <= 0 or days <= 0:
+        return []
+    if stations == 1:
+        return [days]
+    rest = max(1, days - 1)
+    per, rem = divmod(rest, stations - 1)
+    return [1] + [per + (1 if i < rem else 0) for i in range(stations - 1)]
+ # 平均分配
+ def _stay_nights(days: int, stations: int) -> list[int]:
+    """住宿晚数分配：全部站点一起均分，余数优先分配给靠前城市。
+    允许站点0晚，总和严格等于days。
+    """
+    if stations <= 0 or days <= 0:
+        return []
+    per, rem = divmod(days, stations)
+    return [per + (1 if i < rem else 0) for i in range(stations)]
+
+
+===== block 508 ba6182af9324 lines 1-50 source 知行旅行助手-v2#510 =====
+"""_plan_cities 演示：快速通道的游玩城市序列 + 对应交通段 + IATA + 住宿晚数（纯函数，无需密钥）"""
+from app.services.express_planning_service import (
+    ExpressRequirement,
+    _build_legs,
+    _plan_cities,
+    _iata,
+    _stay_nights
+)
+
+# 测试用例：(出发城市, 目的地串, 总行程天数)
+test_cases = [
+    ("福州", "杭州", 4),                      # 普通：福州→杭州
+    ("北京", "天津、上海", 7),                 # 多目的地顿号分隔
+    ("北京", "北京、天津", 5),                 # 目的地包含出发城市
+    ("北京", "北京", 3),                       # 只在本地游玩，无航班
+    ("福州市", "福州，厦门、泉州", 6),         # 出发带【市】后缀 + 混合分隔符，重点测试归一化差异
+    ("上海", "西安,成都,重庆", 10),            # 英文逗号分隔多城
+    ("厦门", "", 2),                           # 目的地为空，边界
+    ("广州", "长沙、张家界、昆明", 12),         # 长多目的地串联
+]
+
+print(f"{'出发':<6}{'目的地':<12}{'游玩城市列表':<30}{'IATA出发':<8}{'交通航段':<30}{'住宿晚数分配'}")
+print("-" * 120)
+
+for dep, dest, total_days in test_cases:
+    req = ExpressRequirement(
+        departure_city=dep,
+        destination=dest,
+        departure_date="2026-10-01",
+        auto_confirm=True
+    )
+    cities = _plan_cities(req)
+    legs = _build_legs(dep, cities)
+    stations_count = len(cities)
+    nights = _stay_nights(total_days, stations_count)
+    dep_iata = _iata(dep)
+
+    # 航段转IATA版本，方便看航班查询参数
+    leg_iata = [(_iata(a), _iata(b)) for a, b in legs]
+
+    print(
+        f"{dep:<6}{dest:<12}{str(cities):<30}{dep_iata:<8}{str(legs):<30}{nights}"
+    )
+    # 附加打印IATA航段（单独一行，方便看并行查询用的参数）
+    print(f"{'':<42}  → IATA航段: {leg_iata}")
+
+print("\n=== 说明 ===")
+print("1. 交通段：(起,终)，自动生成城际+返程；同城市段会自动过滤")
+print("2. IATA为空代表该城市不在城市码映射表，无法调用航班接口")
+print("3. 住宿晚数：首站固定1晚，剩余天数均分，余数优先给前面城市")
+
+
+===== block 509 d3a4eaa04a66 lines 1-23 source 知行旅行助手-v2#511 =====
+出发    目的地         游玩城市列表                        IATA出发  交通航段                          住宿晚数分配
+------------------------------------------------------------------------------------------------------------------------
+福州    杭州          ['杭州']                        FOC     [('福州', '杭州'), ('杭州', '福州')]  [4]
+                                            → IATA航段: [('FOC', 'HGH'), ('HGH', 'FOC')]
+北京    天津、上海       ['天津', '上海']                  BJS     [('北京', '天津'), ('天津', '上海'), ('上海', '北京')][1, 6]
+                                            → IATA航段: [('BJS', 'TSN'), ('TSN', 'SHA'), ('SHA', 'BJS')]
+北京    北京、天津       ['北京', '天津']                  BJS     [('北京', '天津'), ('天津', '北京')]  [1, 4]
+                                            → IATA航段: [('BJS', 'TSN'), ('TSN', 'BJS')]
+北京    北京          ['北京']                        BJS     []                            [3]
+                                            → IATA航段: []
+福州市   福州，厦门、泉州    ['福州', '厦门', '泉州']            FOC     [('福州市', '福州'), ('福州', '厦门'), ('厦门', '泉州'), ('泉州', '福州市')][1, 3, 2]
+                                            → IATA航段: [('FOC', 'FOC'), ('FOC', 'XMN'), ('XMN', 'JJN'), ('JJN', 'FOC')]
+上海    西安,成都,重庆    ['西安', '成都', '重庆']            SHA     [('上海', '西安'), ('西安', '成都'), ('成都', '重庆'), ('重庆', '上海')][1, 5, 4]
+                                            → IATA航段: [('SHA', 'XIY'), ('XIY', 'CTU'), ('CTU', 'CKG'), ('CKG', 'SHA')]
+厦门                []                            XMN     []                            []
+                                            → IATA航段: []
+广州    长沙、张家界、昆明   ['长沙', '张家界', '昆明']           CAN     [('广州', '长沙'), ('长沙', '张家界'), ('张家界', '昆明'), ('昆明', '广州')][1, 6, 5]
+                                            → IATA航段: [('CAN', 'CSX'), ('CSX', 'DYG'), ('DYG', 'KMG'), ('KMG', 'CAN')]
+
+=== 说明 ===
+1. 交通段：(起,终)，自动生成城际+返程；同城市段会自动过滤
+2. IATA为空代表该城市不在城市码映射表，无法调用航班接口
+3. 住宿晚数：首站固定1晚，剩余天数均分，余数优先给前面城市
+
+
+===== block 510 6e3755667a29 lines 1-154 source 知行旅行助手-v2#512 =====
+async def _collect_context(req: ExpressRequirement, stream) -> dict:
+    """
+    并行拉取快速通道需要的所有外部数据
+    分段查询交通，每个城市单独查酒店、天气；单个接口报错只降级，不中断整体流程
+    多目的地场景：去程、城际中转、返程分开查询；每个城市酒店天气独立请求，互不影响
+    """
+    # 导入MCP工具集合：航班、火车、酒店、天气查询工具
+    from app.tools.mcp_tools import (
+        _CITY_IATA, flight_price_args, get_flight_tools, get_train_tools,
+        get_hotel_tools, get_weather_tools,
+    )
+
+    # 推送给前端的提示消息，告诉用户正在查询数据
+    stream.push(make_event(ROLE_ASSISTANT, "⚡ 已锁定需求，正在并行查询交通、酒店与天气…\n"))
+
+    # 预先加载各类MCP查询工具实例
+    flight_tools = await get_flight_tools()
+    train_tools = await get_train_tools()
+    hotel_tools = await get_hotel_tools()
+    weather_tools = await get_weather_tools()
+
+    # 生成游玩城市列表和交通路段
+    # 单目的地：cities=[目标城市], legs=[出发地→目的地]
+    # 多目的地：自动生成多段交通，出发地也可以作为游玩城市
+    cities = _plan_cities(req)
+    legs = _build_legs(req.departure_city, cities)
+    app_logger.info(f"[express] 路段规划: cities={cities} legs={legs}")
+
+    async def _safe(name: str, tool, kwargs: dict) -> str:
+        # 工具查询包装函数，做异常兜底，单点失败不打断整体并行任务
+        if tool is None:
+            # 找不到目标工具时打警告日志，直接返回空字符串
+            # 旧版本这里静默返回，日志看不出为什么查不到数据
+            app_logger.warning(f"[express] {name} 未定位到工具，本次查询跳过（检查 _first 关键词）")
+            return ""
+        try:
+            raw = await tool.ainvoke(kwargs)
+            # MCP返回是block列表，提取里面的文本内容拼接
+            if isinstance(raw, list):
+                return "\n".join(
+                    b.get("text", "") for b in raw if isinstance(b, dict)
+                )
+            return str(raw)
+        except Exception as e:
+            # 查询抛出异常，记录警告日志，返回空串降级
+            app_logger.warning(f"[express] {name} 查询失败降级: {e}")
+            return ""
+
+    def _first(tools, keyword: str):
+        # 在工具列表里，按关键词匹配，返回第一个命中的工具
+        # 关键词和工具名称全部转小写再对比，修复大小写不匹配导致找不到工具的bug
+        # 之前只把工具名转小写，关键词不变，航班工具永远匹配失败
+        key = keyword.lower()
+        for t in tools:
+            if key in t.name.lower():
+                return t
+        return None
+
+    # 存放所有并行任务，key标记任务类型+序号，例如train_0 flight_1
+    jobs = {}
+
+    # 复用状态机里的日期计算逻辑，确定每一段交通的查询日期
+    # 去程=出发当天，城际转场=到达下一城市首日，返程=行程最后一天
+    from app.core.middleware import _leg_query_date
+    _leg_state = {
+        "user_requirement": {"departure_city": req.departure_city,
+                             "departure_date": req.departure_date,
+                             "travel_days": req.travel_days},
+        "selected_destination": req.destination,
+    }
+    _leg_names = [f"{a}→{b}" for a, b in legs]
+    leg_dates = [_leg_query_date(_leg_state, _leg_names, i) or req.departure_date
+                 for i in range(len(legs))]
+
+    # 高铁查询：遍历每一段路程，生成异步任务
+    if "train" in req.transport_types:
+        t = _first(train_tools, "get-tickets")
+        for i, (src, dst) in enumerate(legs):
+            jobs[f"train_{i}"] = _safe(f"高铁{i}", t, {
+                "date": leg_dates[i], "fromStation": src, "toStation": dst,
+            })
+
+    # 航班查询：同时拉取航班时刻表+票价两套接口
+    if "flight" in req.transport_types:
+        t = _first(flight_tools, "searchFlightsByDepArr")
+        # 时刻表接口拿航班动态，另一个接口单独拿票价，两个并发执行
+        pt = _first(flight_tools, "getFlightPriceByCities")
+        for i, (src, dst) in enumerate(legs):
+            dep, arr = _iata(src), _iata(dst)   # 航班时刻表使用机场三字码
+            if not (dep and arr):
+                # 城市不在机场码表，直接跳过该段航班查询并写日志
+                # 旧代码会直接传入空码，日志看不出是城市不支持还是无航班
+                missing = "、".join(c for c, code in ((src, dep), (dst, arr)) if not code)
+                app_logger.warning(
+                    f"[express] 航班段 {src}→{dst} 跳过：{missing} 不在 _CITY_AIRPORT 表里"
+                    f"（searchFlightsByDepArr 要机场三字码，不收城市名）"
+                )
+                continue
+            # 加入航班查询任务
+            jobs[f"flight_{i}"] = _safe(f"航班{i}", t, {
+                "date": leg_dates[i], "depcity": dep, "arrcity": arr,
+            })
+            if pt is not None:
+                # 票价接口使用城市IATA码，和上面机场三字码不是同一套，不要混用
+                cdep, carr = _CITY_IATA.get(src), _CITY_IATA.get(dst)
+                if cdep and carr:
+                    jobs[f"flightprice_{i}"] = _safe(
+                        f"航班价{i}", pt, flight_price_args(pt, leg_dates[i], cdep, carr))
+                else:
+                    app_logger.info(
+                        f"[express] 航班价 {src}→{dst} 跳过：城市码缺失（{cdep}/{carr}）"
+                    )
+
+    # 酒店、天气按城市单独查询
+    # 计算每个城市要住几晚，多城场景分摊住宿天数，避免旧逻辑重复统计住宿晚数
+    nights_by_city = _stay_nights(req.travel_days, len(cities))
+    try:
+        start = datetime.fromisoformat(req.departure_date[:10])
+    except ValueError:
+        # 日期解析失败，兜底赋值，打警告日志
+        start = None
+        app_logger.warning(f"[express] 出发日期不可解析，酒店按出发日查询: {req.departure_date!r}")
+
+    offset = 0
+    last_out = max(req.travel_days - 1, 1)
+    for i, city in enumerate(cities):
+        night = nights_by_city[i] if i < len(nights_by_city) else 0
+        cin, cout = offset, min(offset + night, last_out)
+        offset += night
+        # 当天到当天走的城市，不需要查酒店；天气依旧查询
+        if cout > cin:
+            jobs[f"hotel_{i}"] = _safe(f"酒店{i}", _first(hotel_tools, "searchhotels") or _first(hotel_tools, "find-hotels"), {
+                "place": city,
+                "checkIn": (start + timedelta(days=cin)).strftime("%Y-%m-%d") if start else req.departure_date,
+                "stayNights": cout - cin, "adultCount": req.adult_count, "size": 5,
+            })
+        # 查询城市天气预报，不传日期返回全部预报，后续再截取有效天数
+        jobs[f"weather_{i}"] = _safe(f"天气{i}", _first(weather_tools, "get_weather_forecast"), {
+            "city": city,
+        })
+
+    # 收集所有任务key，并发一次性执行全部请求
+    keys = list(jobs)
+    # asyncio.gather等待所有任务完成；_safe内部捕获异常，不会整体崩溃
+    results = await asyncio.gather(*jobs.values())
+    ctx = dict(zip(keys, results))
+
+    # 日志打印：每个任务返回文本长度，方便排查空数据问题
+    app_logger.info(f"[express] 并行收集完成: {[(k, len(v)) for k, v in ctx.items()]}")
+
+    # 把城市列表、路段存入上下文，后面生成行程时复用
+    ctx["_cities"] = cities
+    ctx["_legs"] = legs
+    return ctx
+
+
+===== block 511 119c1d6957d2 lines 1-20 source 知行旅行助手-v2#513 =====
+"""_collect_context 演示：多段多城一次性并行查询，看总耗时与每项返回长度（需 .env 配好 MCP 相关密钥）"""
+import asyncio
+import time
+from datetime import date, timedelta
+
+from app.core.event_stream import EventStream
+from app.services.express_planning_service import ExpressRequirement, _collect_context
+
+async def main():
+    req = ExpressRequirement(departure_city="福州", destination="杭州、上海",
+                             departure_date=(date.today() + timedelta(days=5)).isoformat(),
+                             travel_days=4, auto_confirm=True, transport_types=["train"])
+    t0 = time.perf_counter()
+    ctx = await _collect_context(req, EventStream())
+    print(f"并行收集完成，用时 {time.perf_counter() - t0:.1f}s（≈ 最慢那一项，而不是各项之和）")
+    for k, v in ctx.items():
+        print(f"  {k:10s} → {v if k.startswith('_') else f'{len(v)} 字'}")   # 某项失败就是 0 字，不影响别的
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+
+===== block 512 a5c3360db9e9 lines 1-44 source 知行旅行助手-v2#514 =====
+# ============== 步骤 3：规则选定器（纯代码 0s，替代状态机的 LLM 判断） ==============
+_SEAT_ORDER = ("二等座", "硬座", "一等座", "硬卧", "软卧", "无座")
+# 有票状态词：12306 原始返回是"有票/剩余N张票"，守卫压缩后的紧凑行是"有/剩余N张票"，两种都要认
+_AVAIL_STATUS = ("有票", "有", "候补")
+
+def _dur_to_mins(dur: str) -> int:
+    """历时 HH:MM → 分钟；解析不出给一个极大值（排最后，不会被选中）"""
+    try:
+        h, m = str(dur).split(":")
+        return int(h) * 60 + int(m)
+    except Exception:
+        return 10 ** 9
+
+def _seat_available(status: str) -> bool:
+    """余票状态是否可购（有票/剩余N张/候补都算，无票/-- 不算）"""
+    s = (status or "").strip()
+    return s in _AVAIL_STATUS or s.startswith("剩余") or s.endswith("张")
+
+def _pick_train(text: str) -> dict | None:
+    """从 12306 文本选最优班次：原始格式与守卫压缩后的紧凑格式都支持。
+    在可购票班次中，按「历时分钟 + 价格/10」综合最低筛选；耗时优先、兼顾价格，纯代码无随机。
+    复用两套解析器：原始多行格式用 parse_ticket_rows，压缩单行格式用 _compact_to_rows，保证两种输入都可解析。
+    """
+    # 就近 import 避免顶层循环依赖（本模块其它函数也按需从 mcp_tools 导入）
+    from app.tools.mcp_tools import parse_ticket_rows
+    from app.capabilities.train_multi_segment.train_agent_tool import _compact_to_rows, train_score
+
+    rows = parse_ticket_rows(text) or _compact_to_rows(text)
+    best = None
+    for r in rows:
+        seats = r.get("seats") or {}
+        # 席别优先序取第一个有数据的（与 _SEAT_ORDER 同口径，通常是二等座）
+        seat = next((k for k in _SEAT_ORDER if k in seats), None)
+        if not seat:
+            continue
+        status, price = seats[seat]
+        if not _seat_available(status):  # 只在有票里挑，无票整趟跳过
+            continue
+        mins = _dur_to_mins(r.get("dur"))
+        score = train_score(mins, float(price))  # 与状态机自动代选同口径（单一公式，避免漂移）
+        if best is None or score < best["score"]:
+            best = {"no": r["code"], "dep": r["dep"], "arr": r["arr"],
+                    "mins": mins, "price": float(price), "score": score}
+    return best
+
+
+===== block 513 61741db706c4 lines 1-27 source 知行旅行助手-v2#515 =====
+"""_pick_train 演示：原始格式与紧凑格式都能按"历时分钟 + 价格/10"选中同一趟（纯函数，无需密钥）"""
+from app.services.express_planning_service import _pick_train
+from app.tools.mcp_tools import compact_ticket_text
+
+# ① 12306 原始多行格式（模型自己调工具、或未过守卫时的形态）
+RAW = """G1234 福州(telecode:FZS) -> 深圳北(telecode:IOQ) 07:10 -> 12:45 历时：05:35
+- 二等座: 有票 380.5元
+- 一等座: 剩余5张票 609元
+D3111 福州(telecode:FZS) -> 深圳北(telecode:IOQ) 08:02 -> 15:30 历时：07:28
+- 二等座: 有票 310元
+G1601 福州南(telecode:FYS) -> 深圳北(telecode:IOQ) 09:15 -> 14:20 历时：05:05
+- 二等座: 无票 400元"""
+
+# ② 守卫压缩后的紧凑行——这才是 get_train_tools() 交给快速通道的真实形态
+COMPACT = compact_ticket_text(RAW)
+print("紧凑行形态：")
+print(COMPACT)
+
+best_raw = _pick_train(RAW)
+best_compact = _pick_train(COMPACT)
+print("原始格式选中：", best_raw)
+print("紧凑格式选中：", best_compact)
+# G1234：335 分钟 + 38.05 = 373.05 分；D3111：448 + 31 = 479 分；G1601 二等座无票，整趟跳过
+# 关键：两种格式必须选中同一趟 G1234（旧版对紧凑行返回 None，就是这条 assert 会挂）
+assert best_raw and best_raw["no"] == "G1234"
+assert best_compact and best_compact["no"] == "G1234"
+assert _pick_train("") is None
+
+
+===== block 514 36bde0f41965 lines 1-8 source 知行旅行助手-v2#516 =====
+紧凑行形态：
+实时班次（共 3 趟，按发车时间排序，仅列前 3 趟）：
+格式：车次|区间|出发→到达|历时|票价
+G1234|福州→深圳北|07:10→12:45|05:35|二等座 有票 380.5元
+D3111|福州→深圳北|08:02→15:30|07:28|二等座 有票 310元
+G1601|福州→深圳北|09:15→14:20|05:05|二等座 无票 400元
+原始格式选中： {'no': 'G1234', 'dep': '07:10', 'arr': '12:45', 'mins': 335, 'price': 380.5, 'score': 373.05}
+紧凑格式选中： {'no': 'G1234', 'dep': '07:10', 'arr': '12:45', 'mins': 335, 'price': 380.5, 'score': 373.05}
+
+
+===== block 515 5c7726c78866 lines 1-26 source 知行旅行助手-v2#517 =====
+def _pick_flight(text: str, price_text: str = "") -> dict | None:
+    """从航班查询结果选最优航班；解析失败返回 None，交由上层降级兜底
+    数据源为 searchFlightsByDepArr 航班动态接口，多数航线不带票价，分两步处理：
+    ① parse_flight_rows 解析得到航班基础信息；
+    ② parse_flight_prices 按航班号补充票价。
+    有价则取最低价；无票价则取最早起飞航班，价格置0，摘要标记价格待定，不再丢弃无价格航班。
+    """
+    from app.tools.mcp_tools import parse_flight_prices, parse_flight_rows
+
+    rows = [
+        {"flight_no": r["code"], "price": float(r.get("price") or 0),
+         "dep": r.get("dep") or "", "arr": r.get("arr") or ""}
+        for r in parse_flight_rows(text) if r.get("code")
+    ]
+    if not rows:
+        return None
+
+    by_flight, _lowest = parse_flight_prices(price_text) if price_text else ({}, 0.0)
+    for r in rows:
+        if not r["price"]:
+            r["price"] = float(by_flight.get(r["flight_no"].upper()) or 0)
+
+    priced = [r for r in rows if r["price"] > 0]
+    if priced:
+        return min(priced, key=lambda r: r["price"])
+    return min(rows, key=lambda r: r.get("dep") or "")

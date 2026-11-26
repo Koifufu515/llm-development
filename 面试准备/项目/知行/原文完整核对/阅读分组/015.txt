@@ -1,0 +1,515 @@
+
+
+===== block 114 08eb81e84e6a lines 1-14 source 知行旅行助手-v2#114 =====
+from langchain_core.documents import Document              # 第 7 章 RAG 用的文档类
+from app.tools.rag_tools import _format_rag_results, set_rag_city   # 导入本章写好的真实函数
+
+# 造两条样例文档喂给真实函数：一条正文写西安、一条写上海
+docs = [
+    Document(page_content="西安兵马俑门票 120 元，建议早上去。", metadata={"source": "xian.md"}),
+    Document(page_content="上海外滩夜景免费，适合傍晚。", metadata={"source": "shanghai.md"}),
+]
+
+set_rag_city("西安")
+print(_format_rag_results(docs, "景点"))     # 真实函数按城市过滤：只留西安那条
+
+set_rag_city("成都")                          # 库里没有成都
+print(_format_rag_results(docs, "景点"))     # 全被剔除 → 真实函数如实说"暂无成都资料"，绝不拿别的城市冒充
+
+
+===== block 115 38d65ba00677 lines 1-12 source 知行旅行助手-v2#115 =====
+"""演示 rag_tools：设城市 → 拿工具 → 直接 ainvoke 一把（需密钥 + 已建向量库）"""
+import asyncio
+from app.tools.rag_tools import get_rag_tools, set_rag_city
+
+async def main():
+    set_rag_city("西安")                        # 先注入目标城市（决定检索按谁过滤）
+    tools = get_rag_tools()
+    print("挂载的工具：", [t.name for t in tools])            # 四把工具的名字
+    guide = next(t for t in tools if t.name == "search_destination_guide")
+    print(await guide.ainvoke({"query": "西安兵马俑门票和游玩建议"}))  # @tool 用 .ainvoke({参数名: 值}) 调
+
+asyncio.run(main())
+
+
+===== block 116 2ee37c3c558a lines 1-10 source 知行旅行助手-v2#116 =====
+"""演示 explore_agent_node：像图那样传分支 state 进去，拿回一条结果（需密钥 + 向量库）"""
+import asyncio
+from app.agents.routers.destination_router import explore_agent_node
+
+async def main():
+    branch_state = {"query": "西安有什么好玩的和好吃的", "destination": "西安"}  # Send 投喂的小 dict
+    out = await explore_agent_node(branch_state)
+    print(out["agent_results"][0]["result"])   # Agent 自主调工具后整合的回答
+
+asyncio.run(main())
+
+
+===== block 117 6bbde316d694 lines 1-67 source 知行旅行助手-v2#117 =====
+class WeatherCast(BaseModel):
+    """单日预报（字段与高德 casts 对齐；缺字段给默认空串，不报错、渲染时留空）"""
+    date: str = ""
+    dayweather: str = ""
+    nightweather: str = ""
+    daytemp: str = ""
+    nighttemp: str = ""
+    daywind: str = ""
+    daypower: str = ""
+
+class WeatherForecast(BaseModel):
+    """天气预报整体结构（第 12 章流式渲染天气会 import 复用它）"""
+    city: str = ""
+    reporttime: str = ""
+    casts: list[WeatherCast] = Field(default_factory=list)
+
+def _normalize_weather_payload(raw) -> dict:
+    """★ 归一化漏斗：把 MCP 三种返回形态统一成 dict（第 12 章也会 import 复用）
+
+    历史 bug：MCP adapter 返回的常是"内容块列表" [{'type':'text','text':'{json}'}]，
+    旧代码只按 str/dict 解析 → list 分支没接住 → 恒判"天气为空" → 每次都降级。
+    接口本来是好的，纯粹解析口径错，所以先在这里把形态抹平。
+    """
+    if isinstance(raw, list):                   # 形态一：内容块列表 → 把每块的 text 拼起来
+        texts = [str(b.get("text") or "") if isinstance(b, dict) else str(getattr(b, "text", "") or "")
+                 for b in raw]
+        raw = "\n".join(t for t in texts if t).strip()
+    if isinstance(raw, str):                     # 形态二：JSON 字符串 → 抠出 {...} 再 loads
+        text = raw.strip()
+        if not text.startswith("{"):             # 兼容"说明文字 + JSON"混合文本
+            start, end = text.find("{"), text.rfind("}")
+            text = text[start:end + 1] if 0 <= start < end else text
+        raw = json.loads(text)
+    return raw if isinstance(raw, dict) else {}  # 形态三：本来就是 dict → 直接用
+
+async def weather_agent_node(state: dict) -> dict:
+    """天气 Agent 节点：调真实高德天气；查不到就如实说，绝不编造"""
+    destination = state["destination"]
+    app_logger.info(f"🌤️ 天气 Agent 执行: {destination}")
+
+    report = f"## {destination} 天气信息\n\n"
+    try:
+        from app.tools.mcp_tools import get_weather_tools   # 延迟导入，与工具装载解耦
+        tools = await get_weather_tools()
+        tool = next((t for t in tools if t.name == "get_weather_forecast"), None)
+        if tool is None:
+            raise RuntimeError("天气工具未加载")
+
+        # 不传 date：该参数只支持未来 4 天内，超出会返回空预报
+        payload = _normalize_weather_payload(await tool.ainvoke({"city": destination}))
+        if payload.get("error"):
+            raise RuntimeError(str(payload["error"]))
+
+        forecast = WeatherForecast.model_validate(payload)   # Pydantic 校验 + 填默认
+        if not forecast.casts:
+            raise RuntimeError("天气返回为空")
+
+        lines = [f"📅 {c.date}：白天{c.dayweather} {c.nighttemp}~{c.daytemp}°C，"
+                 f"{c.daywind}风 {c.daypower} 级" for c in forecast.casts]
+        report += "\n".join(lines)
+        report += f"\n\n*数据来源：高德天气（发布于 {forecast.reporttime}）*"
+    except Exception as e:
+        # ★ 铁律：查不到宁可说"未获取到"，也绝不编造天气（编造会被写进行程正文误导用户）
+        app_logger.warning(f"天气查询失败（降级不编造）: {destination} | {type(e).__name__}: {e}")
+        report += "暂未获取到实时天气，请以当地实际天气为准。"
+
+    return {"agent_results": [{"agent_name": "weather", "result": report}]}
+
+
+===== block 118 8ebe6e43416f lines 1-9 source 知行旅行助手-v2#118 =====
+"""演示 _normalize_weather_payload：三种 MCP 返回形态，出来都是同一种 dict（纯函数，可直接跑）"""
+from app.agents.routers.destination_router import _normalize_weather_payload
+
+blocks   = [{"type": "text", "text": '{"city":"杭州","casts":[{"date":"2026-10-01"}]}'}]  # 内容块列表
+json_str = '{"city":"杭州","casts":[]}'                                                    # JSON 字符串
+raw_dict = {"city": "杭州", "casts": []}                                                   # dict
+
+for name, raw in [("内容块列表", blocks), ("JSON字符串", json_str), ("dict", raw_dict)]:
+    print(f"{name:8s} → {_normalize_weather_payload(raw)}")
+
+
+===== block 119 e329261e1ae4 lines 1-33 source 知行旅行助手-v2#119 =====
+async def synthesizer_node(state: DestinationRouterState) -> dict:
+    """综合器节点（扇入）：等所有并行分支跑完，把结果拼成一份报告"""
+    app_logger.info("综合 Agent 结果...")
+    results = state["agent_results"]           # reducer 已把各分支结果合并到这里
+    if not results:
+        return {"final_report": "未找到相关信息。"}
+    # 简单拼接就够：攻略段 + 天气段各自成块，顺序无所谓（也可换 LLM 做更智能的综合）
+    final_report = "\n\n".join(r["result"] for r in results)
+    app_logger.info("✅ 综合完成")
+    return {"final_report": final_report}
+
+def create_destination_router():
+    """组装并编译整张子图 —— 手工建图四步：建图 → 加节点 → 连边 → compile"""
+    workflow = StateGraph(DestinationRouterState)   # ① 以 State 为骨架建图
+
+    # ② 加节点：名字 → 处理函数（名字就是 Send / 边里用的"节点名"）
+    workflow.add_node("classifier", classifier_node)
+    workflow.add_node("explore", explore_agent_node)
+    workflow.add_node("weather", weather_agent_node)
+    workflow.add_node("synthesizer", synthesizer_node)
+
+    # ③ 连边
+    workflow.add_edge(START, "classifier")          # 入口 → 分类器
+    workflow.add_conditional_edges(                 # 分类器 → 条件边（route_to_agents 里用 Send 扇出）
+        "classifier", route_to_agents, ["explore", "weather"],  # 第三参：声明可能的目标节点
+    )
+    workflow.add_edge("explore", "synthesizer")     # 两个分支都汇到综合器（扇入）
+    workflow.add_edge("weather", "synthesizer")
+    workflow.add_edge("synthesizer", END)           # 综合器 → 出口
+
+    app = workflow.compile()                        # ④ 编译成可 ainvoke 的子图
+    app_logger.info("✅ 目的地 Router 创建完成")
+    return app
+
+
+===== block 120 445ec6586237 lines 1-9 source 知行旅行助手-v2#120 =====
+"""演示 create_destination_router：编译出子图并打印它的节点/边结构（纯结构，无需密钥）"""
+from app.agents.routers.destination_router import create_destination_router
+
+router = create_destination_router()           # 拿到编译好的子图
+graph = router.get_graph()
+print("节点：", list(graph.nodes))              # classifier / explore / weather / synthesizer …
+print("边：")
+for e in graph.edges:
+    print(f"   {e.source} → {e.target}")        # 看清扇出扇入的走向
+
+
+===== block 121 230d28ff98bc lines 1-22 source 知行旅行助手-v2#121 =====
+"""第 8 章综合冒烟：完整跑一遍目的地推荐子图（需 .env 密钥 + 已建向量库）"""
+import asyncio
+from app.agents.routers.destination_router import create_destination_router
+
+async def main():
+    router = create_destination_router()
+    # 初始 state：只需给原始查询和目的地，中间字段图会自己填
+    init_state = {
+        "original_query": "帮我推荐一下西安怎么玩",
+        "destination": "西安",
+        "classifications": [],
+        "agent_results": [],
+        "final_report": "",
+    }
+    result = await router.ainvoke(init_state)   # 一把跑通：分类 → 扇出并行 → 扇入归并
+    print("=" * 60)
+    print(result["final_report"])              # 攻略段 + 天气段合并后的最终报告
+    print("=" * 60)
+    print("分类结果：", [(c["agent"], c["query"]) for c in result["classifications"]])
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+
+===== block 122 ae8815135b27 lines 1-32 source 知行旅行助手-v2#122 =====
+"""
+统一事件流契约
+
+Agent 核心只产出 AgentEvent，对传输协议（SSE）无感知；
+适配器负责把 AgentEvent 序列化为协议帧：
+- SSE 帧：data: {"role", "content", "code"?}
+
+role 取值 = 前端契约，任何一侧不得私自变更。
+"""
+from typing import Any, TypedDict
+
+class AgentEvent(TypedDict):
+    """统一事件结构"""
+    role: str
+    content: Any
+    code: int | None  # 仅 done/end 帧携带状态码，其余为 None
+
+# 事件类型常量（= 前端解析的 role 字段）
+ROLE_ASSISTANT = "assistant"        # 流式文本 chunk
+ROLE_ASSISTANT_RESET = "assistant_reset"  # 撤销本回合已推送文本（择优回退时使用）
+ROLE_SKILLS = "skills"              # 技能执行状态 {"skill_name","title","desc"}
+# 结构化 UI Skill 帧：{"skill_name","data"} —— 前端按 skill_name 查 UI_SKILL_REGISTRY
+# 把组件内嵌渲染在聊天流里（与上面的状态提示帧区分：这条携带完整 payload，是要交互的）
+ROLE_SKILL_UI = "skill_ui"  # ★ 本章主角：携带完整 payload、要交互的卡片帧
+ROLE_ITINERARY = "itinerary_plans"  # 行程清单状态 {"status","id","message"}
+ROLE_DONE = "done"                  # 本轮结束
+ROLE_ERROR = "error"                # 业务错误
+ROLE_END = "end"                    # 连接级终止（如鉴权失败 code=401）
+
+def make_event(role: str, content: Any = None, code: int | None = None) -> AgentEvent:
+    """构造统一事件"""
+    return {"role": role, "content": content, "code": code}
+
+
+===== block 123 f223b09e663d lines 1-6 source 知行旅行助手-v2#123 =====
+"""make_event 演示：文本帧、卡片帧、结束帧走同一个构造函数，前端只认 {role, content, code}（纯函数，无需密钥）"""
+from app.core.events import ROLE_ASSISTANT, ROLE_DONE, ROLE_SKILL_UI, make_event
+
+print(make_event(ROLE_ASSISTANT, "北京到天津、天津到上海两段高铁，候选班次如下："))
+print(make_event(ROLE_SKILL_UI, {"skill_name": "train_multi_segment", "data": {"segments": []}}))
+print(make_event(ROLE_DONE, "finish", code=200))
+
+
+===== block 124 014539bdc1c5 lines 1-3 source 知行旅行助手-v2#124 =====
+{'role': 'assistant', 'content': '北京到天津、天津到上海两段高铁，候选班次如下：', 'code': None}
+{'role': 'skill_ui', 'content': {'skill_name': 'train_multi_segment', 'data': {'segments': []}}, 'code': None}
+{'role': 'done', 'content': 'finish', 'code': 200}
+
+
+===== block 125 571b2655c87c lines 1-38 source 知行旅行助手-v2#125 =====
+"""快速通道服务。本章先放四个路段助手（拆多城、排游玩顺序、造交通段、分配住宿晚数），第 12 章整份重写本文件"""
+import re
+
+# 目的地支持逗号分隔多城（"杭州,深圳"），全链路真查每段交通 + 每城酒店/天气。
+# 串联语义：出发地 → city0 → city1 → ... → 返程（返程终点=出发地）。
+# 原本把整串"杭州,深圳"当单个城市塞进所有查询（toStation/arrcity/place/city），
+# 导致交通全查空 + LLM 自行扩天数为 5 天。
+_CITY_DELIMS = "，,、"
+
+def _split_cities(destination: str) -> list[str]:
+    """把 destination 按中/英逗号、顿号切分为城市列表（去空去重保序）"""
+    if not destination:
+        return []
+    flat = destination
+    for ch in _CITY_DELIMS:
+        flat = flat.replace(ch, " ")
+    out: list[str] = []
+    for city in flat.split():
+        if city not in out:
+            out.append(city)
+    return out
+
+def ordered_play_cities(departure: str, destination: str) -> list[str]:
+    """游玩/住宿节点城市序列（去重保序）：**出发地仅当本身也在目的地串里才计入**，且置于最前。
+
+ （用户规格）：住宿站点 = 目的地城市序列。北京→上海 = [上海]（不再多查北京），
+    北京→天津/上海 = [天津,上海]，北京→北京 = [北京]；目的地含出发地（北京→北京/天津）时
+    出发地是"第一游玩地"（先本地玩再走），故置于最前 → [北京,天津]
+    """
+    cities = _split_cities(destination)
+    dep = (departure or "").strip()
+    # ★ 出发地也在目的地里：先在出发地玩
+    ordered = (([dep] if dep and dep in cities else []) + cities)
+    out: list[str] = []
+    for c in ordered:
+        if c and c not in out:
+            out.append(c)
+    return out
+
+
+===== block 126 2facd18a667b lines 1-5 source 知行旅行助手-v2#126 =====
+"""_split_cities 演示：中英文逗号、顿号、空白都算分隔符，去重且保持原顺序（纯函数，无需密钥）"""
+from app.services.express_planning_service import _split_cities
+
+for text in ["天津、上海", "北京, 天津 上海", "成都，重庆，成都", "杭州", ""]:
+    print(f"{text!r:20} → {_split_cities(text)}")
+
+
+===== block 127 d909b2e80088 lines 1-5 source 知行旅行助手-v2#127 =====
+'天津、上海'              → ['天津', '上海']
+'北京, 天津 上海'          → ['北京', '天津', '上海']
+'成都，重庆，成都'           → ['成都', '重庆']
+'杭州'                 → ['杭州']
+''                   → []
+
+
+===== block 128 4202261f13a7 lines 1-5 source 知行旅行助手-v2#128 =====
+"""ordered_play_cities 演示：出发地也在目的地里时，先在出发地玩（纯函数，无需密钥）"""
+from app.services.express_planning_service import ordered_play_cities
+
+for dep, dest in [("北京", "天津、上海"), ("北京", "上海、北京"), ("北京", "北京"), ("", "杭州、苏州")]:
+    print(f"{dep or '（空）'} 出发，目的地 {dest!r:10} → 游玩顺序 {ordered_play_cities(dep, dest)}")
+
+
+===== block 129 f440108bc9a5 lines 1-4 source 知行旅行助手-v2#129 =====
+北京 出发，目的地 '天津、上海'    → 游玩顺序 ['天津', '上海']
+北京 出发，目的地 '上海、北京'    → 游玩顺序 ['北京', '上海']
+北京 出发，目的地 '北京'       → 游玩顺序 ['北京']
+（空） 出发，目的地 '杭州、苏州'    → 游玩顺序 ['杭州', '苏州']
+
+
+===== block 130 060aef6e71b5 lines 1-28 source 知行旅行助手-v2#130 =====
+def _build_legs(departure: str, cities: list[str]) -> list[tuple[str, str]]:
+    """构造交通路段序列：出发→首城、城际转场、末城→出发地返程。
+
+    剔除"自身段"——当目的地含出发地（如出发+目的地都是北京）时，
+    route 会出现"北京→北京"，本无意义；剔除后行程正确保留北京本地游玩。
+    节点列表 = 出发地 + 目的地序列 + 出发地（返程），相邻节点城市不同才生成段：
+    北京→上海 = 2 段、北京→天津→上海 = 3 段、北京→北京 = 0 段；出发地缺失时不补返程
+    """
+    if not cities:
+        return []
+    route = [departure] + cities + ([departure] if departure else [])
+    # ★ 相邻打包成段；a == b 的自身段跳过；末尾补回的出发地让最后一段成为返程
+    return [(a, b) for a, b in zip(route[:-1], route[1:]) if a != b]
+
+def _stay_nights(days: int, stations: int) -> list[int]:
+    """住宿晚数分配：**出发地固定 1 晚**，剩余天数在其后城市均分（前几城多担 1 天）
+
+ （用户规格）：酒店段覆盖全部节点城市（含出发地）。天数不够分时
+    每站仍按 1 晚顺排（不替用户删城），与 _stay_windows 原口径一致
+    """
+    if stations <= 0 or days <= 0:
+        return []
+    if stations == 1:
+        return [days]
+    rest = max(1, days - 1)
+    per, rem = divmod(rest, stations - 1)
+    # ★ 首站 1 晚，剩下的天数在后面几站均分，除不尽的前几站多担
+    return [1] + [per + (1 if i < rem else 0) for i in range(stations - 1)]
+
+
+===== block 131 3637d1e5f040 lines 1-5 source 知行旅行助手-v2#131 =====
+"""_build_legs 演示：出发地 + 目的地相邻打包成段，跳过自身段，末尾补返程（纯函数，无需密钥）"""
+from app.services.express_planning_service import _build_legs
+
+for dep, cities in [("北京", ["天津", "上海"]), ("北京", ["北京", "天津"]), ("北京", ["北京"]), ("北京", [])]:
+    print(f"{dep} + {cities} → {_build_legs(dep, cities)}")
+
+
+===== block 132 9c22e03c194c lines 1-4 source 知行旅行助手-v2#132 =====
+北京 + ['天津', '上海'] → [('北京', '天津'), ('天津', '上海'), ('上海', '北京')]
+北京 + ['北京', '天津'] → [('北京', '天津'), ('天津', '北京')]
+北京 + ['北京'] → []
+北京 + [] → []
+
+
+===== block 133 f99bf187d2d5 lines 1-5 source 知行旅行助手-v2#133 =====
+"""_stay_nights 演示：首站 1 晚，剩下的天数在后面几站均分，前几站多担（纯函数，无需密钥）"""
+from app.services.express_planning_service import _stay_nights
+
+for days, stations in [(5, 1), (5, 2), (5, 3), (6, 3), (2, 3), (0, 2)]:
+    print(f"{days} 天 / {stations} 站 → 每站晚数 {_stay_nights(days, stations)}")
+
+
+===== block 134 d85a22df1777 lines 1-6 source 知行旅行助手-v2#134 =====
+5 天 / 1 站 → 每站晚数 [5]
+5 天 / 2 站 → 每站晚数 [1, 4]
+5 天 / 3 站 → 每站晚数 [1, 2, 2]
+6 天 / 3 站 → 每站晚数 [1, 3, 2]
+2 天 / 3 站 → 每站晚数 [1, 1, 0]
+0 天 / 2 站 → 每站晚数 []
+
+
+===== block 135 89a2de4c6b18 lines 1-23 source 知行旅行助手-v2#135 =====
+def _multi_city_names(state) -> list[str]:
+    """多目的地城市列表（按游览顺序）；单目的地返回空列表（调用方跳过校验）
+
+    单城返回空列表是刻意设计：单目的地流程保持完全不变，不引入任何新校验
+    """
+    from app.services.express_planning_service import _split_cities
+    cities = _split_cities(state.get("selected_destination") or "")
+    return cities if len(cities) > 1 else []
+
+def _expected_legs(state) -> list[str]:
+    """应有的交通段：出发地→第一城 + 城际转场 + 末城→出发地返程（节点相邻城市不同才生成）。
+
+ 单目的地同样纳入段级校验（此前单城返回空列表跳过校验）。
+ （用户规格）：按 _build_legs 口径——末城→出发地返程段一并计入，
+    北京→上海 = 2 段、北京→天津→上海 = 3 段、北京→北京 = 0 段；出发地缺失时返回空列表
+    """
+    from app.services.express_planning_service import _build_legs, _split_cities
+    departure = ((state.get("user_requirement") or {}).get("departure_city") or "").strip()
+    if not departure:
+        return []
+    cities = _split_cities(state.get("selected_destination") or "")
+    # ★ "应有几段"的唯一口径：交通卡片、段日期、中间件都认它
+    return [f"{a}→{b}" for a, b in _build_legs(departure, cities)]
+
+
+===== block 136 4d1aea4cde45 lines 1-5 source 知行旅行助手-v2#136 =====
+"""_multi_city_names 演示：多目的地返回按游览顺序的城市列表；单目的地刻意返回空列表（纯函数，无需密钥）"""
+from app.tools.state_transition import _multi_city_names
+
+for dest in ["天津、上海", "杭州，苏州，杭州", "上海", ""]:
+    print(f"{dest!r:12} → {_multi_city_names({'selected_destination': dest})}")
+
+
+===== block 137 c7fd6d3c2b11 lines 1-4 source 知行旅行助手-v2#137 =====
+'天津、上海'      → ['天津', '上海']
+'杭州，苏州，杭州'   → ['杭州', '苏州']
+'上海'         → []
+''           → []
+
+
+===== block 138 a56ea80bbaca lines 1-8 source 知行旅行助手-v2#138 =====
+"""_expected_legs 演示：这趟行程应该有哪几段城际交通（纯函数，无需密钥）"""
+from app.tools.state_transition import _expected_legs
+
+def state(dep: str, dest: str) -> dict:
+    return {"user_requirement": {"departure_city": dep}, "selected_destination": dest}
+
+for dep, dest in [("北京", "上海"), ("北京", "天津、上海"), ("北京", "北京、天津"), ("北京", "北京"), ("", "杭州")]:
+    print(f"{dep or '（空）'} → {dest:6} 应有 {_expected_legs(state(dep, dest))}")
+
+
+===== block 139 565f8904771f lines 1-5 source 知行旅行助手-v2#139 =====
+北京 → 上海     应有 ['北京→上海', '上海→北京']
+北京 → 天津、上海  应有 ['北京→天津', '天津→上海', '上海→北京']
+北京 → 北京、天津  应有 ['北京→天津', '天津→北京']
+北京 → 北京     应有 []
+（空） → 杭州     应有 []
+
+
+===== block 140 b5b783cdedfb lines 1-7 source 知行旅行助手-v2#140 =====
+from jinja2 import Template
+from langchain.agents.middleware import AgentMiddleware, ModelRequest, ModelResponse
+from langchain_core.messages import HumanMessage, ToolMessage
+from typing import Callable, Any
+from app.core.state import TravelState
+from app.core.store import get_user_memory_service
+from app.utils.logger import app_logger
+
+
+===== block 141 dbf7c7408915 lines 1-37 source 知行旅行助手-v2#141 =====
+def _leg_query_date(state: dict, legs: list, cursor: int) -> str:
+    """ 多段行程的"段日期"按时序分配（代码算，不由模型猜）
+
+    实测多城会话三段城际全按出发日查询（重庆→北京、北京→天津都查 2026-09-18），
+    与实际时序矛盾（人不可能同一天既在重庆又在北京又在天津）。规则：
+      ① 出发地→首城 = 出发日；
+      ② 城市 i-1 → 城市 i = 出发日 + 前 i 站累计晚数（即下一城的首日）；
+      ③ 返程段（末段、终点=出发地）= 末日。
+    晚数分配与酒店侧同源：出发地 1 晚 + 剩余天数在其后城市均分
+    """
+    from datetime import date as _date, timedelta as _timedelta
+    req = state.get("user_requirement") or {}
+    days = int(req.get("travel_days") or 0)
+    try:
+        start = _date.fromisoformat(str(req.get("departure_date") or "")[:10])
+    except Exception:
+        return ""
+    if days <= 0 or not legs:
+        return ""
+    c = max(0, min(int(cursor), len(legs) - 1))
+    from app.services.express_planning_service import _stay_nights, ordered_play_cities
+    # 与住宿站点同源对齐——节点 = ordered_play_cities（目的地城市串，
+    # 出发地仅当本身也在目的地串里才计入并置最前），晚数按**真实节点数**分配（此前按
+    # legs+1 估，3 城以上与酒店侧错位）。出发地本身是游玩首节点时（北京→北京/天津），
+    # 首段（北京→天津）发生在"北京住 1 晚之后"，偏移整体 +1 站
+    dep = str(req.get("departure_city") or "").strip()
+    dest = str(state.get("selected_destination") or "") or str(req.get("destination") or "")
+    # ★ 返程段 = 末日：单独判定，不靠最后一行 min(offset, days - 1) 的截断碰巧落到末日
+    if dep and c == len(legs) - 1 and str(legs[c]).rpartition("→")[2].strip() == dep:
+        return (start + _timedelta(days=days - 1)).isoformat()
+    nodes = ordered_play_cities(dep, dest)
+    # ★ 与住宿步同一口径：首站 1 晚、其余均分
+    nights = _stay_nights(days, len(nodes) or (len(legs) + 1))
+    # ★ 出发地也在目的地里：第一站在本地玩，每段都往后挪一站
+    shift = 1 if (dep and dep in nodes and nodes[0] == dep) else 0
+    offset = sum(nights[:min(c + shift, len(nights))]) if nights else 0
+    return (start + _timedelta(days=min(offset, days - 1))).isoformat()
+
+
+===== block 142 11ba21540b37 lines 1-10 source 知行旅行助手-v2#142 =====
+"""_leg_query_date 演示：每一段查哪一天，由代码按行程时序算（纯函数，无需密钥）"""
+from app.core.middleware import _leg_query_date
+
+req = {"departure_city": "北京", "departure_date": "2026-10-01", "travel_days": 5}
+for dest, legs in [("天津、上海", ["北京→天津", "天津→上海", "上海→北京"]), ("北京、天津", ["北京→天津", "天津→北京"])]:
+    state = {"user_requirement": req, "selected_destination": dest}
+    for i, leg in enumerate(legs):
+        print(f"目的地 {dest}：第 {i + 1} 段 {leg} → 查 {_leg_query_date(state, legs, i)}")
+state = {"user_requirement": {"departure_city": "北京", "travel_days": 5}, "selected_destination": "上海"}
+print("没有出发日期：", repr(_leg_query_date(state, ["北京→上海"], 0)))
+
+
+===== block 143 e05f439d8e8c lines 1-4 source 知行旅行助手-v2#143 =====
+目的地 天津、上海：第 1 段 北京→天津 → 查 2026-10-01
+目的地 天津、上海：第 2 段 天津→上海 → 查 2026-10-02
+目的地 北京、天津：第 1 段 北京→天津 → 查 2026-10-02
+没有出发日期： ''

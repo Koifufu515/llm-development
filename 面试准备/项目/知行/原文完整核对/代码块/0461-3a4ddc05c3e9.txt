@@ -1,0 +1,29 @@
+"""
+统一响应格式与全局异常处理
+
+前端 request.ts 依赖两点契约：
+1. 响应体统一为 {code, msg, data} 包裹结构
+2. HTTP 状态码语义：200 成功 / 401 跳登录 / 422 参数不对 / 5xx 服务器错误
+"""
+from typing import Any
+import json
+from pydantic import BaseModel
+from fastapi import Request, Response
+from fastapi.responses import JSONResponse
+from app.utils.logger import app_logger
+
+class ResponseModel(BaseModel):
+    code: int = 200
+    msg: Any = "SUCCESS"
+    data: Any | None = None
+
+def response(
+    data: Any = None,  # 返回的数据，可以是任意类型，也可以是 None
+    code: int = 200,  # → 状态码，默认 200
+    msg: Any = "SUCCESS",  # 提示消息，默认 "SUCCESS"
+) -> JSONResponse:
+    """统一响应包装：{code, msg, data}，HTTP 状态码与 code 同步"""
+    if data is None:
+        data = []
+    payload = ResponseModel(code=code, msg=msg, data=data).model_dump()
+    return JSONResponse(content=payload, status_code=code)

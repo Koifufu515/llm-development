@@ -1,0 +1,3 @@
+item = None      → 业务偶尔真推了个 None，消费者提前退出
+item == "__END__" → 理论上也可能是一条真实数据
+item is _CLOSE   → 除了 close() 放进去的那一个，谁都不是它

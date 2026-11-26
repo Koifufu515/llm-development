@@ -1,0 +1,2 @@
+(Get-ChildItem corpus -Recurse -Filter *.md).Count
+Get-ChildItem corpus

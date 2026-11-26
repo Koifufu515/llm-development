@@ -1,0 +1,1 @@
+$env:QUARRY_KEY = "qr_你的key"

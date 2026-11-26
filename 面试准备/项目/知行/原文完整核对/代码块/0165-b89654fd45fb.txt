@@ -1,0 +1,5 @@
+"""_seconds_to_hhmm 演示：高德的 duration 单位是秒，转成 HH:mm；非法或非正数给空串（纯函数，无需密钥）"""
+from app.tools.mcp_tools import _seconds_to_hhmm
+
+for v in ["6120", 45296, "59", 0, "abc", None]:
+    print(f"{v!r:8} → {_seconds_to_hhmm(v)!r}")

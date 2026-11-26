@@ -1,0 +1,249 @@
+[
+  {
+    "action": "directory_relocated",
+    "from": "/Users/jarvis/Documents/ChatGPT/大模型开发/docs",
+    "to": "/Users/jarvis/Desktop/大模型开发/开发记录/实施计划与进度"
+  },
+  {
+    "action": "directory_relocated",
+    "from": "/Users/jarvis/Documents/ChatGPT/大模型开发/ChatGPT实习项目同步",
+    "to": "/Users/jarvis/Desktop/大模型开发/开发记录/ChatGPT资料同步"
+  },
+  {
+    "action": "file_relocated",
+    "from": "/Users/jarvis/Documents/ChatGPT/大模型开发/ChatGPT实习项目同步_2026-10-23_部分归档.zip",
+    "to": "/Users/jarvis/Desktop/大模型开发/开发记录/ChatGPT资料同步/原始归档.zip",
+    "sha256": "31344bdf5ff928cfb85dd439035b9cc128f6ca8787a44e0b8a519e22ec052bc6"
+  },
+  {
+    "action": "file_relocated",
+    "from": "/Users/jarvis/Documents/ChatGPT/大模型开发/task_plan.md",
+    "to": "/Users/jarvis/Desktop/大模型开发/开发记录/实施计划与进度/早期总计划/task_plan.md",
+    "sha256": "6ea0c04e7c31f8c404992b1169523603700f4a8b08c38194f2d2f167896168fe"
+  },
+  {
+    "action": "file_relocated",
+    "from": "/Users/jarvis/Documents/ChatGPT/大模型开发/findings.md",
+    "to": "/Users/jarvis/Desktop/大模型开发/开发记录/实施计划与进度/早期总计划/findings.md",
+    "sha256": "f30fa2b744e8ec03aa7df50e7fbe72bec88437847f3425d28bfc30a0e1c6037b"
+  },
+  {
+    "action": "file_relocated",
+    "from": "/Users/jarvis/Documents/ChatGPT/大模型开发/progress.md",
+    "to": "/Users/jarvis/Desktop/大模型开发/开发记录/实施计划与进度/早期总计划/progress.md",
+    "sha256": "d679acf48a2b00efaf01841016db3371fbf80725336c22249481d7c0b5bb20f4"
+  },
+  {
+    "action": "directory_relocated",
+    "from": "/Users/jarvis/Documents/ChatGPT/大模型开发/知行项目学习",
+    "to": "/Users/jarvis/Desktop/大模型开发/学习笔记/知行"
+  },
+  {
+    "action": "directory_relocated",
+    "from": "/Users/jarvis/Documents/ChatGPT/大模型开发/Quarry项目学习",
+    "to": "/Users/jarvis/Desktop/大模型开发/学习笔记/Quarry"
+  },
+  {
+    "action": "file_relocated",
+    "from": "/Users/jarvis/Documents/ChatGPT/大模型开发/哈啰客服Agent_项目梳理与实现路线.md",
+    "to": "/Users/jarvis/Desktop/大模型开发/学习笔记/哈啰客服/项目梳理与实现路线.md",
+    "sha256": "e37a65e03eb9a254914b41092c9ec5432f154bc675d3583e9519068f3a386169"
+  },
+  {
+    "action": "identical_merged",
+    "from": "/Users/jarvis/Documents/ChatGPT/大模型开发/面试准备/三项目Agent八股/1-标题.json",
+    "to": "/Users/jarvis/Desktop/大模型开发/面试准备/三项目Agent八股/1-标题.json",
+    "sha256": "f15a5f69a3bdc43ab4b9a9a996c13bf33a31b262475e494dc1a991d55ba4e1c9"
+  },
+  {
+    "action": "identical_merged",
+    "from": "/Users/jarvis/Documents/ChatGPT/大模型开发/面试准备/三项目Agent八股/3-原文.txt",
+    "to": "/Users/jarvis/Desktop/大模型开发/面试准备/三项目Agent八股/3-原文.txt",
+    "sha256": "7db4c78e85c408d536d7add6f378e85ebfecbb06f9c9bf91225f506526691d2e"
+  },
+  {
+    "action": "identical_merged",
+    "from": "/Users/jarvis/Documents/ChatGPT/大模型开发/面试准备/三项目Agent八股/1-原文.txt",
+    "to": "/Users/jarvis/Desktop/大模型开发/面试准备/三项目Agent八股/1-原文.txt",
+    "sha256": "2094a09b669a2376abce5bbaea75467519854bbbe00b392e5630b9ba5d9e5980"
+  },
+  {
+    "action": "identical_merged",
+    "from": "/Users/jarvis/Documents/ChatGPT/大模型开发/面试准备/三项目Agent八股/先背这20个主题.md",
+    "to": "/Users/jarvis/Desktop/大模型开发/面试准备/三项目Agent八股/先背这20个主题.md",
+    "sha256": "2cb6556dbd1d567e0a89cc589403c448e8d3a7488196748b75852d8d07052f5f"
+  },
+  {
+    "action": "identical_merged",
+    "from": "/Users/jarvis/Documents/ChatGPT/大模型开发/面试准备/三项目Agent八股/全部原题索引.json",
+    "to": "/Users/jarvis/Desktop/大模型开发/面试准备/三项目Agent八股/全部原题索引.json",
+    "sha256": "429d640348123be8874581c89ce2bfac68a41a04d30ea8381d8aca4b3ae9563b"
+  },
+  {
+    "action": "identical_merged",
+    "from": "/Users/jarvis/Documents/ChatGPT/大模型开发/面试准备/三项目Agent八股/2-标题.json",
+    "to": "/Users/jarvis/Desktop/大模型开发/面试准备/三项目Agent八股/2-标题.json",
+    "sha256": "3a2db52890534f958407588ad807c02007a4bfcda730e8cc75bc0c568b56d331"
+  },
+  {
+    "action": "identical_merged",
+    "from": "/Users/jarvis/Documents/ChatGPT/大模型开发/面试准备/三项目Agent八股/progress.md",
+    "to": "/Users/jarvis/Desktop/大模型开发/面试准备/三项目Agent八股/progress.md",
+    "sha256": "25ccff6c2fe2af76868916dfbaf30ef3c16e1c3416a66a861d0b8d79dbd1950f"
+  },
+  {
+    "action": "identical_merged",
+    "from": "/Users/jarvis/Documents/ChatGPT/大模型开发/面试准备/三项目Agent八股/3-标题.json",
+    "to": "/Users/jarvis/Desktop/大模型开发/面试准备/三项目Agent八股/3-标题.json",
+    "sha256": "c1c393e8511e39109f2a4d01febfc999bab04cbc5dbbf30587dc6459bd661ae5"
+  },
+  {
+    "action": "identical_merged",
+    "from": "/Users/jarvis/Documents/ChatGPT/大模型开发/面试准备/三项目Agent八股/task_plan.md",
+    "to": "/Users/jarvis/Desktop/大模型开发/面试准备/三项目Agent八股/task_plan.md",
+    "sha256": "ab48a95a5be09cad1fd1e90c704f837643c7f0df8a9456f92adc616c6a3f64c1"
+  },
+  {
+    "action": "identical_merged",
+    "from": "/Users/jarvis/Documents/ChatGPT/大模型开发/面试准备/三项目Agent八股/2-原文.txt",
+    "to": "/Users/jarvis/Desktop/大模型开发/面试准备/三项目Agent八股/2-原文.txt",
+    "sha256": "d1dcca0e275af8ef8c043ae4e285eddaaebf109dd8694bc2b7407c371cc5db90"
+  },
+  {
+    "action": "identical_merged",
+    "from": "/Users/jarvis/Documents/ChatGPT/大模型开发/面试准备/三项目Agent八股/筛选统计.json",
+    "to": "/Users/jarvis/Desktop/大模型开发/面试准备/三项目Agent八股/筛选统计.json",
+    "sha256": "70ad645b704821b2dced66808c43abd36a30ec06f11ffacd9bb52b2a4284766f"
+  },
+  {
+    "action": "identical_merged",
+    "from": "/Users/jarvis/Documents/ChatGPT/大模型开发/面试准备/三项目Agent八股/优先题原文摘录.md",
+    "to": "/Users/jarvis/Desktop/大模型开发/面试准备/三项目Agent八股/优先题原文摘录.md",
+    "sha256": "d43b974539e96529563efdb490f8e0b73e08c6a9c728b6a281b83fc869baf1d3"
+  },
+  {
+    "action": "identical_merged",
+    "from": "/Users/jarvis/Documents/ChatGPT/大模型开发/面试准备/三项目Agent八股/findings.md",
+    "to": "/Users/jarvis/Desktop/大模型开发/面试准备/三项目Agent八股/findings.md",
+    "sha256": "841110c078b049141ee989be5bd92dc46dac0e475941e394592f6f7a92e62af9"
+  },
+  {
+    "action": "identical_merged",
+    "from": "/Users/jarvis/Documents/ChatGPT/大模型开发/面试准备/三项目Agent八股/4-原文.txt",
+    "to": "/Users/jarvis/Desktop/大模型开发/面试准备/三项目Agent八股/4-原文.txt",
+    "sha256": "fc933c4cc8248586cd98b82349c633cc052e975f22fa3038446ad1b8c3ddced5"
+  },
+  {
+    "action": "identical_merged",
+    "from": "/Users/jarvis/Documents/ChatGPT/大模型开发/面试准备/三项目Agent八股/4-标题.json",
+    "to": "/Users/jarvis/Desktop/大模型开发/面试准备/三项目Agent八股/4-标题.json",
+    "sha256": "d8e4951ace313f194cd07f9207516ba28f88301aa2aa04aaf203e55557fe7436"
+  },
+  {
+    "action": "directory_relocated",
+    "from": "/Users/jarvis/Documents/ChatGPT/大模型开发/面试准备/三项目Agent八股",
+    "to": "/Users/jarvis/Desktop/大模型开发/面试准备/三项目Agent八股"
+  },
+  {
+    "action": "directory_relocated",
+    "from": "/Users/jarvis/Documents/ChatGPT/大模型开发/面试准备",
+    "to": "/Users/jarvis/Desktop/大模型开发/面试准备"
+  },
+  {
+    "action": "directory_relocated",
+    "from": "/Users/jarvis/Documents/ChatGPT/大模型开发/skills",
+    "to": "/Users/jarvis/Desktop/大模型开发/skills"
+  },
+  {
+    "action": "file_relocated",
+    "from": "/Users/jarvis/Desktop/大模型开发/知行旅行助手_原方案复现_2026-10-31.zip",
+    "to": "/Users/jarvis/Desktop/大模型开发/knowgo-travel/交付/知行旅行助手_原方案复现_2026-10-31.zip",
+    "sha256": "943d78e7ae350bcdaded760c5018175d99a5a44356742eef82b0a2a390b929d3"
+  },
+  {
+    "action": "file_relocated",
+    "from": "/Users/jarvis/Desktop/大模型开发/大厂面经 - Rag.html",
+    "to": "/Users/jarvis/Desktop/大模型开发/原始资料/面试题库/大厂面经 - Rag.html",
+    "sha256": "aec98e09149528777fff664457dfd6d4eb3d8c42ee6093672e2386992cb00971"
+  },
+  {
+    "action": "file_relocated",
+    "from": "/Users/jarvis/Desktop/大模型开发/大厂面经 - SKILLS专题.html",
+    "to": "/Users/jarvis/Desktop/大模型开发/原始资料/面试题库/大厂面经 - SKILLS专题.html",
+    "sha256": "f3b970cabf347a2cc44c7c3088070356a5d9173876e1794657569714fb4280b6"
+  },
+  {
+    "action": "file_relocated",
+    "from": "/Users/jarvis/Desktop/大模型开发/Agent & RAG 面试场景题八股.html",
+    "to": "/Users/jarvis/Desktop/大模型开发/原始资料/面试题库/Agent & RAG 面试场景题八股.html",
+    "sha256": "2cb62d312247e9afdde7e2249b3368e40c12bc92e8e02a6bf01e8effdaa12c87"
+  },
+  {
+    "action": "file_relocated",
+    "from": "/Users/jarvis/Desktop/大模型开发/MCP & A2A 高频面试八股.html",
+    "to": "/Users/jarvis/Desktop/大模型开发/原始资料/面试题库/MCP & A2A 高频面试八股.html",
+    "sha256": "cbee02514a07a3e1a04242aba37706fd2ab95a7449292516b0f9bbc2302e8ae9"
+  },
+  {
+    "action": "file_relocated",
+    "from": "/Users/jarvis/Desktop/大模型开发/代码随想录知识星球-八股文速记版.pdf",
+    "to": "/Users/jarvis/Desktop/大模型开发/原始资料/面试题库/代码随想录知识星球-八股文速记版.pdf",
+    "sha256": "d35c46b507b2860afb54cd1940fc8a0e74d6161e2d9241811573f028500cdb8f"
+  },
+  {
+    "action": "file_relocated",
+    "from": "/Users/jarvis/Desktop/大模型开发/后端开发面试八股 .pdf",
+    "to": "/Users/jarvis/Desktop/大模型开发/学习笔记/后端开发面试八股/后端开发面试八股.pdf",
+    "sha256": "8f2f81ee894468f7b533500a16561f7e529ce0995724b0cef854788412583dba"
+  },
+  {
+    "action": "file_relocated",
+    "from": "/Users/jarvis/Desktop/大模型开发/力扣算法题.pdf",
+    "to": "/Users/jarvis/Desktop/大模型开发/学习笔记/力扣算法题/力扣算法题.pdf",
+    "sha256": "42834cae99eb69f20602f22c10c3656117cf2085eefdfd8909cdb6a71d8f626a"
+  },
+  {
+    "action": "file_relocated",
+    "from": "/Users/jarvis/Desktop/大模型开发/知行项目八股.pdf",
+    "to": "/Users/jarvis/Desktop/大模型开发/学习笔记/知行/知行项目八股.pdf",
+    "sha256": "25a8ce00fab47d7ddec48d23169bd0ef9bfc861a627917008c4cb8dcae8dfcfb"
+  },
+  {
+    "action": "directory_relocated",
+    "from": "/Users/jarvis/Documents/ChatGPT/大模型开发/output/面试材料审阅/models",
+    "to": "/Users/jarvis/Documents/ChatGPT/大模型开发/.tools/models"
+  },
+  {
+    "action": "directory_relocated",
+    "from": "/Users/jarvis/Documents/ChatGPT/大模型开发/output/面试材料审阅",
+    "to": "/Users/jarvis/Desktop/大模型开发/面试准备/面试复盘"
+  },
+  {
+    "action": "directory_relocated",
+    "from": "/Users/jarvis/Documents/ChatGPT/大模型开发/output/playwright",
+    "to": "/Users/jarvis/Desktop/大模型开发/开发记录/验收附件/浏览器截图"
+  },
+  {
+    "action": "directory_relocated",
+    "from": "/Users/jarvis/Documents/ChatGPT/大模型开发/implementation",
+    "to": "/Users/jarvis/Desktop/大模型开发/开发记录/参考代码与差异记录/原实施暂存"
+  },
+  {
+    "action": "file_relocated",
+    "from": "/Users/jarvis/Downloads/quarry-rag 简历模板.html",
+    "to": "/Users/jarvis/Desktop/大模型开发/原始资料/项目资料/Quarry/quarry-rag 简历模板.html",
+    "sha256": "f34c59c542aa46bbb11a55d60baa4e60cae5d07e138340ce8bd85bfc82f0d459"
+  },
+  {
+    "action": "file_relocated",
+    "from": "/Users/jarvis/Downloads/知行旅行助手简历模板-v2 (1).html",
+    "to": "/Users/jarvis/Desktop/大模型开发/原始资料/项目资料/知行/知行旅行助手简历模板-v2 (1).html",
+    "sha256": "8ef72f5cce798f101394adfb62fb7d3d266a51fb7b0f93a965e428cbb20ade19"
+  },
+  {
+    "action": "identical_merged",
+    "from": "/Users/jarvis/Downloads/Skills分享安装包.zip",
+    "to": "/Users/jarvis/Desktop/大模型开发/skills/个人学习skills/Skills分享安装包.zip",
+    "sha256": "15630c1bcbb11856a3a01996fc9702b336f41d39422eb0d7bb4e4f626fbc4ea1"
+  }
+]

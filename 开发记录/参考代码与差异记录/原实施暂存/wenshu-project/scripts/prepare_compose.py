@@ -1,0 +1,1 @@
+../../../../../wenshu-project/scripts/prepare_compose.py

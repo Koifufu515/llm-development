@@ -1,0 +1,47 @@
+async def apply_hotel_selection(
+    conversation_id: str, payload: HotelMultiSegmentSubmitPayload
+) -> HotelMultiSegmentSubmitResult:
+    """前端一次性提交 → 校验 + 写住宿账本 + 推进到餐饮/行程步（**全程不做日期校验**）"""
+    result = validate_hotel_multi_submission(payload, cache_key=conversation_id)
+    if not result.ok:
+        return result
+    agent, config, state = await get_agent_and_state(conversation_id)
+    # 步骤守卫（代码层，不看模型措辞）：只有仍停在住宿步才允许落库推进——
+    # 重复提交（前端连点/已确认过）按幂等成功处理，避免把已推进的状态机拉回住宿步
+    step = str(state.get("current_step") or "")
+    if step != "accommodation_planning":
+        if step in _AFTER_STAY:
+            return HotelMultiSegmentSubmitResult(
+                ok=True, code="OK", msg="该批住宿已确认，无需重复提交",
+                accepted=list(payload.segments),
+                texts=list(state.get("selected_hotels") or []),
+                next_step=step,      # 幂等：反馈文案用当前实际所在步骤
+            )
+        return HotelMultiSegmentSubmitResult(
+            ok=False, code="STEP_MISMATCH",
+            msg=f"当前流程步骤为 {step or '未知'}，不在住宿确认阶段，无法提交住宿",
+        )
+    extra, nxt = _next_step(state)
+    upd: dict = {
+        "selected_hotels": result.texts, "stay_cursor": len(result.texts),
+        "stay_prices": dict(result.prices),   # ★ 校验器已经算好，这里只负责落库
+        "current_step": nxt,
+        # 档位无条件写入（表单未预选 → 兜底经济型），
+        # 否则行程步 requires 校验 selected_accommodation_types 缺失直接抛错
+        "selected_accommodation_types": _accom_types(state) or ["economy_hotel"],
+        **extra,
+    }
+    await agent.aupdate_state(config, upd)
+    app_logger.info(f"🏨 多段住宿已提交并落库：{len(result.texts)} 站，推进到 {nxt}")
+    return result.model_copy(update={
+        "msg": f"已确认 {len(result.texts)} 站住宿，继续为您安排餐饮与行程",
+        "next_step": nxt,   # 提交路由据此挑续跑反馈文案（行程步 → "正在生成行程报告"）
+    })
+
+__all__ = [
+    "hotel_card_mode",
+    "emit_hotel_skill_ui",
+    "auto_select_hotels",
+    "apply_hotel_selection",
+    "build_lead_text",
+]

@@ -1,0 +1,20 @@
+"""chat_route 演示：同一句"确认"，带不带历史，判定完全不同（需 .env 配 DashScope 密钥）"""
+import asyncio
+
+from app.agents.routers.chat_router import chat_route
+
+HISTORY = [
+    "user: 我想10月1号从福州去杭州玩",
+    "assistant: 好的！请问您计划玩几天？预算大概多少？",
+    "user: 3天，人均3000",
+    "assistant: 为您推荐杭州：西湖、灵隐寺……请问是否确认选择杭州作为目的地？",
+]
+
+async def main():
+    for label, hist in [("无历史", None), ("带 4 条历史", HISTORY)]:
+        r = await chat_route("确认", history=hist)
+        print(f"[{label}] planning={r.is_itinerary_planning} skills={[s.skill_name for s in r.skills]}")
+        print(f"            推导：{r.inference_log[:60]}…")
+
+if __name__ == "__main__":
+    asyncio.run(main())

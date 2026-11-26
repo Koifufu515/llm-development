@@ -1,0 +1,11 @@
+    # ---------- 重排（第五章） ----------
+    rerank_backend: Literal["api", "noop"] = "noop"
+    rerank_model: str = ""
+    rerank_url: str = ""
+    rerank_api_key: SecretStr = SecretStr("")      # 留空 = 复用 LLM_API_KEY
+    rerank_candidates: int = Field(default=30, ge=1, le=100)
+    rerank_timeout_s: float = Field(default=3.0, gt=0)
+
+    # ---------- 上下文（第五章） ----------
+    context_max_chars: int = Field(default=6000, ge=500, le=50000)
+    neighbor_radius: int = Field(default=1, ge=0, le=3)

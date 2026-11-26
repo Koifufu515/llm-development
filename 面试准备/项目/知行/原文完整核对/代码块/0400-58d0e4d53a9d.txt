@@ -1,0 +1,24 @@
+"""select_accommodation_tool 逐城循环：与交通段级循环一一对称（直接调真实工具，纯逻辑，无需密钥）"""
+from langchain.tools import ToolRuntime
+from langchain_core.messages import HumanMessage
+
+from app.tools.state_transition import select_accommodation_tool
+
+state = {"messages": [HumanMessage(content="好的")], "current_step": "accommodation_planning",
+         "user_requirement": {"departure_city": "北京", "travel_days": 4}, "selected_destination": "天津、上海",
+         "stay_cursor": 0, "selected_hotels": []}
+
+def call(**kwargs):
+    """测试驱动：用当前 state 调一次真实工具，返回它的 Command.update"""
+    rt = ToolRuntime(state=state, context=None, config={}, stream_writer=None, tool_call_id="call_1", store=None)
+    return select_accommodation_tool.func(runtime=rt, **kwargs).update
+
+up = call(accommodation_types=["economy_hotel"], hotels=["上海 汉庭酒店 259元/晚"])   # 该确认天津，却传了上海
+print("传错城   →", [k for k in up if k != "messages"] or "不写任何字段", "|", up["messages"][0].content[:30], "…")
+
+up = call(accommodation_types=["economy_hotel"], hotels=["天津 如家酒店 199元/晚"])
+print("第 1 城  →", {k: v for k, v in up.items() if k != "messages"})
+state.update({k: v for k, v in up.items() if k != "messages"})
+
+up = call(accommodation_types=["economy_hotel"], hotels=["上海 汉庭酒店 259元/晚"])
+print("最后一城 →", {k: v for k, v in up.items() if k != "messages"})

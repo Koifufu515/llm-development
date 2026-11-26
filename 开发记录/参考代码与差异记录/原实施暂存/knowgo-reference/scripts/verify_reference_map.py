@@ -1,0 +1,1 @@
+../../../../../knowgo-travel/scripts/verify_reference_map.py

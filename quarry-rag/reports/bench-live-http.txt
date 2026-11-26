@@ -1,0 +1,1 @@
+{"concurrency": 4, "measured_requests": 60, "success": 60, "failed": 0, "rerank_degraded": 0, "p50_ms": 461.2, "p95_ms": 755.3, "p99_ms": 1344.3, "qps": 7.86, "query_vector_cache": false}

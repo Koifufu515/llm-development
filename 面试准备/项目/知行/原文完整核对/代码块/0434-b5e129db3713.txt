@@ -1,0 +1,18 @@
+"""go_back_to_step 演示：退回目的地步，目的地及之后的字段连同流程游标一起清空；终态明确拒绝（直接调真实工具，纯逻辑，无需密钥）"""
+from langchain.tools import ToolRuntime
+
+from app.tools.state_transition import go_back_to_step
+
+state = {"messages": [], "current_step": "accommodation_planning", "user_requirement": {"departure_city": "北京"},
+         "selected_destination": "天津、上海", "selected_transport": "train", "leg_cursor": 2,
+         "leg_selections": {"北京→天津": "G1", "天津→上海": "G7512"}, "stay_cursor": 1, "selected_hotels": ["天津 如家"]}
+rt = ToolRuntime(state=state, context=None, config={}, stream_writer=None, tool_call_id="call_1", store=None)
+
+up = go_back_to_step.func(target_step="destination_recommendation", reason="用户想换目的地", runtime=rt).update
+cleared = sorted(k for k, v in up.items() if v is None)
+print("current_step →", up["current_step"])
+print("置为 None 的字段：", cleared)
+print("需求还在吗？", "user_requirement" not in cleared)
+
+up = go_back_to_step.func(target_step="order_generation", reason="试试", runtime=rt).update
+print("回退到订单步 →", [k for k in up if k != "messages"] or "只回一条拒绝消息", "|", up["messages"][0].content[:30], "…")

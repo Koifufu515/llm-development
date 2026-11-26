@@ -1,0 +1,33 @@
+"""generate_plan 演示：提炼（或兜底）→ POI/路线增强 → 按会话 UPSERT；连跑两次，plan_id 不变（需 PG + DeepSeek/高德密钥）"""
+import asyncio
+import uuid
+
+from app.models.base import async_session_maker
+from app.models.user import User
+from app.services.conversation_service import create_conversation
+from app.services.itinerary_plan_service import generate_plan, get_plan
+from app.utils.security import hash_password
+
+DAYS = [{"day": 1, "city": "杭州", "morning": ["西湖断桥"], "noon": ["知味观"],
+         "afternoon": ["灵隐寺"], "evening": ["河坊街"]}]
+MD = "### 杭州 1 日游\n#### Day 1\n- 上午：西湖断桥\n- 中午：知味观\n- 下午：灵隐寺\n- 晚上：河坊街"
+
+async def main():
+    async with async_session_maker() as db:
+        sfx = uuid.uuid4().hex[:6]                       # 造一个测试用户 + 会话（清单表外键指向会话）
+        user = User(username=f"plan_{sfx}", email=f"plan_{sfx}@example.com",
+                    password_hash=hash_password("secret123"), preferences={})
+        db.add(user)
+        await db.commit()
+        conv = await create_conversation(db, user.id, "杭州 1 日游")
+
+        pid1 = await generate_plan(db, conv.id, MD, structure=DAYS)
+        pid2 = await generate_plan(db, conv.id, MD + "\n（晚上改去南宋御街）", structure=DAYS)
+        print("第一次 plan_id：", pid1)
+        print("第二次 plan_id：", pid2, "← 同一会话覆盖更新，id 不变" if pid1 == pid2 else "")
+        plan = await get_plan(db, pid2, conv.id)
+        spot = plan.plan_data["itinerary_list"][0]["itinerary"][0]["scenic_spots_list"][0]
+        print("首个景点：", spot["toponym"], spot["longitude"], spot["latitude"], spot["toponym_image"][:50])
+
+if __name__ == "__main__":
+    asyncio.run(main())

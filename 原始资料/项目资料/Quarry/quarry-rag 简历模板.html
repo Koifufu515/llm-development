@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>quarry-rag 简历模板</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif;
+    max-width: 820px; margin: 40px auto; padding: 0 24px; color: #1f2329; line-height: 1.7; }
+  h1,h2,h3,h4 { line-height: 1.3; margin: 1.4em 0 .6em; }
+  img { max-width: 100%; height: auto; }
+  pre { background: #f6f8fa; padding: 12px 16px; border-radius: 6px; overflow: auto; }
+  code { font-family: Consolas, Monaco, monospace; font-size: .92em; }
+  pre code { background: none; padding: 0; }
+  blockquote { margin: 1em 0; padding: .4em 1em; border-left: 4px solid #d0d7de; color: #57606a; }
+  table { border-collapse: collapse; } td,th { border: 1px solid #d0d7de; padding: 6px 12px; }
+  hr { border: none; border-top: 1px solid #e5e7eb; margin: 2em 0; }
+  @media print { body { margin: 0; max-width: none; } }
+</style>
+</head>
+<body>
+<blockquote>
+<p>🔗 原文链接： <a href="https://q0kyes8lnt5.feishu.cn/docx/S422wsTmMioG60kWxbOcU2oUn9c">quarry-rag 简历模板</a>
+⏰ 转存时间： 2026/11/9 11:19:22
+✂️ 本文档由 <a href="https://yifs.cn">易飞书</a> 整理生成</p>
+</blockquote>
+<hr>
+<blockquote>
+<p>两个版本：</p>
+<ul>
+<li><p><strong>版本 A：通用版</strong>——按&quot;技术平台&quot;讲，适合投基础架构、后端、AI 工程方向</p>
+</li>
+<li><p><strong>版本 B：岗位场景包装版</strong>——把同一个项目套进一个具体业务场景讲，适合投有明确业务域的岗位（SRE / 客服技术 / 合规科技 / 医疗信息化等）</p>
+</li>
+</ul>
+<p><strong>两版的代码和数字完全一样，区别只在叙述角度</strong>。B 版不是编造业务结果，是换一件更贴近目标岗位的外衣：语料域换、场景痛点换、亮点措辞换，<strong>数字还是你自己跑出来的那些</strong>。</p>
+</blockquote>
+<h2>建议：</h2>
+<ol>
+<li><p><strong>换项目名</strong>。同一门课出来的简历都叫一个名字，撞车很难看。直接写&quot;企业知识检索平台&quot;也行，或者起个自己的名字：Lodestone、Trailhead、Bedrock、Cairn 都可以，取&quot;定位、锚点、基底&quot;这类意象。</p>
+</li>
+<li><p><strong>结合实际写在简历的业务场景可以去换更合适的语料域</strong>。课程用的是旅行攻略加企业制度。换成你熟悉的、或者目标岗位相关的领域。事实层那条亮点里的&quot;易变数值&quot;也跟着换。B 版的方向菜单里有现成的搭配。</p>
+</li>
+<li><p><strong>所有数字换成自己跑出来的</strong>。下面每条亮点里的数字都标了取值区间，那是<strong>参考范围不是答案</strong>。文末有对照表，写清每个数字来自哪条命令。<strong>跑不出来的数字不要写</strong>，面试官一追问就会问&quot;你是怎么量的&quot;。</p>
+</li>
+<li><p><strong>除了黑马点评这种项目 ，其他的基本上每个人的项目都不一样，其实面试官也没那么在乎简历项目是否相同，因为校招的同学本来就没有那么多的经验，能描述清楚即可。</strong></p>
+</li>
+</ol>
+<h2>数字取值参考区间</h2>
+<p>把标注集按课件加难之后，正常能跑出的范围。超出区间不是不行，但要能解释清楚。</p>
+<table>
+<thead>
+<tr>
+<th><strong>指标</strong></th>
+<th><strong>基线（不开重排）</strong></th>
+<th><strong>开重排后</strong></th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Recall@5</td>
+<td>0.55 – 0.75</td>
+<td>0.70 – 0.88</td>
+<td>超过 0.95 不要写：说明标注集是从金块生成的、字面高度重合，面试官会追问是不是泄题</td>
+</tr>
+<tr>
+<td>MRR</td>
+<td>0.45 – 0.65</td>
+<td>0.60 – 0.80</td>
+<td>和 Recall 一起给，单给 MRR 没人看得懂</td>
+</tr>
+<tr>
+<td>首位命中率</td>
+<td>0.35 – 0.55</td>
+<td>0.50 – 0.70</td>
+<td>可选，位置不够就删</td>
+</tr>
+<tr>
+<td>重排的代价（P95 增量）</td>
+<td>—</td>
+<td>+150 – 400 ms</td>
+<td>必须和收益一起写，只写收益会被问&quot;那代价呢&quot;</td>
+</tr>
+<tr>
+<td>误拒率</td>
+<td>0 – 8%</td>
+<td>同左</td>
+<td>阈值标定之后的值</td>
+</tr>
+<tr>
+<td>正确拒答率</td>
+<td>0.70 – 0.90</td>
+<td>同左</td>
+<td>标定之前通常只有 0.5 左右，先重标</td>
+</tr>
+<tr>
+<td>证据支撑率（裁判）</td>
+<td>0.70 – 0.90</td>
+<td>同左</td>
+<td>要同时说明&quot;裁判抽样复核 N 条，人机一致 M 条&quot;</td>
+</tr>
+<tr>
+<td>事实抽取准确率</td>
+<td>85% – 95%</td>
+<td>—</td>
+<td>抽样 50 条人工核对，写成&quot;50 条中 46 条正确&quot;比写百分比更可信</td>
+</tr>
+<tr>
+<td>单请求 P95</td>
+<td>0.5 – 1.1 s</td>
+<td>—</td>
+<td>Windows + Docker Desktop 的端口转发会让它偏高，Linux / WSL 内部低一个量级</td>
+</tr>
+<tr>
+<td>并发 4 的 P95</td>
+<td>0.9 – 1.8 s</td>
+<td>—</td>
+<td>写延迟一定要带并发数，否则等于没说</td>
+</tr>
+<tr>
+<td>语料规模</td>
+<td>15 – 30 份文档、1000 – 3000 个子块</td>
+<td>—</td>
+<td>别吹大，面试官会问&quot;多少数据量&quot;</td>
+</tr>
+<tr>
+<td>标注集规模</td>
+<td>30 – 60 题（含 20% 无答案题）</td>
+<td>—</td>
+<td>低于 30 题，指标噪声太大</td>
+</tr>
+<tr>
+<td>自动化测试</td>
+<td>28 条（13 条离线 + 15 条需环境）</td>
+<td>—</td>
+<td>按课件实际条数填</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p><strong>区间里取你实际跑出的那个数，不要取上限，取值合理即可</strong>。</p>
+</blockquote>
+<h2>版本 A：通用版</h2>
+<h3>[你的项目名] — 只返回可定位证据的 RAG 检索平台</h3>
+<p><strong>技术栈</strong>：Python、FastAPI、PostgreSQL + pgvector、asyncpg、Redis、Alembic、Docker、pytest</p>
+<p><strong>项目介绍</strong>：面向多上游复用的 RAG 检索平台，只返回带引用的证据，不生成答案。覆盖幂等接入流水线、向量与全文双路召回、重排与上下文扩展、字符级引用、易变数值的时效治理，以及一套带回归闸门的评测体系。</p>
+<p><strong>技术亮点</strong>：</p>
+<ul>
+<li><p><strong>[你的扩展亮点，可以见文末扩展池]</strong></p>
+</li>
+<li><p><strong>混合检索</strong>：pgvector 余弦召回与 PostgreSQL 全文召回在<strong>单条 SQL</strong> 内完成过滤、双路召回与 RRF 名次融合，叠加重排后在自建 [40] 题标注集上 Recall@5 [0.71→0.85]、MRR [0.58→0.74]，同时量出代价（P95 +[280] ms）并用候选数扫描确定取舍点</p>
+</li>
+<li><p><strong>可定位引用</strong>：每条证据带文档来源、字符区间与定位粒度，上游可直接高亮回原文；以&quot;原文切片逐字等于块内容&quot;为硬不变式，配套全量校验脚本比对，Markdown 语料 [2461] 个块全部逐字相符（Word 受格式限制只能定位到段落，已写进能力边界）</p>
+</li>
+<li><p><strong>时效性事实层</strong>：大模型离线抽取正文里的易变数值、<strong>由代码回原文定位而不让模型报偏移</strong>，与人工维护的权威值按别名匹配；查询时把上下文中的数值替换为占位符，另附核实日期与 verified / expired / unverified 三态，默认引导上游不再照抄旧值；抽样 50 条人工核对，[46] 条正确</p>
+</li>
+<li><p><strong>权限贯穿全链路</strong>：允许制标签（数组相交 + GIN 索引）在召回、父块回捞、邻块补全、事实提及四条 SQL 上强制执行，接口层的调用方标签由 API Key 决定、请求体不可指定；11 条权限红线用例中 [7] 条成对验证，既测&quot;不该看到的看不到&quot;也测&quot;该看到的看得到&quot;</p>
+</li>
+<li><p><strong>幂等接入</strong>：块 ID 由内容哈希决定，配合文档级 sha256 与阶段化状态机，改一个字只重算一个子块，重跑不产生重复向量化成本；接入队列为至少一次投递，靠幂等兜底</p>
+</li>
+<li><p><strong>评测与回归闸门</strong>：自建 [40] 题标注集（模型生成草稿 + 人工筛选 + 口语化改写，含 [20]% 无答案题），指标覆盖 Recall@k、MRR、误拒率、正确拒答率与 LLM 裁判给出的证据支撑率 [0.82]；每次改动只动一个变量并与固定基线对照，输出指标差值与变好、变坏的具体问题清单；闸门以非 0 退出码设计，可直接接入 CI</p>
+</li>
+</ul>
+<blockquote>
+<p> <strong>面试口径</strong>：被问到怎么做出来的，就说架构与技术取舍是自己定的、编码调试借助了 [Claude Code / Cursor]。现在坦诚使用 AI 工具基本是加分的。</p>
+</blockquote>
+<h2>版本 B：岗位场景包装版</h2>
+<p>同一套实现，换一件贴近目标岗位的外衣。<strong>三步完成包装</strong>：</p>
+<ol>
+<li><p>从下面的方向菜单挑一个和目标岗位最近的</p>
+</li>
+<li><p>把语料换成那个域的真实公开文档（15 到 30 份就够），重跑一遍接入和评测</p>
+</li>
+<li><p>按菜单里的&quot;场景句&quot;改写项目介绍和前两条亮点，其余亮点原样保留</p>
+</li>
+</ol>
+<blockquote>
+<p>⚠️ <strong>包装的边界</strong>：可以换场景、换语料、换叙述重点；<strong>不可以编造线上流量、用户数、客诉下降、故障减少</strong>这类业务结果。面试官深挖一句就穿帮，背调也可能核实。你的说服力来自&quot;我能量出来&quot;，不是&quot;我上过线&quot;。</p>
+</blockquote>
+<h3>方向菜单</h3>
+<table>
+<thead>
+<tr>
+<th><strong>方向</strong></th>
+<th><strong>语料换成</strong></th>
+<th><strong>事实层管的&quot;易变数值&quot;</strong></th>
+<th><strong>场景句（用在项目介绍里）</strong></th>
+<th><strong>顺带最该做的扩展</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>SRE / Oncall 值班助手</strong></td>
+<td>运维手册、应急预案、故障复盘、服务 Runbook</td>
+<td>服务版本号、SLA 时限、告警阈值、值班联系人</td>
+<td>值班时查处置步骤靠翻群聊和过期 wiki，照着旧文档执行回滚会出事</td>
+<td>换难语料（代码块、表格多）、CI 工程化</td>
+</tr>
+<tr>
+<td><strong>客服 / 工单辅助</strong></td>
+<td>产品政策、资费说明、常见问题、话术库</td>
+<td>资费、活动有效期、生效日期、违约金比例</td>
+<td>客服照着旧政策答复，口径不一致且无法追溯出处</td>
+<td>多集合检索（政策 + 话术）、拒答双信号</td>
+</tr>
+<tr>
+<td><strong>合规 / 法规问答</strong></td>
+<td>行业法规、监管问答、内部合规手册</td>
+<td>条款生效日期、罚则额度、备案期限</td>
+<td>法规频繁修订，答复必须能定位到具体条款，还要看得出引用的是不是最新版</td>
+<td>实体对齐、标注集加难</td>
+</tr>
+<tr>
+<td><strong>研发内部知识库</strong></td>
+<td>设计文档、接口契约、架构决策记录、发布说明</td>
+<td>接口版本、兼容矩阵、依赖版本号、废弃时间</td>
+<td>新人问&quot;这个接口怎么调&quot;，搜出来的是两年前已废弃的写法</td>
+<td>MCP 适配（接进 IDE）、换难语料</td>
+</tr>
+<tr>
+<td><strong>安全事件响应</strong></td>
+<td>应急预案、漏洞通告、加固基线</td>
+<td>CVE 编号、受影响版本、补丁版本、处置时限</td>
+<td>应急时要快速确认&quot;哪些版本受影响、补到哪个版本&quot;，且必须有出处</td>
+<td>实体对齐、多集合检索</td>
+</tr>
+<tr>
+<td><strong>医疗 / 健康科普</strong></td>
+<td>公开科普资料、用药说明、指南摘要</td>
+<td>剂量、适用年龄、有效期、禁忌更新日期</td>
+<td>科普内容更新快，照抄旧剂量有风险；必须明确标注不构成诊疗建议</td>
+<td>拒答双信号（强化拒答）、上游答案层评测</td>
+</tr>
+<tr>
+<td><strong>售后 / 设备维修</strong></td>
+<td>产品手册、维修指引、参数表</td>
+<td>型号参数、保修期、固件版本</td>
+<td>一线工程师现场查参数，型号相近容易拿错表</td>
+<td>换难语料（表格多）、实体对齐</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p><strong>挑方向的两条建议</strong>：选你能找到<strong>公开真实语料</strong>的那个（自己编的语料一问就露）；选和目标岗位 JD 关键词重合最多的那个。</p>
+</blockquote>
+<h3>示例：SRE / Oncall 方向写出来是什么样</h3>
+<blockquote>
+<p>直接照抄结构，把方括号换成自己的。</p>
+</blockquote>
+<p><strong>[你的项目名] — 面向值班排障的证据检索平台</strong></p>
+<p><strong>技术栈</strong>：Python、FastAPI、PostgreSQL + pgvector、asyncpg、Redis、Alembic、Docker Compose、pytest</p>
+<p><strong>项目介绍</strong>：针对值班时&quot;处置步骤散落在 wiki 和群聊、照着过期文档操作有风险&quot;的问题，做的一套只返回<strong>带出处证据</strong>的检索平台。平台不生成答案，由上游助手或值班人自行判断；每条证据可定位回原文具体位置，涉及版本号、SLA 时限这类会过期的数值时，额外给出核实状态与核实日期。语料为 [N] 份运维手册与应急预案，[N] 个子块。</p>
+<p><strong>技术亮点</strong>（挑 4 到 5 条，第一条放扩展）：</p>
+<ul>
+<li><p><strong>[你的扩展亮点]</strong></p>
+</li>
+<li><p><strong>处置步骤可定位</strong>：每条证据带文档来源、字符区间与定位粒度，值班人点一下就能跳到手册原文确认上下文；以&quot;原文切片逐字等于块内容&quot;为硬不变式，全量校验 [N] 个块逐字相符，避免&quot;看着像、其实是另一节&quot;的误操作</p>
+</li>
+<li><p><strong>版本与时限的时效治理</strong>：对服务版本号、SLA 时限这类易变数值建立事实层，离线抽取正文中的值并与维护的权威表比对；交付时正文里的旧值被替换为占位符，另附权威值、核实日期与 verified / expired / unverified 三态，<strong>照着过期版本号操作这条路被默认堵住</strong>；抽样 50 条人工核对，[46] 条正确</p>
+</li>
+<li><p><strong>混合检索</strong>：报错信息、服务名这类字面匹配靠全文召回，口语化描述靠向量召回，两路在<strong>单条 SQL</strong> 内完成过滤、召回与 RRF 融合，叠加重排后 Recall@5 [0.71→0.85]、MRR [0.58→0.74]，代价是 P95 +[280] ms，用候选数扫描确定取舍点</p>
+</li>
+<li><p><strong>权限与多团队隔离</strong>：允许制标签在召回、父块回捞、邻块补全、事实提及四条 SQL 上强制执行，接口层标签由 API Key 决定、请求体不可指定，保证各团队的预案互不可见；11 条权限红线用例中 [7] 条成对验证</p>
+</li>
+<li><p><strong>评测与回归闸门</strong>：自建 [40] 题标注集（含 [20]% 语料里确实没有的问题，用来测&quot;查不到时能不能老实说查不到&quot;），指标覆盖 Recall@k、MRR、误拒率、正确拒答率与裁判给出的证据支撑率 [0.82]；每次策略调整只动一个变量并与固定基线对照，闸门以非 0 退出码设计，指标回退直接拦住</p>
+</li>
+</ul>
+<blockquote>
+<p><strong>换成别的方向时改三处就行</strong>：项目介绍里的场景句、第二条亮点里的&quot;值班人&quot;、第三条亮点里的易变数值名称。</p>
+</blockquote>
+<h2>扩展亮点池</h2>
+<p>每条都给了&quot;做了什么 + 量出什么&quot;的句式，可以自己ai润色。</p>
+<ol>
+<li><strong>MCP 适配</strong></li>
+</ol>
+<blockquote>
+<p><strong>双形态交付</strong>：除 REST 接口外，用 [约 30 行] 的 stdio MCP 服务把检索能力接进 [Claude Code / Cursor]；MCP 服务通过 HTTP 调用平台而非直连内核，鉴权、限流、集合白名单与查询日志全部复用，工具只读且不暴露权限参数；占位符用法写进工具描述，智能体无需额外提示词即可正确引用核实过的数值</p>
+</blockquote>
+<ol>
+<li><strong>多集合检索</strong></li>
+</ol>
+<blockquote>
+<p><strong>跨集合证据合并</strong>：支持一次查询跨 [N] 个集合，各集合独立召回后按归一化分数合并并标注来源集合，权限仍逐集合判定；解决了 [值班时同时需要预案与接口文档] 的问题，相比上游串行调两次把 P95 从 [x] 降到 [y]</p>
+</blockquote>
+<ol>
+<li><strong>实体对齐（事实层方向</strong>）</li>
+</ol>
+<blockquote>
+<p><strong>实体名归一化</strong>：针对模型抽取出的&quot;X（Y 简称）&quot;&quot;中文名（English Name）&quot;等写法，设计多候选键归一化与数组重叠匹配，并把权威实体清单注入抽取提示词；权威值匹配率从 [38%] 提升到 [86%]，verified 比例随之从 [0.05] 升到 [0.41]</p>
+</blockquote>
+<ol>
+<li><strong>拒答双信号</strong></li>
+</ol>
+<blockquote>
+<p><strong>拒答判定</strong>：发现单用余弦分会把&quot;话题像但答不了&quot;的问题判为可答，改为余弦分与重排分双信号判定，并用标注集两组分布重新标定阈值；正确拒答率从 [0.53] 提升到 [0.87]，误拒率保持在 [3%] 以内</p>
+</blockquote>
+<ol>
+<li><strong>标注集加难与噪声量化</strong></li>
+</ol>
+<blockquote>
+<p><strong>评测可信度</strong>：发现初版标注集由金块直接生成、字面重合导致 Recall 虚高至 [1.0]，改为两步生成加口语化改写并引入多金块题；同配置连跑两次量出指标自身波动为 [±0.03]，据此设定回归闸门阈值，避免噪声触发误拦</p>
+</blockquote>
+<ol>
+<li><strong>上游答案层评测</strong></li>
+</ol>
+<blockquote>
+<p><strong>两层评测</strong>：平台侧用确定性金块判定评证据，上游侧用 RAGAS 的忠实度与答案相关性评答案，形成&quot;证据可召回、答案不脱离证据&quot;的闭环；在 [40] 题上量出答案忠实度 [0.9x]，并定位到 [N] 条&quot;证据够但答案跑偏&quot;的案例</p>
+</blockquote>
+<ol>
+<li><strong>换一个真正难的语料域</strong></li>
+</ol>
+<blockquote>
+<p><strong>[你的领域] 语料适配</strong>：把语料换成 [运维手册 / 法规条文]，暴露出 Markdown 解析器把代码块内 <code>#</code> 注释误判为标题、表格原子块无长度上限等问题并修复；在 [N] 份文档上重跑评测，Recall@5 [x]</p>
+</blockquote>
+<h2>技术热点加分项</h2>
+<p>这些是现在面试里会被主动问到的词。别只写名词，要带结果。</p>
+<table>
+<thead>
+<tr>
+<th><strong>热点</strong></th>
+<th><strong>最小可做的事</strong></th>
+<th><strong>能写的句子</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Agent 工具化 / MCP</td>
+<td>扩展池第 1 条</td>
+<td>见上</td>
+</tr>
+<tr>
+<td>长上下文 vs 检索</td>
+<td>把 top_k 从 3 调到 20，对比证据支撑率和 token 数</td>
+<td>&quot;量化对比了&#39;多塞证据&#39;与&#39;检索更准&#39;：top_k 从 [3] 增到 [20]，证据支撑率仅 +[0.03] 而上下文 token 增 [4.2] 倍，据此把预算定在 [N] 字&quot;</td>
+</tr>
+<tr>
+<td>混合检索权重调优</td>
+<td>用标注集扫 dense / sparse 权重</td>
+<td>&quot;以标注集扫描 RRF 权重，确定 [0.6/0.4] 为本语料最优，相比默认等权 Recall@5 +[0.04]&quot;</td>
+</tr>
+<tr>
+<td>私有化 / 离线部署</td>
+<td>把重排换成本地 ONNX 实现，或向量化换本地模型</td>
+<td>&quot;按 Reranker 协议补了本地 ONNX 实现，无外网环境下 Recall@5 仅降 [0.02]，P95 从 [x] 降到 [y]&quot;</td>
+</tr>
+<tr>
+<td>可观测性</td>
+<td>给分段耗时加结构化日志或 Prometheus 指标</td>
+<td>&quot;全链路分段计时落到结构化日志，上线后可按阶段定位慢查询，P99 异常能在 [1] 次查询内归因到具体阶段&quot;</td>
+</tr>
+<tr>
+<td>成本意识</td>
+<td>统计一次全量重建的模型调用次数与费用</td>
+<td>&quot;量化了重建成本：全量 [2461] 个子块需 [247] 次向量化调用；块级幂等让一次语料小改从 [247] 次降到 [1] 次&quot;</td>
+</tr>
+</tbody></table>
+
+</body>
+</html>

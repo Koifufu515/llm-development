@@ -1,0 +1,22 @@
+（knowgo_travel_backend） PS E：\knowgo_travel_backend> $packages = @C
+>>
+"app".
+"applagents".
+"app\api".
+"app\capabilities".
+'app\cone".
+"app\mcp_core"，
+>2
+"app\models"， "app\rag"， "app\schemas"， "app\services"， "app\tools"， "applutils"|
+>）
+（knowgo_travel_backend） PS E：\knowgo_travel_backend># 普通目录：不需要_-init_-•py
+（knowgo_travel_backend） PS E：\knowgo_travel_backend> $folders = @（"app\data"， "app\scripts"， "data"， "evaluation"， "logs"， "scripts"）
+（knowgo_travel_backend） PS E：\knowgo_travel_backend>
+（knowgo_travel_backend） PS E：\knowgo_travel_backend> $packages | ForEach-0bject ｛
+New-Item -ItemType Directory -Path $_ -Force | Out-NuLL
+$init = Join-Path $_"__init__•py"
+>>
+if （-not （Test-Path $init））｛ New-Item -Itemlype File -Path $init | Out-NuLL ｝ # 已存在就不动
+>>｝
+（knowgo_travel_backend） PS E：\knowgo_travel_backend> $folders | ForEach-Object ｛ New-Item - ItemType Directory -Path $_
+-Force I Out-NuLL ｝

@@ -1,0 +1,6 @@
+hits = await hybrid_search(
+    collection_id=coll_id,
+    query="有什么好吃的",
+    caller_labels=["public"],
+    meta_filter={"license": "CC BY-SA (以条目页面底部声明为准)"},
+)

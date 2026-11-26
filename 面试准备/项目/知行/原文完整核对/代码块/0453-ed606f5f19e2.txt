@@ -1,0 +1,11 @@
+@router.post("/messages")
+async def send_message(req, user, db):
+    queue = asyncio.Queue()
+    asyncio.create_task(agent_producer(queue))   # 后台生产
+    async def gen():
+        while True:
+            item = await queue.get()
+            if item == "__END__":                # 用哪个值代表"结束"？
+                break
+            yield f"data: {json.dumps(item)}\n\n"
+    return StreamingResponse(gen(), media_type="text/event-stream")

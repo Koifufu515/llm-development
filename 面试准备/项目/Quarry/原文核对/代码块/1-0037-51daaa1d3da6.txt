@@ -1,0 +1,27 @@
+"""全局配置。所有环境变量在这里收口。"""
+from functools import lru_cache
+
+from pydantic import SecretStr
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+    )
+
+    postgres_host: str = "localhost"
+    postgres_port: int = 5433
+    postgres_db: str = "quarry"
+    postgres_user: str = "quarry"
+    postgres_password: SecretStr
+
+    @property
+    def alembic_url(self) -> str:
+        """Alembic 用的连接串，驱动用同步的 psycopg2。"""
+        pw = self.postgres_password.get_secret_value()
+        return (f"postgresql+psycopg2://{self.postgres_user}:{pw}"
+                f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}")
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()

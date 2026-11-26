@@ -1,0 +1,13 @@
+"""_stay_cities / _stay_windows 演示：每站的（城市, 入住日, 离店日），首站 1 晚、其余均分，末站在末日离店（纯逻辑，无需密钥）"""
+from app.capabilities.hotel_multi_segment.hotel_flow import _stay_cities, _stay_windows
+
+def state(dest: str, days: int = 5, date: str = "2026-10-01", **req) -> dict:
+    return {"user_requirement": {"departure_city": "北京", "departure_date": date, "travel_days": days, **req},
+            "selected_destination": dest}
+
+for dest, days in [("杭州、苏州", 5), ("北京、天津", 4)]:
+    st = state(dest, days)
+    print(f"北京出发 {dest} {days} 天 → 住宿城市 {_stay_cities(st)}")
+    for city, check_in, check_out in _stay_windows(st):
+        print(f"    {city}：{check_in} 入住 → {check_out} 离店")
+print("没有出发日期：", _stay_windows(state("杭州", 3, date="")))

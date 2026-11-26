@@ -1,0 +1,10 @@
+"""行程质量在线质检服务
+
+【最小桩】清单落库后本该顺手起个后台任务给行程打分，但打分要用的
+Qwen 裁判 + 三维度 GEval 是第 13 章的内容。这里放个空实现，让 itinerary_plan_service
+能 import 通过、清单落库流程整条跑起来；第 13 章整份替换成真正的质检。
+"""
+
+def schedule_quality_check(plan_data: dict) -> None:
+    """【最小桩】占位：什么都不做（第 13 章换成"起后台任务跑三维度打分"）"""
+    return None

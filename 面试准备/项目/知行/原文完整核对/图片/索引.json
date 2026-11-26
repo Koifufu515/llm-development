@@ -1,0 +1,1850 @@
+[
+  {
+    "source": "知行旅行助手-v2",
+    "index": 1,
+    "alt": "行程Agent完整流转逻辑.png",
+    "number": 1,
+    "path": "知行项目学习/原文完整核对/图片/001.png",
+    "size": [
+      6000,
+      5920
+    ],
+    "sha256": "c17dbc62a98a9b2a64b3001ef28c5515a0c1564d7f0e88ffb2d1f0640e186ce4"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 2,
+    "alt": "场景1_单城往返.png",
+    "number": 2,
+    "path": "知行项目学习/原文完整核对/图片/002.png",
+    "size": [
+      6000,
+      4140
+    ],
+    "sha256": "675e701fe74480d1bec0f75996c167ae4cd90d76f67cebd3ab9290fcb106a128"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 3,
+    "alt": "场景2_单城原地.png",
+    "number": 3,
+    "path": "知行项目学习/原文完整核对/图片/003.png",
+    "size": [
+      6000,
+      4140
+    ],
+    "sha256": "7fd1463f216714e0c301f4f0e403be8d9a5f7a0a98e331b48e9a4c5f88c182a2"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 4,
+    "alt": "3_高清.png",
+    "number": 4,
+    "path": "知行项目学习/原文完整核对/图片/004.png",
+    "size": [
+      5120,
+      3532
+    ],
+    "sha256": "9dc2cfb236565f780c426d8135522dbdec2d70b7339592045f6311b3b91a0a8f"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 5,
+    "alt": "4_高清.png",
+    "number": 5,
+    "path": "知行项目学习/原文完整核对/图片/005.png",
+    "size": [
+      5120,
+      3532
+    ],
+    "sha256": "c6ad8f406c7abf5753ea779cad962d1942fccbeb93d8d2a6a4fb5de5cd905c72"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 6,
+    "alt": "5_高清.png",
+    "number": 6,
+    "path": "知行项目学习/原文完整核对/图片/006.png",
+    "size": [
+      5120,
+      3532
+    ],
+    "sha256": "ce19c709cd84f23760c88725f19e99c78e65d30ccd752491a12b36587a9489a5"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 7,
+    "alt": "7_场景6_已修改_高清.png",
+    "number": 7,
+    "path": "知行项目学习/原文完整核对/图片/007.png",
+    "size": [
+      5120,
+      3532
+    ],
+    "sha256": "2e994c3fc79f3190bef2557fa02b9f04a54d185c9bd0394659a3496088eba2cd"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 8,
+    "alt": "7_高清.png",
+    "number": 8,
+    "path": "知行项目学习/原文完整核对/图片/008.png",
+    "size": [
+      5120,
+      3532
+    ],
+    "sha256": "5c7e1326166cfbbc45028382b38ada8f7605b3a423c8972481b1149e846d8742"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 9,
+    "alt": "image.png",
+    "number": 9,
+    "path": "知行项目学习/原文完整核对/图片/009.png",
+    "size": [
+      1912,
+      914
+    ],
+    "sha256": "5d64a40f2ed3ebd40d764c32783a446bd479e7b77f3a9ec5cf4861b0dd6002ef"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 10,
+    "alt": "image.png",
+    "number": 10,
+    "path": "知行项目学习/原文完整核对/图片/010.png",
+    "size": [
+      1912,
+      914
+    ],
+    "sha256": "83ae3ca0098ab4befba74ac055d0cc76c56f1d97c28b5872c880a612c392c070"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 11,
+    "alt": "image.png",
+    "number": 11,
+    "path": "知行项目学习/原文完整核对/图片/011.png",
+    "size": [
+      1912,
+      914
+    ],
+    "sha256": "b60b2cd3a9ae2e0a514b4d2afae33ce2485e7cd406d538b041f1e8fce28364fa"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 12,
+    "alt": "image.png",
+    "number": 12,
+    "path": "知行项目学习/原文完整核对/图片/012.png",
+    "size": [
+      1912,
+      914
+    ],
+    "sha256": "9e4bcca05cfd1e007d7445fd7769bbabeac3c3698d2afab86a0042f28476cd59"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 13,
+    "alt": "image.png",
+    "number": 13,
+    "path": "知行项目学习/原文完整核对/图片/013.png",
+    "size": [
+      1912,
+      914
+    ],
+    "sha256": "c78972326e545833b1919063c4d92e374f8e39d41a16c36634710e3137fa43d8"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 14,
+    "alt": "01_对话示例 (2).png",
+    "number": 14,
+    "path": "知行项目学习/原文完整核对/图片/014.png",
+    "size": [
+      2160,
+      1814
+    ],
+    "sha256": "93f270432aeed49e184488a662a8199c44a6c46764fe7a5e478fd2ca970a72fc"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 15,
+    "alt": "img_02.png",
+    "number": 15,
+    "path": "知行项目学习/原文完整核对/图片/015.png",
+    "size": [
+      2160,
+      2520
+    ],
+    "sha256": "1f32c37ab8df106023d93fb0439f33438ff09ae722419befdc85ddda83d19fa0"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 16,
+    "alt": "image.png",
+    "number": 16,
+    "path": "知行项目学习/原文完整核对/图片/016.png",
+    "size": [
+      1912,
+      914
+    ],
+    "sha256": "de8f6e3a4765589d91a81b17e258b6781bb054aaef38ae34a06b199f33b0ff12"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 17,
+    "alt": "image.png",
+    "number": 17,
+    "path": "知行项目学习/原文完整核对/图片/017.png",
+    "size": [
+      1912,
+      914
+    ],
+    "sha256": "f00f514665789f7ef32b28c492b8d9b6657847b390268e7695bb64d14da37f24"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 18,
+    "alt": "image.png",
+    "number": 18,
+    "path": "知行项目学习/原文完整核对/图片/018.png",
+    "size": [
+      717,
+      797
+    ],
+    "sha256": "2eec7ce48a669fe8c2d4f0c8feedf494faf36227474dfaa2bbc50491f76b63a7"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 19,
+    "alt": "image.png",
+    "number": 19,
+    "path": "知行项目学习/原文完整核对/图片/019.png",
+    "size": [
+      1652,
+      176
+    ],
+    "sha256": "fc8a11d5949fcca93267aa7270877cb852f911e3929da1a38cc1c123b42befc4"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 20,
+    "alt": "image.png",
+    "number": 20,
+    "path": "知行项目学习/原文完整核对/图片/020.png",
+    "size": [
+      1912,
+      914
+    ],
+    "sha256": "d525e038ad63dfbff4893c595190c730e0a458e01b96668c2a7e1cda477e4488"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 21,
+    "alt": "image.png",
+    "number": 21,
+    "path": "知行项目学习/原文完整核对/图片/021.png",
+    "size": [
+      1912,
+      914
+    ],
+    "sha256": "673e7bb222f22570058bd0eb3542c2cf61eaec83f72969e2b382b1257f6a6986"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 22,
+    "alt": "image.png",
+    "number": 22,
+    "path": "知行项目学习/原文完整核对/图片/022.png",
+    "size": [
+      1912,
+      914
+    ],
+    "sha256": "f103f40f7c5846ca9ab1cf646f3d63d1d8bcd4a9a61768cd61a9de83b4f2d1ee"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 23,
+    "alt": "image.png",
+    "number": 23,
+    "path": "知行项目学习/原文完整核对/图片/023.png",
+    "size": [
+      1910,
+      873
+    ],
+    "sha256": "56937b61db015ab1cc764acc2f85b9b4a8a1d117a0aadb32597e37d0cd61c73e"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 24,
+    "alt": "image.png",
+    "number": 24,
+    "path": "知行项目学习/原文完整核对/图片/024.png",
+    "size": [
+      1912,
+      914
+    ],
+    "sha256": "99929bf5e1689f55aebd1123292363cdc048426780bc8a0b850224fe437c0a66"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 25,
+    "alt": "image.png",
+    "number": 25,
+    "path": "知行项目学习/原文完整核对/图片/025.png",
+    "size": [
+      1912,
+      914
+    ],
+    "sha256": "640768ebf10fc9d0e5b2bc93583e4199a32055f95285cdc04b6a8e5db280211e"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 26,
+    "alt": "image.png",
+    "number": 26,
+    "path": "知行项目学习/原文完整核对/图片/026.png",
+    "size": [
+      1912,
+      914
+    ],
+    "sha256": "cd3f5284114a06c0af21ecb910040e4a1dd7f4ebf542ad796c3e93e0ea0be907"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 27,
+    "alt": "image.png",
+    "number": 27,
+    "path": "知行项目学习/原文完整核对/图片/027.png",
+    "size": [
+      1912,
+      914
+    ],
+    "sha256": "eb7478031bfb24ad67b2fb0f229a3a45a0fffa77926a22c7e0562d1fb182934a"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 28,
+    "alt": "image.png",
+    "number": 28,
+    "path": "知行项目学习/原文完整核对/图片/028.png",
+    "size": [
+      1912,
+      914
+    ],
+    "sha256": "ac612e894466c8f10d9431a17b4f9024fa0ef9a764a2df3f741bba86fd81e047"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 29,
+    "alt": "image.png",
+    "number": 29,
+    "path": "知行项目学习/原文完整核对/图片/029.png",
+    "size": [
+      1912,
+      914
+    ],
+    "sha256": "57aa323edd5f212d5641708f56f8a885d52311e11b55d72d0b3f8305d91c0ec9"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 30,
+    "alt": "image.png",
+    "number": 30,
+    "path": "知行项目学习/原文完整核对/图片/030.png",
+    "size": [
+      1106,
+      274
+    ],
+    "sha256": "2864f08d98e4eac68b446860e5db852157ab2af804ce96fb6f12723e85a1bf9f"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 31,
+    "alt": "image.png",
+    "number": 31,
+    "path": "知行项目学习/原文完整核对/图片/031.png",
+    "size": [
+      1921,
+      1033
+    ],
+    "sha256": "c5d4c8f0f41e0da946060a6f150ce63531ffc542247f55e5078a7c79e323b2e3"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 32,
+    "alt": "image.png",
+    "number": 32,
+    "path": "知行项目学习/原文完整核对/图片/032.png",
+    "size": [
+      1235,
+      299
+    ],
+    "sha256": "d7bb1ac10a8df989838f01c0785a49540c5d3257978d4fb99294d7043afa2adf"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 33,
+    "alt": "image.png",
+    "number": 33,
+    "path": "知行项目学习/原文完整核对/图片/033.png",
+    "size": [
+      1055,
+      81
+    ],
+    "sha256": "8163b98ce45f32d794b552ea60133f1e894443f1b4cbaccbbbd661dfaaabc62a"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 34,
+    "alt": "img_03.png",
+    "number": 34,
+    "path": "知行项目学习/原文完整核对/图片/034.png",
+    "size": [
+      2160,
+      1796
+    ],
+    "sha256": "43124fe09f033711efc47cd2211fe05b8e92fa7219fb1a205fc6eff36cbd7f8b"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 35,
+    "alt": "async_singleton_double_check (1).png",
+    "number": 35,
+    "path": "知行项目学习/原文完整核对/图片/035.png",
+    "size": [
+      3000,
+      2538
+    ],
+    "sha256": "c0bf7af1c5d68d913facc615c276f33a4e1f21f2033bf95862e8a5df08b27963"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 36,
+    "alt": "img_04.png",
+    "number": 36,
+    "path": "知行项目学习/原文完整核对/图片/036.png",
+    "size": [
+      2160,
+      1398
+    ],
+    "sha256": "efe703d6f273a8570b7f8a9eaf80b71dec9e8c791085b87a726656cf52ee870c"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 37,
+    "alt": "img_05.png",
+    "number": 37,
+    "path": "知行项目学习/原文完整核对/图片/037.png",
+    "size": [
+      2160,
+      1196
+    ],
+    "sha256": "96dbc0b80e2a473901c4ddd012eaea10bf249830d0dddea3b6ad23d105a46b26"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 38,
+    "alt": "img_06.png",
+    "number": 38,
+    "path": "知行项目学习/原文完整核对/图片/038.png",
+    "size": [
+      2160,
+      1564
+    ],
+    "sha256": "d637ef0d9ea190cd4b439970a383467c39faf52ebdd66d19e6efc2764a48ad8a"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 39,
+    "alt": "img_07.png",
+    "number": 39,
+    "path": "知行项目学习/原文完整核对/图片/039.png",
+    "size": [
+      2160,
+      1762
+    ],
+    "sha256": "2cc71aa669749b8ef64181ad5aaac7089ef2594a8a14ebdf6de68f8156c93027"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 40,
+    "alt": "08_agent_capability_three_stages.png",
+    "number": 40,
+    "path": "知行项目学习/原文完整核对/图片/040.png",
+    "size": [
+      2160,
+      3086
+    ],
+    "sha256": "9ee42f3d4c97c4087e800526539e9e30ae6b982b9851c80aeded1e8b9d2261f1"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 41,
+    "alt": "multi_agent_routing.png",
+    "number": 41,
+    "path": "知行项目学习/原文完整核对/图片/041.png",
+    "size": [
+      2160,
+      1536
+    ],
+    "sha256": "e719bf5ba917851473b5af2ab3f5b593484047127567d28505042a0b33769109"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 42,
+    "alt": "single_agent_middleware.png",
+    "number": 42,
+    "path": "知行项目学习/原文完整核对/图片/042.png",
+    "size": [
+      2160,
+      2342
+    ],
+    "sha256": "cabc0866800682b35b05eaf7a9632da3b7101edee381d6b1e13fa4cda803c793"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 43,
+    "alt": "middleware_execution_flow.png",
+    "number": 43,
+    "path": "知行项目学习/原文完整核对/图片/043.png",
+    "size": [
+      2160,
+      2784
+    ],
+    "sha256": "acab2fede61b5a34d2e12a5de4a51d8fed7d5e0022c128d434f0a6cfcd12637e"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 44,
+    "alt": "create_agent_compare.png",
+    "number": 44,
+    "path": "知行项目学习/原文完整核对/图片/044.png",
+    "size": [
+      2160,
+      2178
+    ],
+    "sha256": "deec42ba514c7589048cc08e3f684a397f25bfa78ce741aebb498e0745464674"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 45,
+    "alt": "rollback_dirty_data_v2.png",
+    "number": 45,
+    "path": "知行项目学习/原文完整核对/图片/045.png",
+    "size": [
+      2160,
+      2154
+    ],
+    "sha256": "55e20ba96503394abc1359a2e1ed2f121ca091cabf95f727d9e5453b3f832d48"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 46,
+    "alt": "image.png",
+    "number": 46,
+    "path": "知行项目学习/原文完整核对/图片/046.png",
+    "size": [
+      1921,
+      1033
+    ],
+    "sha256": "261d0c62b59310a9e8c37441c92ca7153407f74d4fcfe594561783816d9514ce"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 47,
+    "alt": "user_memory_step_3_5.png",
+    "number": 47,
+    "path": "知行项目学习/原文完整核对/图片/047.png",
+    "size": [
+      3000,
+      1822
+    ],
+    "sha256": "f93f3b0888d30ffbb591319ae761660b4614991509936e05da306cece69c17b3"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 48,
+    "alt": "traditional_api_pain.png",
+    "number": 48,
+    "path": "知行项目学习/原文完整核对/图片/048.png",
+    "size": [
+      2160,
+      1906
+    ],
+    "sha256": "baac992cad8486613d8676e2829d36fd1f2a059618ad08e9e1f2fef341f8c890"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 49,
+    "alt": "mcp_architecture.png",
+    "number": 49,
+    "path": "知行项目学习/原文完整核对/图片/049.png",
+    "size": [
+      1720,
+      2006
+    ],
+    "sha256": "fcaa2e04d3376083d9e5993de6356821892d96e0e4321806287ef86675c77414"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 50,
+    "alt": "mcp_loading_compare.png",
+    "number": 50,
+    "path": "知行项目学习/原文完整核对/图片/050.png",
+    "size": [
+      1960,
+      1696
+    ],
+    "sha256": "cfc86cd53dcc19e0db9d04a49413939fc1149c8332bb52aca6ceb7f3bcde8dd9"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 51,
+    "alt": "image.png",
+    "number": 51,
+    "path": "知行项目学习/原文完整核对/图片/051.png",
+    "size": [
+      593,
+      186
+    ],
+    "sha256": "bf23ed63359d6e6b4315062f3abc41a372abdcaec0ddf25bc81905492c93546c"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 52,
+    "alt": "event_loop_dilemma.png",
+    "number": 52,
+    "path": "知行项目学习/原文完整核对/图片/052.png",
+    "size": [
+      1840,
+      1798
+    ],
+    "sha256": "da82c97b09e5a452e2fdb24843f7bf46291f27de2fe476f6f3b34789daaee447"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 53,
+    "alt": "mcp_cross_thread_event_loops.png",
+    "number": 53,
+    "path": "知行项目学习/原文完整核对/图片/053.png",
+    "size": [
+      3000,
+      1816
+    ],
+    "sha256": "2a1d1533369ff7995383db8daec4565c4bf7141df5fd36a44db2646efa8a96cb"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 54,
+    "alt": "朴素RAG三步走.png",
+    "number": 54,
+    "path": "知行项目学习/原文完整核对/图片/054.png",
+    "size": [
+      2800,
+      2462
+    ],
+    "sha256": "5adab2fd73d4b3e194ae8c98c3ad0621f1dde470c6c233621fc40ee75e251deb"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 55,
+    "alt": "rag_index_and_retrieval.png",
+    "number": 55,
+    "path": "知行项目学习/原文完整核对/图片/055.png",
+    "size": [
+      3000,
+      4146
+    ],
+    "sha256": "09f5798ceae73362da1a05fe190828a2cb82e68fe11649f846f3906ccbdb49f0"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 56,
+    "alt": "d4_parent_child.png",
+    "number": 56,
+    "path": "知行项目学习/原文完整核对/图片/056.png",
+    "size": [
+      3000,
+      2462
+    ],
+    "sha256": "c18c5406f1f9c0d48bcb5e24961e03f011d8ce58114561183700c8f55b7438f6"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 57,
+    "alt": "d5_multi_query.png",
+    "number": 57,
+    "path": "知行项目学习/原文完整核对/图片/057.png",
+    "size": [
+      2800,
+      1800
+    ],
+    "sha256": "e76d5b45c301ff44543e1a7fc16e88ee6c490b04995707d43a06927b9a3aa094"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 58,
+    "alt": "d6_retrieval_funnel.png",
+    "number": 58,
+    "path": "知行项目学习/原文完整核对/图片/058.png",
+    "size": [
+      3000,
+      2836
+    ],
+    "sha256": "ac2e4d525f6c026956b61b9964eb6c75ce48a41866263a92e0c5fc1090ba8baf"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 59,
+    "alt": "image.png",
+    "number": 59,
+    "path": "知行项目学习/原文完整核对/图片/059.png",
+    "size": [
+      1921,
+      1033
+    ],
+    "sha256": "8ea8ea9c7fbf1d2559b199c4c079e76068dddfdd185667fb501a731c2b4c0366"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 60,
+    "alt": "image.png",
+    "number": 60,
+    "path": "知行项目学习/原文完整核对/图片/060.png",
+    "size": [
+      1921,
+      1033
+    ],
+    "sha256": "912b05e709e6dcbdff0c927910ed16b826e8f41024bdf12926a90deee9112eda"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 61,
+    "alt": "image.png",
+    "number": 61,
+    "path": "知行项目学习/原文完整核对/图片/061.png",
+    "size": [
+      1921,
+      1033
+    ],
+    "sha256": "f2190b88f3902c1105f72ae68158e3503ff4cfdddef8fd9ca35e6974acaf9a43"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 62,
+    "alt": "image.png",
+    "number": 61,
+    "path": "知行项目学习/原文完整核对/图片/061.png",
+    "size": [
+      1921,
+      1033
+    ],
+    "sha256": "f2190b88f3902c1105f72ae68158e3503ff4cfdddef8fd9ca35e6974acaf9a43"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 63,
+    "alt": "d4_fanout_fanin.png",
+    "number": 62,
+    "path": "知行项目学习/原文完整核对/图片/062.png",
+    "size": [
+      4200,
+      3663
+    ],
+    "sha256": "45e76f9eea5a3148db3a6bc56dd93a883154d910cadb392f5432f54dace05dc9"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 64,
+    "alt": "d1_global_race.png",
+    "number": 63,
+    "path": "知行项目学习/原文完整核对/图片/063.png",
+    "size": [
+      2800,
+      1800
+    ],
+    "sha256": "809359c9f5dd3631797a6a1b76555a2a642bda0620c3d34032f1e665fe3bc9dc"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 65,
+    "alt": "d3_three_walls.png",
+    "number": 64,
+    "path": "知行项目学习/原文完整核对/图片/064.png",
+    "size": [
+      3000,
+      1886
+    ],
+    "sha256": "e8c95d1e8624b821dc7bb75d2b0ec3458e10003d2ceb9e60df246b37a72edcc0"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 66,
+    "alt": "d2_old_vs_new.png",
+    "number": 65,
+    "path": "知行项目学习/原文完整核对/图片/065.png",
+    "size": [
+      3000,
+      1800
+    ],
+    "sha256": "f241b272b75dd2fac1e0d6393d88f230a4b39e641477767f93c686f37f4b9040"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 67,
+    "alt": "前后端暗号本_信息图.png",
+    "number": 66,
+    "path": "知行项目学习/原文完整核对/图片/066.png",
+    "size": [
+      3000,
+      3842
+    ],
+    "sha256": "e3d37397045def524e6b540dc66da2141ebfd23434b52b217665ec81ca8f6212"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 68,
+    "alt": "MCP工具层_图1_总览.png",
+    "number": 67,
+    "path": "知行项目学习/原文完整核对/图片/067.png",
+    "size": [
+      3000,
+      2418
+    ],
+    "sha256": "fa27d25f0fc1668576e322e4848948c4741265ff9b0c600f0ec9ec818b6f72c6"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 69,
+    "alt": "MCP工具层_图2_连接管理.png",
+    "number": 68,
+    "path": "知行项目学习/原文完整核对/图片/068.png",
+    "size": [
+      3000,
+      4928
+    ],
+    "sha256": "7d4a401a6caad3eff324d561dc8f534c2a210edef63ccc17e65b5118f6e32819"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 70,
+    "alt": "MCP工具层_图3_工具分发与自建服务.png",
+    "number": 69,
+    "path": "知行项目学习/原文完整核对/图片/069.png",
+    "size": [
+      3000,
+      4874
+    ],
+    "sha256": "4a6ce7daa40cd7175055eaf6475238534414f8fa9ebe9ffd9ffa64eab841f76a"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 71,
+    "alt": "MCP工具层_图4_12306守卫与裁剪.png",
+    "number": 70,
+    "path": "知行项目学习/原文完整核对/图片/070.png",
+    "size": [
+      3000,
+      4712
+    ],
+    "sha256": "a41167992c3005a62ee3c8c37211a49ff8b9e2c4b2f3284cc2be2df6a01a4ba6"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 72,
+    "alt": "MCP工具层_图5_解析器与代码表.png",
+    "number": 71,
+    "path": "知行项目学习/原文完整核对/图片/071.png",
+    "size": [
+      3000,
+      4204
+    ],
+    "sha256": "e5626beda35f29cade2edc804c25ed6a68a2eb9723297444598985814cac6464"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 73,
+    "alt": "中间件_图1_总览.png",
+    "number": 72,
+    "path": "知行项目学习/原文完整核对/图片/072.png",
+    "size": [
+      3000,
+      4142
+    ],
+    "sha256": "b5d77799baad11f61479c42893edcde095278e5131012dc5acaae69420a22a4e"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 74,
+    "alt": "中间件_图2_读状态与拼提示词.png",
+    "number": 73,
+    "path": "知行项目学习/原文完整核对/图片/073.png",
+    "size": [
+      3000,
+      3226
+    ],
+    "sha256": "652c3617b8428bc356e343c2bc86c658787962d2b0c3a565a1136eda2e224e9b"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 75,
+    "alt": "中间件_图3_工具表裁剪与强推.png",
+    "number": 74,
+    "path": "知行项目学习/原文完整核对/图片/074.png",
+    "size": [
+      3000,
+      3824
+    ],
+    "sha256": "92cabc97235ca2462b45c3edd29be2ad51a5e17c2639708219ac6b63a6ad7c13"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 76,
+    "alt": "中间件_图4_修历史与下发.png",
+    "number": 75,
+    "path": "知行项目学习/原文完整核对/图片/075.png",
+    "size": [
+      3000,
+      3926
+    ],
+    "sha256": "b0f03177ec60018f3a5cb435ffd3ac9ca6120e52262e65fd1bb01a0128e169c2"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 77,
+    "alt": "多段卡片_图1_总览.png",
+    "number": 76,
+    "path": "知行项目学习/原文完整核对/图片/076.png",
+    "size": [
+      3000,
+      3040
+    ],
+    "sha256": "1a696c44bfec93fdd37759a4e6fc3a883bff2a963342fed5cd64da267bc11bb8"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 78,
+    "alt": "多段卡片_图2_公共层.png",
+    "number": 77,
+    "path": "知行项目学习/原文完整核对/图片/077.png",
+    "size": [
+      3000,
+      4690
+    ],
+    "sha256": "1e431f0ae7f25c7843bd5c7186217dcaf966bdfd53549b07a80631eb098d9e19"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 79,
+    "alt": "多段卡片_图3_数据契约.png",
+    "number": 78,
+    "path": "知行项目学习/原文完整核对/图片/078.png",
+    "size": [
+      3000,
+      3716
+    ],
+    "sha256": "4522479885b63bc9e78579e39219eb7af997538a8d6f9919843b1644860654b6"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 80,
+    "alt": "多段卡片_图4_查询与组装.png",
+    "number": 79,
+    "path": "知行项目学习/原文完整核对/图片/079.png",
+    "size": [
+      3000,
+      4788
+    ],
+    "sha256": "ae6588a4d45701c94945980df0dd5b27b3d6152c19885022ca73ef5797aacc54"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 81,
+    "alt": "多段卡片_图5_提交与校验.png",
+    "number": 80,
+    "path": "知行项目学习/原文完整核对/图片/080.png",
+    "size": [
+      3000,
+      3408
+    ],
+    "sha256": "bc6d17e1aa290fd2bc3bf638179a7bf4a09466fed3647412ed37c669946ca4d9"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 82,
+    "alt": "多段卡片_图6_交通步接线.png",
+    "number": 81,
+    "path": "知行项目学习/原文完整核对/图片/081.png",
+    "size": [
+      3000,
+      6290
+    ],
+    "sha256": "aec14ce39c8f752ae83e50cf82afa99da52e88d8c8ba52418646dfa48734c5cb"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 83,
+    "alt": "多段卡片_图7_四类差异对照.png",
+    "number": 82,
+    "path": "知行项目学习/原文完整核对/图片/082.png",
+    "size": [
+      3000,
+      7226
+    ],
+    "sha256": "d9d3f1d2126f317be9b58c0c6d80eb317c5a5d7bd11c57eb5d783c37f8b8b546"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 84,
+    "alt": "web_layer_four_defenses.png",
+    "number": 83,
+    "path": "知行项目学习/原文完整核对/图片/083.png",
+    "size": [
+      4200,
+      2370
+    ],
+    "sha256": "c202438c7925ab8cfc2f6e84d32f8e28f134dfa993241a78509ccf983a32a010"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 85,
+    "alt": "d1_request_lifecycle.png",
+    "number": 84,
+    "path": "知行项目学习/原文完整核对/图片/084.png",
+    "size": [
+      4200,
+      3327
+    ],
+    "sha256": "ab3163e7667892c7ab0aa33108e8aba10f9451ec336edb85b4d88050b8865f22"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 86,
+    "alt": "image.png",
+    "number": 85,
+    "path": "知行项目学习/原文完整核对/图片/085.png",
+    "size": [
+      732,
+      60
+    ],
+    "sha256": "34083de06300301b77101fbac322852a07bc3fa27fdd63c98770adfd5e8b218d"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 87,
+    "alt": "image.png",
+    "number": 86,
+    "path": "知行项目学习/原文完整核对/图片/086.png",
+    "size": [
+      1673,
+      172
+    ],
+    "sha256": "aeeeaeb6e71a7daaaf224b5824eafb328cf4a9e6cc505efcfa50864b53c893bc"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 88,
+    "alt": "chapter_11_nav_concentric.png",
+    "number": 87,
+    "path": "知行项目学习/原文完整核对/图片/087.png",
+    "size": [
+      4200,
+      4026
+    ],
+    "sha256": "961c6426913d6a2c1296c54b3fcf3b0b137573f00421c2562fad07224b86016a"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 89,
+    "alt": "d8_seven_step_pipeline.png",
+    "number": 88,
+    "path": "知行项目学习/原文完整核对/图片/088.png",
+    "size": [
+      3000,
+      1800
+    ],
+    "sha256": "fd80d2a78bd5102c1417c2666757447c295bc48eb6e6baa893dd4a7fecbab43e"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 90,
+    "alt": "d11_code_vs_model.png",
+    "number": 89,
+    "path": "知行项目学习/原文完整核对/图片/089.png",
+    "size": [
+      3000,
+      2468
+    ],
+    "sha256": "0b3eadbe9550f6342070d367a4224525c8c1f8edaf413a0904cd0441accafcb8"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 91,
+    "alt": "agent_seven_steps_workflow.png",
+    "number": 90,
+    "path": "知行项目学习/原文完整核对/图片/090.png",
+    "size": [
+      4200,
+      7014
+    ],
+    "sha256": "0ef5ac7e0325d043de3619ee5607447908d4eaf74ae611f505e960fcd9715108"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 92,
+    "alt": "状态转换_图1_总览.png",
+    "number": 91,
+    "path": "知行项目学习/原文完整核对/图片/091.png",
+    "size": [
+      3000,
+      3768
+    ],
+    "sha256": "37ad5b59c8b35c53a44c84e40aee62dfc6043d330e35a1a48df8d2ae980b89e1"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 93,
+    "alt": "状态转换_图2_需求与目的地.png",
+    "number": 92,
+    "path": "知行项目学习/原文完整核对/图片/092.png",
+    "size": [
+      3000,
+      4556
+    ],
+    "sha256": "50b386df4b05c0a16b40cbbe408cadd4f32f1e7e08818f8a395110a3fbfd539f"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 94,
+    "alt": "状态转换_图3_选择工具与循环.png",
+    "number": 93,
+    "path": "知行项目学习/原文完整核对/图片/093.png",
+    "size": [
+      3000,
+      4806
+    ],
+    "sha256": "380156dde17414cca2f2e2e40f7a40ac3df1c629216df130b8ec492d3be2eba7"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 95,
+    "alt": "状态转换_图4_行程结构.png",
+    "number": 94,
+    "path": "知行项目学习/原文完整核对/图片/094.png",
+    "size": [
+      3000,
+      4898
+    ],
+    "sha256": "1692feb4c178decc807575a3ca47ce73d1bb6fff86931dac166d8be5f05cd0d1"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 96,
+    "alt": "状态转换_图5_预算汇总.png",
+    "number": 95,
+    "path": "知行项目学习/原文完整核对/图片/095.png",
+    "size": [
+      3000,
+      3898
+    ],
+    "sha256": "9506bf6d52ab7274eb8f005419d9d32cca21591c65bf7e623cebfd5f3b289ce8"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 97,
+    "alt": "状态转换_图6_回退与进度.png",
+    "number": 96,
+    "path": "知行项目学习/原文完整核对/图片/096.png",
+    "size": [
+      3000,
+      5288
+    ],
+    "sha256": "0ce07c48b35d0f3645e79b976e3e83efd82a7b0f8e086d7b9284930617c67e9d"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 98,
+    "alt": "message_request_sse_chain.png",
+    "number": 97,
+    "path": "知行项目学习/原文完整核对/图片/097.png",
+    "size": [
+      3000,
+      2742
+    ],
+    "sha256": "86982c65b29a3da41985d425a53134e40c513f2372afcdcfc64164907e37875a"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 99,
+    "alt": "image.png",
+    "number": 98,
+    "path": "知行项目学习/原文完整核对/图片/098.png",
+    "size": [
+      1921,
+      1033
+    ],
+    "sha256": "8dd7c1bc7df9c4f37ea07a74196c7a5264b5a898d0646e3a7e27f673985970f6"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 100,
+    "alt": "image.png",
+    "number": 99,
+    "path": "知行项目学习/原文完整核对/图片/099.png",
+    "size": [
+      1921,
+      1033
+    ],
+    "sha256": "c4322d6fce80a3462a2759c6aabaf49bc56a0e55f0416121f2fb104a73fbc799"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 101,
+    "alt": "图1_总览.png",
+    "number": 100,
+    "path": "知行项目学习/原文完整核对/图片/100.png",
+    "size": [
+      3000,
+      3104
+    ],
+    "sha256": "a951cad9a11844c845dbbbad629a09b25367f18f2ad23fa60a32c1f2f273981c"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 102,
+    "alt": "图2_分流判定.png",
+    "number": 101,
+    "path": "知行项目学习/原文完整核对/图片/101.png",
+    "size": [
+      3000,
+      3558
+    ],
+    "sha256": "4bbd3b051cec5c352015debe8271d42739e1620505c991a0190c51c9253731c8"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 103,
+    "alt": "图3_编排与并行收集.png",
+    "number": 102,
+    "path": "知行项目学习/原文完整核对/图片/102.png",
+    "size": [
+      3000,
+      4628
+    ],
+    "sha256": "7dac51dc9d3719dcf573ef45382c94c46bad011ef37f907a00caeaa8a49db618"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 104,
+    "alt": "图4_规则选定.png",
+    "number": 103,
+    "path": "知行项目学习/原文完整核对/图片/103.png",
+    "size": [
+      3000,
+      5356
+    ],
+    "sha256": "eb099796fdd21cd03d9a0465f1e121668f046ebc5a2bbc7c70b32074a4df47fd"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 105,
+    "alt": "图5_生成预算同步.png",
+    "number": 104,
+    "path": "知行项目学习/原文完整核对/图片/104.png",
+    "size": [
+      3000,
+      4530
+    ],
+    "sha256": "ed4bba788fa519224d3ebc6a203527bd0d253b49d431ab9d46ae988c57a6101a"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 106,
+    "alt": "图6_共享口径工具.png",
+    "number": 105,
+    "path": "知行项目学习/原文完整核对/图片/105.png",
+    "size": [
+      3000,
+      3662
+    ],
+    "sha256": "b5bd5082f1a9cfc7424c7dc560d531c1d70f4afcb08278a57a71aefcbcb1fc20"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 107,
+    "alt": "chat_contract_0_overview.png",
+    "number": 106,
+    "path": "知行项目学习/原文完整核对/图片/106.png",
+    "size": [
+      3000,
+      3476
+    ],
+    "sha256": "c303d058f56635f41a658383d033438bf8c92b3144eea9022e58b3e973b956ba"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 108,
+    "alt": "chat_contract_1_produce_pipeline.png",
+    "number": 107,
+    "path": "知行项目学习/原文完整核对/图片/107.png",
+    "size": [
+      3000,
+      3836
+    ],
+    "sha256": "10a991c26d9c138beabcfc7cb7b2a250b80e00b505a5076869c791b4fd6e5538"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 109,
+    "alt": "chat_contract_2_two_entries.png",
+    "number": 108,
+    "path": "知行项目学习/原文完整核对/图片/108.png",
+    "size": [
+      3000,
+      2926
+    ],
+    "sha256": "b08b8e675ef1ff9965217920a51a82ab38e651202e72a096b0e8f1a4014616f7"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 110,
+    "alt": "chat_contract_3_itinerary_gate.png",
+    "number": 109,
+    "path": "知行项目学习/原文完整核对/图片/109.png",
+    "size": [
+      3000,
+      3262
+    ],
+    "sha256": "9ab0d3300e951e8f6b8a43d17061a16fe1b01364b796ddc91752aa528398b2d6"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 111,
+    "alt": "chat_contract_4_cards_entry_recorder.png",
+    "number": 110,
+    "path": "知行项目学习/原文完整核对/图片/110.png",
+    "size": [
+      3000,
+      3662
+    ],
+    "sha256": "6f87344a29bb72cc37d8421909a5963c7081b55c810dcd55e59704afb641f213"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 112,
+    "alt": "chat_contract_5_cards_helpers.png",
+    "number": 111,
+    "path": "知行项目学习/原文完整核对/图片/111.png",
+    "size": [
+      3000,
+      3096
+    ],
+    "sha256": "fe11fa8d63b908818142ca26cc8c8ee0d31346cfe3ee12098cda2d71b986b91e"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 113,
+    "alt": "图0_总览.png",
+    "number": 112,
+    "path": "知行项目学习/原文完整核对/图片/112.png",
+    "size": [
+      3000,
+      3518
+    ],
+    "sha256": "f7578c7d109d3becac5470bb686356722525fe824f5820948ac5a8d201348d2b"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 114,
+    "alt": "图1_execute_turn主流程.png",
+    "number": 113,
+    "path": "知行项目学习/原文完整核对/图片/113.png",
+    "size": [
+      3000,
+      4024
+    ],
+    "sha256": "b5f2511c51e12d63f68dd219d212cf40982e9544b8054d24c865ad93eb2226fb"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 115,
+    "alt": "图2_流式采集与清洗.png",
+    "number": 114,
+    "path": "知行项目学习/原文完整核对/图片/114.png",
+    "size": [
+      3000,
+      5036
+    ],
+    "sha256": "16113ec232a74c119d619e628c145fb05f81b8acc9e593cd561cdcc13a83a9df"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 116,
+    "alt": "图3_交通直查与班次表.png",
+    "number": 115,
+    "path": "知行项目学习/原文完整核对/图片/115.png",
+    "size": [
+      3000,
+      5144
+    ],
+    "sha256": "9b3d6da6448eed3a630022f52ede45bfc5d1b4ce61c52bffad6e9560628b2f30"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 117,
+    "alt": "图4_天气归代码.png",
+    "number": 116,
+    "path": "知行项目学习/原文完整核对/图片/116.png",
+    "size": [
+      3000,
+      2754
+    ],
+    "sha256": "d5cd26bba3af7bdc2456fcafe58c70734765743e58ffaffd55b1d6bd90f196ff"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 118,
+    "alt": "图5_回合末后处理工具.png",
+    "number": 117,
+    "path": "知行项目学习/原文完整核对/图片/117.png",
+    "size": [
+      3000,
+      3830
+    ],
+    "sha256": "e9a1ba8f524386f8461df71d9fbed437fe32a32a9d575e33e5df638b445044cd"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 119,
+    "alt": "image.png",
+    "number": 118,
+    "path": "知行项目学习/原文完整核对/图片/118.png",
+    "size": [
+      1921,
+      1033
+    ],
+    "sha256": "be2b2b3a5f123be43eac2e320c2c536d929f73ba385ac5af22eb3da189b1b2c1"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 120,
+    "alt": "d10_three_dimensions.png",
+    "number": 119,
+    "path": "知行项目学习/原文完整核对/图片/119.png",
+    "size": [
+      3000,
+      2624
+    ],
+    "sha256": "dd36fd8cf20aa2250d1046c7566514841f8564d91cf797bf358d830b109ffc83"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 121,
+    "alt": "d9_quality_arch.png",
+    "number": 120,
+    "path": "知行项目学习/原文完整核对/图片/120.png",
+    "size": [
+      3000,
+      2354
+    ],
+    "sha256": "4b609b261d444e0ad01491a980128d6a09b21f825abc6ac387ed7896470f5a21"
+  },
+  {
+    "source": "知行旅行助手-v2",
+    "index": 122,
+    "alt": "image.png",
+    "number": 121,
+    "path": "知行项目学习/原文完整核对/图片/121.png",
+    "size": [
+      1818,
+      508
+    ],
+    "sha256": "e6b6fc9a724b45def8b4d2f376448a4f9c93367e3ccbf2fca3372dc817cc2d42"
+  },
+  {
+    "source": "知行旅行助手代码-v2",
+    "index": 1,
+    "alt": "image.png",
+    "number": 122,
+    "path": "知行项目学习/原文完整核对/图片/122.png",
+    "size": [
+      1921,
+      1033
+    ],
+    "sha256": "226e21c91a3ba0a2de3256f13dd54ad5ae76f5bc55137572bcfeafd7839d56d8"
+  },
+  {
+    "source": "知行旅行助手代码-v2",
+    "index": 2,
+    "alt": "image.png",
+    "number": 123,
+    "path": "知行项目学习/原文完整核对/图片/123.png",
+    "size": [
+      841,
+      117
+    ],
+    "sha256": "af468bb60e65eb98e9fa65f5145bba8412823c2341c5c7210c8845e56ab4aed5"
+  },
+  {
+    "source": "知行旅行助手代码-v2",
+    "index": 3,
+    "alt": "image.png",
+    "number": 124,
+    "path": "知行项目学习/原文完整核对/图片/124.png",
+    "size": [
+      1292,
+      224
+    ],
+    "sha256": "e69fe158667bef22e41c26eede7736582514f7f202c468d40f7d41745646362b"
+  },
+  {
+    "source": "知行旅行助手代码-v2",
+    "index": 4,
+    "alt": "image.png",
+    "number": 16,
+    "path": "知行项目学习/原文完整核对/图片/016.png",
+    "size": [
+      1912,
+      914
+    ],
+    "sha256": "de8f6e3a4765589d91a81b17e258b6781bb054aaef38ae34a06b199f33b0ff12"
+  },
+  {
+    "source": "知行旅行助手代码-v2",
+    "index": 5,
+    "alt": "image.png",
+    "number": 17,
+    "path": "知行项目学习/原文完整核对/图片/017.png",
+    "size": [
+      1912,
+      914
+    ],
+    "sha256": "f00f514665789f7ef32b28c492b8d9b6657847b390268e7695bb64d14da37f24"
+  },
+  {
+    "source": "知行旅行助手代码-v2",
+    "index": 6,
+    "alt": "image.png",
+    "number": 18,
+    "path": "知行项目学习/原文完整核对/图片/018.png",
+    "size": [
+      717,
+      797
+    ],
+    "sha256": "2eec7ce48a669fe8c2d4f0c8feedf494faf36227474dfaa2bbc50491f76b63a7"
+  },
+  {
+    "source": "知行旅行助手代码-v2",
+    "index": 7,
+    "alt": "image.png",
+    "number": 19,
+    "path": "知行项目学习/原文完整核对/图片/019.png",
+    "size": [
+      1652,
+      176
+    ],
+    "sha256": "fc8a11d5949fcca93267aa7270877cb852f911e3929da1a38cc1c123b42befc4"
+  },
+  {
+    "source": "知行旅行助手代码-v2",
+    "index": 8,
+    "alt": "image.png",
+    "number": 20,
+    "path": "知行项目学习/原文完整核对/图片/020.png",
+    "size": [
+      1912,
+      914
+    ],
+    "sha256": "d525e038ad63dfbff4893c595190c730e0a458e01b96668c2a7e1cda477e4488"
+  },
+  {
+    "source": "知行旅行助手代码-v2",
+    "index": 9,
+    "alt": "image.png",
+    "number": 21,
+    "path": "知行项目学习/原文完整核对/图片/021.png",
+    "size": [
+      1912,
+      914
+    ],
+    "sha256": "673e7bb222f22570058bd0eb3542c2cf61eaec83f72969e2b382b1257f6a6986"
+  },
+  {
+    "source": "知行旅行助手代码-v2",
+    "index": 10,
+    "alt": "image.png",
+    "number": 22,
+    "path": "知行项目学习/原文完整核对/图片/022.png",
+    "size": [
+      1912,
+      914
+    ],
+    "sha256": "f103f40f7c5846ca9ab1cf646f3d63d1d8bcd4a9a61768cd61a9de83b4f2d1ee"
+  },
+  {
+    "source": "知行旅行助手代码-v2",
+    "index": 11,
+    "alt": "image.png",
+    "number": 23,
+    "path": "知行项目学习/原文完整核对/图片/023.png",
+    "size": [
+      1910,
+      873
+    ],
+    "sha256": "56937b61db015ab1cc764acc2f85b9b4a8a1d117a0aadb32597e37d0cd61c73e"
+  },
+  {
+    "source": "知行旅行助手代码-v2",
+    "index": 12,
+    "alt": "image.png",
+    "number": 24,
+    "path": "知行项目学习/原文完整核对/图片/024.png",
+    "size": [
+      1912,
+      914
+    ],
+    "sha256": "99929bf5e1689f55aebd1123292363cdc048426780bc8a0b850224fe437c0a66"
+  },
+  {
+    "source": "知行旅行助手代码-v2",
+    "index": 13,
+    "alt": "image.png",
+    "number": 25,
+    "path": "知行项目学习/原文完整核对/图片/025.png",
+    "size": [
+      1912,
+      914
+    ],
+    "sha256": "640768ebf10fc9d0e5b2bc93583e4199a32055f95285cdc04b6a8e5db280211e"
+  },
+  {
+    "source": "知行旅行助手代码-v2",
+    "index": 14,
+    "alt": "image.png",
+    "number": 26,
+    "path": "知行项目学习/原文完整核对/图片/026.png",
+    "size": [
+      1912,
+      914
+    ],
+    "sha256": "cd3f5284114a06c0af21ecb910040e4a1dd7f4ebf542ad796c3e93e0ea0be907"
+  },
+  {
+    "source": "知行旅行助手代码-v2",
+    "index": 15,
+    "alt": "image.png",
+    "number": 125,
+    "path": "知行项目学习/原文完整核对/图片/125.png",
+    "size": [
+      1912,
+      914
+    ],
+    "sha256": "a268bbdd96f3a278566a85d8d43c03611491b90806a82d3e5bbe06ba57f08578"
+  },
+  {
+    "source": "知行旅行助手代码-v2",
+    "index": 16,
+    "alt": "image.png",
+    "number": 28,
+    "path": "知行项目学习/原文完整核对/图片/028.png",
+    "size": [
+      1912,
+      914
+    ],
+    "sha256": "ac612e894466c8f10d9431a17b4f9024fa0ef9a764a2df3f741bba86fd81e047"
+  },
+  {
+    "source": "知行旅行助手代码-v2",
+    "index": 17,
+    "alt": "image.png",
+    "number": 29,
+    "path": "知行项目学习/原文完整核对/图片/029.png",
+    "size": [
+      1912,
+      914
+    ],
+    "sha256": "57aa323edd5f212d5641708f56f8a885d52311e11b55d72d0b3f8305d91c0ec9"
+  },
+  {
+    "source": "知行旅行助手代码-v2",
+    "index": 18,
+    "alt": "image.png",
+    "number": 30,
+    "path": "知行项目学习/原文完整核对/图片/030.png",
+    "size": [
+      1106,
+      274
+    ],
+    "sha256": "2864f08d98e4eac68b446860e5db852157ab2af804ce96fb6f12723e85a1bf9f"
+  },
+  {
+    "source": "知行旅行助手代码-v2",
+    "index": 19,
+    "alt": "image.png",
+    "number": 31,
+    "path": "知行项目学习/原文完整核对/图片/031.png",
+    "size": [
+      1921,
+      1033
+    ],
+    "sha256": "c5d4c8f0f41e0da946060a6f150ce63531ffc542247f55e5078a7c79e323b2e3"
+  },
+  {
+    "source": "知行旅行助手代码-v2",
+    "index": 20,
+    "alt": "image.png",
+    "number": 32,
+    "path": "知行项目学习/原文完整核对/图片/032.png",
+    "size": [
+      1235,
+      299
+    ],
+    "sha256": "d7bb1ac10a8df989838f01c0785a49540c5d3257978d4fb99294d7043afa2adf"
+  },
+  {
+    "source": "知行旅行助手代码-v2",
+    "index": 21,
+    "alt": "image.png",
+    "number": 33,
+    "path": "知行项目学习/原文完整核对/图片/033.png",
+    "size": [
+      1055,
+      81
+    ],
+    "sha256": "8163b98ce45f32d794b552ea60133f1e894443f1b4cbaccbbbd661dfaaabc62a"
+  },
+  {
+    "source": "知行旅行助手代码-v2",
+    "index": 22,
+    "alt": "image.png",
+    "number": 46,
+    "path": "知行项目学习/原文完整核对/图片/046.png",
+    "size": [
+      1921,
+      1033
+    ],
+    "sha256": "261d0c62b59310a9e8c37441c92ca7153407f74d4fcfe594561783816d9514ce"
+  },
+  {
+    "source": "知行旅行助手代码-v2",
+    "index": 23,
+    "alt": "image.png",
+    "number": 51,
+    "path": "知行项目学习/原文完整核对/图片/051.png",
+    "size": [
+      593,
+      186
+    ],
+    "sha256": "bf23ed63359d6e6b4315062f3abc41a372abdcaec0ddf25bc81905492c93546c"
+  },
+  {
+    "source": "知行旅行助手代码-v2",
+    "index": 24,
+    "alt": "image.png",
+    "number": 59,
+    "path": "知行项目学习/原文完整核对/图片/059.png",
+    "size": [
+      1921,
+      1033
+    ],
+    "sha256": "8ea8ea9c7fbf1d2559b199c4c079e76068dddfdd185667fb501a731c2b4c0366"
+  },
+  {
+    "source": "知行旅行助手代码-v2",
+    "index": 25,
+    "alt": "image.png",
+    "number": 60,
+    "path": "知行项目学习/原文完整核对/图片/060.png",
+    "size": [
+      1921,
+      1033
+    ],
+    "sha256": "912b05e709e6dcbdff0c927910ed16b826e8f41024bdf12926a90deee9112eda"
+  },
+  {
+    "source": "知行旅行助手代码-v2",
+    "index": 26,
+    "alt": "image.png",
+    "number": 61,
+    "path": "知行项目学习/原文完整核对/图片/061.png",
+    "size": [
+      1921,
+      1033
+    ],
+    "sha256": "f2190b88f3902c1105f72ae68158e3503ff4cfdddef8fd9ca35e6974acaf9a43"
+  },
+  {
+    "source": "知行旅行助手代码-v2",
+    "index": 27,
+    "alt": "image.png",
+    "number": 61,
+    "path": "知行项目学习/原文完整核对/图片/061.png",
+    "size": [
+      1921,
+      1033
+    ],
+    "sha256": "f2190b88f3902c1105f72ae68158e3503ff4cfdddef8fd9ca35e6974acaf9a43"
+  },
+  {
+    "source": "知行旅行助手代码-v2",
+    "index": 28,
+    "alt": "image.png",
+    "number": 85,
+    "path": "知行项目学习/原文完整核对/图片/085.png",
+    "size": [
+      732,
+      60
+    ],
+    "sha256": "34083de06300301b77101fbac322852a07bc3fa27fdd63c98770adfd5e8b218d"
+  },
+  {
+    "source": "知行旅行助手代码-v2",
+    "index": 29,
+    "alt": "image.png",
+    "number": 86,
+    "path": "知行项目学习/原文完整核对/图片/086.png",
+    "size": [
+      1673,
+      172
+    ],
+    "sha256": "aeeeaeb6e71a7daaaf224b5824eafb328cf4a9e6cc505efcfa50864b53c893bc"
+  },
+  {
+    "source": "知行旅行助手代码-v2",
+    "index": 30,
+    "alt": "image.png",
+    "number": 98,
+    "path": "知行项目学习/原文完整核对/图片/098.png",
+    "size": [
+      1921,
+      1033
+    ],
+    "sha256": "8dd7c1bc7df9c4f37ea07a74196c7a5264b5a898d0646e3a7e27f673985970f6"
+  },
+  {
+    "source": "知行旅行助手代码-v2",
+    "index": 31,
+    "alt": "image.png",
+    "number": 99,
+    "path": "知行项目学习/原文完整核对/图片/099.png",
+    "size": [
+      1921,
+      1033
+    ],
+    "sha256": "c4322d6fce80a3462a2759c6aabaf49bc56a0e55f0416121f2fb104a73fbc799"
+  },
+  {
+    "source": "知行旅行助手代码-v2",
+    "index": 32,
+    "alt": "image.png",
+    "number": 121,
+    "path": "知行项目学习/原文完整核对/图片/121.png",
+    "size": [
+      1818,
+      508
+    ],
+    "sha256": "e6b6fc9a724b45def8b4d2f376448a4f9c93367e3ccbf2fca3372dc817cc2d42"
+  }
+]

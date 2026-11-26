@@ -1,0 +1,2 @@
+# macOS / Linux
+export QUARRY_KEY=qr_你的key

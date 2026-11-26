@@ -1,0 +1,37 @@
+{{- if .Values.web.enabled }}
+apiVersion: v1
+kind: Service
+metadata: {name: backend}
+spec:
+  selector: {app: {{ include "wenshu.fullname" . }}-backend}
+  ports: [{port: 8000,targetPort: 8000}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: wenshu-web}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: wenshu-web}}
+  template:
+    metadata: {labels: {app: wenshu-web}}
+    spec:
+      containers:
+        - name: web
+          image: "{{ .Values.web.image.repository }}:{{ .Values.web.image.tag }}"
+          imagePullPolicy: IfNotPresent
+          env:
+            - {name: HOSTNAME,value: '0.0.0.0'}
+            - {name: BACKEND_URL,value: 'http://backend:8000'}
+          ports: [{containerPort: 3000}]
+          readinessProbe: {httpGet: {path: /,port: 3000}}
+          resources:
+            requests: {cpu: 20m,memory: 64Mi}
+            limits: {cpu: 500m,memory: 256Mi}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: wenshu-web}
+spec:
+  selector: {app: wenshu-web}
+  ports: [{port: 3000,targetPort: 3000}]
+{{- end }}

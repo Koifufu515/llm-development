@@ -1,0 +1,10 @@
+# ============ 事实层（第六章） ============
+FACT_MODEL=qwen-flash
+# 百炼北京地域的 OpenAI 兼容地址，和第一章的向量化同一个入口
+FACT_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+# 留空就复用 LLM_API_KEY
+FACT_API_KEY=
+FACT_CONCURRENCY=4
+FACT_TIMEOUT_S=30
+# 官方核实日期超过这么多天，状态变为 expired
+FACT_TTL_DAYS=90

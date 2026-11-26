@@ -1,0 +1,30 @@
+"""用 Python 读一次 SSE 流：注册 → 建会话 → POST /messages，逐帧打印（需服务已启动 + PG）
+
+相当于前端 fetch + getReader 读流那段代码的 Python 版。挂上 wrap_json_middleware 之后，
+普通 JSON 接口的业务数据都在 data 字段里；SSE 流不受包裹影响，原样一帧帧到达。
+"""
+import json
+import uuid
+
+import httpx
+
+BASE = "http://localhost:8000/api/v1"
+sfx = uuid.uuid4().hex[:6]
+
+with httpx.Client(base_url=BASE, timeout=180) as c:
+    r = c.post("/users/register", json={"username": f"sse_{sfx}", "email": f"sse_{sfx}@example.com",
+                                        "password": "secret123"})
+    token = r.json()["data"]["access_token"]            # 包裹后，业务数据在 data 里
+    H = {"Authorization": f"Bearer {token}"}
+    conv_id = c.post("/conversations", headers=H, json={}).json()["data"]["id"]
+
+    with c.stream("POST", "/messages", headers=H,
+                  json={"conversation_id": conv_id, "content": "你好"}) as resp:
+        print("content-type:", resp.headers["content-type"])
+        buf = ""
+        for chunk in resp.iter_text():                  # 一个 chunk 可能含多帧，也可能只有半帧
+            buf += chunk
+            while "\n\n" in buf:                        # 按空行切帧
+                frame, buf = buf.split("\n\n", 1)
+                if frame.startswith("data: "):
+                    print(json.loads(frame[6:]))

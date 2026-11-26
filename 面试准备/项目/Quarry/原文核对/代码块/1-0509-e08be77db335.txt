@@ -1,0 +1,8 @@
+SELECT date_trunc('day', created_at)::date AS day,
+       count(*) AS requests,
+       round(avg(abstain::int) * 100, 1) AS abstain_pct
+FROM query_logs
+WHERE status = 200
+GROUP BY 1
+ORDER BY 1 DESC
+LIMIT 14;

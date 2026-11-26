@@ -1,0 +1,155 @@
+交通直查与班次表•查票不进状态机，表格只由代码画
+本组14个函数分两类用途：一类是直查通道，用户单点查票时绕过规划流程；另一类是班次表渲染，直查回复和交通步后处理⑥共用同一套画表函数，保
+证两边的车次口径一致。
+调用链 同一套画表函数被两条链路共用：直查回复，和交通步的权威班次表
+_produce L225
+直查门禁
+detect_intent 像单点查询？一
+try_direct_ticket_query| - _fill_slots |城市齐了？ 否一 _missing_sLot_text
+追问，≤2轮
+槽位齐了之后
+问的是航班
+TLLont taoLe
+时刻＋票价并发 —|_render_flight_table|
+— 有结果就回复
+没直飞— 降级查同日高铁！
+LL500 get-tlckets
+查高铁
+get-tlckets
+--rows_to_seg
+内部_row_seat_Label 一
+_render_ticket_table
+肉部 hs_only 推上ventstream
+交通步后处理⑥
+execute turn LiS51
+_leg_context
+_ticket_table_from_tail
+-rows_to_seg一-render_ticket_table一非卡片模式追加到正文
+闲聊分支兜底
+execute turn L1517
+try_direct_ticket_query ］返回None -| _query_fallback_text 一句确定性澄清
+直查主链4个函数
+决定这句话要不要直查、缺什么、怎么回
+try_direct_ticket_queryasync
+L279-370
+-fillslots 1n
+L212-232
+用户只是想查个票，就不进规划流程，直接查12306 或航班，用代码画表回复。
+从这句话里把出发地、到达地、日期、查高铁还是航班填进槽位，已有的不覆盖。
+何时调用
+每条消息先过一次门禁（路由之后、快速通道之前）；闲聊分支识别到交通意图时再调一次。
+谁来调用
+chat_contract_service._produce L225跨模块］（带会话id，可多轮补槽）；
+何时调用
+直查门禁通过之后。
+execute turnLl
+谁来调用
+try_direct_ticket_query L299.
+结果交给
+命中返回渲染好的文本并推 Eventstream；没命中返回 None，交回原通道。
+结果交给
+原地修改slot字典，随后判断槽位齐不齐。
+_nissing_slot_textfn
+L235-244
+_query_fallback_text （fn
+L373-386
+缺城市时生成一句固定追问，比如 “从福州出发，您要到哪？”，不调模型。
+闲聊里提到车票但查不了时，给一句确定性澄清：知道城市就只问日期，不知道就示范怎么问。
+何时调用
+起讫城市没凑齐、且还在2轮补槽期限内。
+何时调用 闲聊分支识别到交通意图，但直查返回 None。
+谁来调用
+try_direct_ticket_query L3100
+体絮谙乐
+execute_turn L1521。
+结果饺行
+追问文本推进 Eventstream，同时作为本轮回复返回。
+文本交回 execute_turn，由它推进 EventStream 并返回
+槽位解析
+3 个函数
+纯字符串解析，不调模型；城市以 app/data/cities.py 为准
+_parse_city_pair Fn
+L247-258
+-cities_in mn
+L200-20
+_parse_query_date Fn
+L261-276
+从一句话里找出“从哪到哪”：先按城市库匹配两个城市，不
+按出现顺序列出这句话里提到的城市，以内置342个城市库为
+把“10月1日”“明天”“后天”换成具体日期，什么都没说就
+够再用“X到Y”正则。
+默认今天。
+何时调用
+項禮的，以及士以滾有X杀的
+何时调用
+谁来调用
+filL slots L214; query fallback text
+何时调用
+填槽时；问天气时决定查哪几个城市。
+L379。
+谁来调用
+谁来调用
+_fill_Slots L218;try_veather_query L396。
+L317；try_weather_query L419。
+结果衣绐
+（出发，到达）元组，找不到返回 None。
+结果绐
+城市列表，用于补单个城市槽位或决定天气查询对象。
+结果衣纾
+YYYY-MM-DD 字符串，作查询参数或天气按日筛选。
+航班 2个函数 时刻用机场码 （PEK），票价用城市码 （BJS），两张码表不能混用
+_flight_table lasynd
+-render_flight_table fn
+L150-149
+查航班：城市换机场码查时刻、换城市码查票价，两路并发，再按航班号把价格对上。
+把解析出来的真实航班画成表：航班、时刻、航司、准点率、航站楼、价格，最多10班。
+何时调用 直查时用户问的是航班。
+何附娟市
+瓶奶-含询有结果印
+谁来调用
+try_direct_ticket_query L330。
+谁来调用
+_flight_table L192。
+结果交给
+Markdown航班表；查不到返回空串，上游随即降级查同日高铁。
+结果交给
+表格文本，由_flight_table 返回。
+高铁班次表 5个函数 两条链路共用；表外车次一律视力编造
+_ticket_table_from_tail @
+_rows_to_seg 1
+L44-58
+-render_ticket_table in
+L67-99
+把本回合工具消息里的12306 结果按段分组，画成一张“权威
+把一次查询的班次行归成“车次 发车/到达/历时/票价”，同
+把“段一班次”画成Markdown 表，每段最多10趟；可以
+班次表”。
+车次只留发车最早的那趟。
+只画当前待确认的那一段。
+何时调用
+交通步回合结束后（后处理⑥）。
+何时调用 直查拿到 12306结果时；交通步回合末汇总工具消息时。
+何时调用 直查要回复时；交通步要追加权威班次表时。
+execute_turn L1351。
+谁来调用 try_direct_ticket_query L362；
+谁来调用
+结果绐
+表格又本，非卡片模式追加到止又，卡片模式个出表，遊
+_ticket_table_from_tail L119。
+try_direct_ticket_query L361（自定义表头表
+尾）， ticket_table_trom_tail L-20
+宪肉宾邻据
+结果交给 段字典，交给 _render_ticket_table 画表。
+结果交给
+表格文本，变成直查回复或交通步正文的末尾。
+-row_seat_Label Fn
+L61-65
+掉；全是普速就原样保留。
+一段里只要有G/C/D 高铁动车，就把混进来的K/T/Z 普速剔
+何时调用 画表前，对每一段都过一遍。
+下架倜用
+_render_ticket_table L71。
+结果交给 形如“二等座有553元”的字符串。
+结果交给 过滤后的段字典。
+直查为什么不进状态机：“明天福州到深圳的高铁”只是一个事实查询，走规划流程要先收需求、选目的地，用户等不起。所以try_direct_ticket_query 在意图路由之后、快速通道之前就拦下
+来，查到的班次由_render_ticket_table 画表直出—不读写状态机，也不让模型转述任何一个车次。

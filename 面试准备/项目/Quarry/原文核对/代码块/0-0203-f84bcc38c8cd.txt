@@ -1,0 +1,5 @@
+async def handle_parsing(doc_id, msg_id):
+    ...                                    # 解析
+    await update_status(doc_id, "chunking")
+    await enqueue_document(doc_id, stage="chunking")
+    await xack(msg_id)

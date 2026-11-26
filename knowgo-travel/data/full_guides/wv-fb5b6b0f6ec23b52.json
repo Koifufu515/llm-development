@@ -1,0 +1,21 @@
+{
+  "city": "无锡",
+  "title": "无锡景点资料 · Wuxi",
+  "source_url": "https://en.wikivoyage.org/wiki/Wuxi",
+  "text": "资料城市：无锡。本文是历史开放景点资料，不提供实时开放时间或价格；出行前需要核实。\n\nDonglin Academy\nKept by the stone arch, with pool, Dong Lin monastery, Lize Hall, by Yong Tang, Oscillation Temple, three Temple, things promenade, to re-vegetarian, Road South Temple, Donglin Temple and other major construction work report, remain Ming and Qing Dynasty style layout shape and history. There are relegated name associated Gu Xian: \"Reading the wind rain and the sound of ears; family affairs world are concerned about everything.\"\n\nTaihu Lake Yuantouzhu (Turtle's Head) Scenic Area\nWith a water surface of 2,400 km2, Taihu Lake is the third largest fresh water lake in China. In 1982 it was designated as a national scenic area by the State Council. Yuatouzhu is actually a small hill stretching into the lake like the head of a turtle, hence the name. This scenic area covers an area of 130ha and is composed of eight scenic spots.",
+  "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+  "license": "CC BY-SA 3.0",
+  "attribution": "Wikivoyage contributors; https://en.wikivoyage.org/wiki/Wuxi",
+  "sha256": "b4d37c9c270fe2d41ed2b91bd732a9681ef20940ba8015d421250b6761322a4e",
+  "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+  "poi_count": 2,
+  "source_dataset": "https://github.com/wikivoyage/wikivoyage.github.io",
+  "excluded_fields": [
+    "price",
+    "hours",
+    "phone",
+    "email",
+    "hotel",
+    "restaurant"
+  ]
+}

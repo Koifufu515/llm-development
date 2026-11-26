@@ -1,0 +1,4 @@
+# ❌ 错误做法
+hits = await hybrid_search(collection_id=coll_id, query=q, caller_labels=["*"], top_k=100)
+allowed = [h for h in hits if _check_permission(h, caller)]
+return allowed[:10]

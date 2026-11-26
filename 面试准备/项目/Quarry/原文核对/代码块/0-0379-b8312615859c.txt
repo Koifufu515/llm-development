@@ -1,0 +1,17 @@
+   entity_name     |  attribute   | qualifier |    value    | count 
+--------------------+--------------+-----------+-------------+-------
+ 张家界国家森林公园 | open_hours   | 全年      | 07:00-18:00 |     1
+ 双林寺             | ticket_price | 全年      | 35          |     1
+ 太阳岛公园         | open_hours   | 全年      | 08:30-17:00 |     1
+ 亚龙湾海底世界     | ticket_price | 全年      | 0           |     1
+ 莫高窟（千佛洞）   | ticket_price | 旺季      | 160         |     1
+ 故宫博物院         | ticket_price | 淡季      | 40          |     1
+ 平遥九龙壁         | ticket_price | 全年      | 0           |     1
+ 金殿公园           | open_hours   | 全年      | 08:00-18:00 |     1
+ 天门山             | open_hours   | 旺季      | 08:00-16:00 |     1
+ 唐城墙遗址公园     | ticket_price | 全年      | 0           |     1
+ 杭州植物园         | ticket_price | 全年      | 10          |     1
+ 华东师范大学       | ticket_price | 全年      | 0           |     1
+ 香山（静宜园）     | ticket_price | 全年      | 5           |     1
+ 蓝田猿人遗址       | ticket_price | 全年      | 6           |     1
+ 东方明珠电视塔     | ticket_price | 全年      | 150         |     1

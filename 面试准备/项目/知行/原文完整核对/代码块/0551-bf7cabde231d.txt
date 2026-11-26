@@ -1,0 +1,57 @@
+"""Agent UI Skill API：聊天流内嵌组件（前端 Skill）的回提交口
+
+- POST /api/v1/skills/train_multi_segment/submit  多段高铁选择提交（校验 → 落库 → SSE 续跑）
+- POST /api/v1/skills/hotel_multi_segment/submit  多段住宿选择提交（校验 → 落库 → SSE 续跑）
+- POST /api/v1/skills/flight_multi_segment/submit 多段航班选择提交（校验 → 落库 → SSE 续跑）
+- POST /api/v1/skills/driving_multi_segment/submit 多段自驾路线确认提交（校验 → 落库 → SSE 续跑）
+
+为什么单独开路由：前端卡片是"一次选完 N 段 → 一次提交"的交互，走的是独立 HTTP 提交
+（不是对话消息），提交成功后由代码把段账本写入状态机并推进到下一步。
+
+为什么返回 SSE 而不是 JSON：只落状态不跑编排会让流程停住——卡片下发后旧 SSE 通道已关闭，
+前端只做"卡片收起"，没有任何人驱动住宿步那一轮（用户实证：选完高铁后停在原处、无后续输出）。
+故提交成功后用一条合成发言复用 run_chat_turn 续跑，事件流原样下发；
+前端沿用既有事件管道渲染，住宿/餐饮/行程各步与原来"逐段确认"时完全一致。
+"""
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.dependencies import get_current_user
+from app.api.v1.messages import _SSE_HEADERS, _sse  # 复用同一套 SSE 帧序列化与响应头
+from app.core.events import ROLE_ASSISTANT, ROLE_DONE, ROLE_ERROR, make_event
+from app.models.base import get_db
+from app.models.user import User
+from app.services.chat_contract_service import (  # 卡片提交态落库
+    mark_skill_ui_submitted,
+    run_chat_turn,
+)
+from app.services.conversation_service import get_owned_conversation
+from app.capabilities.driving_multi_segment.driving_flow import apply_driving_selection
+from app.capabilities.driving_multi_segment.driving_skill_schema import (
+    DRIVING_MULTI_SEGMENT_SKILL,
+    DrivingSubmitPayload,
+    DrivingSubmitResult,
+)
+from app.capabilities.flight_multi_segment.flight_flow import apply_flight_selection
+from app.capabilities.flight_multi_segment.flight_skill_schema import (
+    FLIGHT_MULTI_SEGMENT_SKILL,
+    FlightSubmitPayload,
+    FlightSubmitResult,
+)
+from app.capabilities.hotel_multi_segment.hotel_flow import apply_hotel_selection
+from app.capabilities.hotel_multi_segment.hotel_skill_schema import (
+    HOTEL_MULTI_SEGMENT_SKILL,
+    HotelMultiSegmentSubmitPayload,
+    HotelMultiSegmentSubmitResult,
+)
+from app.capabilities.train_multi_segment.train_flow import apply_train_selection
+from app.capabilities.train_multi_segment.train_skill_schema import (
+    TRAIN_MULTI_SEGMENT_SKILL,
+    TrainSubmitPayload,
+    TrainSubmitResult,
+)
+from app.utils.logger import app_logger
+
+router = APIRouter(prefix="/skills", tags=["Agent Skill"])

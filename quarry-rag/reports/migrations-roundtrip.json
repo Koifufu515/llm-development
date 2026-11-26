@@ -1,0 +1,104 @@
+[
+  {
+    "direction": "upgrade",
+    "target": "0001",
+    "exitcode": 0,
+    "output": "INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.\nINFO  [alembic.runtime.migration] Will assume transactional DDL.\nINFO  [alembic.runtime.migration] Running upgrade  -> 0001, core tables\n"
+  },
+  {
+    "direction": "upgrade",
+    "target": "0002",
+    "exitcode": 0,
+    "output": "INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.\nINFO  [alembic.runtime.migration] Will assume transactional DDL.\nINFO  [alembic.runtime.migration] Running upgrade 0001 -> 0002\n"
+  },
+  {
+    "direction": "upgrade",
+    "target": "0003",
+    "exitcode": 0,
+    "output": "INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.\nINFO  [alembic.runtime.migration] Will assume transactional DDL.\nINFO  [alembic.runtime.migration] Running upgrade 0002 -> 0003\n"
+  },
+  {
+    "direction": "upgrade",
+    "target": "0004",
+    "exitcode": 0,
+    "output": "INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.\nINFO  [alembic.runtime.migration] Will assume transactional DDL.\nINFO  [alembic.runtime.migration] Running upgrade 0003 -> 0004\n"
+  },
+  {
+    "direction": "upgrade",
+    "target": "0005",
+    "exitcode": 0,
+    "output": "INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.\nINFO  [alembic.runtime.migration] Will assume transactional DDL.\nINFO  [alembic.runtime.migration] Running upgrade 0004 -> 0005\n"
+  },
+  {
+    "direction": "upgrade",
+    "target": "0006",
+    "exitcode": 0,
+    "output": "INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.\nINFO  [alembic.runtime.migration] Will assume transactional DDL.\nINFO  [alembic.runtime.migration] Running upgrade 0005 -> 0006\n"
+  },
+  {
+    "direction": "upgrade",
+    "target": "0007",
+    "exitcode": 0,
+    "output": "INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.\nINFO  [alembic.runtime.migration] Will assume transactional DDL.\nINFO  [alembic.runtime.migration] Running upgrade 0006 -> 0007, 保留上游任意字符串请求ID，修复原文UUID列与HTTP契约不匹配。\n"
+  },
+  {
+    "direction": "upgrade",
+    "target": "0008",
+    "exitcode": 0,
+    "output": "INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.\nINFO  [alembic.runtime.migration] Will assume transactional DDL.\nINFO  [alembic.runtime.migration] Running upgrade 0007 -> 0008, 将API Key绑定租户，保留旧key默认demo的兼容行为。\n"
+  },
+  {
+    "direction": "downgrade",
+    "target": "0007",
+    "exitcode": 0,
+    "output": "INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.\nINFO  [alembic.runtime.migration] Will assume transactional DDL.\nINFO  [alembic.runtime.migration] Running downgrade 0008 -> 0007, 将API Key绑定租户，保留旧key默认demo的兼容行为。\n"
+  },
+  {
+    "direction": "downgrade",
+    "target": "0006",
+    "exitcode": 0,
+    "output": "INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.\nINFO  [alembic.runtime.migration] Will assume transactional DDL.\nINFO  [alembic.runtime.migration] Running downgrade 0007 -> 0006, 保留上游任意字符串请求ID，修复原文UUID列与HTTP契约不匹配。\n"
+  },
+  {
+    "direction": "downgrade",
+    "target": "0005",
+    "exitcode": 0,
+    "output": "INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.\nINFO  [alembic.runtime.migration] Will assume transactional DDL.\nINFO  [alembic.runtime.migration] Running downgrade 0006 -> 0005\n"
+  },
+  {
+    "direction": "downgrade",
+    "target": "0004",
+    "exitcode": 0,
+    "output": "INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.\nINFO  [alembic.runtime.migration] Will assume transactional DDL.\nINFO  [alembic.runtime.migration] Running downgrade 0005 -> 0004\n"
+  },
+  {
+    "direction": "downgrade",
+    "target": "0003",
+    "exitcode": 0,
+    "output": "INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.\nINFO  [alembic.runtime.migration] Will assume transactional DDL.\nINFO  [alembic.runtime.migration] Running downgrade 0004 -> 0003\n"
+  },
+  {
+    "direction": "downgrade",
+    "target": "0002",
+    "exitcode": 0,
+    "output": "INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.\nINFO  [alembic.runtime.migration] Will assume transactional DDL.\nINFO  [alembic.runtime.migration] Running downgrade 0003 -> 0002\n"
+  },
+  {
+    "direction": "downgrade",
+    "target": "0001",
+    "exitcode": 0,
+    "output": "INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.\nINFO  [alembic.runtime.migration] Will assume transactional DDL.\nINFO  [alembic.runtime.migration] Running downgrade 0002 -> 0001\n"
+  },
+  {
+    "direction": "downgrade",
+    "target": "base",
+    "exitcode": 0,
+    "output": "INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.\nINFO  [alembic.runtime.migration] Will assume transactional DDL.\nINFO  [alembic.runtime.migration] Running downgrade 0001 -> , core tables\n"
+  },
+  {
+    "direction": "upgrade",
+    "target": "head",
+    "exitcode": 0,
+    "output": "INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.\nINFO  [alembic.runtime.migration] Will assume transactional DDL.\nINFO  [alembic.runtime.migration] Running upgrade  -> 0001, core tables\nINFO  [alembic.runtime.migration] Running upgrade 0001 -> 0002\nINFO  [alembic.runtime.migration] Running upgrade 0002 -> 0003\nINFO  [alembic.runtime.migration] Running upgrade 0003 -> 0004\nINFO  [alembic.runtime.migration] Running upgrade 0004 -> 0005\nINFO  [alembic.runtime.migration] Running upgrade 0005 -> 0006\nINFO  [alembic.runtime.migration] Running upgrade 0006 -> 0007, 保留上游任意字符串请求ID，修复原文UUID列与HTTP契约不匹配。\nINFO  [alembic.runtime.migration] Running upgrade 0007 -> 0008, 将API Key绑定租户，保留旧key默认demo的兼容行为。\n"
+  }
+]

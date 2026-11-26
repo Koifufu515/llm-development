@@ -1,0 +1,17 @@
+"""LegChoice 演示：模型交的是字段不是一句话；缺字段、负票价当场被拦（纯逻辑，无需密钥）"""
+from app.tools.state_transition import _parse_leg_choices
+
+CASES = {
+    "完整一段（高铁）": {"from_city": "北京", "to_city": "天津", "vehicle_no": "G1197",
+                  "depart_time": "08:00", "arrive_time": "08:35", "seat_class": "二等座", "price": 54.5},
+    "只给车次号    ": {"from_city": "北京", "to_city": "天津", "vehicle_no": "G1197"},
+    "漏了到达城市  ": {"from_city": "北京", "vehicle_no": "G1197", "price": 54.5},
+    "多给了无关字段": {"from_city": "北京", "to_city": "上海", "vehicle_no": "CA1501",
+                  "depart_time": "09:00", "arrive_time": "11:10", "price": 0, "航司": "国航"},
+    "票价写成负数  ": {"from_city": "北京", "to_city": "天津", "price": -1},
+    "自驾（无班次）": {"from_city": "北京", "to_city": "天津"},
+}
+for label, raw in CASES.items():
+    picked, errors = _parse_leg_choices([raw])
+    print(f"{label} → " + (f"✅ {picked[0].from_city}→{picked[0].to_city}｜{picked[0].summary()}"
+                          if picked else f"❌ {errors[0]}"))

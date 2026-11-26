@@ -1,0 +1,113 @@
+def _rows_to_options(
+    rows: list[dict], limit: int, prices: Optional[dict[str, float]] = None
+) -> list[FlightOption]:
+    """航班原始行 → FlightOption：按起飞时间升序取前 limit 班（仅排序取数，不做时间校验）
+
+    价格字段三级取值（依次回退，**取不到就是 0，绝不编造**）：
+      ① 时刻表行自带的票价（parse_flight_rows 按候选键抠出来的 row["price"]）
+      ② 票价接口按航班号返回的价（prices[航班号]）
+      ③ 都没有 → 0，前端展示"价格待定"，代选时按"价格未知"处理
+    """
+    table = prices or {}
+    options: list[FlightOption] = []
+    for row in sorted(rows, key=lambda r: r.get("dep") or ""):
+        code = row.get("code") or ""
+        # ★ 时刻表自带价优先（同一接口同一班，最不会串）；其次才查票价接口的表
+        price = float(row.get("price") or 0) or float(table.get(code.upper(), 0) or 0)
+        options.append(FlightOption(
+            flight_no=code,
+            dep_time=row.get("dep") or "",
+            arr_time=row.get("arr") or "",
+            dep_airport=row.get("from") or "",
+            arr_airport=row.get("to") or "",
+            price=price,
+            duration=_duration(row.get("dep") or "", row.get("arr") or ""),
+            option_id=option_id_of(row),
+        ))
+        if len(options) >= limit:
+            break
+    return options
+
+async def _query_one_leg(
+    query_tool: BaseTool, price_tool: Optional[BaseTool],
+    segment_id: str, leg: FlightLeg, limit: int
+) -> FlightSegment:
+    """查询单段航班（由 asyncio.gather 并行调度）；任何异常都降级为空 flight_list，绝不抛出"""
+    travel_date = (leg.travel_date or "").strip()
+    # ★ 城市先换成机场码；没有码的城市不查、不猜
+    dep, arr = _CITY_AIRPORT.get(leg.from_), _CITY_AIRPORT.get(leg.to)
+    if not dep or not arr:      # 城市未收录机场码：不放行直查，降级为空段
+        app_logger.warning(
+            f"⚠️ flight_multi_segment {segment_id}（{leg.from_}→{leg.to}）无机场码，跳过查询"
+        )
+        return FlightSegment(
+            segment_id=segment_id, from_=leg.from_, to=leg.to,
+            date=travel_date, flight_list=[],
+        )
+    # ★ 时刻表与票价**并发**查（票价是另一个接口，串行会把单段耗时翻倍）；
+    #   return_exceptions=True 保证票价炸了也不影响时刻表——卡片照出，只是没有价
+    schedule_raw, price_pair = await asyncio.gather(
+        query_tool.ainvoke({"date": travel_date, "dep": dep, "arr": arr}),
+        _query_leg_prices(price_tool, segment_id, leg, travel_date),
+        return_exceptions=True,
+    )
+    if isinstance(schedule_raw, Exception):  # 单段失败不影响其它段，前端对空段置灰
+        app_logger.warning(
+            f"⚠️ flight_multi_segment {segment_id}（{leg.from_}→{leg.to}）查询异常：{schedule_raw}"
+        )
+        return FlightSegment(
+            segment_id=segment_id, from_=leg.from_, to=leg.to,
+            date=travel_date, flight_list=[],
+        )
+    by_flight, lowest = ({}, 0.0) if isinstance(price_pair, Exception) else price_pair
+    rows = parse_flight_rows(schedule_raw)
+    options = _rows_to_options(rows, limit, by_flight)
+    priced = sum(1 for o in options if o.price > 0)
+    app_logger.info(
+        f"✈️ flight_multi_segment {segment_id} {leg.from_}→{leg.to} {travel_date} "
+        f"解析 {len(rows)} 班 → 取 {len(options)} 班（{priced} 班有票价）"
+    )
+    return FlightSegment(
+        segment_id=segment_id, from_=leg.from_, to=leg.to,
+        date=travel_date, flight_list=options,
+        # ★ 段级参考价：票价接口只给"XX元起"时放这里，**不**挨个填到每一班上（那是编造）
+        low_price=lowest,
+    )
+
+async def build_flight_multi_segment_payload(
+    legs: list[Any],
+    max_options_per_leg: int = 10,
+    cache_key: Optional[str] = None,
+) -> FlightMultiSegmentPayload:
+    """核心函数（非工具）：并行查询全部段 → 组装 payload，并缓存供提交侧校验
+
+    legs 长度即段数；日期为空时原样留空由前端展示，不推断时序、不校验时间先后。
+    数据源不可用 / 解析为空时返回**空段**而不是抛异常，避免打断对话。
+    cache_key：隔离键（调用方传 conversation_id），保证提交侧校验到的是**本会话**的候选表
+    """
+    try:
+        parsed = [leg if isinstance(leg, FlightLeg) else FlightLeg.model_validate(leg) for leg in legs]
+    except Exception as exc:
+        app_logger.warning(f"⚠️ flight_multi_segment 入参不合法，已降级为空 payload：{exc}")
+        return FlightMultiSegmentPayload(segments=[])
+    if not parsed:
+        return FlightMultiSegmentPayload(segments=[])
+    query_tool = await _resolve_query_tool()
+    if query_tool is None:                   # 数据源不可用：返回空段而不是抛错
+        empty = FlightMultiSegmentPayload(segments=[
+            FlightSegment(segment_id=f"s{i}", from_=leg.from_, to=leg.to,
+                          date=(leg.travel_date or "").strip(), flight_list=[])
+            for i, leg in enumerate(parsed, 1)
+        ])
+        _PAYLOAD_CACHE.store(empty, cache_key)
+        return empty
+    price_tool = await _resolve_price_tool()   # ★ 票价工具同样只解析一次，段间复用
+    segments = await asyncio.gather(*[     # ← 并行并发，非串行逐段
+        _query_one_leg(query_tool, price_tool, f"s{index}", leg, max_options_per_leg)
+        for index, leg in enumerate(parsed, 1)
+    ])
+    payload = FlightMultiSegmentPayload(segments=list(segments))
+    _PAYLOAD_CACHE.store(payload, cache_key)  # 供提交侧做「是否存在」校验
+    return payload
+
+# ==================== 提交侧：只做基础合法性校验（明确不做时间校验） ====================

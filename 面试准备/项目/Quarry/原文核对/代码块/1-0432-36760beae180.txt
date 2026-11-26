@@ -1,0 +1,2 @@
+uv run python -m quarry.scripts.run_eval --label rerank-on --no-facts
+uv run python -m quarry.scripts.compare_eval --base baseline --new rerank-on

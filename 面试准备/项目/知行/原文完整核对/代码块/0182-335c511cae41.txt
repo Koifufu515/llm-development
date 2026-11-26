@@ -1,0 +1,13 @@
+"""PayloadCache 演示：按会话分桶互不覆盖；不传 key 落到默认桶（纯逻辑，无需密钥）"""
+from app.capabilities.base.payload_cache import PayloadCache
+
+cache: PayloadCache[str] = PayloadCache("demo")
+cache.store("会话 A 的卡片", cache_key="conv-A")
+cache.store("会话 B 的卡片", cache_key="conv-B")
+cache.store("模型自己调工具时的卡片")                  # 不传 key → 默认桶
+print("conv-A        ：", cache.get("conv-A"))
+print("conv-B        ：", cache.get("conv-B"))
+print("默认桶        ：", cache.get())
+print("没下发过的会话：", cache.get("conv-C"))
+cache.store("会话 A 的新卡片", cache_key="conv-A")
+print("同一会话再下发：", cache.get("conv-A"))

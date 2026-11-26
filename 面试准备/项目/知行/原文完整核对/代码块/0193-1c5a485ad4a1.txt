@@ -1,0 +1,8 @@
+"""_pick_seat 演示：先按用户期望席别，再按常用度，最后退化为第一个返回的席别（纯函数，无需密钥）"""
+from app.capabilities.train_multi_segment.train_agent_tool import _pick_seat
+
+seats = {"一等座": ("5张", 1060.0), "二等座": ("有票", 662.0)}
+print("期望一等座    ：", _pick_seat(seats, "一等座"))
+print("期望商务座    ：", _pick_seat(seats, "商务座"))
+print("只有冷门席别  ：", _pick_seat({"高级软卧": ("有票", 1200.0)}, "二等座"))
+print("一个席别都没有：", _pick_seat({}, "二等座"))

@@ -1,0 +1,4 @@
+勾了高铁、两座城 → 走高铁路线 True  | 代码供卡片 True
+勾了航班           → 走高铁路线 False | 代码供卡片 False
+已选定 train      → 走高铁路线 True  | 代码供卡片 True
+高铁但本地游       → 走高铁路线 True  | 代码供卡片 False

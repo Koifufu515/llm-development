@@ -1,0 +1,504 @@
+
+
+===== block 188 be7ddbaee06f lines 1-93 source 知行旅行助手-v2#188 =====
+"""
+多段高铁行程 Agent Skill —— Pydantic 数据契约
+skill_name = train_multi_segment
+
+契约总览（前后端字段严格一一对应，禁止改名）：
+  入参（查询工具 `query_train_multi_segment_tool`）：legs[{from, to, travel_date}] + seat_type + max_options_per_leg
+  出参  TrainMultiSegmentPayload：{skill_name, segments[{segment_id, from, to, date, train_list[]}]}
+  提交  TrainSubmitPayload      ：{skill_name, segments[{segment_id, option_id, trainNo}]}
+
+身份约定（重要）：车次号**不是唯一身份**——12306 真实数据里同一段会出现同号不同终到站的车
+（如 G1308 08:36 分别终到 石家庄 / 正定机场），故选中、校验、回写一律以 TrainOption.option_id
+（= 车次-发车时刻-到达站）为准。
+
+职责边界（重要，不可越界）：
+  1. 本 Skill 只做「并行查询已有 12306 工具 + 组装候选班次」，不做逐段确认、不锁票；
+  2. **不做任何列车时间冲突校验**（不比对到站/发车先后，前端同样不校验）；
+  3. 提交侧只做基础合法性校验（segment_id / trainNo 是否存在），不校验时间。
+"""
+from typing import Literal
+
+from pydantic import (
+    AliasChoices,
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_serializer,
+)
+
+# Agent / 前端 UI Skill 的注册键（出参首字段，前端据此匹配渲染组件）
+TRAIN_MULTI_SEGMENT_SKILL = "train_multi_segment"
+
+class TrainLeg(BaseModel):
+    """【入参】单段行程（段数由用户行程决定，2/3/4 段均可，不写死）"""
+
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
+    # `from` 是 Python 关键字，故字段名用 from_ + 别名 "from"，保证 JSON 契约里仍是 from
+    from_: str = Field(alias="from", description="该段出发城市，如 石家庄")
+    to: str = Field(description="该段到达城市，如 北京")
+    travel_date: str = Field(
+        default="",
+        validation_alias=AliasChoices("travel_date", "date"),
+        description="该段乘车日期 YYYY-MM-DD；缺省时由 Agent 按行程时序推算后传入",
+    )
+
+class TrainOption(BaseModel):
+    """【出参】单趟车次（train_list 元素）；字段名与前端 TS 类型逐字一致"""
+
+    trainNo: str = Field(description="车次号，如 D40 / G547 / G1952")
+    startTime: str = Field(description="发车时刻 HH:mm")
+    endTime: str = Field(description="到达时刻 HH:mm")
+    startStation: str = Field(description="出发站中文名，如 石家庄北")
+    endStation: str = Field(description="到达站中文名，如 北京丰台")
+    duration: str = Field(description="历时 HH:mm")
+    price: float = Field(description="票价（元/人），取 seatType 对应席别")
+    seatType: str = Field(description="座位类型，如 二等座 / 一等座")
+    ticketStatus: str = Field(description="余票状态：有票 / 无票 / 候补 / N张")
+    # 身份字段：同一车次号在同一段内可能有多趟（12306 真实数据，
+    # 如 G1308 08:36 分别终到「石家庄」「正定机场」两趟），故选中/校验/回写一律以
+    # option_id 为身份，**禁止用 trainNo 当身份**（否则两趟会被同时勾选、回写串行）
+    option_id: str = Field(
+        default="",
+        description="该趟车的段内唯一标识：`车次-发车时刻-到达站`（如 G1308-08:36-正定机场）",
+    )
+
+    @field_serializer("price")
+    def _serialize_price(self, value: float) -> int | float:
+        """整数票价去掉小数尾（52.0 → 52），避免前端显示 ¥52.0（返回类型须为 int|float）"""
+        return int(value) if float(value).is_integer() else float(value)
+
+class TrainSegment(BaseModel):
+    """【出参】一段行程（segments 元素）；from 同样用别名保证 JSON 契约一致"""
+
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
+    segment_id: str = Field(description="段唯一标识，按 legs 顺序生成：s1 / s2 / s3 …")
+    from_: str = Field(alias="from", description="该段出发城市")
+    to: str = Field(description="该段到达城市")
+    date: str = Field(description="该段乘车日期 YYYY-MM-DD")
+    train_list: list[TrainOption] = Field(
+        default_factory=list,
+        description="该段候选车次（已按发车时间升序）；查询失败时为空数组，前端置灰该段",
+    )
+
+class TrainMultiSegmentPayload(BaseModel):
+    """【出参】Agent 下发前端 UI Skill 的完整 payload（segments 长度动态）"""
+
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
+    skill_name: Literal["train_multi_segment"] = TRAIN_MULTI_SEGMENT_SKILL
+    segments: list[TrainSegment] = Field(
+        default_factory=list, description="全部行程段，顺序与入参 legs 完全一致"
+    )
+
+
+===== block 189 42f1aa374f68 lines 1-42 source 知行旅行助手-v2#189 =====
+class TrainSubmitSelection(BaseModel):
+    """【提交】前端回传的单段选中结果（身份 = option_id；trainNo 仅作展示/日志）"""
+
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
+    segment_id: str = Field(description="段标识，必须存在于下发 payload 的 segments 中")
+    option_id: str = Field(
+        default="",
+        description="选中车次的段内唯一标识（下发 payload 里该趟车的 option_id）；"
+                    "同一车次号可能对应多趟，故以本字段为准",
+    )
+    trainNo: str = Field(default="", description="车次号（随 option_id 一起回显，仅作展示）")
+
+class TrainSubmitPayload(BaseModel):
+    """【提交】前端一次性全局提交的 payload（逐段单独确认已取消）"""
+
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
+    skill_name: Literal["train_multi_segment"] = TRAIN_MULTI_SEGMENT_SKILL
+    segments: list[TrainSubmitSelection] = Field(
+        description="全部段的选中结果，顺序不限（后端按 segment_id 归位）"
+    )
+
+class TrainSubmitResult(BaseModel):
+    """【提交回执】只反映基础合法性校验结果，不含任何时间连续性问题"""
+
+    ok: bool = Field(description="全部段校验通过为 True")
+    code: str = Field(
+        description=(
+            "结果码：OK / EMPTY_SELECTION / SEGMENT_NOT_FOUND / TRAIN_NOT_FOUND / "
+            "INCOMPLETE / NO_PAYLOAD / INVALID_PAYLOAD / MISSING_OPTION_ID / STEP_MISMATCH"
+        )
+    )
+    msg: str = Field(description="面向 Agent 的中文说明")
+    accepted: list[TrainSubmitSelection] = Field(
+        default_factory=list, description="校验通过的选中项（原样回显）"
+    )
+    # 已选定段的展示文本（"A→B G547 08:00-12:00 二等座553元"）：
+    # 提交成功后由路由侧拼成一条合成发言续跑住宿步，故必须把段文本带出本模块
+    texts: list[str] = Field(
+        default_factory=list, description="已选定各段的展示文本，按行程段顺序排列"
+    )
+
+
+===== block 190 72ee0c729af3 lines 1-10 source 知行旅行助手-v2#190 =====
+"""高铁数据契约演示：字段别名、票价序列化、按别名导出给前端（纯逻辑，无需密钥）"""
+from app.capabilities.train_multi_segment.train_skill_schema import TrainLeg, TrainMultiSegmentPayload, TrainOption, TrainSegment
+
+leg = TrainLeg.model_validate({"from": "北京", "to": "天津", "date": "2026-10-01"})    # 前端/模型可以用 from、date
+print("入参别名：", leg.from_, leg.to, leg.travel_date)
+opt = TrainOption(trainNo="G1", startTime="08:30", endTime="09:05", startStation="北京南", endStation="天津", duration="00:35",
+                  price=54.0, seatType="二等座", ticketStatus="有票", option_id="G1-08:30-天津")
+seg = TrainSegment(segment_id="s1", from_="北京", to="天津", date="2026-10-01", train_list=[opt])
+out = TrainMultiSegmentPayload(segments=[seg]).model_dump(by_alias=True)
+print("下发给前端：", out["skill_name"], "| 段字段：", list(out["segments"][0]), "| 票价：", out["segments"][0]["train_list"][0]["price"])
+
+
+===== block 191 09a856580188 lines 1-2 source 知行旅行助手-v2#191 =====
+入参别名： 北京 天津 2026-10-01
+下发给前端： train_multi_segment | 段字段： ['segment_id', 'from', 'to', 'date', 'train_list'] | 票价： 54
+
+
+===== block 192 eb824b3d4574 lines 1-97 source 知行旅行助手-v2#192 =====
+"""
+多段高铁行程 Agent Skill —— Agent 工具实现（skill_name = train_multi_segment）
+
+设计要点：
+  1. 【真实数据】不内置 mock，直接复用项目已有 12306 MCP 工具（get-tickets 系）查真实班次；
+  2. 【并行】段与段之间用 asyncio.gather 并发查询（段数动态 2/3/4…，总耗时≈最慢一段）；
+  3. 【只组装】拿原始返回 → parse_ticket_rows 解析 → 组装成 TrainMultiSegmentPayload；
+  4. 【零时间校验】全程不比对到站/发车先后，不做逐段确认、不锁票；
+  5. 【提交侧】只校验 segment_id / option_id 是否存在（option_id = 车次-发车时刻-到达站，
+     因为车次号在同段可重复），同样不校验时间。
+"""
+import asyncio
+from typing import Any, Optional
+
+from langchain.tools import tool
+from langchain_core.tools import BaseTool
+
+from app.capabilities.base import PayloadCache
+from app.capabilities.train_multi_segment.train_skill_schema import (
+    TRAIN_MULTI_SEGMENT_SKILL,
+    TrainLeg,
+    TrainMultiSegmentPayload,
+    TrainOption,
+    TrainSegment,
+    TrainSubmitPayload,
+    TrainSubmitResult,
+)
+from app.tools.mcp_tools import get_all_mcp_tools, parse_compact_rows, parse_ticket_rows
+from app.utils.logger import app_logger
+
+# 席别优先序：与本项目 mcp_tools._SEAT_ORDER 同口径，保证"取票价"取到同一档
+_SEAT_PRIORITY = ("二等座", "硬座", "一等座", "硬卧", "软卧", "无座")
+
+# 查询工具缓存：多段并发时只解析一次全量工具列表，段间复用同一工具对象
+_QUERY_TOOL: Optional[BaseTool] = None
+
+# 最近一次下发给前端的 payload：提交侧校验的权威真源（前端展示的就是这一份）
+# 按 cache_key 分桶（交通步传 conversation_id，模型自调工具时用默认桶 "_"）——
+# 原先是单个进程级全局变量，多用户/多会话并发时会互相覆盖，提交侧校验到别人的候选表
+_PAYLOAD_CACHE: PayloadCache[TrainMultiSegmentPayload] = PayloadCache("train")
+
+def get_cached_payload(cache_key: Optional[str] = None) -> Optional[TrainMultiSegmentPayload]:
+    """取某会话最近下发的候选 payload（提交校验用）；不存在返回 None"""
+    return _PAYLOAD_CACHE.get(cache_key)
+
+def train_score(minutes: int, price: float) -> float:
+    """班次综合评分：历时(分钟) + 票价/10（1 分钟 ≈ 0.1 元），越低越优
+
+    状态机自动代选（train_flow._pick_best）与快速通道（express._pick_train）共用本函数，
+    保证同一份候选在两通道选出同一趟车——此前两处各写一套规则会漂移。
+    """
+    return minutes + float(price) / 10
+
+async def _resolve_query_tool() -> Optional[BaseTool]:
+    """定位 12306 车票查询工具：按「必填 date/fromStation/toStation」判定，不写死工具名
+
+    注意取 get_all_mcp_tools() 的**原始工具**而非 get_train_tools() 的守卫版：
+    守卫版把结果压成"一行一趟"的紧凑文本，本 Skill 需要结构化字段，故直接解析 MCP 原文。
+    """
+    global _QUERY_TOOL
+    if _QUERY_TOOL is not None:
+        return _QUERY_TOOL
+    for item in await get_all_mcp_tools():
+        schema = item.args_schema if isinstance(item.args_schema, dict) else {}
+        # ★ 按"必填 date / fromStation / toStation"认 12306 工具，不写死工具名
+        if {"date", "fromStation", "toStation"} <= set(schema.get("required") or []):
+            _QUERY_TOOL = item
+            app_logger.info(f"🚄 train_multi_segment 复用 12306 工具：{item.name}")
+            return _QUERY_TOOL
+    app_logger.warning("⚠️ train_multi_segment 未找到 12306 车票查询工具（date/fromStation/toStation）")
+    return None
+
+def _pick_seat(seats: dict, prefer: str) -> Optional[tuple[str, tuple[str, float]]]:
+    """挑席别：优先用户期望席别 → 次按 _SEAT_PRIORITY → 最后退化为第一个返回席别"""
+    if prefer and prefer in seats:
+        return prefer, seats[prefer]
+    for name in _SEAT_PRIORITY:
+        if name in seats:
+            return name, seats[name]
+    if seats:
+        name = next(iter(seats))
+        return name, seats[name]
+    return None
+
+def _ticket_status(raw_status: str) -> str:
+    """余票状态归一：有→有票，无→无票，候补保留，纯数字→N张（前端按字符串原样展示）"""
+    text = (raw_status or "").strip()
+    if text in ("有", "有票"):
+        return "有票"
+    if text in ("无", "无票", "--", "*", ""):
+        return "无票" if text else "未知"
+    if "候补" in text:
+        return "候补"
+    # ★ "整串都是数字"用 str.isdecimal() 就够了，判定与 re.fullmatch(r"\d+") 完全一致
+    if text.isdecimal():
+        return f"{text}张"
+    return text
+
+
+===== block 193 1c5a485ad4a1 lines 1-8 source 知行旅行助手-v2#193 =====
+"""_pick_seat 演示：先按用户期望席别，再按常用度，最后退化为第一个返回的席别（纯函数，无需密钥）"""
+from app.capabilities.train_multi_segment.train_agent_tool import _pick_seat
+
+seats = {"一等座": ("5张", 1060.0), "二等座": ("有票", 662.0)}
+print("期望一等座    ：", _pick_seat(seats, "一等座"))
+print("期望商务座    ：", _pick_seat(seats, "商务座"))
+print("只有冷门席别  ：", _pick_seat({"高级软卧": ("有票", 1200.0)}, "二等座"))
+print("一个席别都没有：", _pick_seat({}, "二等座"))
+
+
+===== block 194 cb6aea5cf85b lines 1-4 source 知行旅行助手-v2#194 =====
+期望一等座    ： ('一等座', ('5张', 1060.0))
+期望商务座    ： ('二等座', ('有票', 662.0))
+只有冷门席别  ： ('高级软卧', ('有票', 1200.0))
+一个席别都没有： None
+
+
+===== block 195 5dce569e82e3 lines 1-5 source 知行旅行助手-v2#195 =====
+"""_ticket_status 演示：12306 的余票写法五花八门，统一成前端能直接展示的几种（纯函数，无需密钥）"""
+from app.capabilities.train_multi_segment.train_agent_tool import _ticket_status
+
+for raw in ["有", "有票", "无", "--", "", "候补", "12", "少量"]:
+    print(f"{raw!r:6} → {_ticket_status(raw)}")
+
+
+===== block 196 8df2eadb75df lines 1-8 source 知行旅行助手-v2#196 =====
+'有'    → 有票
+'有票'   → 有票
+'无'    → 无票
+'--'   → 无票
+''     → 未知
+'候补'   → 候补
+'12'   → 12张
+'少量'   → 少量
+
+
+===== block 197 04be988691a2 lines 1-58 source 知行旅行助手-v2#197 =====
+def _split_seat_tail(text: str) -> tuple[str, str, float] | None:
+    """紧凑行的席位尾巴「二等座 有 553元」→ (席别, 余票, 票价)；形态不符返回 None
+
+    这串文本是**我们自己的代码**拼的（环节 4 的 compact_ticket_text）：三段、空格分隔、
+    票价以"元"收尾，形态完全确定，所以 split 就够了，不需要正则。
+    早期实现用的是一条"三组非空白字符 + 以元结尾的数字"的正则，除了难读还有个隐患：
+    像"5.5.3元"这种脏数据它会判定命中，随后 float() 抛 ValueError 把整段查询带崩；
+    这里 float 失败一律返回 None，坏数据只影响它自己那一趟
+    """
+    parts = (text or "").strip().split()
+    # ★ str.split() 按空白切、自动丢空串，等价于正则里那几个 \S+，但一眼能看懂
+    if len(parts) != 3 or not parts[2].endswith("元"):
+        return None
+    try:
+        return parts[0], parts[1], float(parts[2][:-1])
+    except ValueError:
+        return None
+
+def _compact_to_rows(raw: Any) -> list[dict]:
+    """兜底解析：万一拿到的工具已被守卫包装（输出紧凑行），还原成与 parse_ticket_rows 同构的行"""
+    rows: list[dict] = []
+    for item in parse_compact_rows(raw):
+        seat = _split_seat_tail(item.get("seat") or "")
+        rows.append({
+            "code": item["code"], "from": item["from"], "to": item["to"],
+            "dep": item["dep"], "arr": item["arr"], "dur": item["dur"],
+            # ★ 解析不出席位尾巴就给空字典，交给 _rows_to_options 跳过这一趟
+            "seats": {seat[0]: (seat[1], seat[2])} if seat else {},
+        })
+    return rows
+
+def option_id_of(row: dict) -> str:
+    """段内唯一标识：车次-发车时刻-到达站
+
+ 车次号在 12306 真实数据里**不唯一**：同一段会返回同号不同终到站的车
+    （如 G1308 08:36 分别终到「石家庄」与「正定机场」两趟）。若用 trainNo 当身份，
+    前端两趟会被同时勾选（同 key），后端回写也只会取到第一趟（到达站/票价全错）。
+    故凡涉及"哪一趟"的判定（选中、校验、回写）一律用本标识。
+    """
+    return f"{row.get('code')}-{row.get('dep')}-{row.get('to')}"
+
+def _rows_to_options(rows: list[dict], prefer_seat: str, limit: int) -> list[TrainOption]:
+    """12306 原始行 → TrainOption：按发车时间升序取前 limit 趟（仅排序取数，不做时间校验）"""
+    options: list[TrainOption] = []
+    for row in sorted(rows, key=lambda r: r.get("dep") or ""):
+        picked = _pick_seat(row.get("seats") or {}, prefer_seat)
+        if not picked:                       # 无席别数据（多为已售罄/未返回票价）则跳过该趟
+            continue
+        seat_name, (status, price) = picked
+        options.append(TrainOption(
+            trainNo=row["code"], startTime=row["dep"], endTime=row["arr"],
+            startStation=row["from"], endStation=row["to"], duration=row["dur"],
+            price=float(price), seatType=seat_name, ticketStatus=_ticket_status(status),
+            option_id=option_id_of(row),
+        ))
+        if len(options) >= limit:
+            break
+    return options
+
+
+===== block 198 da3010170c50 lines 1-7 source 知行旅行助手-v2#198 =====
+"""_compact_to_rows 演示：工具已被守卫压成紧凑行时，还原成和 parse_ticket_rows 同构的行（纯函数，无需密钥）"""
+from app.capabilities.train_multi_segment.train_agent_tool import _compact_to_rows
+
+TEXT = """G1|北京南→天津|08:30→09:05|00:35|二等座 有票 54.5元
+G3|北京南→天津|09:00→09:35|00:35|票价未返回"""
+for row in _compact_to_rows(TEXT):
+    print(row)
+
+
+===== block 199 9e475ab4a703 lines 1-2 source 知行旅行助手-v2#199 =====
+{'code': 'G1', 'from': '北京南', 'to': '天津', 'dep': '08:30', 'arr': '09:05', 'dur': '00:35', 'seats': {'二等座': ('有票', 54.5)}}
+{'code': 'G3', 'from': '北京南', 'to': '天津', 'dep': '09:00', 'arr': '09:35', 'dur': '00:35', 'seats': {}}
+
+
+===== block 200 080402679adc lines 1-11 source 知行旅行助手-v2#200 =====
+"""_rows_to_options 演示：原始行 → 前端候选 TrainOption，按发车时间升序取前几趟（纯函数，无需密钥）"""
+from app.capabilities.train_multi_segment.train_agent_tool import _rows_to_options
+from app.tools.mcp_tools import parse_ticket_rows
+
+RAW = """G101 天津西(telecode:TXP) -> 上海虹桥(telecode:AOH) 09:10 -> 14:02 历时：04:52
+- 二等座: 有 509.0元
+G103 天津南(telecode:TIP) -> 上海虹桥(telecode:AOH) 07:48 -> 12:31 历时：04:43
+- 二等座: 候补 509.0元
+- 一等座: 3 816.0元"""
+for opt in _rows_to_options(parse_ticket_rows(RAW), prefer_seat="二等座", limit=5):
+    print(opt.option_id, "|", opt.startStation, opt.startTime, "→", opt.endTime, "|", opt.seatType, opt.ticketStatus, opt.price)
+
+
+===== block 201 2a66c899ea5c lines 1-2 source 知行旅行助手-v2#201 =====
+G103-07:48-上海虹桥 | 天津南 07:48 → 12:31 | 二等座 候补 509.0
+G101-09:10-上海虹桥 | 天津西 09:10 → 14:02 | 二等座 有票 509.0
+
+
+===== block 202 72e8f353e1e0 lines 1-65 source 知行旅行助手-v2#202 =====
+async def _query_one_leg(
+    query_tool: BaseTool, segment_id: str, leg: TrainLeg, prefer_seat: str, limit: int
+) -> TrainSegment:
+    """查询单段班次（由 asyncio.gather 并行调度）；任何异常都降级为空 train_list，绝不抛出"""
+    travel_date = (leg.travel_date or "").strip()
+    try:
+        raw = await query_tool.ainvoke({
+            "date": travel_date, "fromStation": leg.from_, "toStation": leg.to,
+        })
+    except Exception as exc:                 # 单段失败不影响其它段，前端对空段置灰
+        app_logger.warning(f"⚠️ train_multi_segment {segment_id}（{leg.from_}→{leg.to}）查询异常：{exc}")
+        return TrainSegment(
+            segment_id=segment_id, from_=leg.from_, to=leg.to,
+            date=travel_date, train_list=[],
+        )
+    # ★ 原始返回解析不出，再试紧凑行（工具可能已被守卫包装过）
+    rows = parse_ticket_rows(raw) or _compact_to_rows(raw)
+    options = _rows_to_options(rows, prefer_seat, limit)
+    app_logger.info(
+        f"🚄 train_multi_segment {segment_id} {leg.from_}→{leg.to} {travel_date} "
+        f"解析 {len(rows)} 趟 → 取 {len(options)} 趟"
+    )
+    return TrainSegment(
+        segment_id=segment_id, from_=leg.from_, to=leg.to,
+        date=travel_date, train_list=options,
+    )
+
+async def build_train_multi_segment_payload(
+    legs: list[Any],
+    seat_type: str = "二等座",
+    max_options_per_leg: int = 5,
+    cache_key: Optional[str] = None,
+) -> TrainMultiSegmentPayload:
+    """核心函数（非工具）：并行查询全部段 → 组装 payload，并缓存供提交侧校验
+
+    legs 长度即段数（2/3/4 段均支持，不写死）；日期为空时原样留空由前端展示，
+    不推断时序、不校验时间先后。
+    cache_key：隔离键（调用方传 conversation_id），保证提交侧校验到的是**本会话**的候选表
+    """
+    try:
+        parsed = [leg if isinstance(leg, TrainLeg) else TrainLeg.model_validate(leg) for leg in legs]
+    except Exception as exc:
+        app_logger.warning(f"⚠️ train_multi_segment 入参不合法，已降级为空 payload：{exc}")
+        return TrainMultiSegmentPayload(segments=[])
+    if not parsed:
+        return TrainMultiSegmentPayload(segments=[])
+    query_tool = await _resolve_query_tool()
+    if query_tool is None:                   # 数据源不可用：返回空段而不是抛错，避免打断对话
+        empty = TrainMultiSegmentPayload(segments=[
+            TrainSegment(segment_id=f"s{i}", from_=leg.from_, to=leg.to,
+                         date=(leg.travel_date or "").strip(), train_list=[])
+            for i, leg in enumerate(parsed, 1)
+        ])
+        _PAYLOAD_CACHE.store(empty, cache_key)
+        return empty
+    # ★ 全部段并行查询：总耗时 ≈ 最慢的那一段
+    segments = await asyncio.gather(*[     # ← 并行并发，非串行逐段
+        _query_one_leg(query_tool, f"s{index}", leg, seat_type, max_options_per_leg)
+        for index, leg in enumerate(parsed, 1)
+    ])
+    payload = TrainMultiSegmentPayload(segments=list(segments))
+    _PAYLOAD_CACHE.store(payload, cache_key)  # 供提交工具做「是否存在」校验
+    return payload
+
+# ==================== 提交侧：只做基础合法性校验（明确不做时间校验） ====================
+
+
+===== block 203 f121afe4720c lines 1-37 source 知行旅行助手-v2#203 =====
+"""_query_one_leg 演示：查一段班次；查询异常时降级为空段，绝不抛出（纯逻辑，无需密钥）"""
+import asyncio
+
+from app.capabilities.train_multi_segment.train_agent_tool import _query_one_leg
+from app.capabilities.train_multi_segment.train_skill_schema import TrainLeg
+
+RAW = {
+    ("北京", "天津"): """G1 北京南(telecode:VNP) -> 天津(telecode:TJP) 08:30 -> 09:05 历时：00:35
+- 二等座: 有票 54.5元
+C2001 北京南(telecode:VNP) -> 天津(telecode:TJP) 06:30 -> 07:03 历时：00:33
+- 二等座: 无 54.5元""",
+    ("天津", "上海"): """G101 天津西(telecode:TXP) -> 上海虹桥(telecode:AOH) 09:10 -> 14:02 历时：04:52
+- 二等座: 有 509.0元
+G103 天津南(telecode:TIP) -> 上海虹桥(telecode:AOH) 07:48 -> 12:31 历时：04:43
+- 二等座: 候补 509.0元""",
+}
+
+class FakeTicketTool:        # 测试驱动：假装是 12306 查询工具，按段返回原始文本，并记下被调了几次
+    name = "get-tickets"
+
+    def __init__(self):
+        self.calls = 0
+
+    async def ainvoke(self, args: dict):
+        self.calls += 1
+        if args["fromStation"] == "故障站":
+            raise RuntimeError("12306 超时")
+        return RAW.get((args["fromStation"], args["toStation"]), "")
+
+async def main():
+    tool = FakeTicketTool()
+    ok = await _query_one_leg(tool, "s1", TrainLeg(from_="北京", to="天津", travel_date="2026-10-01"), "二等座", 5)
+    print("正常段：", ok.segment_id, ok.from_, "→", ok.to, [o.option_id for o in ok.train_list])
+    bad = await _query_one_leg(tool, "s2", TrainLeg(from_="故障站", to="上海", travel_date="2026-10-02"), "二等座", 5)
+    print("异常段：", bad.segment_id, bad.from_, "→", bad.to, "train_list =", bad.train_list)
+
+asyncio.run(main())
+
+
+===== block 204 1613a3344241 lines 1-2 source 知行旅行助手-v2#204 =====
+正常段： s1 北京 → 天津 ['C2001-06:30-天津', 'G1-08:30-天津']
+异常段： s2 故障站 → 上海 train_list = []

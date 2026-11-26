@@ -1,0 +1,1 @@
+uv run python -m quarry.scripts.try_pipeline "住宿标准是多少" corp-policy

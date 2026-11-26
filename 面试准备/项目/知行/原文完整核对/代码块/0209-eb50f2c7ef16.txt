@@ -1,0 +1,7 @@
+两段都选对   → OK                已收到 2 段选中车次，基础合法性校验通过（未做任何时间校验）
+什么都没选   → EMPTY_SELECTION   提交内容为空，至少要选择一段车次
+缺 option_id → MISSING_OPTION_ID 以下选择缺少车次标识（option_id）：s1·G1；请在卡片中重新选择后提交
+段不存在     → SEGMENT_NOT_FOUND 不存在的行程段：s9；合法段为 s1、s2
+车次不在候选 → TRAIN_NOT_FOUND   以下车次不在该段候选列表中：s1·G9-10:00-天津
+漏选一段     → INCOMPLETE        以下行程段尚未选择车次：s2
+没下发过卡片 → NO_PAYLOAD        后端尚无候选班次记录，请先调用 query_train_multi_segment_tool 拉取班次

@@ -1,0 +1,3 @@
+async def gen():
+    async for token in llm.astream(prompt):
+        yield f"data: {token}\n\n"   # 只有 token，没有任何元数据

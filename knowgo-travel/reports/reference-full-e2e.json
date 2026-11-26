@@ -1,0 +1,4981 @@
+{
+  "services": {
+    "search": "ready",
+    "weather": "ready",
+    "rail": "ready",
+    "amap": "ready",
+    "flight": "ready",
+    "image_search": "ready",
+    "backup_weather": "ready",
+    "bailian_search": "ready",
+    "hotel": "ready"
+  },
+  "conversation_id": "25ccbe78-71cf-46ba-803a-859de7a400f4",
+  "events": [
+    {
+      "seconds": 0.0265,
+      "role": "skills",
+      "content": {
+        "skill_name": "express",
+        "title": "并行收集旅行资料",
+        "desc": "各段交通、各站住宿与各城天气同时查询"
+      },
+      "code": null
+    },
+    {
+      "seconds": 23.2317,
+      "role": "skills",
+      "content": {
+        "skill_name": "itinerary_generation",
+        "title": "生成与校验逐日行程",
+        "desc": "按已选交通、住宿和攻略来源生成"
+      },
+      "code": null
+    },
+    {
+      "seconds": 66.5929,
+      "role": "itinerary_plans",
+      "content": {
+        "status": "pending",
+        "message": "正在保存行程清单并核对地图地点"
+      },
+      "code": null
+    },
+    {
+      "seconds": 68.4216,
+      "role": "itinerary_plans",
+      "content": {
+        "status": "success",
+        "id": "17cfddd9-83d8-436f-a530-926e532ad5a3",
+        "message": "行程清单已生成"
+      },
+      "code": null
+    },
+    {
+      "seconds": 68.4216,
+      "role": "assistant",
+      "content": "交通：上海→苏州 G986 二等座\n交通：苏州→上海 G735 二等座\n住宿：苏州 蔚徕酒店(苏",
+      "code": null
+    },
+    {
+      "seconds": 68.4223,
+      "role": "assistant",
+      "content": "州相城大道徐图港地铁站店)\n\n# 苏州3日文化深度游\n\n## Day 1 · 苏州\n\n**上午*",
+      "code": null
+    },
+    {
+      "seconds": 68.4487,
+      "role": "assistant",
+      "content": "*\n- 07:05–07:34 **乘高铁抵达苏州北站**：乘坐G986次高铁从上海出发，07:",
+      "code": null
+    },
+    {
+      "seconds": 68.4758,
+      "role": "assistant",
+      "content": "05发车，07:34抵达苏州北站，全程29分钟。建议提前30分钟抵达上海站候车，携带身份证原件，",
+      "code": null
+    },
+    {
+      "seconds": 68.5019,
+      "role": "assistant",
+      "content": "注意站台广播与电子屏信息，出站后可换乘地铁或打车前往酒店。\n\n**中午**\n- 12:00–13",
+      "code": null
+    },
+    {
+      "seconds": 68.5278,
+      "role": "assistant",
+      "content": ":30 **办理入住与休整**：抵达蔚徕酒店（苏州相城大道徐图港地铁站店），地址为元和街道春申湖",
+      "code": null
+    },
+    {
+      "seconds": 68.5539,
+      "role": "assistant",
+      "content": "中路235号。酒店距离苏州北站约8公里，建议打车约20分钟。入住时间通常为14:00后，早到可寄",
+      "code": null
+    },
+    {
+      "seconds": 68.581,
+      "role": "assistant",
+      "content": "存行李并咨询前台周边餐饮及交通信息。\n\n**下午**\n- 14:00–16:30 **苏州博物馆",
+      "code": null
+    },
+    {
+      "seconds": 68.6083,
+      "role": "assistant",
+      "content": "本馆参观**：参观中国著名建筑大师贝聿铭设计的苏州博物馆本馆，融合传统苏式园林与现代建筑语言。馆",
+      "code": null
+    },
+    {
+      "seconds": 68.6351,
+      "role": "assistant",
+      "content": "内陈列吴地文物、明清书画及园林艺术珍品，主庭院假山与水景极具代表性。需提前7天实名预约，每日限流",
+      "code": null
+    },
+    {
+      "seconds": 68.6625,
+      "role": "assistant",
+      "content": "，16:00停止入馆。〔资料4〕\n\n**晚上**\n- 17:30–19:00 **观前街本地风味",
+      "code": null
+    },
+    {
+      "seconds": 68.6882,
+      "role": "assistant",
+      "content": "晚餐**：前往观前街（GuanQian Street）体验苏州本地饮食文化，该街区虽主街商业化，",
+      "code": null
+    },
+    {
+      "seconds": 68.7142,
+      "role": "assistant",
+      "content": "但两侧支巷藏有老字号苏帮菜馆与小吃铺，如松鹤楼、得月楼分店或平江路延伸段的蟹粉小笼、响油鳝糊、糖",
+      "code": null
+    },
+    {
+      "seconds": 68.7403,
+      "role": "assistant",
+      "content": "粥等特色。注意雨天备伞，部分老店无明确英文菜单。〔资料1〕\n\n小贴士：11月1日苏州预报小雨，全",
+      "code": null
+    },
+    {
+      "seconds": 68.7669,
+      "role": "assistant",
+      "content": "天温差大（14–25℃），务必携带雨具与薄外套；苏州博物馆须提前7天在官网或微信公众号‘苏州博物",
+      "code": null
+    },
+    {
+      "seconds": 68.7942,
+      "role": "assistant",
+      "content": "馆’实名预约，未预约者当日余票有限，建议出行前3日完成；观前街周边人流密集，注意保管随身物品，雨",
+      "code": null
+    },
+    {
+      "seconds": 68.8206,
+      "role": "assistant",
+      "content": "天石板路湿滑，请穿防滑鞋。\n\n## Day 2 · 苏州\n\n**上午**\n- 09:00–11:",
+      "code": null
+    },
+    {
+      "seconds": 68.8477,
+      "role": "assistant",
+      "content": "30 **平江路历史街区漫步**：平江路是苏州保存最完整的古街之一，沿河而建，白墙黛瓦、小桥流水",
+      "code": null
+    },
+    {
+      "seconds": 68.8734,
+      "role": "assistant",
+      "content": "，保留宋代以来街巷格局。可观赏评弹表演、手作苏扇、体验昆曲脸谱绘制，沿街茶馆提供碧螺春与船点。建",
+      "code": null
+    },
+    {
+      "seconds": 68.901,
+      "role": "assistant",
+      "content": "议清晨人少时游览，感受原生态水乡生活气息。\n\n**中午**\n- 12:00–13:30 **耦园",
+      "code": null
+    },
+    {
+      "seconds": 68.9286,
+      "role": "assistant",
+      "content": "午餐与园林导览**：在耦园附近苏帮菜馆用午餐，耦园为世界文化遗产，以‘爱情主题’著称，东西两园象",
+      "code": null
+    },
+    {
+      "seconds": 68.956,
+      "role": "assistant",
+      "content": "征阴阳和谐，黄石假山与听橹楼临河而筑。午餐推荐清炒虾仁、樱桃肉等经典苏帮菜，口味偏甜鲜，注意询问",
+      "code": null
+    },
+    {
+      "seconds": 68.9835,
+      "role": "assistant",
+      "content": "是否含过敏原。\n\n**下午**\n- 14:00–16:30 **拙政园深度游览**：中国四大名园",
+      "code": null
+    },
+    {
+      "seconds": 69.0109,
+      "role": "assistant",
+      "content": "之首，明代王献臣所建，以水为中心布局，分东、中、西三部分。中部远香堂、小沧浪、十八曼陀罗花馆最具",
+      "code": null
+    },
+    {
+      "seconds": 69.0371,
+      "role": "assistant",
+      "content": "代表性。建议租用语音导览器（现场可租），重点理解借景、框景等造园手法，雨天可优先游览廊亭与厅堂。",
+      "code": null
+    },
+    {
+      "seconds": 69.0643,
+      "role": "assistant",
+      "content": "\n\n**晚上**\n- 18:30–20:00 **金鸡湖夜景与音乐喷泉**：前往金鸡湖景区，欣赏",
+      "code": null
+    },
+    {
+      "seconds": 69.0918,
+      "role": "assistant",
+      "content": "现代苏州地标——东方之门、月光码头及李公堤。每晚19:30、20:30有音乐喷泉表演（视天气与公",
+      "code": null
+    },
+    {
+      "seconds": 69.1186,
+      "role": "assistant",
+      "content": "告开放），湖畔步道适合散步，亦可选湖滨咖啡馆小憩。注意11月2日多云转阴，气温12–21℃，建议",
+      "code": null
+    },
+    {
+      "seconds": 69.1463,
+      "role": "assistant",
+      "content": "带薄外套。\n\n小贴士：11月2日苏州多云转阴，气温下降明显（12–21℃），早晚寒凉，需添衣；拙",
+      "code": null
+    },
+    {
+      "seconds": 69.1722,
+      "role": "assistant",
+      "content": "政园与耦园均为世界文化遗产，门票需现场扫码购票或通过‘君到苏州’平台预约，旺季可能限流；平江路部",
+      "code": null
+    },
+    {
+      "seconds": 69.1975,
+      "role": "assistant",
+      "content": "分手作体验需另付费且耗时较长，建议提前确认营业状态与预约要求。\n\n## Day 3 · 苏州\n\n",
+      "code": null
+    },
+    {
+      "seconds": 69.225,
+      "role": "assistant",
+      "content": "**上午**\n- 08:30–11:00 **虎丘景区游览**：虎丘被誉为‘吴中第一名胜’，拥有",
+      "code": null
+    },
+    {
+      "seconds": 69.2524,
+      "role": "assistant",
+      "content": "2500年历史，核心景点包括斜塔（云岩寺塔）、剑池、千人石与真娘墓。剑池传为吴王阖闾墓所在，秋季",
+      "code": null
+    },
+    {
+      "seconds": 69.2793,
+      "role": "assistant",
+      "content": "枫叶初染，登高可俯瞰苏州古城风貌。建议预留2.5小时，穿舒适步行鞋，部分台阶较陡。\n\n**中午*",
+      "code": null
+    },
+    {
+      "seconds": 69.3035,
+      "role": "assistant",
+      "content": "*\n- 11:30–13:00 **山塘街午餐与运河游船**：在山塘街品尝地道苏式面点，如奥灶面",
+      "code": null
+    },
+    {
+      "seconds": 69.3309,
+      "role": "assistant",
+      "content": "、焖肉面或酒酿圆子，随后乘坐古运河游船（约30分钟），从阊门码头出发，经白居易诗中‘七里山塘’，",
+      "code": null
+    },
+    {
+      "seconds": 69.3576,
+      "role": "assistant",
+      "content": "欣赏两岸粉墙黛瓦与拱桥倒影，了解唐宋以来漕运与商业发展脉络。\n\n**下午**\n- 13:00–1",
+      "code": null
+    },
+    {
+      "seconds": 69.3846,
+      "role": "assistant",
+      "content": "5:30 **退房与自由活动**：返回蔚徕酒店办理退房手续（最迟12:00前），寄存行李后可于酒",
+      "code": null
+    },
+    {
+      "seconds": 69.4123,
+      "role": "assistant",
+      "content": "店周边短暂停留，购买碧螺春茶叶、苏绣小件或松子糖等伴手礼。酒店邻近徐图港地铁站，方便前往苏州北站",
+      "code": null
+    },
+    {
+      "seconds": 69.4367,
+      "role": "assistant",
+      "content": "。\n\n**晚上**\n- 17:15–17:38 **乘高铁返程上海**：乘坐G735次高铁从苏州",
+      "code": null
+    },
+    {
+      "seconds": 69.4642,
+      "role": "assistant",
+      "content": "北站返回上海虹桥站，17:15发车，17:38抵达，全程23分钟。建议16:00前抵达苏州北站，",
+      "code": null
+    },
+    {
+      "seconds": 69.4894,
+      "role": "assistant",
+      "content": "预留安检与候车时间；车票已确认为二等座，凭身份证直接刷证进站。\n\n小贴士：11月3日苏州阴转小雨",
+      "code": null
+    },
+    {
+      "seconds": 69.5157,
+      "role": "assistant",
+      "content": "，气温14–19℃，虎丘与山塘街均为露天场所，务必携带折叠伞与防水外套；虎丘景区入口处有寄存柜，",
+      "code": null
+    },
+    {
+      "seconds": 69.5421,
+      "role": "assistant",
+      "content": "贵重物品请随身携带；G735次列车为返程确认车次，建议提前1小时抵达车站，避免因天气影响市内交通",
+      "code": null
+    },
+    {
+      "seconds": 69.5683,
+      "role": "assistant",
+      "content": "延误；所有景点开放时间与预约政策均需以当日官方公告为准，出行前请再次核查‘苏州园林旅游’或‘君到",
+      "code": null
+    },
+    {
+      "seconds": 69.5956,
+      "role": "assistant",
+      "content": "苏州’平台最新通知。\n\n## 预算明细\n| 项目 | 数量 | 单价 | 金额 | 依据 |\n|",
+      "code": null
+    },
+    {
+      "seconds": 69.6232,
+      "role": "assistant",
+      "content": "---|---:|---:|---:|---|\n| 上海→苏州 | 1人 | 46.00 | 4",
+      "code": null
+    },
+    {
+      "seconds": 69.649,
+      "role": "assistant",
+      "content": "6.00 | 查询参考价 |\n| 苏州→上海 | 1人 | 40.00 | 40.00 | 查询",
+      "code": null
+    },
+    {
+      "seconds": 69.6753,
+      "role": "assistant",
+      "content": "参考价 |\n| 苏州住宿 | 2间夜 | 143.00 | 286.00 | 查询参考价 |\n|",
+      "code": null
+    },
+    {
+      "seconds": 69.7025,
+      "role": "assistant",
+      "content": " 餐饮 | 3人天 | 150.00 | 450.00 | 估算 |\n| 门票 | 3人天 | ",
+      "code": null
+    },
+    {
+      "seconds": 69.7299,
+      "role": "assistant",
+      "content": "200.00 | 600.00 | 估算 |\n| 市内交通及杂费 | 3人天 | 100.00 ",
+      "code": null
+    },
+    {
+      "seconds": 69.757,
+      "role": "assistant",
+      "content": "| 300.00 | 估算 |\n\n合计 **1722.00元**，人均 **1722.00元**",
+      "code": null
+    },
+    {
+      "seconds": 69.7831,
+      "role": "assistant",
+      "content": "。\n报价为查询时参考价，估算单独列示；本系统不执行购票、订房或支付。\n\n## 资料来源（历史攻略",
+      "code": null
+    },
+    {
+      "seconds": 69.8092,
+      "role": "assistant",
+      "content": "与联网摘要，出行前核实）\n1. 苏州景点资料 · Suzhou https://en.wikiv",
+      "code": null
+    },
+    {
+      "seconds": 69.8364,
+      "role": "assistant",
+      "content": "oyage.org/wiki/Suzhou\n2. 苏州景点资料 · Suzhou https:/",
+      "code": null
+    },
+    {
+      "seconds": 69.8619,
+      "role": "assistant",
+      "content": "/en.wikivoyage.org/wiki/Suzhou\n3. 苏州景点资料 · Suzho",
+      "code": null
+    },
+    {
+      "seconds": 69.8894,
+      "role": "assistant",
+      "content": "u https://en.wikivoyage.org/wiki/Suzhou\n4. 预约 - ",
+      "code": null
+    },
+    {
+      "seconds": 69.9166,
+      "role": "assistant",
+      "content": "苏州博物馆 https://www.szmuseum.com/Other/Reservation",
+      "code": null
+    },
+    {
+      "seconds": 69.9424,
+      "role": "assistant",
+      "content": "Tip\n5. 全部景点 - 君到苏州(文化旅游总入口) https://m.cloud.sz-t",
+      "code": null
+    },
+    {
+      "seconds": 69.9703,
+      "role": "assistant",
+      "content": "rip.com/AttractionsTickets",
+      "code": null
+    },
+    {
+      "seconds": 74.5349,
+      "role": "done",
+      "content": "finish",
+      "code": 200
+    }
+  ],
+  "state": {
+    "user_id": "20eb96ed-777a-4415-83a2-a04d49c2d9c4",
+    "current_step": "budget_summarization",
+    "requirement": {
+      "departure_city": "上海",
+      "destinations": [
+        "苏州"
+      ],
+      "departure_date": "2026-11-01",
+      "travel_days": 3,
+      "adult_count": 1,
+      "children_count": 0,
+      "budget_max": 5000.0,
+      "transport_types": [
+        "train"
+      ],
+      "accommodation_types": [
+        "economy_hotel"
+      ],
+      "food_preferences": [
+        "local",
+        "specialty"
+      ],
+      "travel_styles": [],
+      "special_needs": "",
+      "auto_confirm": true,
+      "city_days": null,
+      "requested_travel_days": null
+    },
+    "revision": 1,
+    "confirmed_revision": 1,
+    "weather_info": {
+      "苏州": {
+        "status": "ok",
+        "source": "高德天气",
+        "requested_date": null,
+        "city": "苏州市",
+        "adcode": "320500",
+        "province": "江苏",
+        "reporttime": "2026-10-31 01:04:34",
+        "casts": [
+          {
+            "date": "2026-10-31",
+            "week": "6",
+            "dayweather": "晴",
+            "nightweather": "多云",
+            "daytemp": "24",
+            "nighttemp": "14",
+            "daywind": "东南",
+            "nightwind": "东南",
+            "daypower": "1-3",
+            "nightpower": "1-3",
+            "daytemp_float": "24.0",
+            "nighttemp_float": "14.0"
+          },
+          {
+            "date": "2026-11-01",
+            "week": "7",
+            "dayweather": "小雨",
+            "nightweather": "小雨",
+            "daytemp": "25",
+            "nighttemp": "14",
+            "daywind": "西北",
+            "nightwind": "西北",
+            "daypower": "1-3",
+            "nightpower": "1-3",
+            "daytemp_float": "25.0",
+            "nighttemp_float": "14.0"
+          },
+          {
+            "date": "2026-11-02",
+            "week": "1",
+            "dayweather": "多云",
+            "nightweather": "阴",
+            "daytemp": "21",
+            "nighttemp": "12",
+            "daywind": "北",
+            "nightwind": "北",
+            "daypower": "1-3",
+            "nightpower": "1-3",
+            "daytemp_float": "21.0",
+            "nighttemp_float": "12.0"
+          },
+          {
+            "date": "2026-11-03",
+            "week": "2",
+            "dayweather": "阴",
+            "nightweather": "小雨",
+            "daytemp": "19",
+            "nighttemp": "14",
+            "daywind": "东",
+            "nightwind": "东",
+            "daypower": "1-3",
+            "nightpower": "1-3",
+            "daytemp_float": "19.0",
+            "nighttemp_float": "14.0"
+          }
+        ]
+      }
+    },
+    "destination_info": null,
+    "selected_transport": [
+      {
+        "option_id": "d1ce708812c7e5cf3b203f69",
+        "train_code": "G986",
+        "from_station": "上海",
+        "to_station": "苏州北",
+        "departure_date": "2026-11-01",
+        "departure_time": "07:05",
+        "arrival_date": "2026-11-01",
+        "arrival_time": "07:34",
+        "duration": "00:29",
+        "seats": [
+          {
+            "name": "二等座",
+            "availability": "有",
+            "price_yuan": 46
+          },
+          {
+            "name": "一等座",
+            "availability": "有",
+            "price_yuan": 76
+          },
+          {
+            "name": "商务座",
+            "availability": "2",
+            "price_yuan": 155
+          }
+        ],
+        "name": "G986 二等座",
+        "price_yuan": 46,
+        "availability": "有",
+        "seat_type": "二等座",
+        "segment_id": "s1",
+        "from": "上海",
+        "to": "苏州",
+        "date": "2026-11-01",
+        "return_leg": false,
+        "mode": "train",
+        "source": "12306 via Joooook/12306-mcp",
+        "queried_at": "2026-10-30T17:21:19.295507+00:00"
+      },
+      {
+        "option_id": "51fd401689ac4711a3891f80",
+        "train_code": "G735",
+        "from_station": "苏州北",
+        "to_station": "上海虹桥",
+        "departure_date": "2026-11-03",
+        "departure_time": "17:15",
+        "arrival_date": "2026-11-03",
+        "arrival_time": "17:38",
+        "duration": "00:23",
+        "seats": [
+          {
+            "name": "二等座",
+            "availability": "有",
+            "price_yuan": 40
+          },
+          {
+            "name": "一等座",
+            "availability": "有",
+            "price_yuan": 68
+          },
+          {
+            "name": "商务座",
+            "availability": "1",
+            "price_yuan": 134
+          }
+        ],
+        "name": "G735 二等座",
+        "price_yuan": 40,
+        "availability": "有",
+        "seat_type": "二等座",
+        "segment_id": "s2",
+        "from": "苏州",
+        "to": "上海",
+        "date": "2026-11-03",
+        "return_leg": true,
+        "mode": "train",
+        "source": "12306 via Joooook/12306-mcp",
+        "queried_at": "2026-10-30T17:21:19.303762+00:00"
+      }
+    ],
+    "selected_hotels": [
+      {
+        "option_id": "f756abfb3037326c058e962d",
+        "name": "蔚徕酒店(苏州相城大道徐图港地铁站店)",
+        "nightly_price_yuan": 143.0,
+        "stay_total_yuan": 286.0,
+        "address": "元和街道春申湖中路235号",
+        "rating": 3.0,
+        "distance_meters": 7922.0,
+        "source": "AIGOHOTEL",
+        "currency": "CNY",
+        "segment_id": "h1",
+        "city": "苏州",
+        "checkin": "2026-11-01",
+        "checkout": "2026-11-03",
+        "nights": 2,
+        "days": 3,
+        "mode": "hotel",
+        "queried_at": "2026-10-31T01:21:23.016453+08:00"
+      }
+    ],
+    "food_preferences": [
+      "local",
+      "specialty"
+    ],
+    "itinerary_body": {
+      "title": "苏州3日文化深度游",
+      "days": [
+        {
+          "day": 1,
+          "city": "苏州",
+          "morning": [
+            {
+              "name": "乘高铁抵达苏州北站",
+              "kind": "transport",
+              "description": "乘坐G986次高铁从上海出发，07:05发车，07:34抵达苏州北站，全程29分钟。建议提前30分钟抵达上海站候车，携带身份证原件，注意站台广播与电子屏信息，出站后可换乘地铁或打车前往酒店。",
+              "start_time": "07:05",
+              "end_time": "07:34",
+              "source_ids": []
+            }
+          ],
+          "noon": [
+            {
+              "name": "办理入住与休整",
+              "kind": "free",
+              "description": "抵达蔚徕酒店（苏州相城大道徐图港地铁站店），地址为元和街道春申湖中路235号。酒店距离苏州北站约8公里，建议打车约20分钟。入住时间通常为14:00后，早到可寄存行李并咨询前台周边餐饮及交通信息。",
+              "start_time": "12:00",
+              "end_time": "13:30",
+              "source_ids": []
+            }
+          ],
+          "afternoon": [
+            {
+              "name": "苏州博物馆本馆参观",
+              "kind": "attraction",
+              "description": "参观中国著名建筑大师贝聿铭设计的苏州博物馆本馆，融合传统苏式园林与现代建筑语言。馆内陈列吴地文物、明清书画及园林艺术珍品，主庭院假山与水景极具代表性。需提前7天实名预约，每日限流，16:00停止入馆。",
+              "start_time": "14:00",
+              "end_time": "16:30",
+              "source_ids": [
+                "bfb62112622245c2a37d107b"
+              ]
+            }
+          ],
+          "evening": [
+            {
+              "name": "观前街本地风味晚餐",
+              "kind": "meal",
+              "description": "前往观前街（GuanQian Street）体验苏州本地饮食文化，该街区虽主街商业化，但两侧支巷藏有老字号苏帮菜馆与小吃铺，如松鹤楼、得月楼分店或平江路延伸段的蟹粉小笼、响油鳝糊、糖粥等特色。注意雨天备伞，部分老店无明确英文菜单。",
+              "start_time": "17:30",
+              "end_time": "19:00",
+              "source_ids": [
+                "6394c57360842788a39cc35a"
+              ]
+            }
+          ],
+          "tips": [
+            "11月1日苏州预报小雨，全天温差大（14–25℃），务必携带雨具与薄外套；苏州博物馆须提前7天在官网或微信公众号‘苏州博物馆’实名预约，未预约者当日余票有限，建议出行前3日完成；观前街周边人流密集，注意保管随身物品，雨天石板路湿滑，请穿防滑鞋。"
+          ]
+        },
+        {
+          "day": 2,
+          "city": "苏州",
+          "morning": [
+            {
+              "name": "平江路历史街区漫步",
+              "kind": "attraction",
+              "description": "平江路是苏州保存最完整的古街之一，沿河而建，白墙黛瓦、小桥流水，保留宋代以来街巷格局。可观赏评弹表演、手作苏扇、体验昆曲脸谱绘制，沿街茶馆提供碧螺春与船点。建议清晨人少时游览，感受原生态水乡生活气息。",
+              "start_time": "09:00",
+              "end_time": "11:30",
+              "source_ids": []
+            }
+          ],
+          "noon": [
+            {
+              "name": "耦园午餐与园林导览",
+              "kind": "meal",
+              "description": "在耦园附近苏帮菜馆用午餐，耦园为世界文化遗产，以‘爱情主题’著称，东西两园象征阴阳和谐，黄石假山与听橹楼临河而筑。午餐推荐清炒虾仁、樱桃肉等经典苏帮菜，口味偏甜鲜，注意询问是否含过敏原。",
+              "start_time": "12:00",
+              "end_time": "13:30",
+              "source_ids": []
+            }
+          ],
+          "afternoon": [
+            {
+              "name": "拙政园深度游览",
+              "kind": "attraction",
+              "description": "中国四大名园之首，明代王献臣所建，以水为中心布局，分东、中、西三部分。中部远香堂、小沧浪、十八曼陀罗花馆最具代表性。建议租用语音导览器（现场可租），重点理解借景、框景等造园手法，雨天可优先游览廊亭与厅堂。",
+              "start_time": "14:00",
+              "end_time": "16:30",
+              "source_ids": []
+            }
+          ],
+          "evening": [
+            {
+              "name": "金鸡湖夜景与音乐喷泉",
+              "kind": "attraction",
+              "description": "前往金鸡湖景区，欣赏现代苏州地标——东方之门、月光码头及李公堤。每晚19:30、20:30有音乐喷泉表演（视天气与公告开放），湖畔步道适合散步，亦可选湖滨咖啡馆小憩。注意11月2日多云转阴，气温12–21℃，建议带薄外套。",
+              "start_time": "18:30",
+              "end_time": "20:00",
+              "source_ids": []
+            }
+          ],
+          "tips": [
+            "11月2日苏州多云转阴，气温下降明显（12–21℃），早晚寒凉，需添衣；拙政园与耦园均为世界文化遗产，门票需现场扫码购票或通过‘君到苏州’平台预约，旺季可能限流；平江路部分手作体验需另付费且耗时较长，建议提前确认营业状态与预约要求。"
+          ]
+        },
+        {
+          "day": 3,
+          "city": "苏州",
+          "morning": [
+            {
+              "name": "虎丘景区游览",
+              "kind": "attraction",
+              "description": "虎丘被誉为‘吴中第一名胜’，拥有2500年历史，核心景点包括斜塔（云岩寺塔）、剑池、千人石与真娘墓。剑池传为吴王阖闾墓所在，秋季枫叶初染，登高可俯瞰苏州古城风貌。建议预留2.5小时，穿舒适步行鞋，部分台阶较陡。",
+              "start_time": "08:30",
+              "end_time": "11:00",
+              "source_ids": []
+            }
+          ],
+          "noon": [
+            {
+              "name": "山塘街午餐与运河游船",
+              "kind": "meal",
+              "description": "在山塘街品尝地道苏式面点，如奥灶面、焖肉面或酒酿圆子，随后乘坐古运河游船（约30分钟），从阊门码头出发，经白居易诗中‘七里山塘’，欣赏两岸粉墙黛瓦与拱桥倒影，了解唐宋以来漕运与商业发展脉络。",
+              "start_time": "11:30",
+              "end_time": "13:00",
+              "source_ids": []
+            }
+          ],
+          "afternoon": [
+            {
+              "name": "退房与自由活动",
+              "kind": "free",
+              "description": "返回蔚徕酒店办理退房手续（最迟12:00前），寄存行李后可于酒店周边短暂停留，购买碧螺春茶叶、苏绣小件或松子糖等伴手礼。酒店邻近徐图港地铁站，方便前往苏州北站。",
+              "start_time": "13:00",
+              "end_time": "15:30",
+              "source_ids": []
+            }
+          ],
+          "evening": [
+            {
+              "name": "乘高铁返程上海",
+              "kind": "transport",
+              "description": "乘坐G735次高铁从苏州北站返回上海虹桥站，17:15发车，17:38抵达，全程23分钟。建议16:00前抵达苏州北站，预留安检与候车时间；车票已确认为二等座，凭身份证直接刷证进站。",
+              "start_time": "17:15",
+              "end_time": "17:38",
+              "source_ids": []
+            }
+          ],
+          "tips": [
+            "11月3日苏州阴转小雨，气温14–19℃，虎丘与山塘街均为露天场所，务必携带折叠伞与防水外套；虎丘景区入口处有寄存柜，贵重物品请随身携带；G735次列车为返程确认车次，建议提前1小时抵达车站，避免因天气影响市内交通延误；所有景点开放时间与预约政策均需以当日官方公告为准，出行前请再次核查‘苏州园林旅游’或‘君到苏州’平台最新通知。"
+          ]
+        }
+      ]
+    },
+    "budget_dirty": false,
+    "itinerary_sources": [
+      {
+        "city": "苏州",
+        "title": "苏州景点资料 · Suzhou",
+        "source_url": "https://en.wikivoyage.org/wiki/Suzhou",
+        "license": "CC BY-SA 3.0",
+        "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+        "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+        "id": "6394c57360842788a39cc35a",
+        "text": "The Suzhou Industrial Park (SIP)\nDescribed by some as a masterpiece of urban planning. Jointly designed by the city government and a Singaporean urban planning committee, this area is characterised by wide boulevards lined with new high-rise apartments, office buildings and factories with some recreation facilities that might make it worth a visit. Shopping malls, eating and drinking streets are surrounded by some interesting contemporary parkland. Bus number 2 will get you there.\n\nTake a boat ride through the city's canals\nAn interesting way to see the city low down in the network of canals.\n\nExplore GuanQian Street (观前街)\nThe street itself is a rather uninspiring shopping street, however the back streets off it harbor many small shops selling local crafts and some interesting restaurants serving local cuisine.",
+        "score": 0.03824884792626728
+      },
+      {
+        "city": "苏州",
+        "title": "苏州景点资料 · Suzhou",
+        "source_url": "https://en.wikivoyage.org/wiki/Suzhou",
+        "license": "CC BY-SA 3.0",
+        "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+        "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+        "id": "2407de1fc03e3c67a2d12dd9",
+        "text": "Weekend cycle rides\nTwo local cycle shops &mdash; Specialized Bicycles and Trek Cycles; see below for contact information &mdash; organise one or two day rides to  nearby attractions such as Lake Tai (30km one way), Yangcheng Lake (40km around the lake), Tongli (20km one way) and Zhouzhuang (40km one way). Pace is normally relaxed with regular stops for photos and taking a rest. Joining the tour is free, although you have to bring your own bike or rent a bike from the store for a deposit and small charge. Costs such as meals and accommodation are split between group members. Although most of the riders are locals, foreigners are always welcomed and most members will speak English, and will ride in a safe manner.\n\nSuzhou Amusement Land\nThis park, located in the SND west of downtown, already has a stop on metro line 1. It will become an interchange with line 3 when that opens, 2015 or 2016.",
+        "score": 0.03389266821665876
+      },
+      {
+        "city": "苏州",
+        "title": "苏州景点资料 · Suzhou",
+        "source_url": "https://en.wikivoyage.org/wiki/Suzhou",
+        "license": "CC BY-SA 3.0",
+        "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+        "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+        "id": "ea4385e23a9e86efcd07c599",
+        "text": "Yangshan Hot Springs\nA hotel resort with hot spring facilities - you can buy a ticket to soak in hot tubs outdoors. It's quite fancy, has plenty of different baths, illuminations and spas. It's in the outskirts to the west of the city, so either take a 30-minute taxi ride or about 2.5 hours bus ride from the city center.\n\nCycle\nSuzhou is relatively flat, and once past the ring-road, traffic is light and easy-going enough to enable a pleasant ride about town. Jinji Lake, Dushu Lake and a few outlying temples are within casual cycling distance. Many hostels rent bikes for around ¥25 a day.",
+        "score": 0.03855606758832565
+      },
+      {
+        "id": "bfb62112622245c2a37d107b",
+        "city": "苏州",
+        "title": "预约 - 苏州博物馆",
+        "text": "### 扫码预约\n\n预约须知\n\n苏州博物馆本馆 苏州博物馆西馆\n\n观众朋友您好，欢迎参观苏州博物馆本馆。\n\n苏州博物馆本馆开放时间为每周二至周日9:00-17:00（16:00停止入馆），周一闭馆（法定节假日除外）。夜间延长开放等特殊情况按照开放公告执行。\n\n苏州博物馆本馆实行实名制全预约制度，观众可提前七天通过线上渠道进行参观预约（系统服务时间：每日8:00-23:00）。如未提前预约且参观当日仍有余票时，观众可在当日进行预约。\n\n未办理身份证的未成年人请使用其户口本上的身份证号码为其预约，参观时请携带好户口本，以便核实预约信息。现役军人、残障人士、70周岁（含）以上行动不便的老人，可凭本人",
+        "source_url": "https://www.szmuseum.com/Other/ReservationTip",
+        "license": "外部搜索摘要，仅供引用溯源",
+        "retrieved_at": "2026-10-30T17:21:40.814182+00:00",
+        "freshness": "联网搜索当次摘要；摘要可能过时或互相矛盾，出行前应核对景区官方公告。",
+        "source_type": "web_search",
+        "provider": "Tavily"
+      },
+      {
+        "id": "9e8ad9babd7ea5f080297653",
+        "city": "苏州",
+        "title": "全部景点 - 君到苏州(文化旅游总入口)",
+        "text": "搜索. 全部景点. 热搜. 没有更多数据了.Read more",
+        "source_url": "https://m.cloud.sz-trip.com/AttractionsTickets",
+        "license": "外部搜索摘要，仅供引用溯源",
+        "retrieved_at": "2026-10-30T17:21:40.814198+00:00",
+        "freshness": "联网搜索当次摘要；摘要可能过时或互相矛盾，出行前应核对景区官方公告。",
+        "source_type": "web_search",
+        "provider": "Tavily"
+      }
+    ],
+    "reference_body": {
+      "days": [
+        {
+          "day": 1,
+          "city": "苏州",
+          "morning": [
+            "乘坐G986次高铁从上海出发，07:05发车，07:34抵达苏州北站，全程29分钟。建议提前30分钟抵达上海站候车，携带身份证原件，注意站台广播与电子屏信息，出站后可换乘地铁或打车前往酒店。"
+          ],
+          "noon": [
+            "抵达蔚徕酒店（苏州相城大道徐图港地铁站店），地址为元和街道春申湖中路235号。酒店距离苏州北站约8公里，建议打车约20分钟。入住时间通常为14:00后，早到可寄存行李并咨询前台周边餐饮及交通信息。"
+          ],
+          "afternoon": [
+            "参观中国著名建筑大师贝聿铭设计的苏州博物馆本馆，融合传统苏式园林与现代建筑语言。馆内陈列吴地文物、明清书画及园林艺术珍品，主庭院假山与水景极具代表性。需提前7天实名预约，每日限流，16:00停止入馆。"
+          ],
+          "evening": [
+            "前往观前街（GuanQian Street）体验苏州本地饮食文化，该街区虽主街商业化，但两侧支巷藏有老字号苏帮菜馆与小吃铺，如松鹤楼、得月楼分店或平江路延伸段的蟹粉小笼、响油鳝糊、糖粥等特色。注意雨天备伞，部分老店无明确英文菜单。"
+          ],
+          "tips": [
+            "11月1日苏州预报小雨，全天温差大（14–25℃），务必携带雨具与薄外套；苏州博物馆须提前7天在官网或微信公众号‘苏州博物馆’实名预约，未预约者当日余票有限，建议出行前3日完成；观前街周边人流密集，注意保管随身物品，雨天石板路湿滑，请穿防滑鞋。"
+          ]
+        },
+        {
+          "day": 2,
+          "city": "苏州",
+          "morning": [
+            "平江路是苏州保存最完整的古街之一，沿河而建，白墙黛瓦、小桥流水，保留宋代以来街巷格局。可观赏评弹表演、手作苏扇、体验昆曲脸谱绘制，沿街茶馆提供碧螺春与船点。建议清晨人少时游览，感受原生态水乡生活气息。"
+          ],
+          "noon": [
+            "在耦园附近苏帮菜馆用午餐，耦园为世界文化遗产，以‘爱情主题’著称，东西两园象征阴阳和谐，黄石假山与听橹楼临河而筑。午餐推荐清炒虾仁、樱桃肉等经典苏帮菜，口味偏甜鲜，注意询问是否含过敏原。"
+          ],
+          "afternoon": [
+            "中国四大名园之首，明代王献臣所建，以水为中心布局，分东、中、西三部分。中部远香堂、小沧浪、十八曼陀罗花馆最具代表性。建议租用语音导览器（现场可租），重点理解借景、框景等造园手法，雨天可优先游览廊亭与厅堂。"
+          ],
+          "evening": [
+            "前往金鸡湖景区，欣赏现代苏州地标——东方之门、月光码头及李公堤。每晚19:30、20:30有音乐喷泉表演（视天气与公告开放），湖畔步道适合散步，亦可选湖滨咖啡馆小憩。注意11月2日多云转阴，气温12–21℃，建议带薄外套。"
+          ],
+          "tips": [
+            "11月2日苏州多云转阴，气温下降明显（12–21℃），早晚寒凉，需添衣；拙政园与耦园均为世界文化遗产，门票需现场扫码购票或通过‘君到苏州’平台预约，旺季可能限流；平江路部分手作体验需另付费且耗时较长，建议提前确认营业状态与预约要求。"
+          ]
+        },
+        {
+          "day": 3,
+          "city": "苏州",
+          "morning": [
+            "虎丘被誉为‘吴中第一名胜’，拥有2500年历史，核心景点包括斜塔（云岩寺塔）、剑池、千人石与真娘墓。剑池传为吴王阖闾墓所在，秋季枫叶初染，登高可俯瞰苏州古城风貌。建议预留2.5小时，穿舒适步行鞋，部分台阶较陡。"
+          ],
+          "noon": [
+            "在山塘街品尝地道苏式面点，如奥灶面、焖肉面或酒酿圆子，随后乘坐古运河游船（约30分钟），从阊门码头出发，经白居易诗中‘七里山塘’，欣赏两岸粉墙黛瓦与拱桥倒影，了解唐宋以来漕运与商业发展脉络。"
+          ],
+          "afternoon": [
+            "返回蔚徕酒店办理退房手续（最迟12:00前），寄存行李后可于酒店周边短暂停留，购买碧螺春茶叶、苏绣小件或松子糖等伴手礼。酒店邻近徐图港地铁站，方便前往苏州北站。"
+          ],
+          "evening": [
+            "乘坐G735次高铁从苏州北站返回上海虹桥站，17:15发车，17:38抵达，全程23分钟。建议16:00前抵达苏州北站，预留安检与候车时间；车票已确认为二等座，凭身份证直接刷证进站。"
+          ],
+          "tips": [
+            "11月3日苏州阴转小雨，气温14–19℃，虎丘与山塘街均为露天场所，务必携带折叠伞与防水外套；虎丘景区入口处有寄存柜，贵重物品请随身携带；G735次列车为返程确认车次，建议提前1小时抵达车站，避免因天气影响市内交通延误；所有景点开放时间与预约政策均需以当日官方公告为准，出行前请再次核查‘苏州园林旅游’或‘君到苏州’平台最新通知。"
+          ]
+        }
+      ]
+    },
+    "normalization_fixes": [],
+    "budget": {
+      "currency": "CNY",
+      "items": [
+        {
+          "category": "transport",
+          "label": "上海→苏州",
+          "segment_id": "s1",
+          "unit": "人",
+          "quantity": 1,
+          "unit_price": 46,
+          "amount": 46.0,
+          "basis": "quote",
+          "source": "12306 via Joooook/12306-mcp",
+          "queried_at": "2026-10-30T17:21:19.295507+00:00",
+          "note": "尚未预订；儿童暂按成人参考价，优惠以购票时为准"
+        },
+        {
+          "category": "transport",
+          "label": "苏州→上海",
+          "segment_id": "s2",
+          "unit": "人",
+          "quantity": 1,
+          "unit_price": 40,
+          "amount": 40.0,
+          "basis": "quote",
+          "source": "12306 via Joooook/12306-mcp",
+          "queried_at": "2026-10-30T17:21:19.303762+00:00",
+          "note": "尚未预订；儿童暂按成人参考价，优惠以购票时为准"
+        },
+        {
+          "category": "accommodation",
+          "label": "苏州住宿",
+          "segment_id": "h1",
+          "unit": "间夜",
+          "quantity": 2,
+          "unit_price": 143.0,
+          "amount": 286.0,
+          "basis": "quote",
+          "source": "AIGOHOTEL",
+          "queried_at": "2026-10-31T01:21:23.016453+08:00",
+          "note": "2晚×1间；品牌参考不表示可订门店"
+        },
+        {
+          "category": "food",
+          "label": "餐饮",
+          "unit": "人天",
+          "quantity": 3,
+          "unit_price": 150,
+          "amount": 450.0,
+          "basis": "estimate",
+          "source": "规划估算"
+        },
+        {
+          "category": "attractions",
+          "label": "门票",
+          "unit": "人天",
+          "quantity": 3,
+          "unit_price": 200,
+          "amount": 600.0,
+          "basis": "estimate",
+          "source": "规划估算"
+        },
+        {
+          "category": "misc",
+          "label": "市内交通及杂费",
+          "unit": "人天",
+          "quantity": 3,
+          "unit_price": 100,
+          "amount": 300.0,
+          "basis": "estimate",
+          "source": "规划估算"
+        }
+      ],
+      "total": 1722.0,
+      "per_person": 1722.0,
+      "people": 1,
+      "rooms": 1,
+      "nights": 2,
+      "budget_max": 5000.0,
+      "over_budget": false,
+      "quote_total": 372.0,
+      "estimate_total": 1350.0,
+      "notice": "报价为查询时参考价，估算单独列示；本系统不执行购票、订房或支付。"
+    },
+    "plan_id": "17cfddd9-83d8-436f-a530-926e532ad5a3",
+    "active_card": null
+  },
+  "plan": {
+    "id": "17cfddd9-83d8-436f-a530-926e532ad5a3",
+    "conversation_id": "25ccbe78-71cf-46ba-803a-859de7a400f4",
+    "title": "苏州3日文化深度游",
+    "revision": 1,
+    "body": {
+      "days": [
+        {
+          "day": 1,
+          "city": "苏州",
+          "noon": [
+            {
+              "kind": "free",
+              "name": "办理入住与休整",
+              "end_time": "13:30",
+              "source_ids": [],
+              "start_time": "12:00",
+              "description": "抵达蔚徕酒店（苏州相城大道徐图港地铁站店），地址为元和街道春申湖中路235号。酒店距离苏州北站约8公里，建议打车约20分钟。入住时间通常为14:00后，早到可寄存行李并咨询前台周边餐饮及交通信息。"
+            }
+          ],
+          "tips": [
+            "11月1日苏州预报小雨，全天温差大（14–25℃），务必携带雨具与薄外套；苏州博物馆须提前7天在官网或微信公众号‘苏州博物馆’实名预约，未预约者当日余票有限，建议出行前3日完成；观前街周边人流密集，注意保管随身物品，雨天石板路湿滑，请穿防滑鞋。"
+          ],
+          "evening": [
+            {
+              "kind": "meal",
+              "name": "观前街本地风味晚餐",
+              "end_time": "19:00",
+              "source_ids": [
+                "6394c57360842788a39cc35a"
+              ],
+              "start_time": "17:30",
+              "description": "前往观前街（GuanQian Street）体验苏州本地饮食文化，该街区虽主街商业化，但两侧支巷藏有老字号苏帮菜馆与小吃铺，如松鹤楼、得月楼分店或平江路延伸段的蟹粉小笼、响油鳝糊、糖粥等特色。注意雨天备伞，部分老店无明确英文菜单。"
+            }
+          ],
+          "morning": [
+            {
+              "kind": "transport",
+              "name": "乘高铁抵达苏州北站",
+              "end_time": "07:34",
+              "source_ids": [],
+              "start_time": "07:05",
+              "description": "乘坐G986次高铁从上海出发，07:05发车，07:34抵达苏州北站，全程29分钟。建议提前30分钟抵达上海站候车，携带身份证原件，注意站台广播与电子屏信息，出站后可换乘地铁或打车前往酒店。"
+            }
+          ],
+          "afternoon": [
+            {
+              "kind": "attraction",
+              "name": "苏州博物馆本馆参观",
+              "end_time": "16:30",
+              "source_ids": [
+                "bfb62112622245c2a37d107b"
+              ],
+              "start_time": "14:00",
+              "description": "参观中国著名建筑大师贝聿铭设计的苏州博物馆本馆，融合传统苏式园林与现代建筑语言。馆内陈列吴地文物、明清书画及园林艺术珍品，主庭院假山与水景极具代表性。需提前7天实名预约，每日限流，16:00停止入馆。"
+            }
+          ]
+        },
+        {
+          "day": 2,
+          "city": "苏州",
+          "noon": [
+            {
+              "kind": "meal",
+              "name": "耦园午餐与园林导览",
+              "end_time": "13:30",
+              "source_ids": [],
+              "start_time": "12:00",
+              "description": "在耦园附近苏帮菜馆用午餐，耦园为世界文化遗产，以‘爱情主题’著称，东西两园象征阴阳和谐，黄石假山与听橹楼临河而筑。午餐推荐清炒虾仁、樱桃肉等经典苏帮菜，口味偏甜鲜，注意询问是否含过敏原。"
+            }
+          ],
+          "tips": [
+            "11月2日苏州多云转阴，气温下降明显（12–21℃），早晚寒凉，需添衣；拙政园与耦园均为世界文化遗产，门票需现场扫码购票或通过‘君到苏州’平台预约，旺季可能限流；平江路部分手作体验需另付费且耗时较长，建议提前确认营业状态与预约要求。"
+          ],
+          "evening": [
+            {
+              "kind": "attraction",
+              "name": "金鸡湖夜景与音乐喷泉",
+              "end_time": "20:00",
+              "source_ids": [],
+              "start_time": "18:30",
+              "description": "前往金鸡湖景区，欣赏现代苏州地标——东方之门、月光码头及李公堤。每晚19:30、20:30有音乐喷泉表演（视天气与公告开放），湖畔步道适合散步，亦可选湖滨咖啡馆小憩。注意11月2日多云转阴，气温12–21℃，建议带薄外套。"
+            }
+          ],
+          "morning": [
+            {
+              "kind": "attraction",
+              "name": "平江路历史街区漫步",
+              "end_time": "11:30",
+              "source_ids": [],
+              "start_time": "09:00",
+              "description": "平江路是苏州保存最完整的古街之一，沿河而建，白墙黛瓦、小桥流水，保留宋代以来街巷格局。可观赏评弹表演、手作苏扇、体验昆曲脸谱绘制，沿街茶馆提供碧螺春与船点。建议清晨人少时游览，感受原生态水乡生活气息。"
+            }
+          ],
+          "afternoon": [
+            {
+              "kind": "attraction",
+              "name": "拙政园深度游览",
+              "end_time": "16:30",
+              "source_ids": [],
+              "start_time": "14:00",
+              "description": "中国四大名园之首，明代王献臣所建，以水为中心布局，分东、中、西三部分。中部远香堂、小沧浪、十八曼陀罗花馆最具代表性。建议租用语音导览器（现场可租），重点理解借景、框景等造园手法，雨天可优先游览廊亭与厅堂。"
+            }
+          ]
+        },
+        {
+          "day": 3,
+          "city": "苏州",
+          "noon": [
+            {
+              "kind": "meal",
+              "name": "山塘街午餐与运河游船",
+              "end_time": "13:00",
+              "source_ids": [],
+              "start_time": "11:30",
+              "description": "在山塘街品尝地道苏式面点，如奥灶面、焖肉面或酒酿圆子，随后乘坐古运河游船（约30分钟），从阊门码头出发，经白居易诗中‘七里山塘’，欣赏两岸粉墙黛瓦与拱桥倒影，了解唐宋以来漕运与商业发展脉络。"
+            }
+          ],
+          "tips": [
+            "11月3日苏州阴转小雨，气温14–19℃，虎丘与山塘街均为露天场所，务必携带折叠伞与防水外套；虎丘景区入口处有寄存柜，贵重物品请随身携带；G735次列车为返程确认车次，建议提前1小时抵达车站，避免因天气影响市内交通延误；所有景点开放时间与预约政策均需以当日官方公告为准，出行前请再次核查‘苏州园林旅游’或‘君到苏州’平台最新通知。"
+          ],
+          "evening": [
+            {
+              "kind": "transport",
+              "name": "乘高铁返程上海",
+              "end_time": "17:38",
+              "source_ids": [],
+              "start_time": "17:15",
+              "description": "乘坐G735次高铁从苏州北站返回上海虹桥站，17:15发车，17:38抵达，全程23分钟。建议16:00前抵达苏州北站，预留安检与候车时间；车票已确认为二等座，凭身份证直接刷证进站。"
+            }
+          ],
+          "morning": [
+            {
+              "kind": "attraction",
+              "name": "虎丘景区游览",
+              "end_time": "11:00",
+              "source_ids": [],
+              "start_time": "08:30",
+              "description": "虎丘被誉为‘吴中第一名胜’，拥有2500年历史，核心景点包括斜塔（云岩寺塔）、剑池、千人石与真娘墓。剑池传为吴王阖闾墓所在，秋季枫叶初染，登高可俯瞰苏州古城风貌。建议预留2.5小时，穿舒适步行鞋，部分台阶较陡。"
+            }
+          ],
+          "afternoon": [
+            {
+              "kind": "free",
+              "name": "退房与自由活动",
+              "end_time": "15:30",
+              "source_ids": [],
+              "start_time": "13:00",
+              "description": "返回蔚徕酒店办理退房手续（最迟12:00前），寄存行李后可于酒店周边短暂停留，购买碧螺春茶叶、苏绣小件或松子糖等伴手礼。酒店邻近徐图港地铁站，方便前往苏州北站。"
+            }
+          ]
+        }
+      ],
+      "title": "苏州3日文化深度游"
+    },
+    "budget": {
+      "items": [
+        {
+          "note": "尚未预订；儿童暂按成人参考价，优惠以购票时为准",
+          "unit": "人",
+          "basis": "quote",
+          "label": "上海→苏州",
+          "amount": 46.0,
+          "source": "12306 via Joooook/12306-mcp",
+          "category": "transport",
+          "quantity": 1,
+          "queried_at": "2026-10-30T17:21:19.295507+00:00",
+          "segment_id": "s1",
+          "unit_price": 46
+        },
+        {
+          "note": "尚未预订；儿童暂按成人参考价，优惠以购票时为准",
+          "unit": "人",
+          "basis": "quote",
+          "label": "苏州→上海",
+          "amount": 40.0,
+          "source": "12306 via Joooook/12306-mcp",
+          "category": "transport",
+          "quantity": 1,
+          "queried_at": "2026-10-30T17:21:19.303762+00:00",
+          "segment_id": "s2",
+          "unit_price": 40
+        },
+        {
+          "note": "2晚×1间；品牌参考不表示可订门店",
+          "unit": "间夜",
+          "basis": "quote",
+          "label": "苏州住宿",
+          "amount": 286.0,
+          "source": "AIGOHOTEL",
+          "category": "accommodation",
+          "quantity": 2,
+          "queried_at": "2026-10-31T01:21:23.016453+08:00",
+          "segment_id": "h1",
+          "unit_price": 143.0
+        },
+        {
+          "unit": "人天",
+          "basis": "estimate",
+          "label": "餐饮",
+          "amount": 450.0,
+          "source": "规划估算",
+          "category": "food",
+          "quantity": 3,
+          "unit_price": 150
+        },
+        {
+          "unit": "人天",
+          "basis": "estimate",
+          "label": "门票",
+          "amount": 600.0,
+          "source": "规划估算",
+          "category": "attractions",
+          "quantity": 3,
+          "unit_price": 200
+        },
+        {
+          "unit": "人天",
+          "basis": "estimate",
+          "label": "市内交通及杂费",
+          "amount": 300.0,
+          "source": "规划估算",
+          "category": "misc",
+          "quantity": 3,
+          "unit_price": 100
+        }
+      ],
+      "rooms": 1,
+      "total": 1722.0,
+      "nights": 2,
+      "notice": "报价为查询时参考价，估算单独列示；本系统不执行购票、订房或支付。",
+      "people": 1,
+      "currency": "CNY",
+      "budget_max": 5000.0,
+      "per_person": 1722.0,
+      "over_budget": false,
+      "quote_total": 372.0,
+      "estimate_total": 1350.0
+    },
+    "map_data": {
+      "notice": "地点按城市检索；无坐标的建议仍保留在正文。",
+      "points": [
+        {
+          "day": 2,
+          "lat": 31.313969,
+          "lng": 120.634556,
+          "city": "苏州",
+          "name": "平江路",
+          "order": 4,
+          "source": "高德POI",
+          "address": "白塔东路65号",
+          "photo_url": "http://store.is.autonavi.com/showpic/5b8d0cdca4174cc7a052a5e06035975f",
+          "source_activity": "平江路历史街区漫步",
+          "coordinate_system": "GCJ02"
+        },
+        {
+          "day": 2,
+          "lat": 31.324194,
+          "lng": 120.629211,
+          "city": "苏州",
+          "name": "拙政园",
+          "order": 6,
+          "source": "高德POI",
+          "address": "东北街178号",
+          "photo_url": "http://store.is.autonavi.com/showpic/72263ebfa1dfbeefe0269400e6ba822f",
+          "source_activity": "拙政园深度游览",
+          "coordinate_system": "GCJ02"
+        },
+        {
+          "day": 2,
+          "lat": 31.313482,
+          "lng": 120.698032,
+          "city": "苏州",
+          "name": "金鸡湖",
+          "order": 7,
+          "source": "高德POI",
+          "address": "吴中区",
+          "photo_url": "https://store.is.autonavi.com/showpic/f02581b862efe05c0a68effd75a50dc6",
+          "source_activity": "金鸡湖夜景与音乐喷泉",
+          "coordinate_system": "GCJ02"
+        }
+      ],
+      "routes": [
+        {
+          "to": "拙政园",
+          "day": 2,
+          "from": "平江路",
+          "source": "高德步行路线",
+          "coordinates": [
+            [
+              31.313976,
+              120.634514
+            ],
+            [
+              31.314397,
+              120.634423
+            ],
+            [
+              31.314397,
+              120.634418
+            ],
+            [
+              31.314284,
+              120.633711
+            ],
+            [
+              31.31428,
+              120.633707
+            ],
+            [
+              31.315017,
+              120.633507
+            ],
+            [
+              31.315017,
+              120.633507
+            ],
+            [
+              31.315599,
+              120.633381
+            ],
+            [
+              31.315599,
+              120.633381
+            ],
+            [
+              31.315829,
+              120.633338
+            ],
+            [
+              31.315829,
+              120.633338
+            ],
+            [
+              31.315929,
+              120.633316
+            ],
+            [
+              31.315929,
+              120.633316
+            ],
+            [
+              31.31628,
+              120.633199
+            ],
+            [
+              31.31628,
+              120.633199
+            ],
+            [
+              31.316458,
+              120.633168
+            ],
+            [
+              31.316458,
+              120.633168
+            ],
+            [
+              31.316506,
+              120.633155
+            ],
+            [
+              31.316623,
+              120.633095
+            ],
+            [
+              31.317079,
+              120.633021
+            ],
+            [
+              31.317174,
+              120.632969
+            ],
+            [
+              31.317244,
+              120.632951
+            ],
+            [
+              31.317244,
+              120.632951
+            ],
+            [
+              31.317812,
+              120.632812
+            ],
+            [
+              31.317812,
+              120.632812
+            ],
+            [
+              31.318099,
+              120.63273
+            ],
+            [
+              31.318099,
+              120.63273
+            ],
+            [
+              31.318533,
+              120.632648
+            ],
+            [
+              31.318533,
+              120.632648
+            ],
+            [
+              31.318924,
+              120.632582
+            ],
+            [
+              31.318924,
+              120.632582
+            ],
+            [
+              31.319705,
+              120.632383
+            ],
+            [
+              31.319705,
+              120.632383
+            ],
+            [
+              31.320039,
+              120.632309
+            ],
+            [
+              31.320039,
+              120.632309
+            ],
+            [
+              31.320599,
+              120.632201
+            ],
+            [
+              31.320599,
+              120.632201
+            ],
+            [
+              31.320768,
+              120.632179
+            ],
+            [
+              31.320768,
+              120.632179
+            ],
+            [
+              31.321289,
+              120.632122
+            ],
+            [
+              31.321289,
+              120.632122
+            ],
+            [
+              31.322018,
+              120.632049
+            ],
+            [
+              31.322079,
+              120.63204
+            ],
+            [
+              31.322079,
+              120.63204
+            ],
+            [
+              31.322187,
+              120.632036
+            ],
+            [
+              31.322187,
+              120.632036
+            ],
+            [
+              31.32253,
+              120.631997
+            ],
+            [
+              31.32253,
+              120.631997
+            ],
+            [
+              31.323273,
+              120.631918
+            ],
+            [
+              31.323273,
+              120.631918
+            ],
+            [
+              31.32349,
+              120.631914
+            ],
+            [
+              31.32349,
+              120.63191
+            ],
+            [
+              31.323472,
+              120.63161
+            ],
+            [
+              31.323472,
+              120.63161
+            ],
+            [
+              31.323424,
+              120.631315
+            ],
+            [
+              31.323381,
+              120.631163
+            ],
+            [
+              31.323381,
+              120.631163
+            ],
+            [
+              31.323316,
+              120.630881
+            ],
+            [
+              31.323316,
+              120.630881
+            ],
+            [
+              31.32322,
+              120.630482
+            ],
+            [
+              31.323216,
+              120.630477
+            ],
+            [
+              31.323351,
+              120.630447
+            ],
+            [
+              31.323351,
+              120.630447
+            ],
+            [
+              31.323485,
+              120.630417
+            ],
+            [
+              31.323542,
+              120.630382
+            ],
+            [
+              31.323611,
+              120.630326
+            ],
+            [
+              31.323611,
+              120.630326
+            ],
+            [
+              31.323763,
+              120.630191
+            ],
+            [
+              31.323793,
+              120.630143
+            ],
+            [
+              31.323802,
+              120.630004
+            ],
+            [
+              31.323789,
+              120.62997
+            ],
+            [
+              31.323789,
+              120.62997
+            ],
+            [
+              31.323785,
+              120.629883
+            ],
+            [
+              31.323785,
+              120.629683
+            ],
+            [
+              31.323811,
+              120.629583
+            ],
+            [
+              31.323811,
+              120.629583
+            ],
+            [
+              31.32385,
+              120.62954
+            ],
+            [
+              31.323845,
+              120.629536
+            ],
+            [
+              31.323676,
+              120.629184
+            ],
+            [
+              31.323676,
+              120.629184
+            ],
+            [
+              31.323646,
+              120.629132
+            ],
+            [
+              31.323641,
+              120.629128
+            ],
+            [
+              31.324054,
+              120.629023
+            ],
+            [
+              31.324054,
+              120.629015
+            ],
+            [
+              31.324002,
+              120.629115
+            ],
+            [
+              31.324002,
+              120.629184
+            ],
+            [
+              31.324002,
+              120.629184
+            ],
+            [
+              31.324045,
+              120.629284
+            ],
+            [
+              31.32411,
+              120.629297
+            ],
+            [
+              31.32411,
+              120.629297
+            ],
+            [
+              31.324197,
+              120.629297
+            ]
+          ],
+          "distance_meters": "1548",
+          "duration_seconds": "1238"
+        },
+        {
+          "to": "金鸡湖",
+          "day": 2,
+          "from": "拙政园",
+          "source": "高德步行路线",
+          "coordinates": [
+            [
+              31.324197,
+              120.629293
+            ],
+            [
+              31.324115,
+              120.629297
+            ],
+            [
+              31.324115,
+              120.629297
+            ],
+            [
+              31.324049,
+              120.629288
+            ],
+            [
+              31.324002,
+              120.629188
+            ],
+            [
+              31.324002,
+              120.629188
+            ],
+            [
+              31.324002,
+              120.629119
+            ],
+            [
+              31.324054,
+              120.629019
+            ],
+            [
+              31.324054,
+              120.629019
+            ],
+            [
+              31.323646,
+              120.629128
+            ],
+            [
+              31.323646,
+              120.629128
+            ],
+            [
+              31.323433,
+              120.62918
+            ],
+            [
+              31.323433,
+              120.62918
+            ],
+            [
+              31.323273,
+              120.629223
+            ],
+            [
+              31.323273,
+              120.629223
+            ],
+            [
+              31.323268,
+              120.629227
+            ],
+            [
+              31.322982,
+              120.629275
+            ],
+            [
+              31.322982,
+              120.629275
+            ],
+            [
+              31.322891,
+              120.629284
+            ],
+            [
+              31.322886,
+              120.629284
+            ],
+            [
+              31.323056,
+              120.629878
+            ],
+            [
+              31.323216,
+              120.630477
+            ],
+            [
+              31.323216,
+              120.630477
+            ],
+            [
+              31.323312,
+              120.630877
+            ],
+            [
+              31.323312,
+              120.630877
+            ],
+            [
+              31.323377,
+              120.631159
+            ],
+            [
+              31.323377,
+              120.631159
+            ],
+            [
+              31.32342,
+              120.631311
+            ],
+            [
+              31.323468,
+              120.631606
+            ],
+            [
+              31.323468,
+              120.631606
+            ],
+            [
+              31.32349,
+              120.63191
+            ],
+            [
+              31.32349,
+              120.63191
+            ],
+            [
+              31.32349,
+              120.632192
+            ],
+            [
+              31.323537,
+              120.632661
+            ],
+            [
+              31.323537,
+              120.632661
+            ],
+            [
+              31.32362,
+              120.633142
+            ],
+            [
+              31.32362,
+              120.633142
+            ],
+            [
+              31.323659,
+              120.63339
+            ],
+            [
+              31.323659,
+              120.63339
+            ],
+            [
+              31.323715,
+              120.633685
+            ],
+            [
+              31.323715,
+              120.633685
+            ],
+            [
+              31.323741,
+              120.633841
+            ],
+            [
+              31.323741,
+              120.633841
+            ],
+            [
+              31.323763,
+              120.63398
+            ],
+            [
+              31.323763,
+              120.63398
+            ],
+            [
+              31.323772,
+              120.634036
+            ],
+            [
+              31.323772,
+              120.634036
+            ],
+            [
+              31.323841,
+              120.63441
+            ],
+            [
+              31.323841,
+              120.63441
+            ],
+            [
+              31.323963,
+              120.634991
+            ],
+            [
+              31.323963,
+              120.634991
+            ],
+            [
+              31.324149,
+              120.636011
+            ],
+            [
+              31.324149,
+              120.636011
+            ],
+            [
+              31.324188,
+              120.63622
+            ],
+            [
+              31.324188,
+              120.63622
+            ],
+            [
+              31.324271,
+              120.636866
+            ],
+            [
+              31.324271,
+              120.636866
+            ],
+            [
+              31.324314,
+              120.637305
+            ],
+            [
+              31.324314,
+              120.637305
+            ],
+            [
+              31.324327,
+              120.637526
+            ],
+            [
+              31.324327,
+              120.637526
+            ],
+            [
+              31.32434,
+              120.637734
+            ],
+            [
+              31.32434,
+              120.637734
+            ],
+            [
+              31.324314,
+              120.637947
+            ],
+            [
+              31.324319,
+              120.638173
+            ],
+            [
+              31.324319,
+              120.638173
+            ],
+            [
+              31.324327,
+              120.638251
+            ],
+            [
+              31.324327,
+              120.638251
+            ],
+            [
+              31.324371,
+              120.638967
+            ],
+            [
+              31.324427,
+              120.639575
+            ],
+            [
+              31.324427,
+              120.639575
+            ],
+            [
+              31.324579,
+              120.64079
+            ],
+            [
+              31.324579,
+              120.64079
+            ],
+            [
+              31.324527,
+              120.640799
+            ],
+            [
+              31.324492,
+              120.640655
+            ],
+            [
+              31.324488,
+              120.640651
+            ],
+            [
+              31.323676,
+              120.64092
+            ],
+            [
+              31.323676,
+              120.64092
+            ],
+            [
+              31.323455,
+              120.640985
+            ],
+            [
+              31.323455,
+              120.640985
+            ],
+            [
+              31.323103,
+              120.641094
+            ],
+            [
+              31.323099,
+              120.641094
+            ],
+            [
+              31.323082,
+              120.640985
+            ],
+            [
+              31.323077,
+              120.640981
+            ],
+            [
+              31.322548,
+              120.641124
+            ],
+            [
+              31.322548,
+              120.641124
+            ],
+            [
+              31.322023,
+              120.641276
+            ],
+            [
+              31.321567,
+              120.641402
+            ],
+            [
+              31.321567,
+              120.641402
+            ],
+            [
+              31.321063,
+              120.641606
+            ],
+            [
+              31.320816,
+              120.641688
+            ],
+            [
+              31.320564,
+              120.641753
+            ],
+            [
+              31.32056,
+              120.641753
+            ],
+            [
+              31.320621,
+              120.642109
+            ],
+            [
+              31.320621,
+              120.642109
+            ],
+            [
+              31.320681,
+              120.642504
+            ],
+            [
+              31.320681,
+              120.642504
+            ],
+            [
+              31.320742,
+              120.642782
+            ],
+            [
+              31.320742,
+              120.642782
+            ],
+            [
+              31.320833,
+              120.643307
+            ],
+            [
+              31.320833,
+              120.643307
+            ],
+            [
+              31.320855,
+              120.643429
+            ],
+            [
+              31.320855,
+              120.643429
+            ],
+            [
+              31.320951,
+              120.644015
+            ],
+            [
+              31.320951,
+              120.644015
+            ],
+            [
+              31.321081,
+              120.644761
+            ],
+            [
+              31.321081,
+              120.644761
+            ],
+            [
+              31.321168,
+              120.6452
+            ],
+            [
+              31.321168,
+              120.6452
+            ],
+            [
+              31.321211,
+              120.645434
+            ],
+            [
+              31.321211,
+              120.645434
+            ],
+            [
+              31.321263,
+              120.645712
+            ],
+            [
+              31.321263,
+              120.645712
+            ],
+            [
+              31.321306,
+              120.645929
+            ],
+            [
+              31.321306,
+              120.645929
+            ],
+            [
+              31.321385,
+              120.64638
+            ],
+            [
+              31.321385,
+              120.64638
+            ],
+            [
+              31.321463,
+              120.646784
+            ],
+            [
+              31.321463,
+              120.646784
+            ],
+            [
+              31.321484,
+              120.646901
+            ],
+            [
+              31.321484,
+              120.646901
+            ],
+            [
+              31.321332,
+              120.646962
+            ],
+            [
+              31.321332,
+              120.646962
+            ],
+            [
+              31.32092,
+              120.647057
+            ],
+            [
+              31.32092,
+              120.647057
+            ],
+            [
+              31.320356,
+              120.647166
+            ],
+            [
+              31.320091,
+              120.647279
+            ],
+            [
+              31.319887,
+              120.647335
+            ],
+            [
+              31.319887,
+              120.647335
+            ],
+            [
+              31.319136,
+              120.647565
+            ],
+            [
+              31.318911,
+              120.647652
+            ],
+            [
+              31.318207,
+              120.647856
+            ],
+            [
+              31.317852,
+              120.647995
+            ],
+            [
+              31.317852,
+              120.647995
+            ],
+            [
+              31.317765,
+              120.64803
+            ],
+            [
+              31.31776,
+              120.64803
+            ],
+            [
+              31.317795,
+              120.648103
+            ],
+            [
+              31.317795,
+              120.648103
+            ],
+            [
+              31.317856,
+              120.648216
+            ],
+            [
+              31.317856,
+              120.648216
+            ],
+            [
+              31.317947,
+              120.648377
+            ],
+            [
+              31.317947,
+              120.648377
+            ],
+            [
+              31.317969,
+              120.648464
+            ],
+            [
+              31.317969,
+              120.648464
+            ],
+            [
+              31.317951,
+              120.648581
+            ],
+            [
+              31.318177,
+              120.650052
+            ],
+            [
+              31.318177,
+              120.650052
+            ],
+            [
+              31.318403,
+              120.651558
+            ],
+            [
+              31.318403,
+              120.651558
+            ],
+            [
+              31.318446,
+              120.651853
+            ],
+            [
+              31.31855,
+              120.652582
+            ],
+            [
+              31.31855,
+              120.652582
+            ],
+            [
+              31.318602,
+              120.652947
+            ],
+            [
+              31.318602,
+              120.652947
+            ],
+            [
+              31.318607,
+              120.652982
+            ],
+            [
+              31.318607,
+              120.652982
+            ],
+            [
+              31.318902,
+              120.655039
+            ],
+            [
+              31.318902,
+              120.655039
+            ],
+            [
+              31.318906,
+              120.655078
+            ],
+            [
+              31.318906,
+              120.655078
+            ],
+            [
+              31.31895,
+              120.65543
+            ],
+            [
+              31.31895,
+              120.65543
+            ],
+            [
+              31.318967,
+              120.655499
+            ],
+            [
+              31.318967,
+              120.655499
+            ],
+            [
+              31.319123,
+              120.656545
+            ],
+            [
+              31.319123,
+              120.656545
+            ],
+            [
+              31.319214,
+              120.657153
+            ],
+            [
+              31.319214,
+              120.657153
+            ],
+            [
+              31.319718,
+              120.660404
+            ],
+            [
+              31.319718,
+              120.660404
+            ],
+            [
+              31.31974,
+              120.660516
+            ],
+            [
+              31.31974,
+              120.660516
+            ],
+            [
+              31.31977,
+              120.660712
+            ],
+            [
+              31.31977,
+              120.660712
+            ],
+            [
+              31.319787,
+              120.660812
+            ],
+            [
+              31.319787,
+              120.660812
+            ],
+            [
+              31.319874,
+              120.661419
+            ],
+            [
+              31.319996,
+              120.662001
+            ],
+            [
+              31.32046,
+              120.664957
+            ],
+            [
+              31.32046,
+              120.664957
+            ],
+            [
+              31.320469,
+              120.665048
+            ],
+            [
+              31.320469,
+              120.665048
+            ],
+            [
+              31.32049,
+              120.665178
+            ],
+            [
+              31.32049,
+              120.665178
+            ],
+            [
+              31.320946,
+              120.668034
+            ],
+            [
+              31.321146,
+              120.669397
+            ],
+            [
+              31.321146,
+              120.669397
+            ],
+            [
+              31.321172,
+              120.669536
+            ],
+            [
+              31.321172,
+              120.669536
+            ],
+            [
+              31.321189,
+              120.669679
+            ],
+            [
+              31.321189,
+              120.669679
+            ],
+            [
+              31.321198,
+              120.669822
+            ],
+            [
+              31.321198,
+              120.669822
+            ],
+            [
+              31.321241,
+              120.669996
+            ],
+            [
+              31.321506,
+              120.671567
+            ],
+            [
+              31.321719,
+              120.673086
+            ],
+            [
+              31.321719,
+              120.673086
+            ],
+            [
+              31.321745,
+              120.67322
+            ],
+            [
+              31.321745,
+              120.67322
+            ],
+            [
+              31.321819,
+              120.673824
+            ],
+            [
+              31.32184,
+              120.673976
+            ],
+            [
+              31.322018,
+              120.675104
+            ],
+            [
+              31.322153,
+              120.676011
+            ],
+            [
+              31.3224,
+              120.677799
+            ],
+            [
+              31.3224,
+              120.677799
+            ],
+            [
+              31.322405,
+              120.677847
+            ],
+            [
+              31.322405,
+              120.677847
+            ],
+            [
+              31.322448,
+              120.678125
+            ],
+            [
+              31.322448,
+              120.678125
+            ],
+            [
+              31.322465,
+              120.678203
+            ],
+            [
+              31.322465,
+              120.678203
+            ],
+            [
+              31.3225,
+              120.678355
+            ],
+            [
+              31.323016,
+              120.681593
+            ],
+            [
+              31.323016,
+              120.681593
+            ],
+            [
+              31.323359,
+              120.683633
+            ],
+            [
+              31.323359,
+              120.683633
+            ],
+            [
+              31.323702,
+              120.685026
+            ],
+            [
+              31.324102,
+              120.686441
+            ],
+            [
+              31.324293,
+              120.687235
+            ],
+            [
+              31.324497,
+              120.68819
+            ],
+            [
+              31.324748,
+              120.689657
+            ],
+            [
+              31.324839,
+              120.690295
+            ],
+            [
+              31.325022,
+              120.692209
+            ],
+            [
+              31.325022,
+              120.692209
+            ],
+            [
+              31.325043,
+              120.692478
+            ],
+            [
+              31.325043,
+              120.692478
+            ],
+            [
+              31.325056,
+              120.692595
+            ],
+            [
+              31.325056,
+              120.692595
+            ],
+            [
+              31.325122,
+              120.69441
+            ],
+            [
+              31.325113,
+              120.695634
+            ],
+            [
+              31.325109,
+              120.695799
+            ],
+            [
+              31.325065,
+              120.696806
+            ],
+            [
+              31.325065,
+              120.69796
+            ],
+            [
+              31.325078,
+              120.698581
+            ],
+            [
+              31.325152,
+              120.699596
+            ],
+            [
+              31.325221,
+              120.700165
+            ],
+            [
+              31.325221,
+              120.700165
+            ],
+            [
+              31.324883,
+              120.700152
+            ],
+            [
+              31.324792,
+              120.700161
+            ],
+            [
+              31.32454,
+              120.700213
+            ],
+            [
+              31.324353,
+              120.700282
+            ],
+            [
+              31.324353,
+              120.700282
+            ],
+            [
+              31.324206,
+              120.700343
+            ],
+            [
+              31.323911,
+              120.70053
+            ],
+            [
+              31.323637,
+              120.700786
+            ],
+            [
+              31.323637,
+              120.700786
+            ],
+            [
+              31.323568,
+              120.700851
+            ],
+            [
+              31.323338,
+              120.701194
+            ],
+            [
+              31.323151,
+              120.701554
+            ],
+            [
+              31.323151,
+              120.701554
+            ],
+            [
+              31.32306,
+              120.701901
+            ],
+            [
+              31.323003,
+              120.702214
+            ],
+            [
+              31.322982,
+              120.702565
+            ],
+            [
+              31.323021,
+              120.703602
+            ],
+            [
+              31.323021,
+              120.703602
+            ],
+            [
+              31.32303,
+              120.703715
+            ],
+            [
+              31.32303,
+              120.703715
+            ],
+            [
+              31.323038,
+              120.703893
+            ],
+            [
+              31.323038,
+              120.703893
+            ],
+            [
+              31.323043,
+              120.704032
+            ],
+            [
+              31.323129,
+              120.704366
+            ],
+            [
+              31.323129,
+              120.704366
+            ],
+            [
+              31.323151,
+              120.704887
+            ],
+            [
+              31.323151,
+              120.704887
+            ],
+            [
+              31.323155,
+              120.704991
+            ],
+            [
+              31.323155,
+              120.704991
+            ],
+            [
+              31.323168,
+              120.705208
+            ],
+            [
+              31.323168,
+              120.705208
+            ],
+            [
+              31.323173,
+              120.705326
+            ],
+            [
+              31.323173,
+              120.705326
+            ],
+            [
+              31.323177,
+              120.705547
+            ],
+            [
+              31.323177,
+              120.705547
+            ],
+            [
+              31.323181,
+              120.705885
+            ],
+            [
+              31.323181,
+              120.705885
+            ],
+            [
+              31.32319,
+              120.706037
+            ],
+            [
+              31.32319,
+              120.706037
+            ],
+            [
+              31.323194,
+              120.706367
+            ],
+            [
+              31.323194,
+              120.706367
+            ],
+            [
+              31.323199,
+              120.706736
+            ],
+            [
+              31.323199,
+              120.706736
+            ],
+            [
+              31.323203,
+              120.707218
+            ],
+            [
+              31.323203,
+              120.707218
+            ],
+            [
+              31.323234,
+              120.70783
+            ],
+            [
+              31.323234,
+              120.70783
+            ],
+            [
+              31.323242,
+              120.708212
+            ],
+            [
+              31.323242,
+              120.708212
+            ],
+            [
+              31.323242,
+              120.708681
+            ],
+            [
+              31.323181,
+              120.708993
+            ],
+            [
+              31.323134,
+              120.709141
+            ],
+            [
+              31.323056,
+              120.709323
+            ],
+            [
+              31.32286,
+              120.709644
+            ],
+            [
+              31.32286,
+              120.709644
+            ],
+            [
+              31.322535,
+              120.710109
+            ],
+            [
+              31.322535,
+              120.710109
+            ],
+            [
+              31.322322,
+              120.710438
+            ],
+            [
+              31.322274,
+              120.710538
+            ],
+            [
+              31.322196,
+              120.710807
+            ],
+            [
+              31.322192,
+              120.710807
+            ],
+            [
+              31.322023,
+              120.710764
+            ],
+            [
+              31.321923,
+              120.710734
+            ],
+            [
+              31.321753,
+              120.710712
+            ],
+            [
+              31.321753,
+              120.710712
+            ],
+            [
+              31.321359,
+              120.71076
+            ],
+            [
+              31.321359,
+              120.71076
+            ],
+            [
+              31.32122,
+              120.710777
+            ],
+            [
+              31.32122,
+              120.710777
+            ],
+            [
+              31.320877,
+              120.710829
+            ],
+            [
+              31.320877,
+              120.710829
+            ],
+            [
+              31.320773,
+              120.710846
+            ],
+            [
+              31.320773,
+              120.710846
+            ],
+            [
+              31.31934,
+              120.711055
+            ],
+            [
+              31.31934,
+              120.711055
+            ],
+            [
+              31.318976,
+              120.711107
+            ],
+            [
+              31.318976,
+              120.711107
+            ],
+            [
+              31.318559,
+              120.711168
+            ],
+            [
+              31.318559,
+              120.711168
+            ],
+            [
+              31.318503,
+              120.711181
+            ],
+            [
+              31.318503,
+              120.711181
+            ],
+            [
+              31.317444,
+              120.711328
+            ],
+            [
+              31.317244,
+              120.711398
+            ],
+            [
+              31.317101,
+              120.711484
+            ],
+            [
+              31.316931,
+              120.711602
+            ],
+            [
+              31.316931,
+              120.711602
+            ],
+            [
+              31.31684,
+              120.711688
+            ],
+            [
+              31.31684,
+              120.711688
+            ],
+            [
+              31.316671,
+              120.711888
+            ],
+            [
+              31.316567,
+              120.712031
+            ],
+            [
+              31.31648,
+              120.712209
+            ],
+            [
+              31.31648,
+              120.712209
+            ],
+            [
+              31.316445,
+              120.712322
+            ],
+            [
+              31.316445,
+              120.712322
+            ],
+            [
+              31.316337,
+              120.71273
+            ],
+            [
+              31.316337,
+              120.71273
+            ],
+            [
+              31.316246,
+              120.713116
+            ],
+            [
+              31.316128,
+              120.713485
+            ],
+            [
+              31.315933,
+              120.713889
+            ],
+            [
+              31.315816,
+              120.714071
+            ],
+            [
+              31.315816,
+              120.714071
+            ],
+            [
+              31.315681,
+              120.71428
+            ],
+            [
+              31.31566,
+              120.714336
+            ],
+            [
+              31.31566,
+              120.714336
+            ],
+            [
+              31.315608,
+              120.71451
+            ],
+            [
+              31.315608,
+              120.71451
+            ],
+            [
+              31.315564,
+              120.714844
+            ],
+            [
+              31.315564,
+              120.714844
+            ],
+            [
+              31.315525,
+              120.715004
+            ],
+            [
+              31.315473,
+              120.715143
+            ],
+            [
+              31.31536,
+              120.715334
+            ],
+            [
+              31.31536,
+              120.715334
+            ],
+            [
+              31.315239,
+              120.715482
+            ],
+            [
+              31.315017,
+              120.715668
+            ],
+            [
+              31.314931,
+              120.715755
+            ],
+            [
+              31.314931,
+              120.715755
+            ],
+            [
+              31.314861,
+              120.715851
+            ],
+            [
+              31.314818,
+              120.715942
+            ],
+            [
+              31.314727,
+              120.716241
+            ],
+            [
+              31.314631,
+              120.716398
+            ],
+            [
+              31.314631,
+              120.716398
+            ],
+            [
+              31.314284,
+              120.716892
+            ],
+            [
+              31.31428,
+              120.716892
+            ],
+            [
+              31.314123,
+              120.716762
+            ],
+            [
+              31.314123,
+              120.716762
+            ],
+            [
+              31.314023,
+              120.716675
+            ],
+            [
+              31.314023,
+              120.716675
+            ],
+            [
+              31.313941,
+              120.71661
+            ],
+            [
+              31.313941,
+              120.71661
+            ],
+            [
+              31.313767,
+              120.716484
+            ],
+            [
+              31.313767,
+              120.716484
+            ],
+            [
+              31.313533,
+              120.71628
+            ],
+            [
+              31.313533,
+              120.71628
+            ],
+            [
+              31.313403,
+              120.716168
+            ],
+            [
+              31.313398,
+              120.716163
+            ],
+            [
+              31.313424,
+              120.716124
+            ],
+            [
+              31.313424,
+              120.71612
+            ],
+            [
+              31.313872,
+              120.715469
+            ],
+            [
+              31.313872,
+              120.715469
+            ],
+            [
+              31.313976,
+              120.715256
+            ],
+            [
+              31.313976,
+              120.715109
+            ],
+            [
+              31.313963,
+              120.715039
+            ],
+            [
+              31.312565,
+              120.71352
+            ],
+            [
+              31.31194,
+              120.712852
+            ],
+            [
+              31.311037,
+              120.712036
+            ],
+            [
+              31.309475,
+              120.710655
+            ],
+            [
+              31.308641,
+              120.709844
+            ],
+            [
+              31.307556,
+              120.708772
+            ],
+            [
+              31.30724,
+              120.708424
+            ],
+            [
+              31.30701,
+              120.708077
+            ],
+            [
+              31.306944,
+              120.707834
+            ],
+            [
+              31.306853,
+              120.707235
+            ],
+            [
+              31.306897,
+              120.706936
+            ],
+            [
+              31.306949,
+              120.706688
+            ],
+            [
+              31.307062,
+              120.70648
+            ],
+            [
+              31.307322,
+              120.70615
+            ],
+            [
+              31.307548,
+              120.705964
+            ],
+            [
+              31.307786,
+              120.705838
+            ],
+            [
+              31.307986,
+              120.705781
+            ],
+            [
+              31.308234,
+              120.705777
+            ],
+            [
+              31.308416,
+              120.705786
+            ],
+            [
+              31.308559,
+              120.705864
+            ],
+            [
+              31.308733,
+              120.706037
+            ],
+            [
+              31.308824,
+              120.706254
+            ],
+            [
+              31.308828,
+              120.706788
+            ],
+            [
+              31.308828,
+              120.706788
+            ],
+            [
+              31.308811,
+              120.706879
+            ],
+            [
+              31.308811,
+              120.706879
+            ],
+            [
+              31.308854,
+              120.706931
+            ],
+            [
+              31.308937,
+              120.707096
+            ],
+            [
+              31.308937,
+              120.707096
+            ],
+            [
+              31.308759,
+              120.707201
+            ],
+            [
+              31.308668,
+              120.707231
+            ],
+            [
+              31.308555,
+              120.707227
+            ],
+            [
+              31.308516,
+              120.707218
+            ],
+            [
+              31.308424,
+              120.707174
+            ],
+            [
+              31.308364,
+              120.707135
+            ],
+            [
+              31.308242,
+              120.706997
+            ],
+            [
+              31.308203,
+              120.706975
+            ],
+            [
+              31.308108,
+              120.706962
+            ],
+            [
+              31.308108,
+              120.706962
+            ],
+            [
+              31.308103,
+              120.706962
+            ],
+            [
+              31.30776,
+              120.707049
+            ],
+            [
+              31.307678,
+              120.707092
+            ],
+            [
+              31.307635,
+              120.707135
+            ],
+            [
+              31.307613,
+              120.707183
+            ],
+            [
+              31.307643,
+              120.707261
+            ],
+            [
+              31.307847,
+              120.707409
+            ],
+            [
+              31.307869,
+              120.707435
+            ],
+            [
+              31.307856,
+              120.707773
+            ],
+            [
+              31.307891,
+              120.70783
+            ],
+            [
+              31.307964,
+              120.707856
+            ],
+            [
+              31.308277,
+              120.707852
+            ],
+            [
+              31.308468,
+              120.707943
+            ],
+            [
+              31.308607,
+              120.708095
+            ],
+            [
+              31.308655,
+              120.708103
+            ],
+            [
+              31.308685,
+              120.708103
+            ],
+            [
+              31.308789,
+              120.708051
+            ],
+            [
+              31.308928,
+              120.707995
+            ],
+            [
+              31.309284,
+              120.707947
+            ],
+            [
+              31.309284,
+              120.707947
+            ],
+            [
+              31.309944,
+              120.707921
+            ],
+            [
+              31.309944,
+              120.707917
+            ],
+            [
+              31.309991,
+              120.707899
+            ],
+            [
+              31.310165,
+              120.707717
+            ],
+            [
+              31.31023,
+              120.707674
+            ],
+            [
+              31.31023,
+              120.707674
+            ],
+            [
+              31.310373,
+              120.70763
+            ],
+            [
+              31.310512,
+              120.707622
+            ],
+            [
+              31.310629,
+              120.707639
+            ],
+            [
+              31.310694,
+              120.707691
+            ],
+            [
+              31.310694,
+              120.707691
+            ],
+            [
+              31.310851,
+              120.707578
+            ],
+            [
+              31.310985,
+              120.707378
+            ],
+            [
+              31.31102,
+              120.707279
+            ],
+            [
+              31.311033,
+              120.707214
+            ],
+            [
+              31.31105,
+              120.707062
+            ],
+            [
+              31.311037,
+              120.70694
+            ],
+            [
+              31.310994,
+              120.706858
+            ],
+            [
+              31.310994,
+              120.706858
+            ],
+            [
+              31.310916,
+              120.706766
+            ],
+            [
+              31.310825,
+              120.706628
+            ],
+            [
+              31.310807,
+              120.706493
+            ],
+            [
+              31.310812,
+              120.705833
+            ],
+            [
+              31.31079,
+              120.705747
+            ],
+            [
+              31.310738,
+              120.705664
+            ],
+            [
+              31.310651,
+              120.705577
+            ],
+            [
+              31.310651,
+              120.705577
+            ],
+            [
+              31.31053,
+              120.705308
+            ],
+            [
+              31.310451,
+              120.705213
+            ],
+            [
+              31.310404,
+              120.705178
+            ],
+            [
+              31.310352,
+              120.705174
+            ],
+            [
+              31.310347,
+              120.705169
+            ],
+            [
+              31.310469,
+              120.704922
+            ],
+            [
+              31.310473,
+              120.704779
+            ],
+            [
+              31.310473,
+              120.704648
+            ],
+            [
+              31.310456,
+              120.704605
+            ],
+            [
+              31.310356,
+              120.704488
+            ],
+            [
+              31.310352,
+              120.704484
+            ],
+            [
+              31.31046,
+              120.704327
+            ],
+            [
+              31.310534,
+              120.704245
+            ],
+            [
+              31.310538,
+              120.704184
+            ],
+            [
+              31.310538,
+              120.704145
+            ],
+            [
+              31.310425,
+              120.704041
+            ],
+            [
+              31.310404,
+              120.70401
+            ],
+            [
+              31.310404,
+              120.70401
+            ]
+          ],
+          "distance_meters": "12815",
+          "duration_seconds": "10252"
+        }
+      ],
+      "status": "ok",
+      "sources": [
+        {
+          "id": "6394c57360842788a39cc35a",
+          "city": "苏州",
+          "title": "苏州景点资料 · Suzhou",
+          "license": "CC BY-SA 3.0",
+          "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+          "source_url": "https://en.wikivoyage.org/wiki/Suzhou"
+        },
+        {
+          "id": "2407de1fc03e3c67a2d12dd9",
+          "city": "苏州",
+          "title": "苏州景点资料 · Suzhou",
+          "license": "CC BY-SA 3.0",
+          "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+          "source_url": "https://en.wikivoyage.org/wiki/Suzhou"
+        },
+        {
+          "id": "ea4385e23a9e86efcd07c599",
+          "city": "苏州",
+          "title": "苏州景点资料 · Suzhou",
+          "license": "CC BY-SA 3.0",
+          "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+          "source_url": "https://en.wikivoyage.org/wiki/Suzhou"
+        },
+        {
+          "id": "bfb62112622245c2a37d107b",
+          "city": "苏州",
+          "title": "预约 - 苏州博物馆",
+          "license": "外部搜索摘要，仅供引用溯源",
+          "freshness": "联网搜索当次摘要；摘要可能过时或互相矛盾，出行前应核对景区官方公告。",
+          "source_url": "https://www.szmuseum.com/Other/ReservationTip"
+        },
+        {
+          "id": "9e8ad9babd7ea5f080297653",
+          "city": "苏州",
+          "title": "全部景点 - 君到苏州(文化旅游总入口)",
+          "license": "外部搜索摘要，仅供引用溯源",
+          "freshness": "联网搜索当次摘要；摘要可能过时或互相矛盾，出行前应核对景区官方公告。",
+          "source_url": "https://m.cloud.sz-trip.com/AttractionsTickets"
+        }
+      ],
+      "coordinate_system": "GCJ02"
+    },
+    "quality": {},
+    "created_at": "2026-10-30T17:22:25.738337+00:00",
+    "updated_at": "2026-10-30T17:22:25.738343+00:00",
+    "plan_data": {
+      "title": "苏州3日文化深度游",
+      "itinerary_list": [
+        {
+          "id": "17cfddd9-83d8-436f-a530-926e532ad5a3-d1",
+          "day": "第1天",
+          "itinerary": [
+            {
+              "time": "上午",
+              "scenic_spots_list": [
+                {
+                  "toponym": "乘高铁抵达苏州北站",
+                  "toponym_desc": "乘坐G986次高铁从上海出发，07:05发车，07:34抵达苏州北站，全程29分钟。建议提前30分钟抵达上海站候车，携带身份证原件，注意站台广播与电子屏信息，出站后可换乘地铁或打车前往酒店。",
+                  "toponym_image": "",
+                  "toponym_image_list": [],
+                  "longitude": null,
+                  "latitude": null
+                }
+              ]
+            },
+            {
+              "time": "中午",
+              "scenic_spots_list": [
+                {
+                  "toponym": "办理入住与休整",
+                  "toponym_desc": "抵达蔚徕酒店（苏州相城大道徐图港地铁站店），地址为元和街道春申湖中路235号。酒店距离苏州北站约8公里，建议打车约20分钟。入住时间通常为14:00后，早到可寄存行李并咨询前台周边餐饮及交通信息。",
+                  "toponym_image": "",
+                  "toponym_image_list": [],
+                  "longitude": null,
+                  "latitude": null
+                }
+              ]
+            },
+            {
+              "time": "下午",
+              "scenic_spots_list": [
+                {
+                  "toponym": "苏州博物馆本馆参观",
+                  "toponym_desc": "参观中国著名建筑大师贝聿铭设计的苏州博物馆本馆，融合传统苏式园林与现代建筑语言。馆内陈列吴地文物、明清书画及园林艺术珍品，主庭院假山与水景极具代表性。需提前7天实名预约，每日限流，16:00停止入馆。",
+                  "toponym_image": "",
+                  "toponym_image_list": [],
+                  "longitude": null,
+                  "latitude": null
+                }
+              ]
+            },
+            {
+              "time": "晚上",
+              "scenic_spots_list": [
+                {
+                  "toponym": "观前街本地风味晚餐",
+                  "toponym_desc": "前往观前街（GuanQian Street）体验苏州本地饮食文化，该街区虽主街商业化，但两侧支巷藏有老字号苏帮菜馆与小吃铺，如松鹤楼、得月楼分店或平江路延伸段的蟹粉小笼、响油鳝糊、糖粥等特色。注意雨天备伞，部分老店无明确英文菜单。",
+                  "toponym_image": "",
+                  "toponym_image_list": [],
+                  "longitude": null,
+                  "latitude": null
+                }
+              ]
+            }
+          ],
+          "route_polylines": []
+        },
+        {
+          "id": "17cfddd9-83d8-436f-a530-926e532ad5a3-d2",
+          "day": "第2天",
+          "itinerary": [
+            {
+              "time": "上午",
+              "scenic_spots_list": [
+                {
+                  "toponym": "平江路历史街区漫步",
+                  "toponym_desc": "平江路是苏州保存最完整的古街之一，沿河而建，白墙黛瓦、小桥流水，保留宋代以来街巷格局。可观赏评弹表演、手作苏扇、体验昆曲脸谱绘制，沿街茶馆提供碧螺春与船点。建议清晨人少时游览，感受原生态水乡生活气息。",
+                  "toponym_image": "http://store.is.autonavi.com/showpic/5b8d0cdca4174cc7a052a5e06035975f",
+                  "toponym_image_list": [
+                    "http://store.is.autonavi.com/showpic/5b8d0cdca4174cc7a052a5e06035975f"
+                  ],
+                  "longitude": 120.634556,
+                  "latitude": 31.313969
+                }
+              ]
+            },
+            {
+              "time": "中午",
+              "scenic_spots_list": [
+                {
+                  "toponym": "耦园午餐与园林导览",
+                  "toponym_desc": "在耦园附近苏帮菜馆用午餐，耦园为世界文化遗产，以‘爱情主题’著称，东西两园象征阴阳和谐，黄石假山与听橹楼临河而筑。午餐推荐清炒虾仁、樱桃肉等经典苏帮菜，口味偏甜鲜，注意询问是否含过敏原。",
+                  "toponym_image": "",
+                  "toponym_image_list": [],
+                  "longitude": null,
+                  "latitude": null
+                }
+              ]
+            },
+            {
+              "time": "下午",
+              "scenic_spots_list": [
+                {
+                  "toponym": "拙政园深度游览",
+                  "toponym_desc": "中国四大名园之首，明代王献臣所建，以水为中心布局，分东、中、西三部分。中部远香堂、小沧浪、十八曼陀罗花馆最具代表性。建议租用语音导览器（现场可租），重点理解借景、框景等造园手法，雨天可优先游览廊亭与厅堂。",
+                  "toponym_image": "http://store.is.autonavi.com/showpic/72263ebfa1dfbeefe0269400e6ba822f",
+                  "toponym_image_list": [
+                    "http://store.is.autonavi.com/showpic/72263ebfa1dfbeefe0269400e6ba822f"
+                  ],
+                  "longitude": 120.629211,
+                  "latitude": 31.324194
+                }
+              ]
+            },
+            {
+              "time": "晚上",
+              "scenic_spots_list": [
+                {
+                  "toponym": "金鸡湖夜景与音乐喷泉",
+                  "toponym_desc": "前往金鸡湖景区，欣赏现代苏州地标——东方之门、月光码头及李公堤。每晚19:30、20:30有音乐喷泉表演（视天气与公告开放），湖畔步道适合散步，亦可选湖滨咖啡馆小憩。注意11月2日多云转阴，气温12–21℃，建议带薄外套。",
+                  "toponym_image": "https://store.is.autonavi.com/showpic/f02581b862efe05c0a68effd75a50dc6",
+                  "toponym_image_list": [
+                    "https://store.is.autonavi.com/showpic/f02581b862efe05c0a68effd75a50dc6"
+                  ],
+                  "longitude": 120.698032,
+                  "latitude": 31.313482
+                }
+              ]
+            }
+          ],
+          "route_polylines": [
+            [
+              31.313976,
+              120.634514,
+              31.314397,
+              120.634423,
+              31.314397,
+              120.634418,
+              31.314284,
+              120.633711,
+              31.31428,
+              120.633707,
+              31.315017,
+              120.633507,
+              31.315017,
+              120.633507,
+              31.315599,
+              120.633381,
+              31.315599,
+              120.633381,
+              31.315829,
+              120.633338,
+              31.315829,
+              120.633338,
+              31.315929,
+              120.633316,
+              31.315929,
+              120.633316,
+              31.31628,
+              120.633199,
+              31.31628,
+              120.633199,
+              31.316458,
+              120.633168,
+              31.316458,
+              120.633168,
+              31.316506,
+              120.633155,
+              31.316623,
+              120.633095,
+              31.317079,
+              120.633021,
+              31.317174,
+              120.632969,
+              31.317244,
+              120.632951,
+              31.317244,
+              120.632951,
+              31.317812,
+              120.632812,
+              31.317812,
+              120.632812,
+              31.318099,
+              120.63273,
+              31.318099,
+              120.63273,
+              31.318533,
+              120.632648,
+              31.318533,
+              120.632648,
+              31.318924,
+              120.632582,
+              31.318924,
+              120.632582,
+              31.319705,
+              120.632383,
+              31.319705,
+              120.632383,
+              31.320039,
+              120.632309,
+              31.320039,
+              120.632309,
+              31.320599,
+              120.632201,
+              31.320599,
+              120.632201,
+              31.320768,
+              120.632179,
+              31.320768,
+              120.632179,
+              31.321289,
+              120.632122,
+              31.321289,
+              120.632122,
+              31.322018,
+              120.632049,
+              31.322079,
+              120.63204,
+              31.322079,
+              120.63204,
+              31.322187,
+              120.632036,
+              31.322187,
+              120.632036,
+              31.32253,
+              120.631997,
+              31.32253,
+              120.631997,
+              31.323273,
+              120.631918,
+              31.323273,
+              120.631918,
+              31.32349,
+              120.631914,
+              31.32349,
+              120.63191,
+              31.323472,
+              120.63161,
+              31.323472,
+              120.63161,
+              31.323424,
+              120.631315,
+              31.323381,
+              120.631163,
+              31.323381,
+              120.631163,
+              31.323316,
+              120.630881,
+              31.323316,
+              120.630881,
+              31.32322,
+              120.630482,
+              31.323216,
+              120.630477,
+              31.323351,
+              120.630447,
+              31.323351,
+              120.630447,
+              31.323485,
+              120.630417,
+              31.323542,
+              120.630382,
+              31.323611,
+              120.630326,
+              31.323611,
+              120.630326,
+              31.323763,
+              120.630191,
+              31.323793,
+              120.630143,
+              31.323802,
+              120.630004,
+              31.323789,
+              120.62997,
+              31.323789,
+              120.62997,
+              31.323785,
+              120.629883,
+              31.323785,
+              120.629683,
+              31.323811,
+              120.629583,
+              31.323811,
+              120.629583,
+              31.32385,
+              120.62954,
+              31.323845,
+              120.629536,
+              31.323676,
+              120.629184,
+              31.323676,
+              120.629184,
+              31.323646,
+              120.629132,
+              31.323641,
+              120.629128,
+              31.324054,
+              120.629023,
+              31.324054,
+              120.629015,
+              31.324002,
+              120.629115,
+              31.324002,
+              120.629184,
+              31.324002,
+              120.629184,
+              31.324045,
+              120.629284,
+              31.32411,
+              120.629297,
+              31.32411,
+              120.629297,
+              31.324197,
+              120.629297
+            ],
+            [
+              31.324197,
+              120.629293,
+              31.324115,
+              120.629297,
+              31.324115,
+              120.629297,
+              31.324049,
+              120.629288,
+              31.324002,
+              120.629188,
+              31.324002,
+              120.629188,
+              31.324002,
+              120.629119,
+              31.324054,
+              120.629019,
+              31.324054,
+              120.629019,
+              31.323646,
+              120.629128,
+              31.323646,
+              120.629128,
+              31.323433,
+              120.62918,
+              31.323433,
+              120.62918,
+              31.323273,
+              120.629223,
+              31.323273,
+              120.629223,
+              31.323268,
+              120.629227,
+              31.322982,
+              120.629275,
+              31.322982,
+              120.629275,
+              31.322891,
+              120.629284,
+              31.322886,
+              120.629284,
+              31.323056,
+              120.629878,
+              31.323216,
+              120.630477,
+              31.323216,
+              120.630477,
+              31.323312,
+              120.630877,
+              31.323312,
+              120.630877,
+              31.323377,
+              120.631159,
+              31.323377,
+              120.631159,
+              31.32342,
+              120.631311,
+              31.323468,
+              120.631606,
+              31.323468,
+              120.631606,
+              31.32349,
+              120.63191,
+              31.32349,
+              120.63191,
+              31.32349,
+              120.632192,
+              31.323537,
+              120.632661,
+              31.323537,
+              120.632661,
+              31.32362,
+              120.633142,
+              31.32362,
+              120.633142,
+              31.323659,
+              120.63339,
+              31.323659,
+              120.63339,
+              31.323715,
+              120.633685,
+              31.323715,
+              120.633685,
+              31.323741,
+              120.633841,
+              31.323741,
+              120.633841,
+              31.323763,
+              120.63398,
+              31.323763,
+              120.63398,
+              31.323772,
+              120.634036,
+              31.323772,
+              120.634036,
+              31.323841,
+              120.63441,
+              31.323841,
+              120.63441,
+              31.323963,
+              120.634991,
+              31.323963,
+              120.634991,
+              31.324149,
+              120.636011,
+              31.324149,
+              120.636011,
+              31.324188,
+              120.63622,
+              31.324188,
+              120.63622,
+              31.324271,
+              120.636866,
+              31.324271,
+              120.636866,
+              31.324314,
+              120.637305,
+              31.324314,
+              120.637305,
+              31.324327,
+              120.637526,
+              31.324327,
+              120.637526,
+              31.32434,
+              120.637734,
+              31.32434,
+              120.637734,
+              31.324314,
+              120.637947,
+              31.324319,
+              120.638173,
+              31.324319,
+              120.638173,
+              31.324327,
+              120.638251,
+              31.324327,
+              120.638251,
+              31.324371,
+              120.638967,
+              31.324427,
+              120.639575,
+              31.324427,
+              120.639575,
+              31.324579,
+              120.64079,
+              31.324579,
+              120.64079,
+              31.324527,
+              120.640799,
+              31.324492,
+              120.640655,
+              31.324488,
+              120.640651,
+              31.323676,
+              120.64092,
+              31.323676,
+              120.64092,
+              31.323455,
+              120.640985,
+              31.323455,
+              120.640985,
+              31.323103,
+              120.641094,
+              31.323099,
+              120.641094,
+              31.323082,
+              120.640985,
+              31.323077,
+              120.640981,
+              31.322548,
+              120.641124,
+              31.322548,
+              120.641124,
+              31.322023,
+              120.641276,
+              31.321567,
+              120.641402,
+              31.321567,
+              120.641402,
+              31.321063,
+              120.641606,
+              31.320816,
+              120.641688,
+              31.320564,
+              120.641753,
+              31.32056,
+              120.641753,
+              31.320621,
+              120.642109,
+              31.320621,
+              120.642109,
+              31.320681,
+              120.642504,
+              31.320681,
+              120.642504,
+              31.320742,
+              120.642782,
+              31.320742,
+              120.642782,
+              31.320833,
+              120.643307,
+              31.320833,
+              120.643307,
+              31.320855,
+              120.643429,
+              31.320855,
+              120.643429,
+              31.320951,
+              120.644015,
+              31.320951,
+              120.644015,
+              31.321081,
+              120.644761,
+              31.321081,
+              120.644761,
+              31.321168,
+              120.6452,
+              31.321168,
+              120.6452,
+              31.321211,
+              120.645434,
+              31.321211,
+              120.645434,
+              31.321263,
+              120.645712,
+              31.321263,
+              120.645712,
+              31.321306,
+              120.645929,
+              31.321306,
+              120.645929,
+              31.321385,
+              120.64638,
+              31.321385,
+              120.64638,
+              31.321463,
+              120.646784,
+              31.321463,
+              120.646784,
+              31.321484,
+              120.646901,
+              31.321484,
+              120.646901,
+              31.321332,
+              120.646962,
+              31.321332,
+              120.646962,
+              31.32092,
+              120.647057,
+              31.32092,
+              120.647057,
+              31.320356,
+              120.647166,
+              31.320091,
+              120.647279,
+              31.319887,
+              120.647335,
+              31.319887,
+              120.647335,
+              31.319136,
+              120.647565,
+              31.318911,
+              120.647652,
+              31.318207,
+              120.647856,
+              31.317852,
+              120.647995,
+              31.317852,
+              120.647995,
+              31.317765,
+              120.64803,
+              31.31776,
+              120.64803,
+              31.317795,
+              120.648103,
+              31.317795,
+              120.648103,
+              31.317856,
+              120.648216,
+              31.317856,
+              120.648216,
+              31.317947,
+              120.648377,
+              31.317947,
+              120.648377,
+              31.317969,
+              120.648464,
+              31.317969,
+              120.648464,
+              31.317951,
+              120.648581,
+              31.318177,
+              120.650052,
+              31.318177,
+              120.650052,
+              31.318403,
+              120.651558,
+              31.318403,
+              120.651558,
+              31.318446,
+              120.651853,
+              31.31855,
+              120.652582,
+              31.31855,
+              120.652582,
+              31.318602,
+              120.652947,
+              31.318602,
+              120.652947,
+              31.318607,
+              120.652982,
+              31.318607,
+              120.652982,
+              31.318902,
+              120.655039,
+              31.318902,
+              120.655039,
+              31.318906,
+              120.655078,
+              31.318906,
+              120.655078,
+              31.31895,
+              120.65543,
+              31.31895,
+              120.65543,
+              31.318967,
+              120.655499,
+              31.318967,
+              120.655499,
+              31.319123,
+              120.656545,
+              31.319123,
+              120.656545,
+              31.319214,
+              120.657153,
+              31.319214,
+              120.657153,
+              31.319718,
+              120.660404,
+              31.319718,
+              120.660404,
+              31.31974,
+              120.660516,
+              31.31974,
+              120.660516,
+              31.31977,
+              120.660712,
+              31.31977,
+              120.660712,
+              31.319787,
+              120.660812,
+              31.319787,
+              120.660812,
+              31.319874,
+              120.661419,
+              31.319996,
+              120.662001,
+              31.32046,
+              120.664957,
+              31.32046,
+              120.664957,
+              31.320469,
+              120.665048,
+              31.320469,
+              120.665048,
+              31.32049,
+              120.665178,
+              31.32049,
+              120.665178,
+              31.320946,
+              120.668034,
+              31.321146,
+              120.669397,
+              31.321146,
+              120.669397,
+              31.321172,
+              120.669536,
+              31.321172,
+              120.669536,
+              31.321189,
+              120.669679,
+              31.321189,
+              120.669679,
+              31.321198,
+              120.669822,
+              31.321198,
+              120.669822,
+              31.321241,
+              120.669996,
+              31.321506,
+              120.671567,
+              31.321719,
+              120.673086,
+              31.321719,
+              120.673086,
+              31.321745,
+              120.67322,
+              31.321745,
+              120.67322,
+              31.321819,
+              120.673824,
+              31.32184,
+              120.673976,
+              31.322018,
+              120.675104,
+              31.322153,
+              120.676011,
+              31.3224,
+              120.677799,
+              31.3224,
+              120.677799,
+              31.322405,
+              120.677847,
+              31.322405,
+              120.677847,
+              31.322448,
+              120.678125,
+              31.322448,
+              120.678125,
+              31.322465,
+              120.678203,
+              31.322465,
+              120.678203,
+              31.3225,
+              120.678355,
+              31.323016,
+              120.681593,
+              31.323016,
+              120.681593,
+              31.323359,
+              120.683633,
+              31.323359,
+              120.683633,
+              31.323702,
+              120.685026,
+              31.324102,
+              120.686441,
+              31.324293,
+              120.687235,
+              31.324497,
+              120.68819,
+              31.324748,
+              120.689657,
+              31.324839,
+              120.690295,
+              31.325022,
+              120.692209,
+              31.325022,
+              120.692209,
+              31.325043,
+              120.692478,
+              31.325043,
+              120.692478,
+              31.325056,
+              120.692595,
+              31.325056,
+              120.692595,
+              31.325122,
+              120.69441,
+              31.325113,
+              120.695634,
+              31.325109,
+              120.695799,
+              31.325065,
+              120.696806,
+              31.325065,
+              120.69796,
+              31.325078,
+              120.698581,
+              31.325152,
+              120.699596,
+              31.325221,
+              120.700165,
+              31.325221,
+              120.700165,
+              31.324883,
+              120.700152,
+              31.324792,
+              120.700161,
+              31.32454,
+              120.700213,
+              31.324353,
+              120.700282,
+              31.324353,
+              120.700282,
+              31.324206,
+              120.700343,
+              31.323911,
+              120.70053,
+              31.323637,
+              120.700786,
+              31.323637,
+              120.700786,
+              31.323568,
+              120.700851,
+              31.323338,
+              120.701194,
+              31.323151,
+              120.701554,
+              31.323151,
+              120.701554,
+              31.32306,
+              120.701901,
+              31.323003,
+              120.702214,
+              31.322982,
+              120.702565,
+              31.323021,
+              120.703602,
+              31.323021,
+              120.703602,
+              31.32303,
+              120.703715,
+              31.32303,
+              120.703715,
+              31.323038,
+              120.703893,
+              31.323038,
+              120.703893,
+              31.323043,
+              120.704032,
+              31.323129,
+              120.704366,
+              31.323129,
+              120.704366,
+              31.323151,
+              120.704887,
+              31.323151,
+              120.704887,
+              31.323155,
+              120.704991,
+              31.323155,
+              120.704991,
+              31.323168,
+              120.705208,
+              31.323168,
+              120.705208,
+              31.323173,
+              120.705326,
+              31.323173,
+              120.705326,
+              31.323177,
+              120.705547,
+              31.323177,
+              120.705547,
+              31.323181,
+              120.705885,
+              31.323181,
+              120.705885,
+              31.32319,
+              120.706037,
+              31.32319,
+              120.706037,
+              31.323194,
+              120.706367,
+              31.323194,
+              120.706367,
+              31.323199,
+              120.706736,
+              31.323199,
+              120.706736,
+              31.323203,
+              120.707218,
+              31.323203,
+              120.707218,
+              31.323234,
+              120.70783,
+              31.323234,
+              120.70783,
+              31.323242,
+              120.708212,
+              31.323242,
+              120.708212,
+              31.323242,
+              120.708681,
+              31.323181,
+              120.708993,
+              31.323134,
+              120.709141,
+              31.323056,
+              120.709323,
+              31.32286,
+              120.709644,
+              31.32286,
+              120.709644,
+              31.322535,
+              120.710109,
+              31.322535,
+              120.710109,
+              31.322322,
+              120.710438,
+              31.322274,
+              120.710538,
+              31.322196,
+              120.710807,
+              31.322192,
+              120.710807,
+              31.322023,
+              120.710764,
+              31.321923,
+              120.710734,
+              31.321753,
+              120.710712,
+              31.321753,
+              120.710712,
+              31.321359,
+              120.71076,
+              31.321359,
+              120.71076,
+              31.32122,
+              120.710777,
+              31.32122,
+              120.710777,
+              31.320877,
+              120.710829,
+              31.320877,
+              120.710829,
+              31.320773,
+              120.710846,
+              31.320773,
+              120.710846,
+              31.31934,
+              120.711055,
+              31.31934,
+              120.711055,
+              31.318976,
+              120.711107,
+              31.318976,
+              120.711107,
+              31.318559,
+              120.711168,
+              31.318559,
+              120.711168,
+              31.318503,
+              120.711181,
+              31.318503,
+              120.711181,
+              31.317444,
+              120.711328,
+              31.317244,
+              120.711398,
+              31.317101,
+              120.711484,
+              31.316931,
+              120.711602,
+              31.316931,
+              120.711602,
+              31.31684,
+              120.711688,
+              31.31684,
+              120.711688,
+              31.316671,
+              120.711888,
+              31.316567,
+              120.712031,
+              31.31648,
+              120.712209,
+              31.31648,
+              120.712209,
+              31.316445,
+              120.712322,
+              31.316445,
+              120.712322,
+              31.316337,
+              120.71273,
+              31.316337,
+              120.71273,
+              31.316246,
+              120.713116,
+              31.316128,
+              120.713485,
+              31.315933,
+              120.713889,
+              31.315816,
+              120.714071,
+              31.315816,
+              120.714071,
+              31.315681,
+              120.71428,
+              31.31566,
+              120.714336,
+              31.31566,
+              120.714336,
+              31.315608,
+              120.71451,
+              31.315608,
+              120.71451,
+              31.315564,
+              120.714844,
+              31.315564,
+              120.714844,
+              31.315525,
+              120.715004,
+              31.315473,
+              120.715143,
+              31.31536,
+              120.715334,
+              31.31536,
+              120.715334,
+              31.315239,
+              120.715482,
+              31.315017,
+              120.715668,
+              31.314931,
+              120.715755,
+              31.314931,
+              120.715755,
+              31.314861,
+              120.715851,
+              31.314818,
+              120.715942,
+              31.314727,
+              120.716241,
+              31.314631,
+              120.716398,
+              31.314631,
+              120.716398,
+              31.314284,
+              120.716892,
+              31.31428,
+              120.716892,
+              31.314123,
+              120.716762,
+              31.314123,
+              120.716762,
+              31.314023,
+              120.716675,
+              31.314023,
+              120.716675,
+              31.313941,
+              120.71661,
+              31.313941,
+              120.71661,
+              31.313767,
+              120.716484,
+              31.313767,
+              120.716484,
+              31.313533,
+              120.71628,
+              31.313533,
+              120.71628,
+              31.313403,
+              120.716168,
+              31.313398,
+              120.716163,
+              31.313424,
+              120.716124,
+              31.313424,
+              120.71612,
+              31.313872,
+              120.715469,
+              31.313872,
+              120.715469,
+              31.313976,
+              120.715256,
+              31.313976,
+              120.715109,
+              31.313963,
+              120.715039,
+              31.312565,
+              120.71352,
+              31.31194,
+              120.712852,
+              31.311037,
+              120.712036,
+              31.309475,
+              120.710655,
+              31.308641,
+              120.709844,
+              31.307556,
+              120.708772,
+              31.30724,
+              120.708424,
+              31.30701,
+              120.708077,
+              31.306944,
+              120.707834,
+              31.306853,
+              120.707235,
+              31.306897,
+              120.706936,
+              31.306949,
+              120.706688,
+              31.307062,
+              120.70648,
+              31.307322,
+              120.70615,
+              31.307548,
+              120.705964,
+              31.307786,
+              120.705838,
+              31.307986,
+              120.705781,
+              31.308234,
+              120.705777,
+              31.308416,
+              120.705786,
+              31.308559,
+              120.705864,
+              31.308733,
+              120.706037,
+              31.308824,
+              120.706254,
+              31.308828,
+              120.706788,
+              31.308828,
+              120.706788,
+              31.308811,
+              120.706879,
+              31.308811,
+              120.706879,
+              31.308854,
+              120.706931,
+              31.308937,
+              120.707096,
+              31.308937,
+              120.707096,
+              31.308759,
+              120.707201,
+              31.308668,
+              120.707231,
+              31.308555,
+              120.707227,
+              31.308516,
+              120.707218,
+              31.308424,
+              120.707174,
+              31.308364,
+              120.707135,
+              31.308242,
+              120.706997,
+              31.308203,
+              120.706975,
+              31.308108,
+              120.706962,
+              31.308108,
+              120.706962,
+              31.308103,
+              120.706962,
+              31.30776,
+              120.707049,
+              31.307678,
+              120.707092,
+              31.307635,
+              120.707135,
+              31.307613,
+              120.707183,
+              31.307643,
+              120.707261,
+              31.307847,
+              120.707409,
+              31.307869,
+              120.707435,
+              31.307856,
+              120.707773,
+              31.307891,
+              120.70783,
+              31.307964,
+              120.707856,
+              31.308277,
+              120.707852,
+              31.308468,
+              120.707943,
+              31.308607,
+              120.708095,
+              31.308655,
+              120.708103,
+              31.308685,
+              120.708103,
+              31.308789,
+              120.708051,
+              31.308928,
+              120.707995,
+              31.309284,
+              120.707947,
+              31.309284,
+              120.707947,
+              31.309944,
+              120.707921,
+              31.309944,
+              120.707917,
+              31.309991,
+              120.707899,
+              31.310165,
+              120.707717,
+              31.31023,
+              120.707674,
+              31.31023,
+              120.707674,
+              31.310373,
+              120.70763,
+              31.310512,
+              120.707622,
+              31.310629,
+              120.707639,
+              31.310694,
+              120.707691,
+              31.310694,
+              120.707691,
+              31.310851,
+              120.707578,
+              31.310985,
+              120.707378,
+              31.31102,
+              120.707279,
+              31.311033,
+              120.707214,
+              31.31105,
+              120.707062,
+              31.311037,
+              120.70694,
+              31.310994,
+              120.706858,
+              31.310994,
+              120.706858,
+              31.310916,
+              120.706766,
+              31.310825,
+              120.706628,
+              31.310807,
+              120.706493,
+              31.310812,
+              120.705833,
+              31.31079,
+              120.705747,
+              31.310738,
+              120.705664,
+              31.310651,
+              120.705577,
+              31.310651,
+              120.705577,
+              31.31053,
+              120.705308,
+              31.310451,
+              120.705213,
+              31.310404,
+              120.705178,
+              31.310352,
+              120.705174,
+              31.310347,
+              120.705169,
+              31.310469,
+              120.704922,
+              31.310473,
+              120.704779,
+              31.310473,
+              120.704648,
+              31.310456,
+              120.704605,
+              31.310356,
+              120.704488,
+              31.310352,
+              120.704484,
+              31.31046,
+              120.704327,
+              31.310534,
+              120.704245,
+              31.310538,
+              120.704184,
+              31.310538,
+              120.704145,
+              31.310425,
+              120.704041,
+              31.310404,
+              120.70401,
+              31.310404,
+              120.70401
+            ]
+          ]
+        },
+        {
+          "id": "17cfddd9-83d8-436f-a530-926e532ad5a3-d3",
+          "day": "第3天",
+          "itinerary": [
+            {
+              "time": "上午",
+              "scenic_spots_list": [
+                {
+                  "toponym": "虎丘景区游览",
+                  "toponym_desc": "虎丘被誉为‘吴中第一名胜’，拥有2500年历史，核心景点包括斜塔（云岩寺塔）、剑池、千人石与真娘墓。剑池传为吴王阖闾墓所在，秋季枫叶初染，登高可俯瞰苏州古城风貌。建议预留2.5小时，穿舒适步行鞋，部分台阶较陡。",
+                  "toponym_image": "",
+                  "toponym_image_list": [],
+                  "longitude": null,
+                  "latitude": null
+                }
+              ]
+            },
+            {
+              "time": "中午",
+              "scenic_spots_list": [
+                {
+                  "toponym": "山塘街午餐与运河游船",
+                  "toponym_desc": "在山塘街品尝地道苏式面点，如奥灶面、焖肉面或酒酿圆子，随后乘坐古运河游船（约30分钟），从阊门码头出发，经白居易诗中‘七里山塘’，欣赏两岸粉墙黛瓦与拱桥倒影，了解唐宋以来漕运与商业发展脉络。",
+                  "toponym_image": "",
+                  "toponym_image_list": [],
+                  "longitude": null,
+                  "latitude": null
+                }
+              ]
+            },
+            {
+              "time": "下午",
+              "scenic_spots_list": [
+                {
+                  "toponym": "退房与自由活动",
+                  "toponym_desc": "返回蔚徕酒店办理退房手续（最迟12:00前），寄存行李后可于酒店周边短暂停留，购买碧螺春茶叶、苏绣小件或松子糖等伴手礼。酒店邻近徐图港地铁站，方便前往苏州北站。",
+                  "toponym_image": "",
+                  "toponym_image_list": [],
+                  "longitude": null,
+                  "latitude": null
+                }
+              ]
+            },
+            {
+              "time": "晚上",
+              "scenic_spots_list": [
+                {
+                  "toponym": "乘高铁返程上海",
+                  "toponym_desc": "乘坐G735次高铁从苏州北站返回上海虹桥站，17:15发车，17:38抵达，全程23分钟。建议16:00前抵达苏州北站，预留安检与候车时间；车票已确认为二等座，凭身份证直接刷证进站。",
+                  "toponym_image": "",
+                  "toponym_image_list": [],
+                  "longitude": null,
+                  "latitude": null
+                }
+              ]
+            }
+          ],
+          "route_polylines": []
+        }
+      ]
+    },
+    "is_current": true
+  },
+  "display_matches_saved": true,
+  "seconds": 74.60522816609591
+}

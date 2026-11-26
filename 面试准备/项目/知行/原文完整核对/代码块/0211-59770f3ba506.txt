@@ -1,0 +1,10 @@
+"""train_mode_requested / multi_leg_train 演示：表单勾了高铁、且至少一段城际交通，才走"代码供卡片"（纯逻辑，无需密钥）"""
+from app.capabilities.train_multi_segment.train_flow import multi_leg_train, train_mode_requested
+
+def state(transport: list, dest: str, picked: str = "") -> dict:
+    return {"user_requirement": {"departure_city": "北京", "departure_date": "2026-10-01", "travel_days": 4,
+                                 "transport_types": transport}, "selected_destination": dest, "selected_transport": picked}
+
+for name, st in {"勾了高铁、两座城": state(["高铁"], "天津、上海"), "勾了航班          ": state(["flight"], "上海"),
+                 "已选定 train     ": state([], "上海", picked="train"), "高铁但本地游      ": state(["高铁"], "北京")}.items():
+    print(f"{name} → 走高铁路线 {train_mode_requested(st)!s:5} | 代码供卡片 {multi_leg_train(st)}")

@@ -1,0 +1,2 @@
+New-Item -ItemType Directory -Force -Path quarry/ingest/parsers | Out-Null
+New-Item -ItemType File -Force -Path quarry/ingest/__init__.py | Out-Null

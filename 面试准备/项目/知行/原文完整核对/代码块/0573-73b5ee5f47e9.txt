@@ -1,0 +1,9 @@
+"""_render_flight_table 演示：航班清单归代码，只渲染解析出来的真实航班（纯函数，无需密钥）"""
+from app.services.chat_stream_executor import _render_flight_table
+
+rows = [   # 第 9 章 parse_flight_rows 的产物形态
+    {"code": "MF8101", "dep": "07:30", "arr": "09:05", "airline": "厦门航空", "ontime": "92%", "terminal": "T2", "stop": ""},
+    {"code": "ZH9502", "dep": "12:10", "arr": "13:50", "airline": "深圳航空", "ontime": "", "terminal": "", "stop": "赣州"},
+]
+print(_render_flight_table(rows))
+print(repr(_render_flight_table([])))    # 没数据 → 空串，由调用方决定兜底，绝不编造

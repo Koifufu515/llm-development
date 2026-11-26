@@ -1,0 +1,21 @@
+{
+  "city": "上海",
+  "title": "上海景点资料 · Shanghai/Songjiang",
+  "source_url": "https://en.wikivoyage.org/wiki/Shanghai/Songjiang",
+  "text": "资料城市：上海。本文是历史开放景点资料，不提供实时开放时间或价格；出行前需要核实。\n\nXilin pagoda\nA 46.5m high pagoda with temple located in the western part of Songjiang near the intersection of Zhongshanzhong Lu and Xilin Bei Lu (中山中路, 西林北路). The original pagoda dates back to 1440 and is within a Buddhist temple, which has been renovated recently.\n\nZhenjiao mosque\nThe oldest Islamic building in Shanghai, dating back to the Yuan dynasty (A.D. 1341) merges Chinese with Arabic architecture. A large scale repair 1985 restored much of the original beauty and in modern times 300 Muslims worship here.\n\nFangta pagoda\n'''Square pagoda''' in the south-east of Songjiang. From the Xilin pagoda central city area to the Fangta pagoda its a 30 minute walk to the east on Zhongshan Lu. The garden is a newly renovated and includes a large peaceful area and some 600 year old trees. A few \"attractions\", such electric boats, auto scooter for kids and the like at the outer places of the park disturb the peaceful overall impression. Still, the park and pagoda is highly recommended and a peaceful refreshment from crowded Shanghai city.\n\nSongjiang Mosque\nBuilt in the 14th century, the oldest mosque in Shanghai that is still active.\n\nThames Town\nA very convincing English-style village, complete with pubs, cobbled lanes and a church. Only residents are missing, and empty stores and streets make the place looks like a film set even though it is very popular with newly-weds taking photos of themselves in front of the massive church. Definitely worth a visit for its eerie, unlikely atmosphere.\n\nSheshan\nAt the top of the hill sit a large catholic basilica and an observatory.",
+  "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+  "license": "CC BY-SA 3.0",
+  "attribution": "Wikivoyage contributors; https://en.wikivoyage.org/wiki/Shanghai/Songjiang",
+  "sha256": "e2e409c07d2d18f64f8c2ff6d8b9402fcad9475bf90622068e87a25af8075441",
+  "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+  "poi_count": 6,
+  "source_dataset": "https://github.com/wikivoyage/wikivoyage.github.io",
+  "excluded_fields": [
+    "price",
+    "hours",
+    "phone",
+    "email",
+    "hotel",
+    "restaurant"
+  ]
+}

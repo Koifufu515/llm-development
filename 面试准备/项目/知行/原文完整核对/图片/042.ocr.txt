@@ -1,0 +1,32 @@
+第四章•多步骤 Agent设计
+单 Agent+ Middleware 架构
+一个 create_agent 编译的图
+Middleware
+读
+state.current_step： "requirement_collection"
+V 从 StepConfig 里挑：
+\
+该步的 Prompt
+该步的工具列表
+该步的前置依赖校验
+专属角色人设与指令
+只暴露当前步所需
+requires 字段检查
+- V注入给 Model
+1
+Model 节点
+M
+LLM +该步工具
+1
+（调工具 or结束）
+1
+ToolNode
+T
+4工具用 Command
+更新
+current_step
+只有一个 Agent，8步之间只靠
+State.current_step
+切换
+-Middleware 每轮读取当前步骤，动态装配 Prompt 和工具，
+无需 Router，无需多图编译。

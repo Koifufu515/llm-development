@@ -1,0 +1,35 @@
+"""execute_turn 直调演示：同一个 thread 先规划一轮、再闲聊一句，看帧和返回的四元组（需 PG + DashScope + MCP 全套）"""
+import asyncio
+import uuid
+
+from app.core.checkpointer import checkpointer_lifespan
+from app.core.event_stream import EventStream
+from app.core.store import store_lifespan
+from app.services.chat_stream_executor import execute_turn
+
+async def one_turn(conv_id: str, content: str, planning: bool):
+    stream = EventStream()
+
+    async def consume():
+        async for ev in stream:
+            print(f"  [{ev['role']}] {str(ev['content'])[:60]!r}")
+
+    task = asyncio.create_task(consume())
+    text, step, committed, body = await execute_turn("demo-user", conv_id, content, planning, stream)
+    stream.close()
+    await task
+    print(f"  → 返回：{len(text)} 字 | state_step={step} | committed={committed} | body={'有' if body else '无'}")
+
+async def main():
+    async with checkpointer_lifespan(), store_lifespan():   # 与 main.py 的 lifespan 同一套初始化
+        conv_id = str(uuid.uuid4())                          # thread_id：状态机的短期记忆按它隔离
+        print("① 规划请求（planning=True）")
+        await one_turn(conv_id, "我想下周六从福州出发去杭州玩3天，2个大人，人均预算3000", True)
+        print("② 闲聊（planning=False）")
+        await one_turn(conv_id, "你好呀", False)
+
+if __name__ == "__main__":
+    import selectors
+
+    # 原来：asyncio.run(main())
+    asyncio.run(main(), loop_factory=lambda: asyncio.SelectorEventLoop(selectors.SelectSelector()))

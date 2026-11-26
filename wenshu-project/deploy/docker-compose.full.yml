@@ -1,0 +1,91 @@
+name: wenshu-full
+x-app: &app
+  image: wenshu-backend:faithful
+  build: {context: ../backend}
+  env_file: ../.local/config/compose.env
+  environment: &environment
+    MONGODB_URI: ${FULL_MONGODB_URI}
+    MONGODB_DB: wenshu_full
+    REDIS_ADDR: ${FULL_REDIS_ADDR}
+    STORAGE_MODE: mongo
+    VECTOR_BACKEND: milvus
+    MILVUS_URI: http://milvus:19530
+    MILVUS_COLLECTION: wenshu_full_qwen_1024
+    PRIVACY_REDACTION_FILE: /run/privacy/privacy-map.json
+    TESSDATA_PREFIX: /usr/share/tesseract-ocr/5/tessdata
+    PI_AGENT_URL: http://pi-agent:8100
+    UPLOAD_STORAGE_DIR: /data/uploads
+  volumes:
+    - uploads:/data/uploads
+    - ../.local/private:/run/privacy:ro
+  networks: [default,vectors]
+  restart: unless-stopped
+  depends_on:
+    mongodb: {condition: service_healthy}
+    redis: {condition: service_healthy}
+services:
+  mongodb:
+    image: mongo:8.0
+    command: [mongod,--bind_ip_all]
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: wenshu
+      MONGO_INITDB_ROOT_PASSWORD: ${FULL_MONGO_PASSWORD}
+    ports: ['127.0.0.1:27028:27017']
+    volumes: [mongo_data:/data/db]
+    healthcheck:
+      test: [CMD-SHELL, 'mongosh --quiet -u wenshu -p "$$MONGO_INITDB_ROOT_PASSWORD" --authenticationDatabase admin --eval "db.runCommand({ping:1}).ok"']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  redis:
+    image: redis:7-alpine
+    environment: {REDIS_PASSWORD: "${FULL_REDIS_PASSWORD}"}
+    command: [sh,-c,'exec redis-server --appendonly yes --requirepass "$$REDIS_PASSWORD"']
+    volumes: [redis_data:/data]
+    healthcheck:
+      test: [CMD-SHELL, 'redis-cli --no-auth-warning -a "$$REDIS_PASSWORD" ping']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  backend:
+    <<: *app
+    ports: ['127.0.0.1:18000:8000']
+    healthcheck:
+      test: [CMD,python,-c,"import urllib.request;urllib.request.urlopen('http://localhost:8000/readyz')"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+  worker:
+    <<: *app
+    command: [python,-m,scripts.async_worker]
+  pi-agent:
+    image: wenshu-pi:faithful
+    build: {context: ../services/pi-agent}
+    env_file: ../.local/config/compose.env
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8100
+      BACKEND_URL: http://backend:8000
+      PRIVACY_REDACTION_FILE: /run/privacy/privacy-map.json
+    volumes: ['../.local/private:/run/privacy:ro']
+    healthcheck:
+      test: [CMD,node,-e,"fetch('http://localhost:8100/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 20
+  web:
+    image: wenshu-web:faithful
+    build:
+      context: ../web
+      args: {BACKEND_URL: 'http://backend:8000'}
+    environment: {BACKEND_URL: 'http://backend:8000', PORT: '3000', HOSTNAME: '0.0.0.0'}
+    ports: ['127.0.0.1:13000:3000']
+    depends_on: [backend]
+volumes:
+  mongo_data:
+  redis_data:
+  uploads:
+networks:
+  vectors:
+    external: true
+    name: wenshu-vectors_default

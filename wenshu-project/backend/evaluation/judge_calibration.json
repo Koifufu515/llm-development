@@ -1,0 +1,58 @@
+[
+  {
+    "id": "correct_citation",
+    "query": "电子信息带几份？",
+    "evidence": "[来源1] 电子信息纸质报告一式5份。\n[来源2] 机械纸质报告一式6份。",
+    "answer": "电子信息一式5份。[来源1]",
+    "expected_passed": true
+  },
+  {
+    "id": "wrong_citation",
+    "query": "电子信息带几份？",
+    "evidence": "[来源1] 电子信息纸质报告一式5份。\n[来源2] 机械纸质报告一式6份。",
+    "answer": "电子信息一式5份。[来源2]",
+    "expected_passed": false
+  },
+  {
+    "id": "wrong_value",
+    "query": "机械带几份？",
+    "evidence": "[来源1] 机械一式6份。",
+    "answer": "机械一式5份。[来源1]",
+    "expected_passed": false
+  },
+  {
+    "id": "unsupported_extra",
+    "query": "可以涉水拍照吗？",
+    "evidence": "[来源1] 禁止涉水拍照。",
+    "answer": "禁止涉水拍照，但学校给每人赔偿500元。[来源1]",
+    "expected_passed": false
+  },
+  {
+    "id": "proper_refusal",
+    "query": "博士最低录取分数线多少？",
+    "evidence": "[来源1] 硕士开题报告不少于5000字。",
+    "answer": "根据现有制度文件未找到博士招生最低录取分数线的明确规定。",
+    "expected_passed": true
+  },
+  {
+    "id": "question_scope",
+    "query": "机械开题是哪天？",
+    "evidence": "[来源1] 机械7月21日开题，实践小结每4周提交一次。",
+    "answer": "机械7月21日开题。[来源1]",
+    "expected_passed": true
+  },
+  {
+    "id": "table_index",
+    "query": "什么时候签到？",
+    "evidence": "[来源1] 序号 | 时间 | 内容\n2 | 答辩当天 | 12点50前到达教室签到。\n[来源2] 文献至少30篇。",
+    "answer": "12点50前签到。[来源2]",
+    "expected_passed": false
+  },
+  {
+    "id": "boundary",
+    "query": "能在寄存期间临时取物吗？",
+    "evidence": "[来源1] 寄存期间行李无法取出。",
+    "answer": "可以提前预约后临时取出。[来源1]",
+    "expected_passed": false
+  }
+]

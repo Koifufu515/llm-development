@@ -1,0 +1,1 @@
+{"file": "/Users/jarvis/Desktop/大模型开发/quarry-rag/交付/Quarry-RAG-完整复现-20261107.zip", "files": 904, "bytes": 3006521, "sha256": "9cf7412aa5be8247bcc8b9380f5704183e72157b527e270c48cf46ae80b6562d", "crc_ok": true, "configured_secret_matches": 0, "code_sha256": "18ace50d4f9d7b2ea591abee433b2b4bc7f4d2141caa2b335483fc91fdb4ae1b"}

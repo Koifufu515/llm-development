@@ -1,0 +1,5 @@
+"""duration_to_minutes 演示：历时 HH:mm → 分钟，给自动模式排序用；解析不了就排到最后（纯函数，无需密钥）"""
+from app.capabilities.base.common import duration_to_minutes
+
+for text in ["04:52", "00:35", "15:25", "", "约4小时"]:
+    print(f"{text!r:8} → {duration_to_minutes(text)}")

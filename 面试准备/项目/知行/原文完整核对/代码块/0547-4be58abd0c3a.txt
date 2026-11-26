@@ -1,0 +1,7 @@
+try:
+    ...                                                      # 六段正常流程，末尾推 done(200)
+except Exception as e:
+    stream.push(make_event(ROLE_ERROR, str(e)))              # 先告诉前端出错了
+    stream.push(make_event(ROLE_DONE, "finish", code=500))   # 再明确"本回合结束"
+finally:
+    stream.close()                                           # 走哪条路都会执行

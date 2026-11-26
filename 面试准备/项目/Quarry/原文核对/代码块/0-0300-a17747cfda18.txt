@@ -1,0 +1,5 @@
+@dataclass
+class Hit:
+    ...
+    sparse_score: float | None           # ts_rank_cd，调试用
+    rerank_score: float | None = None    # ← 第五章新增：重排分，没重排过就是 None

@@ -1,0 +1,67 @@
+_ACCOMMODATION_LABELS: dict[str, str] = {
+    "star_hotel": "星级酒店",
+    "economy_hotel": "经济酒店",
+    "hostel": "特色民宿",
+    "youth_hostel": "青年旅社",
+}
+
+# 各档位常见连锁品牌，仅作参考，不含实时门店与价格
+_COMMON_HOTELS: dict[str, list[str]] = {
+    "economy_hotel": ["如家", "汉庭", "7 天", "锦江之星", "格林豪泰", "莫泰"],
+    "star_hotel": ["希尔顿", "万豪", "洲际", "香格里拉", "凯悦", "雅高"],
+    "hostel": ["花间堂", "途家民宿", "小猪民宿", "美团民宿"],
+    "youth_hostel": ["国际青年旅舍（YHA）", "万里路青年旅舍", "如家青旅"],
+}
+
+def _match_hotel_choice(text: str, requirement: dict | None) -> str:
+    """识别用户住宿选择，命中品牌名/委托语返回选中品牌，未命中返回空串
+    两类命中：①品牌清单内品牌；②委托语。委托语自动选用户已勾选档位的首个品牌
+    """
+    raw = (text or "").strip()
+    if not raw:
+        return ""
+    for brand in [b for v in _COMMON_HOTELS.values() for b in v]:
+        if brand.replace(" ", "") in raw.replace(" ", ""):
+            return brand
+    if detect_intent(raw).hotel_accept:
+        selected = list((requirement or {}).get("accommodation_types") or [])
+        types = [t for t in selected if t in _COMMON_HOTELS] or ["economy_hotel"]
+        return _COMMON_HOTELS[types[0]][0]
+    return ""
+
+def _build_hotel_fallback(requirement: dict | None, auto_confirm: bool = False,
+                          chosen: str = "") -> str:
+    """酒店服务不可用时生成降级推荐文案，同时用于流式推送与落库
+    自动确认模式不再向用户索要品牌，直接按档位安排；普通模式等待用户选择
+    """
+    selected = list((requirement or {}).get("accommodation_types") or [])
+    types = [t for t in selected if t in _COMMON_HOTELS] or list(_COMMON_HOTELS)
+    lines = [
+        "\n\n---\n",
+        "⚠️ 实时酒店报价服务当前不可用，无法展示具体门店与实时价格。\n",
+        "以下按您的住宿类型，列出该档位市面上常见的连锁品牌，供您参考（具体门店与价格到店/官网再定）：\n",
+    ]
+    for t in types:
+        lines.append(f"- **{_ACCOMMODATION_LABELS[t]}**：{'、'.join(_COMMON_HOTELS[t])}\n")
+    if chosen:
+        lines.append(
+            f"✅ 已记录您的住宿选择：**{chosen}**（具体门店与实时价格到店择优选同档位），"
+            f"并继续规划后续行程。"
+        )
+    elif auto_confirm:
+        lines.append("已按以上该档位的常见品牌为您直接安排住宿（不指定具体门店与实时价格，到店择优选同档位），并继续规划后续行程。")
+    else:
+        lines.append("请回复您想选的品牌（或「按推荐来」），我将按该档位继续安排行程。")
+    return "".join(lines)
+
+async def _has_hotel_search_tool() -> bool:
+    """校验是否存在酒店查询工具；异常时返回False，进入降级兜底"""
+    try:
+        from app.tools.mcp_tools import get_hotel_tools
+        tools = await get_hotel_tools()
+    except Exception:
+        return False
+    return any(
+        any(hint in getattr(t, "name", "").lower() for hint in ("searchhotels", "find-hotels"))
+        for t in tools
+    )

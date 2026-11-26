@@ -1,0 +1,6 @@
+    # ---------- 评测（第七章） ----------
+    judge_model: str = ""
+    judge_base_url: str = ""
+    judge_api_key: SecretStr = SecretStr("")       # 留空 = 复用 LLM_API_KEY
+    judge_timeout_s: float = Field(default=60.0, gt=0)
+    eval_top_k: int = Field(default=5, ge=1, le=20)

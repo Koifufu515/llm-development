@@ -1,0 +1,8 @@
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 0001, core tables
+INFO  [alembic.runtime.migration] Running upgrade 0001 -> 0002
+INFO  [alembic.runtime.migration] Running upgrade 0002 -> 0003
+INFO  [alembic.runtime.migration] Running upgrade 0003 -> 0004
+INFO  [alembic.runtime.migration] Running upgrade 0004 -> 0005
+INFO  [alembic.runtime.migration] Running upgrade 0005 -> 0006

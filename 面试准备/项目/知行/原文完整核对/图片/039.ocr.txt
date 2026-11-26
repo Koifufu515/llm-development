@@ -1,0 +1,16 @@
+Tool Command 更新 State 流程
+LLM 决定要调工具
+LLM 决定要调 record_requirement_tool
+LangGraph 注入运行时
+2
+LangGraph 把参数+Runtime 传进来
+工具执行业务逻辑
+3
+工具做业务（校验、变换、算派生值）
+4•返回Command（update=｛...｝
+"messages"：［ToolMessage （...）］ #追加消息
+"user_requirement"： ｛.•｝# 更新 State
+“current_step"："destination_•.." # 更新流程标记
+（
+LangGraph 合并进 State
+合并后重新回到 Model 节点，开始下一轮

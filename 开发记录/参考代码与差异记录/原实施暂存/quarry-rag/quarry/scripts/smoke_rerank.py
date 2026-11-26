@@ -1,0 +1,1 @@
+../../../../../../quarry-rag/quarry/scripts/smoke_rerank.py

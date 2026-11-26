@@ -1,0 +1,8 @@
+"""_history_has_itinerary 演示：本回合的 AI 消息里出现过"第N天 / Day N"，就算已经展示过逐日行程（纯函数，无需密钥）"""
+from langchain_core.messages import AIMessage, HumanMessage
+
+from app.core.middleware import _history_has_itinerary
+
+print(_history_has_itinerary([HumanMessage("帮我排行程"), AIMessage("第一天：上午游西湖，下午灵隐寺……")]))
+print(_history_has_itinerary([HumanMessage("帮我排行程"), AIMessage("Day 2: 苏州园林")]))
+print(_history_has_itinerary([HumanMessage("第一天去哪好？"), AIMessage("建议先确认交通方式")]))

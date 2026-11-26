@@ -1,0 +1,28 @@
+def _build_legs(departure: str, cities: list[str]) -> list[tuple[str, str]]:
+    """构造交通路段序列：出发→首城、城际转场、末城→出发地返程。
+
+    剔除"自身段"——当目的地含出发地（如出发+目的地都是北京）时，
+    route 会出现"北京→北京"，本无意义；剔除后行程正确保留北京本地游玩。
+    节点列表 = 出发地 + 目的地序列 + 出发地（返程），相邻节点城市不同才生成段：
+    北京→上海 = 2 段、北京→天津→上海 = 3 段、北京→北京 = 0 段；出发地缺失时不补返程
+    """
+    if not cities:
+        return []
+    route = [departure] + cities + ([departure] if departure else [])
+    # ★ 相邻打包成段；a == b 的自身段跳过；末尾补回的出发地让最后一段成为返程
+    return [(a, b) for a, b in zip(route[:-1], route[1:]) if a != b]
+
+def _stay_nights(days: int, stations: int) -> list[int]:
+    """住宿晚数分配：**出发地固定 1 晚**，剩余天数在其后城市均分（前几城多担 1 天）
+
+ （用户规格）：酒店段覆盖全部节点城市（含出发地）。天数不够分时
+    每站仍按 1 晚顺排（不替用户删城），与 _stay_windows 原口径一致
+    """
+    if stations <= 0 or days <= 0:
+        return []
+    if stations == 1:
+        return [days]
+    rest = max(1, days - 1)
+    per, rem = divmod(rest, stations - 1)
+    # ★ 首站 1 晚，剩下的天数在后面几站均分，除不尽的前几站多担
+    return [1] + [per + (1 if i < rem else 0) for i in range(stations - 1)]

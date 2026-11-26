@@ -1,0 +1,10 @@
+"""check_current_progress 演示：全文件唯一返回字符串的工具——只读、不改状态（直接调真实工具，纯逻辑，无需密钥）"""
+from langchain.tools import ToolRuntime
+
+from app.tools.state_transition import check_current_progress
+
+state = {"messages": [], "current_step": "accommodation_planning", "selected_destination": "天津、上海",
+         "selected_transport": "train",
+         "user_requirement": {"departure_date": "2026-10-01", "travel_days": 4, "adult_count": 2, "children_count": 0}}
+rt = ToolRuntime(state=state, context=None, config={}, stream_writer=None, tool_call_id="call_1", store=None)
+print(check_current_progress.func(runtime=rt))

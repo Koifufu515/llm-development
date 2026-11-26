@@ -1,0 +1,561 @@
+
+
+===== block 447 c6bbfdabf8b1 lines 1-107 source 知行旅行助手-v2#447 =====
+"""
+Handoffs 主 Agent
+一个 Agent + 中间件实现整个旅行规划流程
+"""
+from app.tools.mcp_tools import get_all_mcp_tools, apply_train_arg_guard
+from app.tools.router_query import query_destination_info
+# 并行改造：query_transport_options（mock 链路）已废弃移除，交通步骤改用真实 MCP 工具
+from langchain.agents import create_agent
+from app.config import settings
+from app.core.state import TravelState
+from app.core.checkpointer import get_checkpointer
+from app.core.store import get_store
+from langchain_openai import ChatOpenAI
+from app.core.middleware import create_step_config_middleware
+from app.tools.memory_tools import (
+    update_travel_style_tool,
+    update_dietary_restriction_tool,
+    update_food_preference_tool,
+    add_travel_record_tool,
+    update_accommodation_preference_tool
+)
+from app.tools.state_transition import (
+    record_requirement_tool,
+    select_destination_tool,
+    select_transport_tool,
+    select_accommodation_tool,
+    select_food_tool,
+    select_accommodation_food_tool,  # 一站式住宿+餐饮确认（总工具表注册，防 unknown tool names）
+    generate_itinerary_tool,
+    submit_itinerary_body_tool,  # 结构化行程提交（正文由代码渲染）
+    summarize_budget_tool,
+    # generate_order_tool,  # 订单环节已按需求移除：无需订单，行程清单即最终产物
+    ALL_ROLLBACK_TOOLS
+)
+from app.utils.logger import app_logger
+
+# ============== 初始化 LLM ==============
+
+def get_llm():
+    """获取配置好的千问模型"""
+    return ChatOpenAI(
+        model=settings.qwen_model_name,
+        base_url=settings.qwen_base_url,
+        api_key=settings.dashscope_api_key,
+        temperature=settings.qwen_temperature,
+        max_tokens=settings.qwen_max_tokens,
+        streaming=True
+    )
+
+# ============== 创建 Agent ==============
+
+async def create_travel_agent():
+    """
+    创建 Handoffs 旅行规划 Agent
+
+    返回：
+        编译好的 Agent（可直接调用）
+    """
+
+    app_logger.info("创建 Travel Agent（带审批）...")
+
+    llm = get_llm()
+    all_mcp_tools = await get_all_mcp_tools()
+    # 注册侧同源套用车票守卫。ToolNode 是按名到本注册表取对象执行的，
+    # 若此处不套，middleware 注入侧的 _ArgGuardTool 会被绕过（参数兜底/结果裁剪全失效）
+    all_mcp_tools = apply_train_arg_guard(all_mcp_tools)
+
+    # 异步创建中间件（预加载配置）
+    step_config_middleware = await create_step_config_middleware()
+
+    all_tools = [
+        record_requirement_tool,
+        select_destination_tool,
+        select_transport_tool,
+        select_accommodation_tool,
+        select_food_tool,
+        select_accommodation_food_tool,  # 一站式住宿+餐饮确认
+        generate_itinerary_tool,
+        submit_itinerary_body_tool,
+        summarize_budget_tool,
+        # generate_order_tool,  # 订单环节已移除，总工具表不再注册
+        *ALL_ROLLBACK_TOOLS,
+        query_destination_info,
+        # 并行改造：query_transport_options 已从总表移除（mock 假数据链路废弃）
+        *all_mcp_tools,
+        update_travel_style_tool,
+        update_dietary_restriction_tool,
+        update_food_preference_tool,
+        add_travel_record_tool,
+        update_accommodation_preference_tool
+    ]
+
+    # 使用 PostgreSQL 持久化 Checkpointer（替代 MemorySaver）
+    checkpointer = await get_checkpointer()
+    store = await get_store()
+    agent = create_agent(
+        model=llm,
+        tools=all_tools,
+        state_schema=TravelState,
+        middleware=[step_config_middleware],
+        checkpointer=checkpointer,
+        store=store
+    )
+
+    app_logger.info("✅ Travel Agent（带审批）创建完成")
+
+    return agent
+
+
+===== block 448 0dc095de480e lines 1-19 source 知行旅行助手-v2#448 =====
+"""装配演示：真正构建一次 Agent，数一数它挂了多少把工具（需 PG + MCP；与 main.py 的 lifespan 同一套初始化）"""
+import asyncio
+
+from app.agents.handoffs.travel_agent import create_travel_agent
+from app.core.checkpointer import checkpointer_lifespan
+from app.core.store import store_lifespan
+from app.tools.state_transition import ALL_ROLLBACK_TOOLS
+
+async def main():
+    async with checkpointer_lifespan(), store_lifespan():
+        agent = await create_travel_agent()
+        tools = agent.get_graph().nodes.get("tools")
+        names = sorted(getattr(tools, "data", None).tools_by_name) if tools is not None else []
+        print(f"Agent 共挂 {len(names)} 把工具；本章回退组 {len(ALL_ROLLBACK_TOOLS)} 把都在其中：",
+              all(t.name in names for t in ALL_ROLLBACK_TOOLS))
+        print([n for n in names if n.endswith("_tool") or n.startswith("go_back")])
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+
+===== block 449 c3b51e2e780f lines 1-11 source 知行旅行助手-v2#450 =====
+✅ 1 需求收集：天数以表单为准（4），推进到目的地步
+✅ 2 目的地：写入完整多城串，应有 2 段交通
+✅ 3 交通：段级循环两轮，最后一段才推进到住宿步
+✅ 4 住宿：逐城循环两轮，推进到餐饮步
+✅ 5 餐饮：推进到行程步
+✅ 6 行程：只交 1 天，代码归一补齐到 4 天，并就地补算预算
+✅ 7 预算：参数覆盖并写回需求真源，流程停在终点
+✅ 8 回退守卫：用户没说要换，快捷回退被拒，数据原样保留
+✅ 9 回退：目的地及之后全部清空（含两个游标），需求保留
+
+🎉 第 11 章综合冒烟全部通过
+
+
+===== block 450 62c379d2abbf lines 1-2 source 知行旅行助手-v2#451 =====
+引子：会话建好了，但要"聊"就得流式
+用户在旅行 Agent 里敲下一句："我想 10 月 1 号从福州出发去杭州玩 3 天，帮我规划一下。"后台要跑完一整套活儿：
+
+
+===== block 451 62c0036541ba lines 1-3 source 知行旅行助手-v2#452 =====
+async def gen():
+    async for token in llm.astream(prompt):
+        yield f"data: {token}\n\n"   # 只有 token，没有任何元数据
+
+
+===== block 452 fedeaa7269ec lines 1-7 source 知行旅行助手-v2#453 =====
+async def gen():
+    async for chunk in agent_stream:
+        if chunk.type == "text":
+            yield f"data: {json.dumps({'kind': 'text', 'content': chunk.text})}\n\n"
+        elif chunk.type == "card":
+            yield f"data: {json.dumps({'kind': 'card', 'payload': chunk.payload})}\n\n"
+        # 每多一种消息，就再加一个 elif……
+
+
+===== block 453 ed606f5f19e2 lines 1-11 source 知行旅行助手-v2#454 =====
+@router.post("/messages")
+async def send_message(req, user, db):
+    queue = asyncio.Queue()
+    asyncio.create_task(agent_producer(queue))   # 后台生产
+    async def gen():
+        while True:
+            item = await queue.get()
+            if item == "__END__":                # 用哪个值代表"结束"？
+                break
+            yield f"data: {json.dumps(item)}\n\n"
+    return StreamingResponse(gen(), media_type="text/event-stream")
+
+
+===== block 454 968229ae2fbf lines 1-36 source 知行旅行助手-v2#456 =====
+"""
+事件流管道
+
+单轮对话的事件管道：Agent 核心是生产者，WS/SSE 适配器是消费者。
+生产顺序即契约顺序：skills → assistant* → itinerary_plans → done → (close)。
+流生命周期 = 单条消息生命周期（SSE 场景下流关闭即响应结束）。
+"""
+import asyncio
+from app.core.events import AgentEvent
+
+_CLOSE = object()  # ★ 流结束哨兵（独一份的裸对象，只用 is 比较，绝不和业务数据撞车）
+
+class EventStream:
+    """生产者 push / 消费者 async for 的异步队列包装"""
+
+    def __init__(self) -> None:
+        self._queue: asyncio.Queue = asyncio.Queue()
+
+    def push(self, event: AgentEvent) -> None:
+        """投递事件。用 put_nowait（同步），便于在流式回调等同步上下文中调用。"""
+        # ★ 同步投递：无界队列永远不满，put_nowait 永不阻塞，同步回调里也能直接调
+        self._queue.put_nowait(event)
+
+    def close(self) -> None:
+        """生产者宣告投递结束，消费者迭代随之终止"""
+        self._queue.put_nowait(_CLOSE)
+
+    def __aiter__(self) -> "EventStream":
+        return self
+
+    async def __anext__(self) -> AgentEvent:
+        item = await self._queue.get()
+        # ★ 用 is 判身份而不是 == 判值：业务数据再像也不会被误判成"收摊"
+        if item is _CLOSE:
+            raise StopAsyncIteration
+        return item
+
+
+===== block 455 448bc48f0f46 lines 1-5 source 知行旅行助手-v2#457 =====
+async def push(self, event):          # ❌ 直觉写法：await put，调用方全链路都得是 async
+    await self._queue.put(event)
+
+def push(self, event) -> None:        # ✅ 实际写法：同步投递，任何上下文都能直接调
+    self._queue.put_nowait(event)
+
+
+===== block 456 d077b01093c8 lines 1-3 source 知行旅行助手-v2#458 =====
+item = None      → 业务偶尔真推了个 None，消费者提前退出
+item == "__END__" → 理论上也可能是一条真实数据
+item is _CLOSE   → 除了 close() 放进去的那一个，谁都不是它
+
+
+===== block 457 f27c7880176b lines 1-27 source 知行旅行助手-v2#459 =====
+"""EventStream 生产者-消费者演示：生产者边算边 push，消费者 async for 边收边打印（纯逻辑，无需密钥）"""
+import asyncio
+import time
+
+from app.core.event_stream import EventStream
+from app.core.events import make_event, ROLE_ASSISTANT, ROLE_DONE
+
+T0 = time.perf_counter()
+
+async def producer(stream: EventStream):
+    """测试驱动：模拟后台编排每隔 0.5s 产出一段内容"""
+    for word in ["已识别出发地：福州", "正在查询高铁…", "Day 1 西湖"]:
+        await asyncio.sleep(0.5)
+        print(f"[{time.perf_counter() - T0:.1f}s] 生产者 push：{word}")
+        stream.push(make_event(ROLE_ASSISTANT, word))   # 同步 push：放进队列就走
+    stream.push(make_event(ROLE_DONE, "finish", code=200))
+    stream.close()                                      # 宣告结束 → 消费者的 async for 随之退出
+
+async def main():
+    stream = EventStream()
+    asyncio.create_task(producer(stream))               # 生产者丢到后台跑
+    async for event in stream:                          # 消费者：来一帧收一帧
+        print(f"[{time.perf_counter() - T0:.1f}s] 消费者收到：{event}")
+    print(f"[{time.perf_counter() - T0:.1f}s] async for 正常结束（收到了 close 哨兵）")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+
+===== block 458 338162da9e0d lines 1-8 source 知行旅行助手-v2#460 =====
+[0.5s] 生产者 push：已识别出发地：福州
+[0.5s] 消费者收到：{'role': 'assistant', 'content': '已识别出发地：福州', 'code': None}
+[1.0s] 生产者 push：正在查询高铁…
+[1.0s] 消费者收到：{'role': 'assistant', 'content': '正在查询高铁…', 'code': None}
+[1.5s] 生产者 push：Day 1 西湖
+[1.5s] 消费者收到：{'role': 'assistant', 'content': 'Day 1 西湖', 'code': None}
+[1.5s] 消费者收到：{'role': 'done', 'content': 'finish', 'code': 200}
+[1.5s] async for 正常结束（收到了 close 哨兵）
+
+
+===== block 459 e2e543161185 lines 1-25 source 知行旅行助手-v2#461 =====
+"""忘了 close 会怎样：同样推一帧，不 close 的那个流，消费者永远等下去（纯逻辑，无需密钥）"""
+import asyncio
+
+from app.core.event_stream import EventStream
+from app.core.events import make_event, ROLE_ASSISTANT
+
+async def drain(stream: EventStream) -> list:
+    """测试驱动：消费者，一直读到 StopAsyncIteration 为止"""
+    return [event async for event in stream]
+
+async def main():
+    ok = EventStream()
+    ok.push(make_event(ROLE_ASSISTANT, "推一帧"))
+    ok.close()                                           # ✅ 记得 close
+    print("有 close →", await asyncio.wait_for(drain(ok), timeout=2))
+
+    bad = EventStream()
+    bad.push(make_event(ROLE_ASSISTANT, "推一帧"))       # ❌ 忘了 close
+    try:
+        await asyncio.wait_for(drain(bad), timeout=2)
+    except asyncio.TimeoutError:
+        print("没 close → 等了 2 秒还没结束：消费者卡在 await queue.get()，前端就是一直转圈圈")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+
+===== block 460 cfde46f72cce lines 1-2 source 知行旅行助手-v2#462 =====
+有 close → [{'role': 'assistant', 'content': '推一帧', 'code': None}]
+没 close → 等了 2 秒还没结束：消费者卡在 await queue.get()，前端就是一直转圈圈
+
+
+===== block 461 3a4ddc05c3e9 lines 1-29 source 知行旅行助手-v2#463 =====
+"""
+统一响应格式与全局异常处理
+
+前端 request.ts 依赖两点契约：
+1. 响应体统一为 {code, msg, data} 包裹结构
+2. HTTP 状态码语义：200 成功 / 401 跳登录 / 422 参数不对 / 5xx 服务器错误
+"""
+from typing import Any
+import json
+from pydantic import BaseModel
+from fastapi import Request, Response
+from fastapi.responses import JSONResponse
+from app.utils.logger import app_logger
+
+class ResponseModel(BaseModel):
+    code: int = 200
+    msg: Any = "SUCCESS"
+    data: Any | None = None
+
+def response(
+    data: Any = None,  # 返回的数据，可以是任意类型，也可以是 None
+    code: int = 200,  # → 状态码，默认 200
+    msg: Any = "SUCCESS",  # 提示消息，默认 "SUCCESS"
+) -> JSONResponse:
+    """统一响应包装：{code, msg, data}，HTTP 状态码与 code 同步"""
+    if data is None:
+        data = []
+    payload = ResponseModel(code=code, msg=msg, data=data).model_dump()
+    return JSONResponse(content=payload, status_code=code)
+
+
+===== block 462 371aa772e10e lines 1-15 source 知行旅行助手-v2#464 =====
+# 全局异常处理中间件：兜底 500，避免裸堆栈直接抛给前端
+async def global_http_middleware(request: Request, call_next: Any):
+    try:
+        return await call_next(request)
+    except Exception as err:
+        app_logger.exception("全局异常")  # ★ 完整堆栈进日志，是排查线上问题的唯一依据
+        return response([], 500, str(err))  # ★ 只把一句摘要返回前端，不暴露文件路径/内部函数
+
+# 全局参数校验器：RequestValidationError → 422 + 中文提示
+async def validation_exception_handler(request: Request, exc: Any):
+    first_error = exc.errors()[0]
+    msg = first_error["msg"]
+    if msg in ["Field required"]:
+        msg = "缺少必传参数"
+    return response(code=422, msg=msg, data=[])
+
+
+===== block 463 68ace1babf09 lines 1-62 source 知行旅行助手-v2#465 =====
+# 全局响应包裹中间件：让所有 JSON 接口统一返回 {code, msg, data}
+_SKIP_PATH_PREFIXES = ("/docs", "/redoc", "/openapi.json", "/image")
+
+def _rebuild(resp: Any, raw: bytes) -> Response:
+    """用已消费的原始字节重建响应
+
+    body_iterator 只能消费一次，取过字节后不能再返回原 resp（流已空）；
+    这里保头重建，content-length 交给框架按新 body 重算。
+    """
+    headers = {k: v for k, v in resp.headers.items() if k.lower() != "content-length"}
+    return Response(content=raw, status_code=resp.status_code, headers=headers)
+
+def _wrapped(resp: Any, data: Any, code: int, msg: Any) -> JSONResponse:
+    """构造 {code,msg,data} 包裹响应，并原样保留原响应头
+
+    必须保留原响应头：CORSMiddleware 注册在最内层，`Access-Control-Allow-Origin`
+    等 CORS 头是挂在原响应上的；若直接 `response()` 新建响应会把这些头丢掉，
+    浏览器随即报 "No 'Access-Control-Allow-Origin' header is present"。
+    """
+    if data is None:
+        data = []
+    payload = ResponseModel(code=code, msg=msg, data=data).model_dump()
+    headers = {k: v for k, v in resp.headers.items() if k.lower() != "content-length"}
+    return JSONResponse(content=payload, status_code=code, headers=headers)
+
+async def wrap_json_middleware(request: Request, call_next: Any):
+    """统一响应契约：把 JSON 响应包成 {code,msg,data}（前端 request() 只解一层）
+
+    三条跳过规则（命中任意一条即原样放行）：
+    1. 路径属文档/静态资源（/docs、/redoc、/openapi.json、/image）
+    2. content-type 非 application/json（SSE 的 text/event-stream、文件流）
+    3. 响应体已是 {code,msg,data}（response() 产出，避免二次包裹）
+    错误响应：HTTP 状态码保持原值（401 仍 401、422 仍 422），msg 取 FastAPI 的 detail
+    """
+    # ★ 规则 1：文档/静态资源路径直接放行
+    if request.url.path.startswith(_SKIP_PATH_PREFIXES):
+        return await call_next(request)
+
+    resp = await call_next(request)
+    # ★ 规则 2（流式的命脉）：text/event-stream 在这里原样放行，不读 body、不包裹
+    if "application/json" not in resp.headers.get("content-type", ""):
+        return resp
+
+    # 注意：经 app.middleware("http") 注册后，call_next 返回的是 _StreamingResponse，
+    # 它没有 .body 属性（不能像直接调 ASGI app 那样读 resp.body），
+    # 必须主动消费 body_iterator 才能拿到原始 JSON 字节。
+    # ★ body_iterator 只能消费一次：读完原 resp 就成了空壳，下面只能用 raw 重建
+    raw = b"".join([chunk async for chunk in resp.body_iterator])
+    try:
+        payload = json.loads(raw)
+    except Exception:
+        return _rebuild(resp, raw)
+
+    # ★ 规则 3：已是 {code,msg,data} 的原样放行，防二次包裹
+    if isinstance(payload, dict) and "code" in payload and "data" in payload:
+        return _rebuild(resp, raw)
+
+    if resp.status_code < 400:
+        return _wrapped(resp, payload, resp.status_code, "SUCCESS")
+
+    msg = payload.get("detail") if isinstance(payload, dict) else None
+    return _wrapped(resp, [], resp.status_code, msg or "请求失败")
+
+
+===== block 464 a88fae1084a7 lines 1-12 source 知行旅行助手-v2#466 =====
+from fastapi.exceptions import RequestValidationError
+from app.core.response import (
+    global_http_middleware,
+    validation_exception_handler,
+    wrap_json_middleware,
+)
+
+# ……lifespan / FastAPI(...) / CORSMiddleware 保持第 10 章原样……
+
+app.middleware("http")(global_http_middleware)
+app.middleware("http")(wrap_json_middleware)   # ★ 最后注册 = 最外层：兜底产出的包裹体不会被再包一次
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
+
+
+===== block 465 699ef2244506 lines 1-36 source 知行旅行助手-v2#467 =====
+"""对话服务层：编排层，产出统一事件流
+
+【最小桩】这里只立骨架：立即返回 EventStream + 后台任务推两条演示帧，
+让 messages.py 端点在本章就能跑通。真正的六段编排（意图路由 / 三条分流 /
+清单生成 / 长文压缩 / 落库）在环节 9–10 按片整份替换本文件，签名保持不变。
+"""
+import asyncio
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.event_stream import EventStream
+from app.core.events import make_event, ROLE_ASSISTANT, ROLE_DONE, ROLE_ERROR
+
+async def run_chat_turn(
+        db: AsyncSession, user_id: str, conversation_id: str, content: str,
+        force_planning: bool = False, persist_user: bool = True,
+        resume_stage: str | None = None,
+) -> EventStream:
+    """单轮对话：立即返回事件流，生产任务后台执行（调用方须在请求周期内消费完）
+
+    后三个参数（force_planning / persist_user / resume_stage）是卡片提交续跑专用，
+    环节 10 / 环节 11 才会用到；本桩全部走默认值。
+    """
+    stream = EventStream()
+    asyncio.create_task(_produce(stream, content))   # ★ 挂到后台就返回，不 await
+    return stream
+
+async def _produce(stream: EventStream, content: str) -> None:
+    """【最小桩】演示"边生边推 + 无论成败都 close"的生产者纪律"""
+    try:
+        stream.push(make_event(ROLE_ASSISTANT, f"（桩）已收到：{content}"))
+        stream.push(make_event(ROLE_DONE, "finish", code=200))   # done 恒为末帧
+    except Exception as e:
+        stream.push(make_event(ROLE_ERROR, str(e)))
+        stream.push(make_event(ROLE_DONE, "finish", code=500))
+    finally:
+        stream.close()   # ★ 无论中间出什么异常，close 必须执行
+
+
+===== block 466 dd192475902c lines 1-15 source 知行旅行助手-v2#468 =====
+"""run_chat_turn 桩演示：函数立刻返回 EventStream，帧随后才陆续到（纯逻辑，无需密钥；仅桩阶段可用）"""
+import asyncio
+import time
+
+from app.services.chat_contract_service import run_chat_turn
+
+async def main():
+    t0 = time.perf_counter()
+    stream = await run_chat_turn(None, "user-1", "conv-1", "你好")   # 桩不碰数据库，db 传 None 即可
+    print(f"run_chat_turn 返回用时 {1000 * (time.perf_counter() - t0):.2f} ms（没等编排跑完）")
+    async for event in stream:
+        print("收到帧：", event)
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+
+===== block 467 3723a6d5afba lines 1-3 source 知行旅行助手-v2#469 =====
+run_chat_turn 返回用时 0.03 ms（没等编排跑完）
+收到帧： {'role': 'assistant', 'content': '（桩）已收到：你好', 'code': None}
+收到帧： {'role': 'done', 'content': 'finish', 'code': 200}
+
+
+===== block 468 f1f10f4ceea2 lines 1-38 source 知行旅行助手-v2#470 =====
+"""
+消息 API（资源式）：发消息 + 拉历史
+
+路径按资源式扁平约定挂在 /api/v1/messages（不嵌套 conversations/{id}/messages）：
+- POST /api/v1/messages  body {conversation_id, content} → SSE 流
+- GET  /api/v1/messages?conversation_id=xxx → {conversation, messages}
+
+响应体统一由 wrap_json_middleware 包成 {code,msg,data}；SSE 流是 text/event-stream，不受包裹影响。
+"""
+import json
+from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi.responses import StreamingResponse
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+
+from app.models.base import get_db
+from app.models.user import User
+from app.models.message import Message
+from app.schemas.message import MessageSendRequest
+from app.api.dependencies import get_current_user
+from app.services.chat_contract_service import run_chat_turn
+from app.services.conversation_service import get_owned_conversation
+
+router = APIRouter(prefix="/messages", tags=["消息"])
+
+# SSE 响应头：禁用各级缓冲，保证逐字流式
+_SSE_HEADERS = {
+    "Cache-Control": "no-cache",
+    "Connection": "keep-alive",
+    "X-Accel-Buffering": "no",  # ★ 禁用 Nginx 缓冲（本地没事、一上 Nginx 就"卡顿式流式"的那个坑）
+}
+
+def _sse(event: dict) -> str:
+    """统一事件 → SSE data 帧（剔除 None 字段）"""
+    # ★ 剔掉值为 None 的字段：大部分帧 code 是 None，没必要给前端送 "code": null
+    frame = {k: v for k, v in event.items() if v is not None}
+    # ★ SSE 帧 = "data: " + JSON + 两个换行；少一个换行前端就一直等
+    return f"data: {json.dumps(frame, ensure_ascii=False)}\n\n"
+
+
+===== block 469 a0eadcaed98f lines 1-10 source 知行旅行助手-v2#471 =====
+"""_sse 帧格式演示：剔掉 None 字段、中文原样输出、末尾两个换行（纯函数，无需密钥）"""
+from app.api.v1.messages import _sse
+from app.core.events import make_event, ROLE_ASSISTANT, ROLE_ITINERARY, ROLE_DONE
+
+for event in [
+    make_event(ROLE_ASSISTANT, "你好"),                   # code=None → 帧里不出现 code
+    make_event(ROLE_ITINERARY, {"status": "pending", "id": "", "message": "行程清单生成中..."}),
+    make_event(ROLE_DONE, "finish", code=200),            # 只有 done/end 帧带 code
+]:
+    print(repr(_sse(event)))                              # repr 让你看见结尾的 \n\n
+
+
+===== block 470 ba541788a8c4 lines 1-3 source 知行旅行助手-v2#472 =====
+'data: {"role": "assistant", "content": "你好"}\n\n'
+'data: {"role": "itinerary_plans", "content": {"status": "pending", "id": "", "message": "行程清单生成中..."}}\n\n'
+'data: {"role": "done", "content": "finish", "code": 200}\n\n'

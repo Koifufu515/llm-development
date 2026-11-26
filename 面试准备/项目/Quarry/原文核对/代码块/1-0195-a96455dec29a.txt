@@ -1,0 +1,6 @@
+ version |   status   |   sha    
+---------+------------+----------
+       1 | superseded | 88ec6378
+       2 | superseded | d8df1b8e
+       3 | ready      | 1a8e1c4b
+(3 rows)

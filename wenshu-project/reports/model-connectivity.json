@@ -1,0 +1,19 @@
+{
+  "model": "qwen-plus",
+  "chat_json": {
+    "connected": true
+  },
+  "embedding_model": "text-embedding-v4",
+  "vectors": 2,
+  "dimensions": [
+    1024,
+    1024
+  ],
+  "rerank_model": "qwen3-rerank",
+  "rerank_scores": [
+    0.19424808203419425,
+    0.8308204645532732
+  ],
+  "milvus_real_roundtrip": true,
+  "real_api": true
+}

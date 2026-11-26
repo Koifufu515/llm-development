@@ -1,0 +1,16 @@
+"""RouterResult 的 schema 演示：with_structured_output 会把这些 description 一起塞进 prompt（纯逻辑，无需密钥）"""
+import json
+
+from app.agents.routers.chat_router import SKILL_CATALOG, RouterResult
+
+print("技能目录（LLM 的候选池 = 前端的技能名单）：")
+for item in SKILL_CATALOG:
+    print("  -", item)
+
+schema = RouterResult.model_json_schema()
+print("\nRouterResult 字段 → description（写给 LLM 的判定指令）：")
+for name, prop in schema["properties"].items():
+    print(f"  {name:22s} {prop.get('description')}")
+print("\nSelectedSkill 字段：",
+      json.dumps({k: v.get("description") for k, v in schema["$defs"]["SelectedSkill"]["properties"].items()},
+                 ensure_ascii=False))

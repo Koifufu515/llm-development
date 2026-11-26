@@ -1,0 +1,108 @@
+@router.post("/hotel_multi_segment/submit")
+async def submit_hotel_multi_segment(
+        req: HotelSubmitRequest,
+        user: User = Depends(get_current_user),
+        db: AsyncSession = Depends(get_db),
+):
+    """多段住宿提交：基础合法性校验（**不做任何日期校验**）→ 落库推进 → SSE 续跑餐饮/行程步"""
+    conv = await get_owned_conversation(db, req.conversation_id, user.id)
+    if not conv:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="会话不存在")
+
+    async def event_generator():
+        result = await apply_hotel_selection(req.conversation_id, req.payload)
+        if not result.ok:
+            # 校验未过：只在流内如实告知（前端渲染为一条助手气泡，卡片保持展开供用户重选）
+            yield _sse(make_event(ROLE_ERROR, result.msg))
+            yield _sse(make_event(ROLE_DONE, "finish", code=400))
+            return
+        # 提交态 + 选中账本写回卡片帧消息（切会话/刷新后卡片仍为已提交锁定态）
+        await mark_skill_ui_submitted(db, conv.id, HOTEL_MULTI_SEGMENT_SKILL, req.payload)
+        app_logger.info(f"🏨 住宿卡片提交成功，SSE 续跑后续步骤：已确认 {len(result.texts)} 站")
+        # 先在对话里回显用户已选定的住宿（门店或品牌，按站顺序），再续跑下一步
+        yield _sse(make_event(ROLE_ASSISTANT, _confirmed_content("住宿（按行程站顺序）", result.texts)))
+        stream = await run_chat_turn(
+            db, str(user.id), req.conversation_id, _hotel_resume_content(result),
+            force_planning=True,  # 续跑必须成立：不走概率性意图路由，由代码指定进规划状态机
+            persist_user=False,   # 合成发言不落库：历史里不该冒出用户没打过的句子
+            # 反馈文案按落库后实际推进到的步骤取（住宿已确认 → 正在生成行程报告）
+            resume_stage=result.next_step or None,
+        )
+        async for event in stream:
+            yield _sse(event)
+
+    return StreamingResponse(
+        event_generator(), media_type="text/event-stream", headers=_SSE_HEADERS
+    )
+
+@router.post("/flight_multi_segment/submit")
+async def submit_flight_multi_segment(
+        req: FlightSubmitRequest,
+        user: User = Depends(get_current_user),
+        db: AsyncSession = Depends(get_db),
+):
+    """多段航班提交：基础合法性校验（**不做任何航班时间校验**）→ 落库推进 → SSE 续跑住宿步"""
+    conv = await get_owned_conversation(db, req.conversation_id, user.id)
+    if not conv:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="会话不存在")
+
+    async def event_generator():
+        result = await apply_flight_selection(req.conversation_id, req.payload)
+        if not result.ok:
+            # 校验未过：只在流内如实告知（前端渲染为一条助手气泡，卡片保持展开供用户重选）
+            yield _sse(make_event(ROLE_ERROR, result.msg))
+            yield _sse(make_event(ROLE_DONE, "finish", code=400))
+            return
+        # 提交态 + 选中账本写回卡片帧消息（切会话/刷新后卡片仍为已提交锁定态）
+        await mark_skill_ui_submitted(db, conv.id, FLIGHT_MULTI_SEGMENT_SKILL, req.payload)
+        app_logger.info(f"✈️ 航班卡片提交成功，SSE 续跑后续步骤：已确认 {len(result.texts)} 段")
+        # 先在对话里回显用户已选定的航班（按行程段顺序），再续跑下一步
+        yield _sse(make_event(ROLE_ASSISTANT, _confirmed_content("航班（按行程段顺序）", result.texts)))
+        stream = await run_chat_turn(
+            db, str(user.id), req.conversation_id, _flight_resume_content(result),
+            force_planning=True,  # 续跑必须成立：不走概率性意图路由，由代码指定进规划状态机
+            persist_user=False,   # 合成发言不落库：历史里不该冒出用户没打过的句子
+            resume_stage="accommodation_planning",  # 反馈文案：航班已确认 → 正在规划住宿
+        )
+        async for event in stream:
+            yield _sse(event)
+
+    return StreamingResponse(
+        event_generator(), media_type="text/event-stream", headers=_SSE_HEADERS
+    )
+
+@router.post("/driving_multi_segment/submit")
+async def submit_driving_multi_segment(
+        req: DrivingSubmitRequest,
+        user: User = Depends(get_current_user),
+        db: AsyncSession = Depends(get_db),
+):
+    """多段自驾提交：基础合法性校验（**不做任何时间/路线校验**）→ 落库推进 → SSE 续跑住宿步"""
+    conv = await get_owned_conversation(db, req.conversation_id, user.id)
+    if not conv:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="会话不存在")
+
+    async def event_generator():
+        result = await apply_driving_selection(req.conversation_id, req.payload)
+        if not result.ok:
+            # 校验未过：只在流内如实告知（前端渲染为一条助手气泡，卡片保持展开供用户重试）
+            yield _sse(make_event(ROLE_ERROR, result.msg))
+            yield _sse(make_event(ROLE_DONE, "finish", code=400))
+            return
+        # 提交态 + 选中账本写回卡片帧消息（切会话/刷新后卡片仍为已提交锁定态）
+        await mark_skill_ui_submitted(db, conv.id, DRIVING_MULTI_SEGMENT_SKILL, req.payload)
+        app_logger.info(f"🚗 自驾卡片提交成功，SSE 续跑后续步骤：已确认 {len(result.texts)} 段")
+        # 先在对话里回显用户已确认的自驾路线（按行程段顺序），再续跑下一步
+        yield _sse(make_event(ROLE_ASSISTANT, _confirmed_content("自驾路线（按行程段顺序）", result.texts)))
+        stream = await run_chat_turn(
+            db, str(user.id), req.conversation_id, _driving_resume_content(result),
+            force_planning=True,  # 续跑必须成立：不走概率性意图路由，由代码指定进规划状态机
+            persist_user=False,   # 合成发言不落库：历史里不该冒出用户没打过的句子
+            resume_stage="accommodation_planning",  # 反馈文案：自驾已确认 → 正在规划住宿
+        )
+        async for event in stream:
+            yield _sse(event)
+
+    return StreamingResponse(
+        event_generator(), media_type="text/event-stream", headers=_SSE_HEADERS
+    )

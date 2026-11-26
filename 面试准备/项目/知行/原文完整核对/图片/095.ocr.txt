@@ -1,0 +1,93 @@
+预算汇总• 三级取价：入参一账本一估算
+summarize_budget_tool 不推进步骤，只算钱并写回状态。每项价格都按同一个顺序取：模型传了真实价就用，账本里有就用，都没有才估算。账本由
+卡片在提交时写好数字，预算不必再从"553元”这类展示文本里抠价。
+三级取价L1077-1196；前一级拿到大于O的值就不再往下找
+交通
+① 入参
+② 账本
+③ 估算
+人均一趟
+transport_price_per_person，取自已选班次
+_Legs_price_per_person:leg_prices 里各段票价相加
+500元/人/段（段数含返程）
+①入参
+② 账本
+③ 估算
+住宿
+每晚房价
+hotel_price_per_night，取自已选酒店
+_hotel_price_per_night_from_book:stay_prices 各城
+300元/晚
+均价
+门票
+① 入参
+② 估算（门票没有账本）
+人均
+attraction_tickets：只收有名字、价格≥0的条目，求和
+200元/人/天
+五项怎么算 N=天数（入参优先），P=总人数
+项目
+公式
+说明
+交通
+交通人均 ×P
+账本里已是各段之和；没有票价时人均按500×段数
+住宿
+每晚房价 x max（N - 1,1）晚 x 间数
+间数优先用入参 hotel_rooms，否则［P-21
+餐饮
+150 x N x P
+固定估算
+门票
+真实票价之和 × P，或200 x N x P
+金额来源记进 attractions_source（real / estimated），预算表据此写说明
+杂费
+100 × N × P
+固定估算
+结论
+人均 = 总计 ：P，对比 budget_max
+budget_max 入参优先
+入参会写回需求：模型传了 travel_days 或 budget_max ，工具会把新值写进 user_requirement。用户说"改成5天、预算加到4000"，就是靠这一步落进状态；提示词因此要求改需求时必须带上新值，否则会
+按旧状态误判超支。
+账本
+谁会写
+谁不会写
+Leg_prices
+高铁、航班卡片的提交与自动代选；select_transport_tool 的逐段确认；快速通道的
+sync_express_state
+零段直通会把它写成空字典
+stay_prices
+住宿卡片 hotel_flow 的提交与自动代选；快速通道的 sync_express_state；非卡片路
+线的 select_accommodation_tool（从酒店文本抽「元/晚」）
+品牌兜底的城本来就没有房价
+函数卡 本组3个函数
+summarize_budget_tool ［etool
+L1077
+_legs_price_per_person Fn
+嵌套
+L1103
+_hotel_price_per_night_from_book ［n 嵌套
+把交通、住宿、餐饮、门票、杂费五项算出来写回状态，并判
+把交通账本里大于0的各段票价加起来，就是人均一趟的交通
+断人均有没有超预算；不动current_step。
+费；账本空返回 None。
+把住宿账本里各城房价取平均，当作每晚价；账本空返回
+None。
+何时调用 行程步（提示词要求先调它再提交结构）和预算步；改天
+何时调用 模型没传交通价时
+数、改预算时必须带新值
+谁来调用 Summarize_budget_tool 内部
+何时调用 模型没传房价时
+谁来调用 模型经 ToolNode 执行（工具表：行程步、预算步）；本文
+结果交给 第②级交通价；None 时落到500元 × 段数估算
+谁来调用
+summarize_budget_tool 内部
+件 submit_itinerary_body_tool 在预算缺失时用
+结果交给 第② 级房价；None 时落到300元估算
+.func 直接调
+结果交给 Command 写 budget（含门票来源
+attractions_source）、user_requirement ；回执
+明细给模型看，用户看到的预算表由执行器按 budget 渲
+染
+预算的准确度取决于账本有没有写全：三级取价让“真实价优先、估算兜底”成了固定顺序，兜底估算也和快速通道统一成了按段计；交通、住宿两本账在卡片、快速通道和非卡片选择工具里都会写。
+门票没有账本，但金额来源随金额一起落库（attractions_source），预算表上的说明和实际算法一致。

@@ -1,0 +1,9 @@
+# ============ 评测（第七章） ============
+# 裁判模型：判断证据够不够回答问题。比抽取难一点，用大一号的型号
+JUDGE_MODEL=qwen-plus
+JUDGE_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+# 留空就复用 LLM_API_KEY
+JUDGE_API_KEY=
+JUDGE_TIMEOUT_S=60
+# 评测时取前几条证据算召回
+EVAL_TOP_K=5

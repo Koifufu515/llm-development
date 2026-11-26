@@ -1,0 +1,500 @@
+
+
+===== block 530 22fc59e0a4a0 lines 1-61 source 知行旅行助手-v2#532 =====
+async def run_express_planning(req: ExpressRequirement, stream):
+    """快速通道主流程：收集 → 选定 → 生成 → 预算拼接，返回完整回复文本。
+    调用方（chat_contract_service）拿到返回值后走既有清单生成/压缩/落库链路；
+    状态机记忆同步不在此处处理，挪至清单落库后与行程合并执行一次 aupdate_state，
+    分两次写入会触发 Ambiguous update 异常。
+    无目的地场景：auto_confirm模式下AI自动选定最优目的地（不经过RAG），
+    选定失败返回 None，调用方回落状态机。
+    """
+    if not req.destination:
+        picked = await _pick_destination(req)
+        if not picked:
+            app_logger.warning("[express] 目的地自动选定失败，回落状态机")
+            return None, None
+        req.destination, reason = picked.city, picked.reason
+        stream.push(make_event(
+            ROLE_ASSISTANT, f"🏛️ 已为您选定目的地：{req.destination}（{reason}）\n\n"))
+
+    stream.push(make_event(ROLE_ASSISTANT, "🚀 已识别自动确认需求，启用极速规划模式\n"))
+
+    # 多目的地天数调整：按游玩城市数×2规划紧凑行程，天数不足自动上调并告知用户，单目的地不受影响
+    # 使用 _plan_cities 计算，目的地包含出发地时，出发地计入游玩城市
+    _cities = _plan_cities(req)
+    if len(_cities) > 1:
+        _needed = len(_cities) * 2
+        if req.travel_days < _needed:
+            _old_days = req.travel_days
+            req.travel_days = _needed
+            stream.push(make_event(ROLE_ASSISTANT,
+                f"📅 由于您选择的是 {_old_days} 天，多目的地行程时间比较紧凑，已为您调整到 {_needed} 天\n\n"))
+
+    ctx = await _collect_context(req, stream)
+    sel = _select_choices(req, ctx)
+    stream.push(make_event(ROLE_ASSISTANT, f"\n{sel['summary']}\n\n"))
+
+    days = await _generate_itinerary(req, sel, stream)
+    if not days:
+        # 拿不到逐日结构绝不静默出预算（实测：无行程仍推预算，用户只见"正在生成逐日行程…"后跳预算）
+        # 回落状态机：调用方已有 None 分支（chat_contract_service），状态机行程步同样强推落库工具
+        app_logger.warning("[express] 逐日行程生成失败，放弃快速通道，回落状态机")
+        return None
+    budget = _build_budget(req, sel)
+
+    # 将结构化逐日行程渲染为Markdown正文推送给前端
+    from app.services.chat_stream_executor import _push_rendered, _render_itinerary_body
+    body = _render_itinerary_body(
+        days or [],
+        {},
+        {
+            "adult_count": req.adult_count,
+            "children_count": req.children_count,
+            "budget_max": req.budget_max,
+        },
+    )
+    if body:
+        await _push_rendered(stream, f"\n\n{body}")
+
+    stream.push(make_event(ROLE_ASSISTANT, "\n\n" + budget))
+    #   同时返回逐日结构：清单提炼失败时调用方要靠它兜底（此前只返回文本，
+    #   DeepSeek 欠费/不返工具调用时直接抛"无可用的结构化行程可兜底"）
+    sync = {"sel": sel, "breakdown": breakdown, "itinerary_body": days}
+    return f"{sel['summary']}\n\n{body}\n\n{budget}", days, sync
+
+
+===== block 531 17eb2e69e3d0 lines 1-78 source 知行旅行助手-v2#533 =====
+# ============== 步骤 5.5：短期记忆同步 ==============
+async def sync_express_state(conversation_id: str, req: ExpressRequirement,
+                             reply: str, plan_id: str | None,
+                             sync: dict | None = None) -> None:
+    """快速通道结束后把上下文一次性写入 LangGraph thread（短期记忆）。
+    快速通道绕过状态机，thread 中缺少行程相关状态；同步完成后用户后续调整需求可直接在状态机续接，无需重新提问。
+    必须一次性写入全部数据，同一thread多次调用aupdate_state会触发Ambiguous update异常。
+    调用时机：清单落库完成后，此时行程数据才完整可用。
+    """
+    import uuid as _uuid
+    from langchain_core.messages import AIMessage, HumanMessage
+    from app.agents.handoffs.travel_agent import create_travel_agent
+    from app.models.base import async_session_maker
+    from app.services.itinerary_plan_service import get_plan
+
+    itinerary_list: list = []
+    if plan_id:
+        async with async_session_maker() as db:
+            plan = await get_plan(db, plan_id, _uuid.UUID(conversation_id))
+        itinerary_list = (plan.plan_data.get("itinerary_list") if plan else None) or []
+
+    agent = await create_travel_agent()
+    # 提高递归上限，防止长回合被默认25上限截断
+    config = {"configurable": {"thread_id": conversation_id}, "recursion_limit": 60}
+    requirement = {
+        "departure_city": req.departure_city,
+        "destination": req.destination,
+        "departure_date": req.departure_date,
+        "travel_days": req.travel_days,
+        "adult_count": req.adult_count,
+        "children_count": req.children_count,
+        "budget_min": float(req.budget_max or 0),
+        "budget_max": float(req.budget_max or 0),
+        # 档位口径与 state_transition 的三档同源：express 只有"人均预算上限"一个数，
+        #   以其同时充当上下限（min=max），再套同一张阈值表（<3000 经济 / <8000 舒适 / 否则高端）
+        "budget_level": ("economy" if (req.budget_max or 0) < 3000
+                         else "comfort" if (req.budget_max or 0) < 8000 else "luxury"),
+        "travel_styles": req.travel_styles,
+        "special_needs": "",
+    }
+    # 与 _select_choices 同口径：按勾选顺序取首个已知模式（不再默认 train 优先）
+    transport = next((m for m in req.transport_types if m in {"train", "flight", "driving"}), "driving")
+    updates = {
+        "messages": [
+            HumanMessage(content=(
+                f"[{'自动确认表单' if req.auto_confirm else '多目的地行程'}] "
+                f"目的地 {req.destination}，{req.departure_date} 出发，"
+                f"{req.travel_days} 天，{req.adult_count + req.children_count} 人，"
+                f"人均预算≤{req.budget_max or '不限'}元"
+            )),
+            AIMessage(content=reply[:2000]),  # 规划结果摘要，避免checkpoint数据膨胀
+        ],
+        "user_id": "",
+        "auto_confirm": True,
+        "user_requirement": requirement,
+        "selected_destination": req.destination,
+        "selected_transport": transport,
+        "selected_accommodation_types": req.accommodation_types or ["economy_hotel"],
+        "selected_food_types": req.food_preferences or ["local", "specialty"],
+        "itinerary": itinerary_list,
+        "current_step": "budget_summarization",
+    }
+    if sync:
+        sel = sync.get("sel") or {}
+        updates["leg_prices"] = {
+            f"{tr['src']}→{tr['dst']}": float(tr["price"])
+            for tr in (sel.get("transports") or []) if float(tr.get("price") or 0) > 0
+        }
+        updates["stay_prices"] = {
+            h["city"]: float(h["price"])
+            for h in (sel.get("hotels") or []) if float(h.get("price") or 0) > 0
+        }
+        updates["itinerary_body"] = sync.get("itinerary_body") or []
+        if sync.get("breakdown"):
+            updates["budget"] = sync["breakdown"]
+    # 使用异步aupdate_state，同步update_state会与AsyncPostgresSaver产生调用异常
+    await agent.aupdate_state(config, updates)
+    app_logger.info("[express] 状态机短期记忆已同步（含 itinerary/预算账本，current_step=budget_summarization）")
+
+
+===== block 532 b01e91809db6 lines 1-27 source 知行旅行助手-v2#534 =====
+"""run_express_planning 整跑演示：收集 → 选定 → 单次生成 → 预算拼接，看帧一段段出来（需 DashScope + MCP 密钥）"""
+import asyncio
+from datetime import date, timedelta
+
+from app.core.event_stream import EventStream
+from app.services.express_planning_service import ExpressRequirement, run_express_planning
+
+async def main():
+    stream = EventStream()
+    req = ExpressRequirement(departure_city="福州", destination="杭州",
+                             departure_date=(date.today() + timedelta(days=5)).isoformat(),
+                             travel_days=3, adult_count=2, budget_max=3000, auto_confirm=True,
+                             transport_types=["train"], food_preferences=["local"],
+                             accommodation_types=["economy_hotel"])
+
+    async def consume():
+        async for ev in stream:
+            print(ev["content"], end="", flush=True)     # 逐帧打印，就是前端看到的"正在流"
+
+    task = asyncio.create_task(consume())
+    text = await run_express_planning(req, stream)
+    stream.close()
+    await task
+    print(f"\n\n—— 返回全文 {len(text or '')} 字（摘要 + 正文 + 预算表），交给编排总线去生成清单 ——")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+
+===== block 533 399944deca08 lines 1-27 source 知行旅行助手-v2#535 =====
+"""对话流式执行器
+
+【最小桩】只立两个入口的签名骨架，让编排总线（chat_contract_service）
+能按阅读顺序 import 通过、整条链先跑起来。真正的实现——闲聊直连 _stream_plain、
+直查通道、框架流式 _stream_agent、状态机执行总线 execute_turn 的七类后处理——
+环节 12–17 按片①–⑰ 一步步替换进来，两个入口的签名保持不变。
+"""
+from app.core.event_stream import EventStream
+from app.core.events import make_event, ROLE_ASSISTANT
+
+async def try_direct_ticket_query(content: str, stream=None,
+                                  conversation_id: str = "") -> str | None:
+    """【最小桩】直查通道：命中"高铁/航班单点查询"才接管、否则返回 None。
+    桩先一律返回 None（不命中），让分流始终落到 execute_turn。环节 14 写完片⑦后删掉本桩。
+    """
+    return None
+
+async def execute_turn(
+        user_id: str, conversation_id: str, content: str, planning: bool, stream: EventStream
+) -> tuple[str, str | None, bool, list | None]:
+    """【最小桩】执行阶段入口，返回 (完整回复文本, 状态机步骤, 是否落库, 逐日结构)。
+    桩只把用户输入回显一条 assistant 帧、后三项返回 None/False/None；
+    环节 17 写完片⑰后删掉本桩。
+    """
+    reply = f"（执行器桩）已收到：{content}"
+    stream.push(make_event(ROLE_ASSISTANT, reply))
+    return reply, None, False, None
+
+
+===== block 534 f84794eae7aa lines 1-39 source 知行旅行助手-v2#536 =====
+"""对话服务层：编排层，产出统一事件流
+框架化对应关系：
+- 路由阶段 → chat_route（with_structured_output，替代手写 JSON 解析）
+- 持久化   → Message.extra_info 存储富字段（original/inference_steps，前端历史渲染依赖）
+"""
+import asyncio
+import re
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.events import (
+    make_event, ROLE_SKILLS, ROLE_DONE, ROLE_ERROR, ROLE_ITINERARY,
+    ROLE_ASSISTANT,
+    ROLE_SKILL_UI,
+)
+from app.core.event_stream import EventStream
+from app.core.intent import detect_intent
+from app.agents.routers.chat_router import chat_route, RouterResult
+from app.services.chat_stream_executor import execute_turn, try_direct_ticket_query
+from app.services.itinerary_plan_service import generate_plan
+from app.services.chat_compress_service import compress_content, COMPRESS_THRESHOLD
+from app.services.conversation_service import get_owned_conversation
+from app.models.message import Message
+from app.utils.logger import app_logger
+
+# 行程特征守卫：匹配行程天数标记，兼容中文/阿拉伯数字、Day格式
+_DAY_MARK = re.compile(r"第\s*(\d+|[一二三四五六七八九十]+)\s*天|Day\s*\d", re.IGNORECASE)
+
+# 清单生成步骤白名单：仅在行程生成及后续步骤才渲染清单
+_ITINERARY_READY_STEPS = {"itinerary_generation", "budget_summarization", "report_generation"}
+
+def _hit_auto_confirm(content: str) -> bool:
+    """判断表单是否包含自动确认表述"""
+    return detect_intent(content).auto_confirm
+
+# 多目的地表单解析常量
+_HEAD_DEST_PREFIX = "我想去"
+_HEAD_DEST_SUFFIX = "旅行"
+_HEAD_DAYS_LABEL = "旅行天数"
+
+
+===== block 535 fd698b24a2d5 lines 1-27 source 知行旅行助手-v2#537 =====
+class _SkillUiRecorder:
+    """ 卡片帧回放记录器——旁路记录本轮推送的 skill_ui 帧
+
+    卡片此前只活在本轮 SSE/WS 事件里，刷新页面或切会话即消失。此处只做记录（不改推送行为），
+    回合末把最近一条卡片帧写进 assistant 消息的 extra_info["skill_ui"]，历史接口随之透出，
+    前端挂回 ChatMessage.skillUi 即可原样重渲染卡片
+    """
+
+    def __init__(self, inner: EventStream) -> None:
+        self._inner = inner
+        self.skill_ui: dict | None = None  # 最近一条卡片帧内容 {skill_name, data}
+
+    def push(self, event: dict) -> None:
+        try:
+            if event.get("role") == ROLE_SKILL_UI and isinstance(event.get("content"), dict):
+                # ★ 只记录、不改推送：最近一条 skill_ui 卡片帧留给回合末落库
+                self.skill_ui = event["content"]
+        except Exception:
+            pass
+        self._inner.push(event)
+
+    def close(self) -> None:
+        self._inner.close()
+
+    # ★ 鸭子类型：push / close / async for 与 EventStream 完全一致，下游无感知
+    def __aiter__(self):
+        return self._inner.__aiter__()
+
+
+===== block 536 54389865de85 lines 1-19 source 知行旅行助手-v2#538 =====
+"""_SkillUiRecorder 演示：包一层照常转发，顺手记下最后一张卡片帧（纯逻辑，无需密钥）"""
+import asyncio
+
+from app.core.event_stream import EventStream
+from app.core.events import make_event, ROLE_ASSISTANT, ROLE_SKILL_UI
+from app.services.chat_contract_service import _SkillUiRecorder
+
+async def main():
+    stream = _SkillUiRecorder(EventStream())             # 和 _produce 开头那一行一模一样
+    stream.push(make_event(ROLE_ASSISTANT, "为您查到 2 段高铁，请在卡片里选择："))
+    stream.push(make_event(ROLE_SKILL_UI, {"skill_name": "train_multi_segment", "data": {"segments": 2}}))
+    stream.push(make_event(ROLE_ASSISTANT, "选完点提交即可。"))
+    stream.close()
+    frames = [ev async for ev in stream]                 # 下游照常 async for，感觉不到包了一层
+    print("转发了", len(frames), "帧：", [f["role"] for f in frames])
+    print("顺手记下的卡片：", stream.skill_ui)             # 回合末写进 extra_info["skill_ui"]
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+
+===== block 537 862cf718cdc0 lines 1-2 source 知行旅行助手-v2#539 =====
+转发了 3 帧： ['assistant', 'skill_ui', 'assistant']
+顺手记下的卡片： {'skill_name': 'train_multi_segment', 'data': {'segments': 2}}
+
+
+===== block 538 dc79bc0e0e3c lines 1-35 source 知行旅行助手-v2#540 =====
+async def mark_skill_ui_submitted(
+    db: AsyncSession, conversation_id, skill_name: str, payload,
+) -> None:
+    """ 把「已提交 + 各段选中」写回卡片帧所在消息的 extra_info
+
+    卡片帧此前已随消息落库，但"提交态"只活在前端组件里——切会话/刷新后
+    卡片按历史帧重渲染时又回到未选可点态（用户实测：切回来还能点）。
+    此处按 skill_name 找到最近一条带同款帧的 assistant 消息，把选中账本并入
+    extra_info["skill_ui"]["submitted"]，历史接口随 extra_info 透出，前端据此直接
+    渲染为已提交锁定态。仅记录展示态，异常只记日志、不影响提交流程。
+    """
+    try:
+        raw = payload.model_dump() if hasattr(payload, "model_dump") else dict(payload)
+        selections: dict[str, str] = {}
+        for seg in raw.get("segments") or []:
+            sid = seg.get("segment_id")
+            picked = seg.get("option_id") or seg.get("hotel_id") or seg.get("brand_id")
+            if sid and picked:
+                selections[str(sid)] = str(picked)
+        rows = (await db.execute(
+            select(Message)
+            .where(Message.conversation_id == conversation_id, Message.role == "assistant")
+            .order_by(Message.created_at.desc())
+            .limit(10)
+        )).scalars().all()
+        for msg in rows:
+            extra = dict(msg.extra_info or {})
+            frame = extra.get("skill_ui")
+            if isinstance(frame, dict) and frame.get("skill_name") == skill_name:
+                extra["skill_ui"] = {**frame, "submitted": {"selections": selections}}
+                msg.extra_info = extra  # ★ 重新赋值整列，SQLAlchemy 才会标记 JSON 变更为脏
+                await db.commit()
+                return
+    except Exception:
+        app_logger.exception("卡片提交态落库失败（仅影响历史回放，不影响主流程）")
+
+
+===== block 539 50d15479ee1b lines 1-32 source 知行旅行助手-v2#541 =====
+"""mark_skill_ui_submitted 演示：把"已提交 + 各段选中"写回卡片帧所在的那条消息（需 PG）"""
+import asyncio
+import uuid
+
+from app.models.base import async_session_maker
+from app.models.message import Message
+from app.models.user import User
+from app.services.chat_contract_service import mark_skill_ui_submitted
+from app.services.conversation_service import create_conversation
+from app.utils.security import hash_password
+
+async def main():
+    async with async_session_maker() as db:
+        sfx = uuid.uuid4().hex[:6]
+        user = User(username=f"ui_{sfx}", email=f"ui_{sfx}@example.com",
+                    password_hash=hash_password("secret123"), preferences={})
+        db.add(user)
+        await db.commit()
+        conv = await create_conversation(db, user.id)
+        msg = Message(conversation_id=conv.id, role="assistant", content="请在卡片里选择车次",
+                      extra_info={"skill_ui": {"skill_name": "train_multi_segment", "data": {}}})
+        db.add(msg)
+        await db.commit()
+
+        payload = {"segments": [{"segment_id": "seg_0", "option_id": "G1650"},
+                                {"segment_id": "seg_1", "option_id": "G7512"}]}
+        await mark_skill_ui_submitted(db, conv.id, "train_multi_segment", payload)
+        await db.refresh(msg)
+        print(msg.extra_info["skill_ui"])   # 多出 submitted.selections：前端据此渲染"已提交锁定态"
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+
+===== block 540 533352a41ee2 lines 1-48 source 知行旅行助手-v2#542 =====
+def _manual_multi_city_day_warning(content: str) -> str | None:
+    """手动模式 + 多目的地 → 天数 < 目的地数×2 时返回告警文案；否则 None 不打扰"""
+    from app.services.express_planning_service import _split_cities
+    # ★ 复用第 11 章的三个字符串助手：全项目只有一套"读表单"的写法
+    from app.tools.state_transition import _between, _leading_int, _value_after
+    head = _between(content, _HEAD_DEST_PREFIX, _HEAD_DEST_SUFFIX).strip()
+    if not head:
+        return None
+    cities = _split_cities(head)
+    if len(cities) <= 1:
+        return None
+    needed = len(cities) * 2  # 多目的地天数下限：每个目的地 2 天
+    days = _leading_int(_value_after(content, _HEAD_DAYS_LABEL))
+    if days is None or days >= needed:
+        return None
+    return (f"⚠️ 您选择了 {len(cities)} 个目的地，行程时间紧凑，至少需要 {needed} 天"
+            f"，否则无法为您生成完整报告。"
+            f"请将旅行天数调整为 {needed} 天及以上（或减少目的地）。")
+
+def _looks_like_itinerary(text: str) -> bool:
+    """多日行程看'第X天'标记；单日行程看时段块（上午/中午/下午/晚上，≥3 个）"""
+    if not text or len(text) <= 150:
+        return False
+    if _DAY_MARK.search(text):
+        return True
+    # ★ 单日行程没有"第X天"，就数时段词够不够 3 个
+    return len(re.findall(r"上午|中午|下午|晚上", text)) >= 3
+
+async def _recent_itinerary_text(db: AsyncSession, conversation_id) -> str | None:
+    """ 取历史里最近一条"像行程"的助手消息作为清单提炼源料
+
+    场景：确认轮只回一句话（防重复输出），该文本无法作为提炼源料，
+    真正的行程正文在上一轮的助手消息里（可能还含预算明细表，一并作为源料无妨）。
+    只回看最近 8 条助手消息，找不到则返回 None（调用方据此不生成清单）
+    """
+    rows = (await db.execute(
+        select(Message.content, Message.extra_info)
+        .where(Message.conversation_id == conversation_id, Message.role == "assistant")
+        .order_by(Message.created_at.desc())
+        .limit(8)
+    )).all()
+    for content, extra in rows:
+        # content 超出压缩阈值时只存摘要（列表预览用），全文在 extra_info["original"]，
+        # 清单提炼必须用全文，否则源料不足会提炼出残缺行程
+        text = (extra or {}).get("original") or content or ""
+        if _looks_like_itinerary(text):
+            return text
+    return None
+
+
+===== block 541 cf1f3a5892e5 lines 1-10 source 知行旅行助手-v2#543 =====
+"""_looks_like_itinerary 演示：清单源料"像不像行程"的判定（纯函数，无需密钥）"""
+from app.services.chat_contract_service import _looks_like_itinerary
+
+multi = "为您规划如下：\n" + "\n".join(f"第{d}天：上午逛景点，下午喝茶，晚上夜市。" * 3 for d in (1, 2, 3))
+single = "一日游安排：上午西湖漫步、断桥拍照；中午知味观；下午灵隐寺祈福；晚上河坊街夜市小吃。" * 4
+ask = "请问您从哪里出发？计划几号出发、玩几天？人均预算大概多少？偏好高铁还是飞机？" * 5
+short = "第1天：西湖。"
+
+for name, text in [("多日行程", multi), ("单日行程", single), ("需求追问", ask), ("太短", short)]:
+    print(f"{name}（{len(text)} 字）→ {_looks_like_itinerary(text)}")
+
+
+===== block 542 92baf0bc791d lines 1-4 source 知行旅行助手-v2#544 =====
+多日行程（190 字）→ True
+单日行程（168 字）→ True
+需求追问（190 字）→ False
+太短（7 字）→ False
+
+
+===== block 543 25c77b942704 lines 1-11 source 知行旅行助手-v2#545 =====
+"""_manual_multi_city_day_warning 演示：手动模式多目的地、天数不够时先给告警（纯函数，无需密钥）"""
+from app.services.chat_contract_service import _manual_multi_city_day_warning
+
+cases = {
+    "单目的地": "我想去杭州旅行\n- 旅行天数：2 天",
+    "3 城 4 天": "我想去杭州、上海、苏州旅行\n- 旅行天数：4 天",
+    "3 城 6 天": "我想去杭州、上海、苏州旅行\n- 旅行天数：6 天",
+    "非表单": "帮我看看杭州、上海怎么玩",
+}
+for name, text in cases.items():
+    print(f"{name:6s} → {_manual_multi_city_day_warning(text)}")
+
+
+===== block 544 8b929b093716 lines 1-4 source 知行旅行助手-v2#546 =====
+单目的地   → None
+3 城 4 天 → ⚠️ 您选择了 3 个目的地，行程时间紧凑，至少需要 6 天，否则无法为您生成完整报告。请将旅行天数调整为 6 天及以上（或减少目的地）。
+3 城 6 天 → None
+非表单    → None
+
+
+===== block 545 d19bba97a5bc lines 1-28 source 知行旅行助手-v2#547 =====
+async def run_chat_turn(
+        db: AsyncSession, user_id: str, conversation_id: str, content: str,
+        force_planning: bool = False, persist_user: bool = True,
+        resume_stage: str | None = None,
+) -> EventStream:
+    """单轮对话：立即返回事件流，生产任务后台执行（调用方须在请求周期内消费完）
+    force_planning / persist_user：前端UI Skill卡片提交后的续跑专用参数。
+    卡片提交属于独立REST动作，仅落状态不跑编排会造成流程停滞；续跑由代码指定走规划状态机，不依赖意图路由，
+    同时不持久化合成发言，避免用户未输入的文本出现在对话历史。
+    resume_stage：卡片提交后状态机推进到的实际步骤，反馈文案按此字段确定性生成，消除界面文案与真实流程不一致问题。
+    """
+    stream = EventStream()
+    # 创建后台任务，不阻塞当前请求，实现流式边生成边推送
+    asyncio.create_task(_produce(
+        db, user_id, conversation_id, content, stream,
+        force_planning=force_planning, persist_user=persist_user,
+        resume_stage=resume_stage,
+    ))
+    return stream
+
+# 卡片提交续跑提示文案：根据状态机当前步骤直接取值，不再依靠force_planning推断
+_RESUME_PENDING_TEXT = {
+    "accommodation_planning": "\U0001F684 车次已确认，正在为您规划住宿…\n",
+    "food_planning": "住宿已确认，正在为您安排餐饮…\n",
+    "itinerary_generation": "住宿已确认，正在为您生成行程报告…\n",
+    "budget_summarization": "行程已生成，正在为您汇总预算…\n",
+    "report_generation": "行程已生成，正在为您生成行程报告…\n",
+}

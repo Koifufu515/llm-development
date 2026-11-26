@@ -1,0 +1,6 @@
+      slug      | facts_enabled 
+----------------+---------------
+ corp-policy    | f
+ internal-notes | f
+ travel-guide   | t
+(3 rows)

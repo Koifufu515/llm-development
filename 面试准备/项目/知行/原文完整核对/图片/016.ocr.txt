@@ -1,0 +1,31 @@
+阿里云百炼
+模型
+Agent *
+TokenPlan C
+文档~
+CLI
+（-）阿里云
+aliyun0060283074
+默认业务空间~ ◎华北2（北京） ◎
+主账号
+个 API管理
+API Key
+白
+API API Key
+1.API Key 加密存储：新建 API Key仅在创建后显示一次，供用户复制或下载保存，平台采用不可逆的加密存储技术，用户后续无法在控制台中再次查看明文。现有 API Key 仍然可以正常使用，功能不受影响。
+2. 业务空间专属域名：业务空间现已支持独立推理 API 域名，具备更高并发与网络隔离能力。DashScope 域名（dashscope.aliyuncs.com）将于 2026年9月30日 起进入维护状态、不再支持新特性（仍可正常使用）。建议新业务尽快迁移。查看迁移文档
+8 KMS管理
+按量付费
+创建API-KEY
+按量付费 Base URL
+＄ https://ws-zio26e12yllocnqr.cn-bejing.maas.aliuncs.com/compatible-mode/v1
+Al https://ws-zio26e12yllocnqr.cn-beijing.maas.aliyuncs.com/apps/anthropic
+复制下来就可以了
+ID
+API Key
+描述
+归届账号◎
+创建时间
+操作
+4451885
+查看费用 重置 编辑 更多

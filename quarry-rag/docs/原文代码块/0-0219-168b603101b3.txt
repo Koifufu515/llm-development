@@ -1,0 +1,2 @@
+CLAIM_INTERVAL = 5                   # 原来是 60
+CLAIM_MIN_IDLE_MS = 10 * 1000        # 原来是 5 * 60 * 1000

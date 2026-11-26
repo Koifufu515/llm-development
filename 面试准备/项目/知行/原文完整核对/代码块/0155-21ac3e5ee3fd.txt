@@ -1,0 +1,40 @@
+"""apply_train_arg_guard 演示：车票工具被套上入参守卫，别的工具原样放行（纯逻辑，无需密钥）"""
+import asyncio
+from datetime import date, timedelta
+
+from langchain_core.tools import StructuredTool
+
+from app.tools.mcp_tools import apply_train_arg_guard, set_turn_context
+
+RAW = """G1234 北京南(telecode:VNP) -> 上海虹桥(telecode:AOH) 08:00 -> 12:28 历时：04:28
+- 二等座: 有票 662.0元
+- 一等座: 5张 1060.0元
+G7 北京南(telecode:VNP) -> 上海(telecode:SHH) 07:00 -> 11:35 历时：04:35
+- 商务座: 无票 2318.0元
+- 二等座: 候补 669.0元
+K51 北京(telecode:BJP) -> 上海(telecode:SHH) 06:15 -> 21:40 历时：15:25
+- 硬卧: 有票 304.5元"""
+TICKET_SCHEMA = {"type": "object", "properties": {"date": {"type": "string"}, "fromStation": {"type": "string"},
+                 "toStation": {"type": "string"}}, "required": ["date", "fromStation", "toStation"]}
+WEATHER_SCHEMA = {"type": "object", "properties": {"city": {"type": "string"}}, "required": ["city"]}
+
+async def fake_tickets(**kwargs):          # 测试驱动：假装是 12306 MCP，打印真正收到的入参
+    print("   12306 收到的入参：", kwargs)
+    return RAW
+
+async def fake_weather(**kwargs):
+    return "晴"
+
+async def main():
+    tickets = StructuredTool.from_function(coroutine=fake_tickets, name="get-tickets", description="查车票", args_schema=TICKET_SCHEMA)
+    weather = StructuredTool.from_function(coroutine=fake_weather, name="maps_weather", description="查天气", args_schema=WEATHER_SCHEMA)
+    guarded = apply_train_arg_guard([tickets, weather])
+    print("被套上守卫：", [(t.name, type(t).__name__) for t in guarded])
+    day = (date.today() + timedelta(days=3)).isoformat()
+    set_turn_context(departure_city="北京", destination="上海", date=day)
+    print("模型用了别名 trainDate/from/to：")
+    print(await guarded[0].ainvoke({"trainDate": day, "from": "北京", "to": "上海"}))
+    set_turn_context()
+    print("模型只传了出发站：", await guarded[0].ainvoke({"fromStation": "北京"}))
+
+asyncio.run(main())

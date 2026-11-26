@@ -1,0 +1,43 @@
+"""确定性路由指标自检：python -m app.scripts.verify_router_metric
+
+纯逻辑、无需密钥：planning 精确匹配 + skills 三种语义
+（expect_empty_skills=True=必须为空 / 命中任一 / 都不给=不检查），对=1 错=0。
+"""
+import json
+
+from deepeval.test_case import LLMTestCase
+
+from evaluation.router_metric import RouterCorrectnessMetric
+
+def case(planning, skills: list[str]) -> LLMTestCase:
+    """测试驱动：把"路由器的输出"序列化成 actual_output，和 test_router.py 的写法一致"""
+    return LLMTestCase(input="-", actual_output=json.dumps(
+        {"is_itinerary_planning": planning, "skills": [{"skill_name": s} for s in skills]}, ensure_ascii=False))
+
+CHECKS = [
+    ("规划请求判对", RouterCorrectnessMetric(True, ["itinerary_planning"]), case(True, ["itinerary_planning"])),
+    ("闲聊误判成规划", RouterCorrectnessMetric(False), case(True, [])),
+    ("查天气却命中高铁", RouterCorrectnessMetric(False, ["weather_query"]), case(False, ["train_query"])),
+    ("命中期望之一就算对", RouterCorrectnessMetric(False, ["weather_query", "hotel_query"]),
+     case(False, ["hotel_query", "train_query"])),
+    ("没要求 skills 就不查", RouterCorrectnessMetric(True), case(True, ["train_query"])),
+    ("闲聊技能必须为空·空则过", RouterCorrectnessMetric(False, expect_empty_skills=True), case(False, [])),
+    ("闲聊技能必须为空·有则拦", RouterCorrectnessMetric(False, expect_empty_skills=True), case(False, ["weather_query"])),
+]
+
+def main() -> None:
+    for name, metric, tc in CHECKS:
+        score = metric.measure(tc)
+        print(f"{name:<12} → {score} 通过={metric.is_successful()} | {metric.reason}")
+
+    bad = RouterCorrectnessMetric(True)
+    bad.measure(LLMTestCase(input="-", actual_output="不是 JSON"))
+    print("输出不是 JSON →", bad.score, "|", bad.reason)
+
+    try:                                      # ★ 矛盾入参必须显式报错，不静默吞掉其一
+        RouterCorrectnessMetric(False, ["train_query"], expect_empty_skills=True)
+    except ValueError as e:
+        print("矛盾入参 → ValueError |", e)
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,1 @@
+../../../../../../wenshu-project/backend/scripts/create_admin.py

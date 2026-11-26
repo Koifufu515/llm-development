@@ -1,0 +1,6 @@
+"abstain": {
+  "should_abstain": true,
+  "reason": "low_score",
+  "top_dense_score": 0.2871,
+  "threshold": 0.52
+}

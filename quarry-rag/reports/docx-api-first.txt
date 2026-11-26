@@ -1,0 +1,1 @@
+{'upload_ready': True, 'real_evidence_count': 1, 'table_value_preserved': True, 'locator_kind': 'paragraph'}

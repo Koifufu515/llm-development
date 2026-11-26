@@ -1,0 +1,44 @@
+# ============== 步骤 3：规则选定器（纯代码 0s，替代状态机的 LLM 判断） ==============
+_SEAT_ORDER = ("二等座", "硬座", "一等座", "硬卧", "软卧", "无座")
+# 有票状态词：12306 原始返回是"有票/剩余N张票"，守卫压缩后的紧凑行是"有/剩余N张票"，两种都要认
+_AVAIL_STATUS = ("有票", "有", "候补")
+
+def _dur_to_mins(dur: str) -> int:
+    """历时 HH:MM → 分钟；解析不出给一个极大值（排最后，不会被选中）"""
+    try:
+        h, m = str(dur).split(":")
+        return int(h) * 60 + int(m)
+    except Exception:
+        return 10 ** 9
+
+def _seat_available(status: str) -> bool:
+    """余票状态是否可购（有票/剩余N张/候补都算，无票/-- 不算）"""
+    s = (status or "").strip()
+    return s in _AVAIL_STATUS or s.startswith("剩余") or s.endswith("张")
+
+def _pick_train(text: str) -> dict | None:
+    """从 12306 文本选最优班次：原始格式与守卫压缩后的紧凑格式都支持。
+    在可购票班次中，按「历时分钟 + 价格/10」综合最低筛选；耗时优先、兼顾价格，纯代码无随机。
+    复用两套解析器：原始多行格式用 parse_ticket_rows，压缩单行格式用 _compact_to_rows，保证两种输入都可解析。
+    """
+    # 就近 import 避免顶层循环依赖（本模块其它函数也按需从 mcp_tools 导入）
+    from app.tools.mcp_tools import parse_ticket_rows
+    from app.capabilities.train_multi_segment.train_agent_tool import _compact_to_rows, train_score
+
+    rows = parse_ticket_rows(text) or _compact_to_rows(text)
+    best = None
+    for r in rows:
+        seats = r.get("seats") or {}
+        # 席别优先序取第一个有数据的（与 _SEAT_ORDER 同口径，通常是二等座）
+        seat = next((k for k in _SEAT_ORDER if k in seats), None)
+        if not seat:
+            continue
+        status, price = seats[seat]
+        if not _seat_available(status):  # 只在有票里挑，无票整趟跳过
+            continue
+        mins = _dur_to_mins(r.get("dur"))
+        score = train_score(mins, float(price))  # 与状态机自动代选同口径（单一公式，避免漂移）
+        if best is None or score < best["score"]:
+            best = {"no": r["code"], "dep": r["dep"], "arr": r["arr"],
+                    "mins": mins, "price": float(price), "score": score}
+    return best

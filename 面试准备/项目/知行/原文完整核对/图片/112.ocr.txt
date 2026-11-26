@@ -1,0 +1,81 @@
+chat_stream_executor 总览• 模型先说，代码收尾
+对话流式执行器是 chat_contract_service 与LangGraph Agent之间的一层：它把Agent跑起来、把输出洗干净，再按当前步骤用代码接管班次、天
+气、酒店与行程正文。下面按“谁调进来—文件内部—结果去哪”三段看。
+谁调进来 全项目只有两个模块真正调用本文件（grep核实；另有2处只在注释里提到函数名）
+chat_contract_service._produce
+主调用方
+express_planning_service
+借用方
+POST /messages
+POST /skills/*/submit run_chat_turn 一
+_produce
+run_expresS_Planning
+L848 import
+•L225 每条消息先调 try_direct_ticket_query：直查门禁，优先级高于意图路由
+•只借两把工具：_render_itinerary_body 把逐日结构渲染成正文
+•L256 快速通道没接管（返回 None）时，回落调 execute_turn
+•_push_rendered 把正文分段推给前端
+•L265 常规分支直接调 execute_turn，拿回四元组决定清单与落库
+• 不碰 Agent、不碰状态机：快速通道本身就绕过了状态机
+𠄌进入本文件𠄌
+FILE app/services/chat_stream_executor.py
+大 45个函数•1524行
+三个对外入口
+总入口
+直查入口
+借用入口
+execute_turn
+try_direct_ticket_query
+-render_itinerary_body •_push_rendered
+规划消息跑 Agent+七道后处理；非规划走闲聊分支
+单点查票，不读写状态机，代码直出班次表
+给快速通道复用的渲染与推送
+全部函数按职责分5组（每组一张详解图）
+图1 主编排2个
+一轮对话的总调度与闲聊兜底
+execute turl
+_stream_plain
+_stream_agent
+_chunk_has_tool_call_is_protocol_leak _scrub_leak_text _strip_leak_blocks _is_trace_block_start
+流式采集与清洗 14个
+收token、洗泄漏、折叠重述、去重、选出口
+_strip_claim_sentences_rewrite_closing_invite _is_leak_sentence _fold_restatements_norm_para_is_prose_para
+_common_len
+_dedupe_texts
+try_direct_ticket_query _fill_slots _missing_slot_text _query_fallback_text _parse_city_pair
+_cities_in
+图3 交通直查与班次表14个
+_parse_query_date_flight_table_render_flight_table _ticket_table_from_tail_rows_to_seg_row_seat_label
+_hs_only
+查票不进状态机，班次表由代码画
+_render_ticket_table
+图 4 天气归代码 5 个
+闲聊问天气、目的地步追加天气
+try_weather_query _weather_extra_answer
+'_strip_model_weather_queried_cities _weather_paragraph
+回合末后处理工具 10 个
+-covers_all_days _zero_leg_guard _leg_context
+_has_hotel_search_tool _strip_transport_Lists_match_hotel_choice
+按步骤判定、改写、渲染推送
+_build_hotel_fallback
+_render_itinerary_body
+_render_confirmed_block _push_rendered
+𠄌 结果去三个地方
+① 事件流
+② 状态机
+③ 返回值
+EventStream.push-_sse
+一—
+浏览器
+agent.aupdate_state
+LangGraph checkpoint
+（text，step,committed,body） -| _produce
+帧类型：assistant 文字、assistant_reset 撒回、
+后处理里由代码直接改 current_step、
+selected _hotels 等
+_produce 据此调 generate_plan 生成行程清单，并把消息写
+skill_ui 卡片（由 capabilities 推）
+字段，不等模型调工具
+进 Message表
+一句话看懂这个文件：execute_turn 先让Agent自由发挥，再在回合末用七道后处理把班次、天气、酒店、行程正文换成代码直出的真数据——模型负责“说”，数字由代码“定”；出口只有三个：
+EventStream、aupdate_state、返回给_produce。

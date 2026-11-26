@@ -1,0 +1,9 @@
+{
+  "actual_redis_window": [
+    200,
+    200,
+    429
+  ],
+  "revoked_key_status": 401,
+  "production_debug_status": 403
+}

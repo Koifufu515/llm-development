@@ -1,0 +1,17 @@
+.env
+.env.*
+!.env.example
+.venv
+logs/
+snapshots/
+reports/
+__pycache__/
+*.pyc
+.git/
+.pytest_cache/
+.ruff_cache/
+private/
+交付/
+
+.DS_Store
+._*

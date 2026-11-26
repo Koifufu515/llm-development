@@ -1,0 +1,564 @@
+{
+  "scope": "同城同查询/同模型/同管线；冷时只清本查询Redis键，计入真实查询优化与LLM重排，索引已加载；预热一次后各3轮。",
+  "corpus": {
+    "status": "ready",
+    "documents": 71,
+    "cities": 39,
+    "characters": 404025,
+    "parents": 654,
+    "children": 3120,
+    "version": "82743fa72fa86b29597c16e0",
+    "embedding": "text-embedding-v2",
+    "vector_store": "Chroma",
+    "cache": "Redis",
+    "reranker": "Qwen LLM"
+  },
+  "rows": [
+    {
+      "repeat": 1,
+      "cold": {
+        "seconds": 11.98003500001505,
+        "cache_hit": false,
+        "ids": [
+          "4cad97262ad2d31b77cb4c17",
+          "2118caad6924f80c0694f331",
+          "c1cbba707345c0e0b4fd77e7"
+        ],
+        "queries": [
+          "苏州园林和博物馆游览推荐",
+          "苏州有哪些值得推荐的园林和博物馆游览路线？",
+          "在苏州，哪些园林与博物馆适合一起参观游览？",
+          "苏州经典园林和博物馆的游览推荐有哪些？"
+        ],
+        "pipeline": "reference-0099-v3-scored-fallback-9-6-3",
+        "model": "qwen-plus",
+        "metrics": {
+          "request_id": "b35078a5-b6a9-400d-861d-028ed62f97ff",
+          "status": "ok",
+          "elapsed_seconds": 11.98,
+          "llm_calls": 2,
+          "llm_errors": 0,
+          "usage_reported_calls": 2,
+          "input_tokens": 821,
+          "output_tokens": 488,
+          "usage_complete": true,
+          "first_token_seconds": null
+        },
+        "pipeline_complete": true,
+        "rerank_scores": [
+          {
+            "document_index": 3,
+            "relevance_score": 10,
+            "reason": "明确介绍苏州博物馆（Suzhou Museum），由贝聿铭设计，核心推荐对象，高度相关",
+            "id": "4cad97262ad2d31b77cb4c17-0"
+          },
+          {
+            "document_index": 8,
+            "relevance_score": 10,
+            "reason": "明确介绍沧浪亭（The Surging Wave Pavilion），为苏州四大名园之一，属经典苏州园林，高度相关",
+            "id": "c1cbba707345c0e0b4fd77e7-3"
+          },
+          {
+            "document_index": 1,
+            "relevance_score": 9,
+            "reason": "明确提及苏州戏曲博物馆（Suzhou Opera Museum），属博物馆类，且具文化特色，高度相关",
+            "id": "2118caad6924f80c0694f331-1"
+          },
+          {
+            "document_index": 4,
+            "relevance_score": 8,
+            "reason": "明确介绍苏州丝绸博物馆（Suzhou Silk Museum），属专题博物馆，符合‘博物馆游览’要求",
+            "id": "cd021605697e68542136848b-0"
+          },
+          {
+            "document_index": 6,
+            "relevance_score": 7,
+            "reason": "提及园内水道游船及盆景收藏，隐含苏州园林（如留园/网师园等常见此类布局），但未明示园林名称，相关性较强",
+            "id": "fe4998bfc580fbb5e6db7202-3"
+          },
+          {
+            "document_index": 5,
+            "relevance_score": 5,
+            "reason": "介绍北寺塔及附属花园寺庙，属古建景点，有一定园林属性但非典型苏州园林，相关性中等",
+            "id": "e3fd12f6a067c0ea727c94b9-3"
+          },
+          {
+            "document_index": 7,
+            "relevance_score": 4,
+            "reason": "提到靠近拙政园和苏州博物馆的街道，间接关联，但内容聚焦咖啡店与建筑风格，非游览推荐主体",
+            "id": "32b19f6c4552e89f65293398-2"
+          },
+          {
+            "document_index": 0,
+            "relevance_score": 2,
+            "reason": "仅说明城市为苏州及资料性质，未提具体园林或博物馆，相关性低",
+            "id": "fe4998bfc580fbb5e6db7202-0"
+          },
+          {
+            "document_index": 2,
+            "relevance_score": 1,
+            "reason": "描述商业设施与公园，未涉及园林或博物馆，无关",
+            "id": "6394c57360842788a39cc35a-2"
+          }
+        ],
+        "query_error": null,
+        "rerank_error": null,
+        "failures": []
+      },
+      "warm": {
+        "seconds": 0.004887833259999752,
+        "cache_hit": true,
+        "ids": [
+          "4cad97262ad2d31b77cb4c17",
+          "2118caad6924f80c0694f331",
+          "c1cbba707345c0e0b4fd77e7"
+        ],
+        "queries": [
+          "苏州园林和博物馆游览推荐",
+          "苏州有哪些值得推荐的园林和博物馆游览路线？",
+          "在苏州，哪些园林与博物馆适合一起参观游览？",
+          "苏州经典园林和博物馆的游览推荐有哪些？"
+        ],
+        "pipeline": "reference-0099-v3-scored-fallback-9-6-3",
+        "model": "qwen-plus",
+        "metrics": {
+          "request_id": "6947eafe-1208-4119-b3ce-1a51e412c5e2",
+          "status": "ok",
+          "elapsed_seconds": 0.0049,
+          "llm_calls": 0,
+          "llm_errors": 0,
+          "usage_reported_calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "usage_complete": true,
+          "first_token_seconds": null
+        },
+        "pipeline_complete": true,
+        "rerank_scores": [
+          {
+            "document_index": 3,
+            "relevance_score": 10,
+            "reason": "明确介绍苏州博物馆（Suzhou Museum），由贝聿铭设计，核心推荐对象，高度相关",
+            "id": "4cad97262ad2d31b77cb4c17-0"
+          },
+          {
+            "document_index": 8,
+            "relevance_score": 10,
+            "reason": "明确介绍沧浪亭（The Surging Wave Pavilion），为苏州四大名园之一，属经典苏州园林，高度相关",
+            "id": "c1cbba707345c0e0b4fd77e7-3"
+          },
+          {
+            "document_index": 1,
+            "relevance_score": 9,
+            "reason": "明确提及苏州戏曲博物馆（Suzhou Opera Museum），属博物馆类，且具文化特色，高度相关",
+            "id": "2118caad6924f80c0694f331-1"
+          },
+          {
+            "document_index": 4,
+            "relevance_score": 8,
+            "reason": "明确介绍苏州丝绸博物馆（Suzhou Silk Museum），属专题博物馆，符合‘博物馆游览’要求",
+            "id": "cd021605697e68542136848b-0"
+          },
+          {
+            "document_index": 6,
+            "relevance_score": 7,
+            "reason": "提及园内水道游船及盆景收藏，隐含苏州园林（如留园/网师园等常见此类布局），但未明示园林名称，相关性较强",
+            "id": "fe4998bfc580fbb5e6db7202-3"
+          },
+          {
+            "document_index": 5,
+            "relevance_score": 5,
+            "reason": "介绍北寺塔及附属花园寺庙，属古建景点，有一定园林属性但非典型苏州园林，相关性中等",
+            "id": "e3fd12f6a067c0ea727c94b9-3"
+          },
+          {
+            "document_index": 7,
+            "relevance_score": 4,
+            "reason": "提到靠近拙政园和苏州博物馆的街道，间接关联，但内容聚焦咖啡店与建筑风格，非游览推荐主体",
+            "id": "32b19f6c4552e89f65293398-2"
+          },
+          {
+            "document_index": 0,
+            "relevance_score": 2,
+            "reason": "仅说明城市为苏州及资料性质，未提具体园林或博物馆，相关性低",
+            "id": "fe4998bfc580fbb5e6db7202-0"
+          },
+          {
+            "document_index": 2,
+            "relevance_score": 1,
+            "reason": "描述商业设施与公园，未涉及园林或博物馆，无关",
+            "id": "6394c57360842788a39cc35a-2"
+          }
+        ],
+        "query_error": null,
+        "rerank_error": null,
+        "failures": []
+      },
+      "same_ids": true
+    },
+    {
+      "repeat": 2,
+      "cold": {
+        "seconds": 11.567292334046215,
+        "cache_hit": false,
+        "ids": [
+          "4cad97262ad2d31b77cb4c17",
+          "2118caad6924f80c0694f331",
+          "c1cbba707345c0e0b4fd77e7"
+        ],
+        "queries": [
+          "苏州园林和博物馆游览推荐",
+          "苏州有哪些值得推荐的园林和博物馆游览路线？",
+          "在苏州，哪些园林与博物馆适合一起参观游览？",
+          "苏州经典园林和博物馆的游览推荐有哪些？"
+        ],
+        "pipeline": "reference-0099-v3-scored-fallback-9-6-3",
+        "model": "qwen-plus",
+        "metrics": {
+          "request_id": "be56f49f-8af6-4e96-b08f-cdcd72223b66",
+          "status": "ok",
+          "elapsed_seconds": 11.5673,
+          "llm_calls": 2,
+          "llm_errors": 0,
+          "usage_reported_calls": 2,
+          "input_tokens": 821,
+          "output_tokens": 475,
+          "usage_complete": true,
+          "first_token_seconds": null
+        },
+        "pipeline_complete": true,
+        "rerank_scores": [
+          {
+            "document_index": 3,
+            "relevance_score": 10,
+            "reason": "明确介绍苏州博物馆（Suzhou Museum），由贝聿铭设计，核心推荐对象，高度相关",
+            "id": "4cad97262ad2d31b77cb4c17-0"
+          },
+          {
+            "document_index": 8,
+            "relevance_score": 10,
+            "reason": "介绍沧浪亭（Surging Wave Pavilion），为苏州四大名园之一，属经典古典园林，高度相关",
+            "id": "c1cbba707345c0e0b4fd77e7-3"
+          },
+          {
+            "document_index": 1,
+            "relevance_score": 9,
+            "reason": "明确提及苏州戏曲博物馆（Suzhou Opera Museum），属博物馆类，且具文化特色，高度相关",
+            "id": "2118caad6924f80c0694f331-1"
+          },
+          {
+            "document_index": 6,
+            "relevance_score": 9,
+            "reason": "提到乘船游览园内水道及盆景园，明显指向苏州古典园林（如网师园/留园等）体验，强相关",
+            "id": "fe4998bfc580fbb5e6db7202-3"
+          },
+          {
+            "document_index": 4,
+            "relevance_score": 8,
+            "reason": "明确介绍苏州丝绸博物馆（Suzhou Silk Museum），属专业博物馆，符合‘博物馆游览’要求",
+            "id": "cd021605697e68542136848b-0"
+          },
+          {
+            "document_index": 5,
+            "relevance_score": 6,
+            "reason": "介绍北寺塔及附属花园寺庙，属古建+园林元素，但非典型苏州古典园林，相关性中等",
+            "id": "e3fd12f6a067c0ea727c94b9-3"
+          },
+          {
+            "document_index": 7,
+            "relevance_score": 4,
+            "reason": "提及拙政园和苏州博物馆地理位置，间接关联，但内容聚焦街道风格与咖啡店，信息弱",
+            "id": "32b19f6c4552e89f65293398-2"
+          },
+          {
+            "document_index": 0,
+            "relevance_score": 2,
+            "reason": "仅说明城市为苏州及资料性质，未提具体园林或博物馆，相关性低",
+            "id": "fe4998bfc580fbb5e6db7202-0"
+          },
+          {
+            "document_index": 2,
+            "relevance_score": 1,
+            "reason": "描述商业设施与公园，未涉及园林或博物馆，无关",
+            "id": "6394c57360842788a39cc35a-2"
+          }
+        ],
+        "query_error": null,
+        "rerank_error": null,
+        "failures": []
+      },
+      "warm": {
+        "seconds": 0.0055657499469816685,
+        "cache_hit": true,
+        "ids": [
+          "4cad97262ad2d31b77cb4c17",
+          "2118caad6924f80c0694f331",
+          "c1cbba707345c0e0b4fd77e7"
+        ],
+        "queries": [
+          "苏州园林和博物馆游览推荐",
+          "苏州有哪些值得推荐的园林和博物馆游览路线？",
+          "在苏州，哪些园林与博物馆适合一起参观游览？",
+          "苏州经典园林和博物馆的游览推荐有哪些？"
+        ],
+        "pipeline": "reference-0099-v3-scored-fallback-9-6-3",
+        "model": "qwen-plus",
+        "metrics": {
+          "request_id": "1896ed30-f241-46c0-b81c-bca460532ac7",
+          "status": "ok",
+          "elapsed_seconds": 0.0056,
+          "llm_calls": 0,
+          "llm_errors": 0,
+          "usage_reported_calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "usage_complete": true,
+          "first_token_seconds": null
+        },
+        "pipeline_complete": true,
+        "rerank_scores": [
+          {
+            "document_index": 3,
+            "relevance_score": 10,
+            "reason": "明确介绍苏州博物馆（Suzhou Museum），由贝聿铭设计，核心推荐对象，高度相关",
+            "id": "4cad97262ad2d31b77cb4c17-0"
+          },
+          {
+            "document_index": 8,
+            "relevance_score": 10,
+            "reason": "介绍沧浪亭（Surging Wave Pavilion），为苏州四大名园之一，属经典古典园林，高度相关",
+            "id": "c1cbba707345c0e0b4fd77e7-3"
+          },
+          {
+            "document_index": 1,
+            "relevance_score": 9,
+            "reason": "明确提及苏州戏曲博物馆（Suzhou Opera Museum），属博物馆类，且具文化特色，高度相关",
+            "id": "2118caad6924f80c0694f331-1"
+          },
+          {
+            "document_index": 6,
+            "relevance_score": 9,
+            "reason": "提到乘船游览园内水道及盆景园，明显指向苏州古典园林（如网师园/留园等）体验，强相关",
+            "id": "fe4998bfc580fbb5e6db7202-3"
+          },
+          {
+            "document_index": 4,
+            "relevance_score": 8,
+            "reason": "明确介绍苏州丝绸博物馆（Suzhou Silk Museum），属专业博物馆，符合‘博物馆游览’要求",
+            "id": "cd021605697e68542136848b-0"
+          },
+          {
+            "document_index": 5,
+            "relevance_score": 6,
+            "reason": "介绍北寺塔及附属花园寺庙，属古建+园林元素，但非典型苏州古典园林，相关性中等",
+            "id": "e3fd12f6a067c0ea727c94b9-3"
+          },
+          {
+            "document_index": 7,
+            "relevance_score": 4,
+            "reason": "提及拙政园和苏州博物馆地理位置，间接关联，但内容聚焦街道风格与咖啡店，信息弱",
+            "id": "32b19f6c4552e89f65293398-2"
+          },
+          {
+            "document_index": 0,
+            "relevance_score": 2,
+            "reason": "仅说明城市为苏州及资料性质，未提具体园林或博物馆，相关性低",
+            "id": "fe4998bfc580fbb5e6db7202-0"
+          },
+          {
+            "document_index": 2,
+            "relevance_score": 1,
+            "reason": "描述商业设施与公园，未涉及园林或博物馆，无关",
+            "id": "6394c57360842788a39cc35a-2"
+          }
+        ],
+        "query_error": null,
+        "rerank_error": null,
+        "failures": []
+      },
+      "same_ids": true
+    },
+    {
+      "repeat": 3,
+      "cold": {
+        "seconds": 11.84462954197079,
+        "cache_hit": false,
+        "ids": [
+          "4cad97262ad2d31b77cb4c17",
+          "2118caad6924f80c0694f331",
+          "c1cbba707345c0e0b4fd77e7"
+        ],
+        "queries": [
+          "苏州园林和博物馆游览推荐",
+          "苏州有哪些值得推荐的园林和博物馆游览路线？",
+          "在苏州，哪些园林与博物馆适合一起参观游览？",
+          "苏州经典园林和博物馆的游览推荐有哪些？"
+        ],
+        "pipeline": "reference-0099-v3-scored-fallback-9-6-3",
+        "model": "qwen-plus",
+        "metrics": {
+          "request_id": "c745d5e6-8b0e-4597-b735-61d4789e098d",
+          "status": "ok",
+          "elapsed_seconds": 11.8446,
+          "llm_calls": 2,
+          "llm_errors": 0,
+          "usage_reported_calls": 2,
+          "input_tokens": 821,
+          "output_tokens": 488,
+          "usage_complete": true,
+          "first_token_seconds": null
+        },
+        "pipeline_complete": true,
+        "rerank_scores": [
+          {
+            "document_index": 3,
+            "relevance_score": 10,
+            "reason": "明确介绍苏州博物馆（Suzhou Museum），由贝聿铭设计，核心推荐对象，高度相关",
+            "id": "4cad97262ad2d31b77cb4c17-0"
+          },
+          {
+            "document_index": 8,
+            "relevance_score": 10,
+            "reason": "明确介绍沧浪亭（The Surging Wave Pavilion），为苏州四大名园之一，属经典苏州园林，高度相关",
+            "id": "c1cbba707345c0e0b4fd77e7-3"
+          },
+          {
+            "document_index": 1,
+            "relevance_score": 9,
+            "reason": "明确提及苏州戏曲博物馆（Suzhou Opera Museum），属博物馆类，且具文化特色，高度相关",
+            "id": "2118caad6924f80c0694f331-1"
+          },
+          {
+            "document_index": 4,
+            "relevance_score": 8,
+            "reason": "明确介绍苏州丝绸博物馆（Suzhou Silk Museum），属专题博物馆，符合‘博物馆游览’要求",
+            "id": "cd021605697e68542136848b-0"
+          },
+          {
+            "document_index": 6,
+            "relevance_score": 7,
+            "reason": "提及园内水道游船及盆景收藏，隐含苏州园林（如留园/网师园等常见此类布局），但未明示园林名称，相关性较强",
+            "id": "fe4998bfc580fbb5e6db7202-3"
+          },
+          {
+            "document_index": 5,
+            "relevance_score": 5,
+            "reason": "介绍北寺塔及附属花园寺庙，属古建景点，有一定园林属性但非典型苏州园林，相关性中等",
+            "id": "e3fd12f6a067c0ea727c94b9-3"
+          },
+          {
+            "document_index": 7,
+            "relevance_score": 4,
+            "reason": "提到靠近拙政园和苏州博物馆的街道，间接关联，但内容聚焦咖啡店与建筑风格，非游览推荐主体",
+            "id": "32b19f6c4552e89f65293398-2"
+          },
+          {
+            "document_index": 0,
+            "relevance_score": 2,
+            "reason": "仅说明城市为苏州及资料性质，未提具体园林或博物馆，相关性低",
+            "id": "fe4998bfc580fbb5e6db7202-0"
+          },
+          {
+            "document_index": 2,
+            "relevance_score": 1,
+            "reason": "描述商业设施与公园，未涉及园林或博物馆，无关",
+            "id": "6394c57360842788a39cc35a-2"
+          }
+        ],
+        "query_error": null,
+        "rerank_error": null,
+        "failures": []
+      },
+      "warm": {
+        "seconds": 0.006236916873604059,
+        "cache_hit": true,
+        "ids": [
+          "4cad97262ad2d31b77cb4c17",
+          "2118caad6924f80c0694f331",
+          "c1cbba707345c0e0b4fd77e7"
+        ],
+        "queries": [
+          "苏州园林和博物馆游览推荐",
+          "苏州有哪些值得推荐的园林和博物馆游览路线？",
+          "在苏州，哪些园林与博物馆适合一起参观游览？",
+          "苏州经典园林和博物馆的游览推荐有哪些？"
+        ],
+        "pipeline": "reference-0099-v3-scored-fallback-9-6-3",
+        "model": "qwen-plus",
+        "metrics": {
+          "request_id": "fb09393c-53bd-4af0-adea-4451f19d65b1",
+          "status": "ok",
+          "elapsed_seconds": 0.0062,
+          "llm_calls": 0,
+          "llm_errors": 0,
+          "usage_reported_calls": 0,
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "usage_complete": true,
+          "first_token_seconds": null
+        },
+        "pipeline_complete": true,
+        "rerank_scores": [
+          {
+            "document_index": 3,
+            "relevance_score": 10,
+            "reason": "明确介绍苏州博物馆（Suzhou Museum），由贝聿铭设计，核心推荐对象，高度相关",
+            "id": "4cad97262ad2d31b77cb4c17-0"
+          },
+          {
+            "document_index": 8,
+            "relevance_score": 10,
+            "reason": "明确介绍沧浪亭（The Surging Wave Pavilion），为苏州四大名园之一，属经典苏州园林，高度相关",
+            "id": "c1cbba707345c0e0b4fd77e7-3"
+          },
+          {
+            "document_index": 1,
+            "relevance_score": 9,
+            "reason": "明确提及苏州戏曲博物馆（Suzhou Opera Museum），属博物馆类，且具文化特色，高度相关",
+            "id": "2118caad6924f80c0694f331-1"
+          },
+          {
+            "document_index": 4,
+            "relevance_score": 8,
+            "reason": "明确介绍苏州丝绸博物馆（Suzhou Silk Museum），属专题博物馆，符合‘博物馆游览’要求",
+            "id": "cd021605697e68542136848b-0"
+          },
+          {
+            "document_index": 6,
+            "relevance_score": 7,
+            "reason": "提及园内水道游船及盆景收藏，隐含苏州园林（如留园/网师园等常见此类布局），但未明示园林名称，相关性较强",
+            "id": "fe4998bfc580fbb5e6db7202-3"
+          },
+          {
+            "document_index": 5,
+            "relevance_score": 5,
+            "reason": "介绍北寺塔及附属花园寺庙，属古建景点，有一定园林属性但非典型苏州园林，相关性中等",
+            "id": "e3fd12f6a067c0ea727c94b9-3"
+          },
+          {
+            "document_index": 7,
+            "relevance_score": 4,
+            "reason": "提到靠近拙政园和苏州博物馆的街道，间接关联，但内容聚焦咖啡店与建筑风格，非游览推荐主体",
+            "id": "32b19f6c4552e89f65293398-2"
+          },
+          {
+            "document_index": 0,
+            "relevance_score": 2,
+            "reason": "仅说明城市为苏州及资料性质，未提具体园林或博物馆，相关性低",
+            "id": "fe4998bfc580fbb5e6db7202-0"
+          },
+          {
+            "document_index": 2,
+            "relevance_score": 1,
+            "reason": "描述商业设施与公园，未涉及园林或博物馆，无关",
+            "id": "6394c57360842788a39cc35a-2"
+          }
+        ],
+        "query_error": null,
+        "rerank_error": null,
+        "failures": []
+      },
+      "same_ids": true
+    }
+  ]
+}

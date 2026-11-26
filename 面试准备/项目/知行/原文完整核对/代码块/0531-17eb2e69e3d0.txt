@@ -1,0 +1,78 @@
+# ============== 步骤 5.5：短期记忆同步 ==============
+async def sync_express_state(conversation_id: str, req: ExpressRequirement,
+                             reply: str, plan_id: str | None,
+                             sync: dict | None = None) -> None:
+    """快速通道结束后把上下文一次性写入 LangGraph thread（短期记忆）。
+    快速通道绕过状态机，thread 中缺少行程相关状态；同步完成后用户后续调整需求可直接在状态机续接，无需重新提问。
+    必须一次性写入全部数据，同一thread多次调用aupdate_state会触发Ambiguous update异常。
+    调用时机：清单落库完成后，此时行程数据才完整可用。
+    """
+    import uuid as _uuid
+    from langchain_core.messages import AIMessage, HumanMessage
+    from app.agents.handoffs.travel_agent import create_travel_agent
+    from app.models.base import async_session_maker
+    from app.services.itinerary_plan_service import get_plan
+
+    itinerary_list: list = []
+    if plan_id:
+        async with async_session_maker() as db:
+            plan = await get_plan(db, plan_id, _uuid.UUID(conversation_id))
+        itinerary_list = (plan.plan_data.get("itinerary_list") if plan else None) or []
+
+    agent = await create_travel_agent()
+    # 提高递归上限，防止长回合被默认25上限截断
+    config = {"configurable": {"thread_id": conversation_id}, "recursion_limit": 60}
+    requirement = {
+        "departure_city": req.departure_city,
+        "destination": req.destination,
+        "departure_date": req.departure_date,
+        "travel_days": req.travel_days,
+        "adult_count": req.adult_count,
+        "children_count": req.children_count,
+        "budget_min": float(req.budget_max or 0),
+        "budget_max": float(req.budget_max or 0),
+        # 档位口径与 state_transition 的三档同源：express 只有"人均预算上限"一个数，
+        #   以其同时充当上下限（min=max），再套同一张阈值表（<3000 经济 / <8000 舒适 / 否则高端）
+        "budget_level": ("economy" if (req.budget_max or 0) < 3000
+                         else "comfort" if (req.budget_max or 0) < 8000 else "luxury"),
+        "travel_styles": req.travel_styles,
+        "special_needs": "",
+    }
+    # 与 _select_choices 同口径：按勾选顺序取首个已知模式（不再默认 train 优先）
+    transport = next((m for m in req.transport_types if m in {"train", "flight", "driving"}), "driving")
+    updates = {
+        "messages": [
+            HumanMessage(content=(
+                f"[{'自动确认表单' if req.auto_confirm else '多目的地行程'}] "
+                f"目的地 {req.destination}，{req.departure_date} 出发，"
+                f"{req.travel_days} 天，{req.adult_count + req.children_count} 人，"
+                f"人均预算≤{req.budget_max or '不限'}元"
+            )),
+            AIMessage(content=reply[:2000]),  # 规划结果摘要，避免checkpoint数据膨胀
+        ],
+        "user_id": "",
+        "auto_confirm": True,
+        "user_requirement": requirement,
+        "selected_destination": req.destination,
+        "selected_transport": transport,
+        "selected_accommodation_types": req.accommodation_types or ["economy_hotel"],
+        "selected_food_types": req.food_preferences or ["local", "specialty"],
+        "itinerary": itinerary_list,
+        "current_step": "budget_summarization",
+    }
+    if sync:
+        sel = sync.get("sel") or {}
+        updates["leg_prices"] = {
+            f"{tr['src']}→{tr['dst']}": float(tr["price"])
+            for tr in (sel.get("transports") or []) if float(tr.get("price") or 0) > 0
+        }
+        updates["stay_prices"] = {
+            h["city"]: float(h["price"])
+            for h in (sel.get("hotels") or []) if float(h.get("price") or 0) > 0
+        }
+        updates["itinerary_body"] = sync.get("itinerary_body") or []
+        if sync.get("breakdown"):
+            updates["budget"] = sync["breakdown"]
+    # 使用异步aupdate_state，同步update_state会与AsyncPostgresSaver产生调用异常
+    await agent.aupdate_state(config, updates)
+    app_logger.info("[express] 状态机短期记忆已同步（含 itinerary/预算账本，current_step=budget_summarization）")

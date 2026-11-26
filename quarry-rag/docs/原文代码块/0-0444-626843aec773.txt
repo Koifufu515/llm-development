@@ -1,0 +1,2 @@
+- run: uv run python -m quarry.scripts.run_eval --label ci --judge
+- run: uv run python -m quarry.scripts.compare_eval --base baseline --new ci --gate

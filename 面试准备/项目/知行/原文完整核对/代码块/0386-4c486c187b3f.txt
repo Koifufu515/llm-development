@@ -1,0 +1,5 @@
+"""_multi_city_names 演示：多城返回城市列表；单城故意返回空列表，让老的"整步确认"路径零改动（纯函数，无需密钥）"""
+from app.tools.state_transition import _multi_city_names
+
+for dest in ["天津、上海", "北京, 天津 上海", "上海", ""]:
+    print(f"{dest!r:16} → {_multi_city_names({'selected_destination': dest})}")

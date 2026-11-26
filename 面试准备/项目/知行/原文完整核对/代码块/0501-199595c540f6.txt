@@ -1,0 +1,3 @@
+assistant 生成 5000 字 ──┬─ compress_content → 300 字摘要 → Message.content（列表预览）
+                         └─ 原文                        → extra_info.original（详情渲染）
+GET /messages 两样一起返回，列表读 content，详情读 original

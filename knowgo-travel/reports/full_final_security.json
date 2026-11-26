@@ -1,0 +1,12 @@
+{
+  "parallel_same_registration": [
+    201,
+    409
+  ],
+  "formal_owner": 200,
+  "formal_anonymous": 401,
+  "legacy_cannot_read_formal": 404,
+  "legacy_cannot_write_formal": 404,
+  "legacy_own_demo_still_works": 200,
+  "foreign_card_is_404": 404
+}

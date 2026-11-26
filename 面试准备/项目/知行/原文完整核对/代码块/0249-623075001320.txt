@@ -1,0 +1,36 @@
+class DrivingSubmitSelection(BaseModel):
+    """【提交】前端回传的单段确认结果（只读确认：无路线策略、无班次号，故仅需 segment_id）"""
+
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
+    segment_id: str = Field(description="段标识，必须存在于下发 payload 的 segments 中")
+
+class DrivingSubmitPayload(BaseModel):
+    """【提交】前端一次性全局提交的 payload（整批确认，不选策略）"""
+
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
+    skill_name: Literal["driving_multi_segment"] = DRIVING_MULTI_SEGMENT_SKILL
+    segments: list[DrivingSubmitSelection] = Field(
+        description="全部段的确认项，顺序不限（后端按 segment_id 归位）"
+    )
+
+class DrivingSubmitResult(BaseModel):
+    """【提交回执】只反映基础合法性校验结果（段是否存在、是否覆盖完整）"""
+
+    ok: bool = Field(description="全部段校验通过为 True")
+    code: str = Field(
+        description=(
+            "结果码：OK / EMPTY_SELECTION / SEGMENT_NOT_FOUND / INCOMPLETE / NO_PAYLOAD / "
+            "INVALID_PAYLOAD / STEP_MISMATCH"
+        )
+    )
+    msg: str = Field(description="面向 Agent 的中文说明")
+    accepted: list[DrivingSubmitSelection] = Field(
+        default_factory=list, description="校验通过的确认项（原样回显）"
+    )
+    # 已确认段的展示文本（"北京→上海 自驾 1210.5km 12:30"）：提交成功后由路由侧拼成
+    # 一条合成发言续跑住宿步，故必须把段文本带出本模块
+    texts: list[str] = Field(
+        default_factory=list, description="已确认各段的展示文本，按行程段顺序排列"
+    )

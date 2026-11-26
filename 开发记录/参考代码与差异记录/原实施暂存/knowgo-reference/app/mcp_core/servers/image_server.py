@@ -1,0 +1,1 @@
+../../../../../../../knowgo-travel/app/mcp_core/servers/image_server.py

@@ -1,0 +1,68 @@
+"""
+住宿候选解析核心（酒店 MCP 原始返回 → 标准门店 / 品牌候选）
+
+来源：原 app/capabilities/hotel_single/hotel_agent_tool.py 的解析部分（单段 Skill 已下线，整体搬迁至此），
+全项目只保留这一份解析口径，供 hotel_multi_segment 按段并行调用。
+
+解析策略（两级兜底，因 MCP 原始返回格式可能随服务端版本变化）：
+  ① JSON 优先：正文即 JSON → json.loads；
+  ② 结构化取值：递归找"最像酒店记录"的字典列表，按多候选键名取值（中英文键都认）；
+  两级都拿不到门店 → 由调用方降级 brand 模式（本模块只负责如实返回空列表）。
+"""
+import json
+import re
+from datetime import date as _date
+from typing import Any, Optional
+
+from langchain_core.tools import BaseTool
+
+from app.capabilities.hotel_multi_segment.hotel_skill_schema import HotelBrand, HotelOption
+from app.tools.mcp_tools import get_all_mcp_tools
+from app.utils.logger import app_logger
+
+# ==================== 品牌兜底口径 ====================
+# 与 app/services/chat_stream_executor.py 的 _COMMON_HOTELS 同口径（国民级认知度品牌，
+# 不含具体门店与实时价格，避免与实时报价混淆）；此处本地常量避免 Skill 反向依赖大服务模块
+_BRANDS: dict[str, list[str]] = {
+    "economy_hotel": ["如家", "汉庭", "7 天", "锦江之星", "格林豪泰", "莫泰"],
+    "star_hotel": ["希尔顿", "万豪", "洲际", "香格里拉", "凯悦", "雅高"],
+    "hostel": ["花间堂", "途家民宿", "小猪民宿", "美团民宿"],
+    "youth_hostel": ["国际青年旅舍（YHA）", "万里路青年旅舍", "如家青旅"],
+}
+# priceLevel 文案 → 档位键（未命中一律按经济型，与项目住宿档位口径一致）
+_LEVEL_HINTS = (
+    ("youth_hostel", ("青年", "青旅", "YHA")),
+    ("hostel", ("民宿", "客栈", "公寓")),
+    ("star_hotel", ("星级", "高端", "豪华", "五星", "四星", "舒适")),
+    ("economy_hotel", ("经济", "快捷", "低", "预算")),
+)
+# 档位 → MCP starRatings 入参（按项目既有 prompt 口径：高预算 [4.5,5.0]，低预算 [0.0,3.0]）
+_STAR_RATINGS = {
+    "economy_hotel": [0.0, 3.0],
+    "star_hotel": [4.5, 5.0],
+    "hostel": [0.0, 5.0],
+    "youth_hostel": [0.0, 5.0],
+}
+
+# 酒店查询工具：按名过滤（与 app/tools/mcp_tools.get_hotel_tools 同口径）
+_HOTEL_TOOL_HINTS = ("searchhotels", "find-hotels")
+
+# ==================== 记录键名候选（中英文都认，服务端换字段名时不至于解析不出） ====================
+_NAME_KEYS = ("hotelname", "hotel_name", "hotel", "name", "title", "酒店名称", "店名", "名称")
+_TOTAL_KEYS = ("totalprice", "total_price", "totalamount", "total_amount", "total", "总价", "合计", "总计")
+_NIGHT_KEYS = (
+    "pricepernight", "price_per_night", "nightlyprice", "nightly_price",
+    "avgprice", "avg_price", "unitprice", "price", "每晚", "单价", "均价",
+)
+_RATING_KEYS = ("starrating", "star_rating", "star", "rating", "score", "评分", "星级", "钻级")
+_ADDR_KEYS = ("address", "addr", "location", "position", "地址", "位置", "详细地址")
+# 价格在 aigohotel 真实返回里是**嵌套对象**（实测）：
+#   "price": {"message":"查价成功。1晚总价：193CNY（约193CNY/晚）","hasPrice":true,"lowestPrice":193.0}
+# 故优先取 price.* 子字段
+_PRICE_OBJ_KEYS = ("price", "priceinfo", "pricing")
+_PRICE_NIGHT_KEYS = ("lowestprice", "pricepernight", "nightlyprice", "pernightprice", "avgprice")
+_PRICE_TOTAL_KEYS = ("totalprice", "totalamount", "total")
+
+# 查询工具缓存（一次解析全量工具列表后复用）
+_QUERY_TOOL: Optional[BaseTool] = None
+# ==================== 档位 / 日期 / 数值小工具 ====================

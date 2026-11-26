@@ -1,0 +1,5 @@
+"""stay_nights 演示：住几晚 = 离店 - 入住；日期不合法或倒挂按 1 晚兜底（纯函数，无需密钥）"""
+from app.capabilities.hotel_multi_segment.hotel_parser import stay_nights
+
+for a, b in [("2026-10-01", "2026-10-03"), ("2026-10-01", "2026-10-06"), ("2026-10-03", "2026-10-01"), ("2026-10-01", "明天")]:
+    print(f"{a} → {b}：{stay_nights(a, b)} 晚")

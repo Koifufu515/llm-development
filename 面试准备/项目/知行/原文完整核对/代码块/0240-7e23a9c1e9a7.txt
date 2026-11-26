@@ -1,0 +1,60 @@
+async def emit_flight_skill_ui(
+    stream: Any, conversation_id: str, state: dict
+) -> tuple[Optional[FlightMultiSegmentPayload], str]:
+    """手动确认模式：并行查全部段 → 推 skill_ui 帧
+
+    返回 (payload, status)，status 供调用方决定正文怎么写：
+      pushed    —— 已下发卡片（payload 非空）
+      empty     —— 各段都没查到候选，未下发卡片（调用方须如实告知，不能静默）
+      skipped   —— 不走航班卡片路线（未选航班 / 同时选了高铁 / 0 段）
+    """
+    if not flight_card_mode(state):
+        return None, "skipped"
+    legs = _legs_with_dates(state)
+    payload = await _payload_for(conversation_id, legs)
+    if not any(seg.flight_list for seg in payload.segments):
+        app_logger.warning("⚠️ 交通步多段航班全部为空，本次不下发选择卡片（避免空卡片）")
+        return None, "empty"
+    stream.push(make_event(ROLE_SKILL_UI, {
+        "skill_name": FLIGHT_MULTI_SEGMENT_SKILL,
+        "data": payload.model_dump(by_alias=True),
+    }))
+    app_logger.info(
+        f"✈️ 已下发多段航班选择卡片：{len(payload.segments)} 段"
+        f"（各段候选 {[len(s.flight_list) for s in payload.segments]}）"
+    )
+    return payload, "pushed"
+
+def build_lead_text(payload: Optional[FlightMultiSegmentPayload]) -> str:
+    """卡片上方的一句引导语（确定性文案，不用模型自由发挥）"""
+    n = len(payload.segments) if payload else 0
+    text = (f"已为您**并行查询**到全部 {n} 段航班的实时班次（段与段同时查询，未做先后校验）。"
+            f"请在下方卡片中依次选定每一段航班，确认无误后一次提交。\n")
+    # ★ 票价说明归代码：有价就说有价，没价就把"为什么没价"讲清楚，
+    #   免得模型自由发挥去编一个价，或者含糊其辞让用户以为是免费的
+    segs = list(payload.segments) if payload else []
+    priced = sum(1 for s in segs for o in s.flight_list if o.price > 0)
+    total = sum(len(s.flight_list) for s in segs)
+    if total and priced == 0:
+        text += "（本次票价数据源暂未返回报价，卡片内票价显示为「待定」，请以航司官方渠道为准。）\n"
+    elif total and priced < total:
+        text += f"（{total} 班中 {priced} 班取到实时票价，其余显示「待定」。）\n"
+    return text
+
+# 本批段的签名缓存：同一会话、同一批段的后续轮次直接复用，避免同一批段被反复查航班 MCP
+_SIG_CACHE: SignatureCache[FlightMultiSegmentPayload] = SignatureCache("flight")
+
+def _any_has_options(payload: FlightMultiSegmentPayload) -> bool:
+    """航班的缓存口径：只要有一段查到航班就缓存（没有机场码的段本来就是空的，重试也查不出来）"""
+    # ★ 航班口径：有一段查到就行
+    return any(seg.flight_list for seg in payload.segments)
+
+async def _payload_for(conversation_id: str, legs: list[FlightLeg]) -> FlightMultiSegmentPayload:
+    """同一会话同一批段只查一次；全部段都为空时不写缓存，留给下次重试"""
+    sig = leg_signature(legs)
+    cached = _SIG_CACHE.get(conversation_id, sig)
+    if cached is not None:
+        return cached
+    payload = await build_flight_multi_segment_payload(legs, cache_key=conversation_id)
+    _SIG_CACHE.store(conversation_id, sig, payload, is_complete=_any_has_options)
+    return payload

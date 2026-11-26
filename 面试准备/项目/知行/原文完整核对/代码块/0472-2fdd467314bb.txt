@@ -1,0 +1,18 @@
+@router.get("")
+async def list_messages(
+        conversation_id: str = Query(..., min_length=1, description="会话 id"),
+        user: User = Depends(get_current_user),
+        db: AsyncSession = Depends(get_db),
+):
+    """历史消息：{conversation, messages}（assistant 全文/清单回放存于 message.extra_info）"""
+    conv = await get_owned_conversation(db, conversation_id, user.id)
+    if not conv:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="会话不存在")
+
+    result = await db.execute(
+        select(Message)
+        .where(Message.conversation_id == conv.id)
+        .order_by(Message.created_at)
+    )
+    messages = result.scalars().all()
+    return {"conversation": conv.to_dict(), "messages": [m.to_dict() for m in messages]}

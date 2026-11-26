@@ -1,0 +1,1 @@
+schedule_quality_check(plan.model_dump())

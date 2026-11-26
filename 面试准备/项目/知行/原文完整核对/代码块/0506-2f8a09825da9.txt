@@ -1,0 +1,57 @@
+# 自动选目的地
+class DestinationPick(BaseModel):
+    # LLM结构化返回模型，替代之前用竖线分割字符串的方案，避免解析翻车
+    city: str = Field(description='目的地城市名，如"杭州"；只写城市，不带省份、不带"市"字')
+    reason: str = Field(description="推荐理由，40 字以内，说明为什么匹配这次出行")
+
+_PICK_DEST_PROMPT = (
+    "你是目的地推荐专家。用户信息：从 {departure_city} 出发，{departure_date} 出行 "
+    "{travel_days} 天，{people} 人，人均预算≤{budget}元，交通方式：{transport}，"
+    "旅行风格：{styles}。\n"
+    "从国内真实城市中选出最匹配的一个目的地。要求：\n"
+    "1. 从出发地乘所选交通方式可达（高铁优先 5 小时内）\n"
+    "2. 匹配{season}的季节特征与旅行风格（如 culture→历史人文名城，food→美食之都）\n"
+    "3. 按 schema 填写 city 与 reason 两个字段，不要输出多余文字"
+)
+
+async def _pick_destination(req: ExpressRequirement) -> DestinationPick | None:
+    # 用户没填目的地时，调用大模型选城市，返回结构化结果，解析失败返回None
+    # 根据出发月份判断季节
+    season = {"3": "春季", "4": "春季", "5": "春季", "6": "夏季", "7": "夏季", "8": "夏季",
+              "9": "秋季", "10": "秋季", "11": "秋季", "12": "冬季", "1": "冬季", "2": "冬季"}.get(
+        req.departure_date[5:7], "")
+
+    # 初始化通义模型，低温度保证结果稳定
+    llm = ChatTongyi(
+        model=settings.qwen_model_name,
+        api_key=settings.dashscope_api_key,
+        temperature=0.3,
+    )
+
+    # 填充prompt变量
+    prompt = _PICK_DEST_PROMPT.format(
+        departure_city=req.departure_city, departure_date=req.departure_date,
+        travel_days=req.travel_days,
+        people=f"{req.adult_count}成人{req.children_count}儿童",
+        budget=req.budget_max or "不限", transport="/".join(req.transport_types) or "高铁",
+        styles="、".join(req.travel_styles) or "不限", season=season,
+    )
+
+    # 绑定Pydantic模型，强制输出结构化数据
+    structured = llm.with_structured_output(DestinationPick)
+
+    try:
+        picked: DestinationPick = await structured.ainvoke(prompt)
+    except Exception:
+        app_logger.warning("[express] 目的地自动选定失败：模型未给出合规结构", exc_info=True)
+        return None
+
+    city = (picked.city or "").strip()
+    # 简单校验城市字段，防止模型瞎写一堆附加信息
+    if not city or len(city) > 10:
+        app_logger.warning(f"[express] 目的地自动选定不合规: city={picked.city!r}")
+        return None
+
+    picked.city = city
+    app_logger.info(f"[express] 自动选定目的地: {city}（{picked.reason}）")
+    return picked

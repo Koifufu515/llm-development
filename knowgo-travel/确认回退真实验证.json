@@ -1,0 +1,99 @@
+{
+  "session_id": "f0ec4f35-fd63-4390-b1d8-7c978751c15a",
+  "first_confirm": {
+    "session_id": "f0ec4f35-fd63-4390-b1d8-7c978751c15a",
+    "reply": "需求已确认，现在进入交通规划阶段：\n\n- 出发地：上海\n- 目的地：杭州\n- 出发日期：2026-11-15\n- 天数：3天\n- 人数：1位成人，无儿童\n- 预算：每人2000元\n\n目前交通查询功能还没有接入，我无法提供具体的班次、票价或酒店信息，也不会编造。等功能开放后，我会第一时间为你查询上海到杭州的交通方案。",
+    "tool_calls": [
+      "confirm_requirement_tool"
+    ],
+    "current_step": "transport_planning",
+    "user_requirement": {
+      "departure_city": "上海",
+      "destination": "杭州",
+      "departure_date": "2026-11-15",
+      "travel_days": 3,
+      "adult_count": 1,
+      "children_count": 0,
+      "budget_min": 2000.0,
+      "budget_max": 2000.0
+    },
+    "missing_fields": [],
+    "requirement_ready": true,
+    "requirement_revision": 0,
+    "requirement_confirmed": true,
+    "confirmed_revision": 0,
+    "selected_destination": "杭州",
+    "downstream": {
+      "transport_options": null,
+      "selected_transport": null,
+      "accommodation_options": null,
+      "itinerary": null,
+      "budget": null
+    },
+    "message_count": 12
+  },
+  "changed": {
+    "session_id": "f0ec4f35-fd63-4390-b1d8-7c978751c15a",
+    "reply": "目的地已改为苏州，其他需求不变。修改后需要重新确认：\n\n- 出发地：上海\n- 目的地：苏州\n- 出发日期：2026-11-15\n- 天数：3天\n- 人数：1位成人，无儿童\n- 预算：每人2000元\n\n确认无误的话，请单独回复“确认”。",
+    "tool_calls": [
+      "record_requirement_tool"
+    ],
+    "current_step": "requirement_collection",
+    "user_requirement": {
+      "departure_city": "上海",
+      "destination": "苏州",
+      "departure_date": "2026-11-15",
+      "travel_days": 3,
+      "adult_count": 1,
+      "children_count": 0,
+      "budget_min": 2000.0,
+      "budget_max": 2000.0
+    },
+    "missing_fields": [],
+    "requirement_ready": true,
+    "requirement_revision": 1,
+    "requirement_confirmed": false,
+    "confirmed_revision": null,
+    "selected_destination": null,
+    "downstream": {
+      "transport_options": [],
+      "selected_transport": null,
+      "accommodation_options": [],
+      "itinerary": null,
+      "budget": null
+    },
+    "message_count": 16
+  },
+  "second_confirm": {
+    "session_id": "f0ec4f35-fd63-4390-b1d8-7c978751c15a",
+    "reply": "需求已确认，现在进入交通规划阶段：\n\n- 出发地：上海\n- 目的地：苏州\n- 出发日期：2026-11-15\n- 天数：3天\n- 人数：1位成人，无儿童\n- 预算：每人2000元\n\n目前交通查询功能还没有接入，我无法提供具体的班次、票价或酒店信息，也不会编造。等功能开放后，我会第一时间为你查询上海到苏州的交通方案。",
+    "tool_calls": [
+      "confirm_requirement_tool"
+    ],
+    "current_step": "transport_planning",
+    "user_requirement": {
+      "departure_city": "上海",
+      "destination": "苏州",
+      "departure_date": "2026-11-15",
+      "travel_days": 3,
+      "adult_count": 1,
+      "children_count": 0,
+      "budget_min": 2000.0,
+      "budget_max": 2000.0
+    },
+    "missing_fields": [],
+    "requirement_ready": true,
+    "requirement_revision": 1,
+    "requirement_confirmed": true,
+    "confirmed_revision": 1,
+    "selected_destination": "苏州",
+    "downstream": {
+      "transport_options": [],
+      "selected_transport": null,
+      "accommodation_options": [],
+      "itinerary": null,
+      "budget": null
+    },
+    "message_count": 20
+  }
+}

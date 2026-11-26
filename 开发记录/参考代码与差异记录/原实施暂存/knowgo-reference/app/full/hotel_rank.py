@@ -1,0 +1,1 @@
+../../../../../../knowgo-travel/app/full/hotel_rank.py

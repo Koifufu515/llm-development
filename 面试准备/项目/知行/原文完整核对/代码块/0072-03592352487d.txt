@@ -1,0 +1,10 @@
+from fastmcp import FastMCP
+mcp = FastMCP("service-name")
+
+@mcp.tool()
+async def some_tool(arg: str) -> str:
+    """docstring 就是给模型的工具说明"""
+    ...
+
+if __name__ == "__main__":
+    mcp.run(transport="stdio")

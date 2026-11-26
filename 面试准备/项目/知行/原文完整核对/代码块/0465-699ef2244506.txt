@@ -1,0 +1,36 @@
+"""对话服务层：编排层，产出统一事件流
+
+【最小桩】这里只立骨架：立即返回 EventStream + 后台任务推两条演示帧，
+让 messages.py 端点在本章就能跑通。真正的六段编排（意图路由 / 三条分流 /
+清单生成 / 长文压缩 / 落库）在环节 9–10 按片整份替换本文件，签名保持不变。
+"""
+import asyncio
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.event_stream import EventStream
+from app.core.events import make_event, ROLE_ASSISTANT, ROLE_DONE, ROLE_ERROR
+
+async def run_chat_turn(
+        db: AsyncSession, user_id: str, conversation_id: str, content: str,
+        force_planning: bool = False, persist_user: bool = True,
+        resume_stage: str | None = None,
+) -> EventStream:
+    """单轮对话：立即返回事件流，生产任务后台执行（调用方须在请求周期内消费完）
+
+    后三个参数（force_planning / persist_user / resume_stage）是卡片提交续跑专用，
+    环节 10 / 环节 11 才会用到；本桩全部走默认值。
+    """
+    stream = EventStream()
+    asyncio.create_task(_produce(stream, content))   # ★ 挂到后台就返回，不 await
+    return stream
+
+async def _produce(stream: EventStream, content: str) -> None:
+    """【最小桩】演示"边生边推 + 无论成败都 close"的生产者纪律"""
+    try:
+        stream.push(make_event(ROLE_ASSISTANT, f"（桩）已收到：{content}"))
+        stream.push(make_event(ROLE_DONE, "finish", code=200))   # done 恒为末帧
+    except Exception as e:
+        stream.push(make_event(ROLE_ERROR, str(e)))
+        stream.push(make_event(ROLE_DONE, "finish", code=500))
+    finally:
+        stream.close()   # ★ 无论中间出什么异常，close 必须执行

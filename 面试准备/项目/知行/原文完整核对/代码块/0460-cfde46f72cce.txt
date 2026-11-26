@@ -1,0 +1,2 @@
+有 close → [{'role': 'assistant', 'content': '推一帧', 'code': None}]
+没 close → 等了 2 秒还没结束：消费者卡在 await queue.get()，前端就是一直转圈圈

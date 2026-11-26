@@ -1,0 +1,11 @@
+"""_pick_flight 演示：JSON / 文本两种返回都能抠出"航班号 + 价格"，取最便宜（纯函数，无需密钥）"""
+import json
+
+from app.services.express_planning_service import _pick_flight
+
+as_json = json.dumps([{"flightNo": "MF8101", "price": 820}, {"flightNo": "ZH9502", "price": "¥650"}])
+as_text = "CA1829 福州→深圳 经济舱 760元\nMU5301 福州→深圳 经济舱 590元"
+
+print("JSON 形态 →", _pick_flight(as_json))    # 字符串价格 "¥650" 也能抠出数字
+print("文本形态 →", _pick_flight(as_text))     # JSON 解析失败 → 兜底正则抓"航班号…价格"
+print("没有数据 →", _pick_flight("暂无数据"))  # None → 这一段走降级

@@ -1,0 +1,52 @@
+async def emit_driving_skill_ui(
+    stream: Any, conversation_id: str, state: dict
+) -> tuple[Optional[DrivingMultiSegmentPayload], str]:
+    """手动确认模式：并行查全部段 → 推 skill_ui 帧
+
+    返回 (payload, status)，status 供调用方决定正文怎么写：
+      pushed    —— 已下发卡片（payload 非空）
+      empty     —— 各段都没查到路线，未下发卡片（调用方须如实告知，不能静默）
+      skipped   —— 不走自驾卡片路线（未选自驾 / 选了高铁或航班 / 0 段）
+    """
+    if not driving_card_mode(state):
+        return None, "skipped"
+    legs = _legs_with_dates(state)
+    payload = await _payload_for(conversation_id, legs)
+    if not any(seg.ok for seg in payload.segments):
+        app_logger.warning("⚠️ 交通步多段自驾路线全部为空，本次不下发确认卡片（避免空卡片）")
+        return None, "empty"
+    stream.push(make_event(ROLE_SKILL_UI, {
+        "skill_name": DRIVING_MULTI_SEGMENT_SKILL,
+        "data": payload.model_dump(by_alias=True),
+    }))
+    app_logger.info(
+        f"🚗 已下发多段自驾确认卡片：{len(payload.segments)} 段"
+        f"（各段 ok={[s.ok for s in payload.segments]}）"
+    )
+    return payload, "pushed"
+
+def build_lead_text(payload: Optional[DrivingMultiSegmentPayload]) -> str:
+    """卡片上方的一句引导语（确定性文案，不用模型自由发挥）"""
+    n = len(payload.segments) if payload else 0
+    return (f"已为您**并行查询**到全部 {n} 段自驾路线（每段均为高德默认策略的最优路线，"
+            f"不可选策略）。请在下方卡片中逐段核对，确认无误后一次提交。\n")
+
+# 本批段的签名缓存：同一会话、同一批段的后续轮次直接复用，避免同一批段被反复查高德 MCP
+_SIG_CACHE: SignatureCache[DrivingMultiSegmentPayload] = SignatureCache("driving")
+
+def _any_ok(payload: DrivingMultiSegmentPayload) -> bool:
+    """自驾的缓存口径：只要有一段查到路线就缓存"""
+    # ★ 自驾口径：有一段查到路线就行
+    return any(seg.ok for seg in payload.segments)
+
+async def _payload_for(
+    conversation_id: str, legs: list[DrivingLeg]
+) -> DrivingMultiSegmentPayload:
+    """同一会话同一批段只查一次；全部段都失败时不写缓存，留给下次重试"""
+    sig = leg_signature(legs)
+    cached = _SIG_CACHE.get(conversation_id, sig)
+    if cached is not None:
+        return cached
+    payload = await build_driving_multi_segment_payload(legs, cache_key=conversation_id)
+    _SIG_CACHE.store(conversation_id, sig, payload, is_complete=_any_ok)
+    return payload

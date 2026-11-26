@@ -1,0 +1,9 @@
+建会话 → 默认标题 新对话 | 状态 active | 字段 ['created_at', 'extra_info', 'id', 'status', 'title', 'updated_at', 'user_id']
+列表 → ['五一去杭州', '新对话'] （按更新时间倒序）
+改标题 → 200 国庆去成都 | 状态没传就不动: active
+bob 查 alice 的会话 → 404 {'detail': '会话不存在'}
+bob 删 alice 的会话 → 404 {'detail': '会话不存在'}
+不存在的 id → 404 {'detail': '会话不存在'}
+alice 软删 → 200 {'message': '会话已删除'}
+软删后列表 → ['五一去杭州']
+按 id 还能查到 → 200 deleted

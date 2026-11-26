@@ -1,0 +1,47 @@
+{
+  "scenario": "真实 DeepSeek + PostgreSQL 两轮需求收集",
+  "session_id": "f0ec4f35-fd63-4390-b1d8-7c978751c15a",
+  "first": {
+    "session_id": "f0ec4f35-fd63-4390-b1d8-7c978751c15a",
+    "reply": "已记下：杭州、3天、每人预算2000元。\n\n还需要确认几项：\n1. 从哪个城市出发？\n2. 计划哪天出发？",
+    "tool_calls": [
+      "record_requirement_tool"
+    ],
+    "current_step": "requirement_collection",
+    "user_requirement": {
+      "destination": "杭州",
+      "travel_days": 3,
+      "budget_min": 2000.0,
+      "budget_max": 2000.0
+    },
+    "missing_fields": [
+      "departure_city",
+      "departure_date",
+      "adult_count",
+      "children_count"
+    ],
+    "requirement_ready": false,
+    "message_count": 4
+  },
+  "second": {
+    "session_id": "f0ec4f35-fd63-4390-b1d8-7c978751c15a",
+    "reply": "需求已齐全，请确认：\n\n- 出发地：上海\n- 目的地：杭州\n- 出发日期：2026-11-15\n- 天数：3天\n- 人数：1位成人，无儿童\n- 预算：每人2000元\n\n确认无误的话，我就按这个需求继续。需要说明的是，目前我这边还不能查询交通、酒店或生成行程，后续功能开放后再为你安排。",
+    "tool_calls": [
+      "record_requirement_tool"
+    ],
+    "current_step": "requirement_collection",
+    "user_requirement": {
+      "departure_city": "上海",
+      "destination": "杭州",
+      "departure_date": "2026-11-15",
+      "travel_days": 3,
+      "adult_count": 1,
+      "children_count": 0,
+      "budget_min": 2000.0,
+      "budget_max": 2000.0
+    },
+    "missing_fields": [],
+    "requirement_ready": true,
+    "message_count": 8
+  }
+}

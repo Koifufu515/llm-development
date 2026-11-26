@@ -1,0 +1,13 @@
+Building prefix dict from the default dictionary ...
+Loading model from cache /var/folders/rk/qtxh2ds10vd6_cdg09pdzrbm0000gn/T/jieba.cache
+Loading model cost 0.223 seconds.
+Prefix dict has been built successfully.
+模式：已缓存 embedding（只测检索），预热完成
+
+并发 1    成功 100   失败 0    耗时  0.66s  QPS   151.1  p50     6.0ms  p95     9.7ms  p99    16.7ms
+并发 5    成功 100   失败 0    耗时  0.22s  QPS   457.0  p50     9.6ms  p95    18.5ms  p99    27.6ms
+并发 10   成功 100   失败 0    耗时  0.19s  QPS   517.6  p50    16.4ms  p95    35.7ms  p99    60.6ms
+并发 20   成功 100   失败 0    耗时  0.22s  QPS   458.5  p50    29.4ms  p95   131.1ms  p99   154.8ms
+并发 50   成功 100   失败 0    耗时  0.17s  QPS   578.0  p50    71.3ms  p95   123.8ms  p99   134.9ms
+
+embedding 真实调用 6 次，缓存命中 500 次

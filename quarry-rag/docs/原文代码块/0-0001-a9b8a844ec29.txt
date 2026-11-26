@@ -1,0 +1,28 @@
+{
+  "request_id": "7c1e9a52-0b7f-4d0e-9d1a-2f3b4c5d6e7f",
+  "query": "兵马俑门票多少钱",
+  "abstain": {"should_abstain": false, "reason": null, "top_dense_score": 0.7412, "threshold": 0.45},
+  "evidences": [
+    {
+      "chunk_id": "9c1e…",
+      "text": "兵马俑博物馆位于临潼区，门票 120 元，旺季开放时间 8:30 至 18:00……",
+      "context": "……门票 〔F1 门票价格〕，旺季开放时间 〔F2 开放时间〕……",
+      "context_level": "neighbors",
+      "citation": {
+        "source_uri": "travel-guide/西安.md",
+        "heading_path": ["西安", "游览", "秦始皇陵兵马俑"],
+        "char_start": 5120,
+        "char_end": 5388,
+        "locator_kind": "char",
+        "verified_at": "2026-09-01"
+      },
+      "facts": [
+        {"ref": "F1", "entity": "秦始皇帝陵博物院", "label": "门票价格", "qualifier": "旺季",
+         "value": "150", "status": "verified", "verified_at": "2026-09-01", "written_values": ["120"]}
+      ],
+      "score": 0.0325,
+      "rerank_score": 0.912
+    }
+  ],
+  "timings": {"recall_ms": 142.8, "rerank_ms": 231.5, "facts_ms": 3.2, "total_ms": 389.1}
+}

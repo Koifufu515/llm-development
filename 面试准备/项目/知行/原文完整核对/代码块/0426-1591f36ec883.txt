@@ -1,0 +1,3 @@
+写进 state 的键： ['budget', 'user_requirement'] | current_step 不在其中 → 流程终点
+预算： {'transport': 1120, 'accommodation': 1074, 'food': 1200, 'attractions': 90.0, 'misc': 800, 'total': 4284.0}
+写回真源：travel_days = 4 | budget_max = 4000

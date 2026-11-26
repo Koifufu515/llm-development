@@ -1,0 +1,19 @@
+MCP统一协议架构
+每个数据源出一个 MCP Server 一统一协议—一份代码接所有
+溫 高德 MCP Server
+二 12306 MCP Server
+糕酒店 MCP Server
+每个数据源出一个"MCP Server"
+（自建或第三方提供）
+统一MCP 协议
+MCP Client（一份代码接所有）
+核心层
+发现工具一
+server 会自报家门
+调用工具— 统一入参 / 出参格式
+⑦
+错误处理—— 统一异常类型
+LLM Agent
+只看到“工具”，不关心底层
+核心思路：每个数据源各自提供 MCP Server（自建或第三方），通过统一MCP协议暴露能力；MCP Client 只需一份代
+码即可发现、调用、处理所有 Server的工具—LLM Agent 只看到"工具列表”，完全不关心底层数据源差异。

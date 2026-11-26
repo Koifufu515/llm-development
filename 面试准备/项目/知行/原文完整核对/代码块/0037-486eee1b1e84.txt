@@ -1,0 +1,12 @@
+class UserRequirement(TypedDict):
+    departure_city: str             # 出发地点
+    destination: str                # 目的地（这一步可有可无）
+    departure_date: str             # 出发日期（YYYY-MM-DD）
+    travel_days: int                # 出行天数
+    adult_count: int                # 成人数量
+    children_count: int             # 儿童数量
+    budget_min: Optional[float]     # 预算下限
+    budget_max: Optional[float]     # 预算上限
+    budget_level: BudgetLevel       # 预算等级（工具内推断，不用户填）
+    travel_styles: list[TravelStyle]# 旅行风格（多选）
+    special_needs: Optional[str]    # 特殊需求

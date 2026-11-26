@@ -1,0 +1,476 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prometheus
+  namespace: wenshu
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: prometheus-discovery
+  namespace: wenshu
+rules:
+- apiGroups:
+  - ''
+  resources:
+  - pods
+  - services
+  - endpoints
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: prometheus-discovery
+  namespace: wenshu
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: prometheus-discovery
+subjects:
+- kind: ServiceAccount
+  name: prometheus
+  namespace: wenshu
+---
+apiVersion: v1
+data:
+  alerts.yml: "groups:\n- name: wenshu\n  rules:\n  - alert: WenshuHighErrorRate\n\
+    \    annotations:\n      summary: 文枢服务5xx比例超过5%\n    expr: sum(rate(wenshu_http_requests_total{status=~\"\
+    5..\"}[1m])) / clamp_min(sum(rate(wenshu_http_requests_total[1m])),\n      0.001)\
+    \ > 0.05\n    for: 1m\n    labels:\n      severity: warning\n  - alert: WenshuHighLatency\n\
+    \    annotations:\n      summary: 问答HTTP P95超过8秒\n    expr: histogram_quantile(0.95,\
+    \ sum(rate(wenshu_http_duration_seconds_bucket[1m]))\n      by (le)) > 8\n   \
+    \ for: 1m\n    labels:\n      severity: warning\n"
+  prometheus.yml: "global:\n  evaluation_interval: 10s\n  scrape_interval: 5s\nrule_files:\n\
+    - /etc/prometheus/alerts.yml\nscrape_configs:\n- job_name: wenshu-agents\n  kubernetes_sd_configs:\n\
+    \  - namespaces:\n      names:\n      - wenshu\n    role: pod\n  metrics_path:\
+    \ /metrics\n  relabel_configs:\n  - action: keep\n    regex: dept-agent|.*-backend\n\
+    \    source_labels:\n    - __meta_kubernetes_pod_label_app\n  - replacement: $1:8000\n\
+    \    source_labels:\n    - __meta_kubernetes_pod_ip\n    target_label: __address__\n\
+    \  - source_labels:\n    - __meta_kubernetes_pod_name\n    target_label: pod\n\
+    \  - source_labels:\n    - __meta_kubernetes_namespace\n    target_label: namespace\n\
+    \  - source_labels:\n    - __meta_kubernetes_pod_label_department\n    target_label:\
+    \ department\n"
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: wenshu
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: wenshu
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      containers:
+      - args:
+        - --config.file=/etc/prometheus/prometheus.yml
+        - --storage.tsdb.retention.time=24h
+        image: prom/prometheus:v2.52.0
+        name: prometheus
+        ports:
+        - containerPort: 9090
+        resources:
+          limits:
+            cpu: 500m
+            memory: 384Mi
+          requests:
+            cpu: 10m
+            memory: 32Mi
+        volumeMounts:
+        - mountPath: /etc/prometheus
+          name: config
+      serviceAccountName: prometheus
+      volumes:
+      - configMap:
+          name: prometheus-config
+        name: config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: wenshu
+spec:
+  ports:
+  - name: p9090
+    port: 9090
+    targetPort: 9090
+  selector:
+    app: prometheus
+---
+apiVersion: v1
+data:
+  loki.yaml: "auth_enabled: false\ncommon:\n  instance_addr: 127.0.0.1\n  path_prefix:\
+    \ /tmp/loki\n  replication_factor: 1\n  ring:\n    kvstore:\n      store: inmemory\n\
+    \  storage:\n    filesystem:\n      chunks_directory: /tmp/loki/chunks\n     \
+    \ rules_directory: /tmp/loki/rules\nlimits_config:\n  allow_structured_metadata:\
+    \ false\nschema_config:\n  configs:\n  - from: '2024-01-01'\n    index:\n    \
+    \  period: 24h\n      prefix: index_\n    object_store: filesystem\n    schema:\
+    \ v13\n    store: tsdb\nserver:\n  http_listen_port: 3100\n"
+kind: ConfigMap
+metadata:
+  name: loki-config
+  namespace: wenshu
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loki
+  namespace: wenshu
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loki
+  template:
+    metadata:
+      labels:
+        app: loki
+    spec:
+      containers:
+      - args:
+        - -config.file=/etc/loki/loki.yaml
+        image: grafana/loki:3.0.0
+        name: loki
+        ports:
+        - containerPort: 3100
+        resources:
+          limits:
+            cpu: 500m
+            memory: 384Mi
+          requests:
+            cpu: 10m
+            memory: 32Mi
+        volumeMounts:
+        - mountPath: /etc/loki
+          name: config
+      volumes:
+      - configMap:
+          name: loki-config
+        name: config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loki
+  namespace: wenshu
+spec:
+  ports:
+  - name: p3100
+    port: 3100
+    targetPort: 3100
+  selector:
+    app: loki
+---
+apiVersion: v1
+data:
+  tempo.yaml: "compactor:\n  compaction:\n    block_retention: 24h\ndistributor:\n\
+    \  receivers:\n    otlp:\n      protocols:\n        grpc:\n          endpoint:\
+    \ 0.0.0.0:4317\n        http:\n          endpoint: 0.0.0.0:4318\nserver:\n  http_listen_port:\
+    \ 3200\nstorage:\n  trace:\n    backend: local\n    local:\n      path: /tmp/tempo/traces\n\
+    \    wal:\n      path: /tmp/tempo/wal\n"
+kind: ConfigMap
+metadata:
+  name: tempo-config
+  namespace: wenshu
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tempo
+  namespace: wenshu
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tempo
+  template:
+    metadata:
+      labels:
+        app: tempo
+    spec:
+      containers:
+      - args:
+        - -config.file=/etc/tempo/tempo.yaml
+        image: grafana/tempo:2.6.0
+        name: tempo
+        ports:
+        - containerPort: 3200
+        - containerPort: 4317
+        - containerPort: 4318
+        resources:
+          limits:
+            cpu: 500m
+            memory: 384Mi
+          requests:
+            cpu: 10m
+            memory: 32Mi
+        volumeMounts:
+        - mountPath: /etc/tempo
+          name: config
+      volumes:
+      - configMap:
+          name: tempo-config
+        name: config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tempo
+  namespace: wenshu
+spec:
+  ports:
+  - name: p3200
+    port: 3200
+    targetPort: 3200
+  - name: p4317
+    port: 4317
+    targetPort: 4317
+  - name: p4318
+    port: 4318
+    targetPort: 4318
+  selector:
+    app: tempo
+---
+apiVersion: v1
+data:
+  config.yaml: "exporters:\n  debug:\n    verbosity: basic\n  otlphttp:\n    endpoint:\
+    \ http://tempo:4318\nprocessors:\n  batch: {}\nreceivers:\n  otlp:\n    protocols:\n\
+    \      grpc:\n        endpoint: 0.0.0.0:4317\n      http:\n        endpoint: 0.0.0.0:4318\n\
+    service:\n  pipelines:\n    traces:\n      exporters:\n      - otlphttp\n    \
+    \  - debug\n      processors:\n      - batch\n      receivers:\n      - otlp\n"
+kind: ConfigMap
+metadata:
+  name: otel-config
+  namespace: wenshu
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-collector
+  namespace: wenshu
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: otel-collector
+  template:
+    metadata:
+      labels:
+        app: otel-collector
+    spec:
+      containers:
+      - args:
+        - --config=/etc/otel/config.yaml
+        image: otel/opentelemetry-collector-contrib:0.110.0
+        name: otel-collector
+        ports:
+        - containerPort: 4317
+        - containerPort: 4318
+        resources:
+          limits:
+            cpu: 500m
+            memory: 384Mi
+          requests:
+            cpu: 10m
+            memory: 32Mi
+        volumeMounts:
+        - mountPath: /etc/otel
+          name: config
+      volumes:
+      - configMap:
+          name: otel-config
+        name: config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector
+  namespace: wenshu
+spec:
+  ports:
+  - name: p4317
+    port: 4317
+    targetPort: 4317
+  - name: p4318
+    port: 4318
+    targetPort: 4318
+  selector:
+    app: otel-collector
+---
+apiVersion: v1
+data:
+  dashboards.yaml: "apiVersion: 1\nproviders:\n- name: Wenshu\n  options:\n    path:\
+    \ /var/lib/grafana/dashboards\n  type: file\n"
+  datasources.yaml: "apiVersion: 1\ndatasources:\n- access: proxy\n  isDefault: true\n\
+    \  name: Prometheus\n  type: prometheus\n  uid: prometheus\n  url: http://prometheus:9090\n\
+    - access: proxy\n  jsonData:\n    derivedFields:\n    - datasourceUid: tempo\n\
+    \      matcherRegex: '\"trace_id\":\\s*\"([a-f0-9]{32})\"'\n      name: TraceID\n\
+    \      url: ${__value.raw}\n  name: Loki\n  type: loki\n  uid: loki\n  url: http://loki:3100\n\
+    - access: proxy\n  name: Tempo\n  type: tempo\n  uid: tempo\n  url: http://tempo:3200\n"
+kind: ConfigMap
+metadata:
+  name: grafana-provision
+  namespace: wenshu
+---
+apiVersion: v1
+data:
+  wenshu.json: '{"uid": "wenshu-overview", "title": "文枢运行与Agent观测", "schemaVersion":
+    39, "version": 1, "panels": [{"id": 1, "type": "timeseries", "title": "HTTP吞吐",
+    "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8}, "datasource": {"uid": "prometheus",
+    "type": "prometheus"}, "targets": [{"expr": "sum(rate(wenshu_http_requests_total[1m]))",
+    "refId": "A"}]}, {"id": 2, "type": "timeseries", "title": "HTTP P95", "gridPos":
+    {"x": 12, "y": 0, "w": 12, "h": 8}, "datasource": {"uid": "prometheus", "type":
+    "prometheus"}, "targets": [{"expr": "histogram_quantile(0.95,sum(rate(wenshu_http_duration_seconds_bucket[1m]))
+    by(le))", "refId": "A"}]}, {"id": 3, "type": "timeseries", "title": "部门在途请求",
+    "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8}, "datasource": {"uid": "prometheus",
+    "type": "prometheus"}, "targets": [{"expr": "sum by(dept)(wenshu_dept_agent_inflight)",
+    "refId": "A"}]}, {"id": 4, "type": "timeseries", "title": "pi执行/降级", "gridPos":
+    {"x": 12, "y": 8, "w": 12, "h": 8}, "datasource": {"uid": "prometheus", "type":
+    "prometheus"}, "targets": [{"expr": "sum by(agent,status)(rate(wenshu_pi_agent_execution_total[1m]))",
+    "refId": "A"}]}, {"id": 5, "type": "timeseries", "title": "问答结果", "gridPos": {"x":
+    0, "y": 16, "w": 12, "h": 8}, "datasource": {"uid": "prometheus", "type": "prometheus"},
+    "targets": [{"expr": "sum by(intent)(wenshu_query_total)", "refId": "A"}]}, {"id":
+    6, "type": "timeseries", "title": "采纳反馈", "gridPos": {"x": 12, "y": 16, "w": 12,
+    "h": 8}, "datasource": {"uid": "prometheus", "type": "prometheus"}, "targets":
+    [{"expr": "sum by(kind)(wenshu_answer_adoption_total)", "refId": "A"}]}]}'
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard
+  namespace: wenshu
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: wenshu
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+      - env:
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: grafana-password
+              name: wenshu-ha-auth
+        image: grafana/grafana:10.4.0
+        name: grafana
+        ports:
+        - containerPort: 3000
+        resources:
+          limits:
+            cpu: 500m
+            memory: 384Mi
+          requests:
+            cpu: 10m
+            memory: 32Mi
+        volumeMounts:
+        - mountPath: /etc/grafana/provisioning/datasources/datasources.yaml
+          name: provision
+          subPath: datasources.yaml
+        - mountPath: /etc/grafana/provisioning/dashboards/dashboards.yaml
+          name: provision
+          subPath: dashboards.yaml
+        - mountPath: /var/lib/grafana/dashboards
+          name: dashboard
+      volumes:
+      - configMap:
+          name: grafana-provision
+        name: provision
+      - configMap:
+          name: grafana-dashboard
+        name: dashboard
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: wenshu
+spec:
+  ports:
+  - name: p3000
+    port: 3000
+    targetPort: 3000
+  selector:
+    app: grafana
+---
+apiVersion: v1
+data:
+  promtail.yaml: "clients:\n- url: http://loki:3100/loki/api/v1/push\npositions:\n\
+    \  filename: /tmp/positions.yaml\nscrape_configs:\n- job_name: local-pods\n  pipeline_stages:\n\
+    \  - docker: {}\n  - regex:\n      expression: /var/log/pods/(?P<namespace>[^_]+)_(?P<pod>[^_]+)_[^/]+/(?P<container>[^/]+)/.*\n\
+    \      source: filename\n  - labels:\n      container: null\n      pod: null\n\
+    \  static_configs:\n  - labels:\n      __path__: /var/log/pods/wenshu_*/*/*.log\n\
+    \      job: wenshu-pod-logs\n      namespace: wenshu\n    targets:\n    - localhost\n\
+    server:\n  grpc_listen_port: 0\n  http_listen_port: 9080\n"
+kind: ConfigMap
+metadata:
+  name: promtail-config
+  namespace: wenshu
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: promtail
+  namespace: wenshu
+spec:
+  selector:
+    matchLabels:
+      app: promtail
+  template:
+    metadata:
+      labels:
+        app: promtail
+    spec:
+      containers:
+      - args:
+        - -config.file=/etc/promtail/promtail.yaml
+        image: grafana/promtail:3.0.0
+        name: promtail
+        resources:
+          limits:
+            cpu: 250m
+            memory: 128Mi
+          requests:
+            cpu: 10m
+            memory: 24Mi
+        volumeMounts:
+        - mountPath: /etc/promtail
+          name: config
+        - mountPath: /var/log/pods
+          name: logs
+          readOnly: true
+        - mountPath: /var/lib/docker/containers
+          name: docker-logs
+          readOnly: true
+      volumes:
+      - configMap:
+          name: promtail-config
+        name: config
+      - hostPath:
+          path: /var/log/pods
+        name: logs
+      - hostPath:
+          path: /var/lib/docker/containers
+        name: docker-logs

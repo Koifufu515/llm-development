@@ -1,0 +1,8 @@
+调用方    zhixing-travel
+key_id    L8dlT-2i
+权限标签  public
+可访问    travel-guide
+限流      120 次/分钟
+
+API Key（只显示这一次，请立刻交给上游并妥善保存）：
+qr_L8dlT-2iK4zKPPtIwSJJp5IH3mmBwi3p-mFwgMfy0EM

@@ -1,0 +1,17 @@
+"""QwenJudge 适配器：只构造、不调用模型，看它报出的名字，以及"重写 model 属性"会怎样（需 .env 里的 DashScope 密钥，不发起调用）"""
+from app.services.quality_check_service import QwenJudge
+
+judge = QwenJudge()
+print("裁判名字 →", judge.get_model_name())
+print("底层客户端 →", type(judge.model).__name__, "| 由基类 __init__ 调 load_model() 赋值")
+
+class BadJudge(QwenJudge):
+    """反例：顺手把 model 写成只读属性"""
+    @property
+    def model(self):
+        return None
+
+try:
+    BadJudge()
+except AttributeError as exc:
+    print("重写 model 属性 → 构造时就报", type(exc).__name__)

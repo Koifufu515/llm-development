@@ -1,0 +1,446 @@
+
+
+===== block 677 f85d08796fa8 lines 1-70 source 知行旅行助手代码-v2#217 =====
+"""多段自驾行程 Agent Skill —— Pydantic 数据契约
+skill_name = driving_multi_segment
+
+契约总览（前后端字段严格一一对应，禁止改名）：
+  入参  DrivingLeg                 ：from + to + travel_date（段数动态 1/Chapter_Two/2_/3…，自驾可不带日期）
+  出参  DrivingMultiSegmentPayload ：{skill_name, segments[{segment_id, from, to, date, ok,
+                                     distance_km, duration_text, tolls, traffic_lights, summary}]}
+  提交  DrivingSubmitPayload       ：{skill_name, segments[{segment_id}]}
+
+交互语义（重要，与航班/高铁不同）：
+  1. **只读确认**：每段只给**一条**高德驾车路线（默认策略的最优路线），用户**不能选路线策略**，
+     只能整批【确认】（提交项只带 segment_id，没有 option_id）；
+  2. **不做任何校验**：不比对段时间先后、不校验路线可行性、不锁位；
+  3. 单段查询失败 / 城市解析不出经纬度或城市名 → 该段 ok=False（前端置灰），绝不编造数字。
+"""
+from typing import Literal
+
+from pydantic import (
+    AliasChoices,
+    BaseModel,
+    ConfigDict,
+    Field,
+)
+
+# Agent / 前端 UI Skill 的注册键（出参首字段，前端据此匹配渲染组件）
+DRIVING_MULTI_SEGMENT_SKILL = "driving_multi_segment"
+
+class DrivingLeg(BaseModel):
+    """【入参】单段行程（段数由用户行程决定，1/Chapter_Two/2_/3 段均可，不写死）"""
+
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
+    # `from` 是 Python 关键字，故字段名用 from_ + 别名 "from"，保证 JSON 契约里仍是 from
+    from_: str = Field(alias="from", description="该段出发城市，如 北京")
+    to: str = Field(description="该段到达城市，如 上海")
+    # 自驾不依赖发车时刻，日期字段保留但允许为空（仅作展示，不参与任何校验）
+    travel_date: str = Field(
+        default="",
+        validation_alias=AliasChoices("travel_date", "date"),
+        description="该段出行日期 YYYY-MM-DD（自驾可不填，留空即不展示）",
+    )
+
+class DrivingSegment(BaseModel):
+    """【出参】一段行程（segments 元素）；from 同样用别名保证 JSON 契约一致"""
+
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
+    segment_id: str = Field(description="段唯一标识，按 legs 顺序生成：s1 / s2 / s3 …")
+    from_: str = Field(alias="from", description="该段出发城市")
+    to: str = Field(description="该段到达城市")
+    date: str = Field(default="", description="该段出行日期 YYYY-MM-DD；未知时留空")
+    ok: bool = Field(
+        default=False,
+        description="该段是否查询成功（成功即前端可继续；失败=false，前端置灰该段并说明原因）",
+    )
+    distance_km: float = Field(default=0, description="驾车总距离（公里）；未解析到时为 0")
+    duration_text: str = Field(default="", description="预计耗时 HH:mm；未解析到时留空")
+    tolls: float = Field(default=0, description="过路费（元）；未解析到或免费时为 0")
+    traffic_lights: int = Field(default=0, description="红绿灯数；未解析到时为 0")
+    summary: str = Field(default="", description="关键路段摘要（前几条导航指令）；无则留空")
+
+class DrivingMultiSegmentPayload(BaseModel):
+    """【出参】Agent 下发前端 UI Skill 的完整 payload（segments 长度动态）"""
+
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
+    skill_name: Literal["driving_multi_segment"] = DRIVING_MULTI_SEGMENT_SKILL
+    segments: list[DrivingSegment] = Field(
+        default_factory=list, description="全部行程段，顺序与入参 legs 完全一致"
+    )
+
+
+===== block 678 f6041aaab9e2 lines 1-67 source 知行旅行助手代码-v2#261 =====
+async def _query_one_segment(
+    tool: Optional[BaseTool], segment_id: str, segment: HotelSegmentInput, limit: int
+) -> HotelMultiSegmentItem:
+    """查询单段住宿（由 asyncio.gather 并行调度）
+
+    任何异常/解析不出门店都**只影响本段**：该段降级为品牌模式，其它段照常返回。
+    """
+    nights = stay_nights(segment.checkInDate, segment.checkOutDate)
+    options: list[Any] = []
+    if tool is not None:
+        args = build_args(
+            tool, segment.city, segment.checkInDate, nights,
+            segment.guestCount, segment.priceLevel, limit,
+        )
+        try:
+            raw = await tool.ainvoke(args)
+            options = hotels_from_raw(raw, nights, limit)
+        except Exception as exc:                  # 单段服务抖动/超时/配额：本段降级，不影响其它段
+            app_logger.warning(f"⚠️ hotel_multi_segment {segment_id}（{segment.city}）查询失败，本段降级品牌模式：{exc}")
+    base = {
+        "segment_id": segment_id, "city": segment.city, "checkInDate": segment.checkInDate,
+        "checkOutDate": segment.checkOutDate, "guestCount": segment.guestCount,
+        "priceLevel": segment.priceLevel,
+    }
+    if options:                                   # 场景 A：真实门店可用 → mode="hotel"
+        return HotelMultiSegmentItem(
+            **base, mode="hotel", hotel_list=_reid(segment_id, options, "hotel_id"), brand_list=[],
+        )
+    # 场景 B：实时报价不可用 → mode="brand"（按档位给常见连锁品牌，不编造门店与价格）
+    return HotelMultiSegmentItem(
+        # ★ 查不到门店就降级品牌模式：只给品牌，不编门店和价格
+        **base, mode="brand", hotel_list=[],
+        brand_list=_reid(segment_id, brand_fallback(segment.priceLevel), "brand_id"),
+    )
+
+async def build_hotel_multi_segment_payload(
+    segments: list[Any],
+    max_options_per_segment: int = 10,
+    cache_key: Optional[str] = None,
+) -> HotelMultiSegmentPayload:
+    """核心函数（非工具）：并行查询全部住宿段 → 组装 payload，并缓存供提交侧校验
+
+    段数由入参长度决定（2/3/多段均支持，不写死）；每段模式独立判定，可混合（h1 门店 + h2 品牌）。
+    cache_key：隔离键（调用方传 conversation_id），保证提交侧校验到的是**本会话**的候选表。
+    """
+    try:
+        parsed = [seg if isinstance(seg, HotelSegmentInput) else HotelSegmentInput.model_validate(seg)
+                  for seg in segments]
+    except Exception as exc:
+        app_logger.warning(f"⚠️ hotel_multi_segment 入参不合法，已降级为空 payload：{exc}")
+        return HotelMultiSegmentPayload(segments=[])
+    if not parsed:
+        return HotelMultiSegmentPayload(segments=[])
+    tool = await resolve_hotel_tool()             # 工具缺席时每段都会自动走品牌兜底
+    items = await asyncio.gather(*[                # ← 并行并发，非串行逐段查
+        _query_one_segment(tool, f"h{index}", segment, max_options_per_segment)
+        for index, segment in enumerate(parsed, 1)
+    ])
+    payload = HotelMultiSegmentPayload(segments=list(items))
+    _PAYLOAD_CACHE.store(payload, cache_key)   # 供提交工具做「是否存在」校验
+    app_logger.info(
+        f"🏨 hotel_multi_segment 出参：{len(payload.segments)} 段 / "
+        f"模式 {'、'.join(f'{s.segment_id}={s.mode}' for s in payload.segments)}"
+    )
+    return payload
+
+# ==================== 提交侧：只做基础合法性校验（不做任何日期/时间校验） ====================
+
+
+===== block 679 52ed1c6dda85 lines 1-47 source 知行旅行助手代码-v2#276 =====
+async def auto_select_hotels(conversation_id: str, state: dict) -> list[str]:
+    """自动确认模式：不弹卡片，由代码代选全部站并推进（门店取首条 / 品牌取首个）
+
+    返回已选定站的展示文本（空列表 = 未推进，调用方跳过即可）
+    """
+    segments = _segments(state)
+    if not segments:
+        return []
+    payload = await _payload_for(conversation_id, segments)
+    texts: list[str] = []
+    prices: dict[str, float] = {}
+    for seg in payload.segments:
+        head = f"{seg.city}（{seg.checkInDate} 至 {seg.checkOutDate}）"
+        if seg.hotel_list:
+            # ★ 门店择优与快速通道同源（同一批候选）：评分≥4.5 取低价、否则取评分最高，
+            #   异常低价剔除；全为异常低价时不硬选，本轮不推进（交回原流程如实告知）
+            hotel = pick_best_hotel(list(seg.hotel_list))
+            if hotel is None:
+                break
+            texts.append(
+                f"{head}：{hotel.hotelName}，{hotel.pricePerNight:g}元/晚，总价 {hotel.totalPrice:g}元"
+            )
+            if float(hotel.pricePerNight) > 0:     # 同一次循环产出数字账本
+                prices[seg.city] = float(hotel.pricePerNight)
+        elif seg.brand_list:
+            texts.append(
+                f"{head}：{seg.brand_list[0].brandName}（实时报价不可用，仅选定品牌，"
+                f"具体门店到店择优选同档位）"
+            )
+    if len(texts) != len(payload.segments):
+        app_logger.warning(
+            f"⚠️ 住宿自动模式代选不完整（{len(texts)}/{len(payload.segments)} 站有候选），本轮不推进"
+        )
+        return []
+    agent, config, _ = await get_agent_and_state(conversation_id)
+    extra, step = _next_step(state)
+    upd: dict = {
+        "selected_hotels": texts, "stay_cursor": len(texts), "current_step": step,
+        "stay_prices": prices,      # ★ 数字账本：第 11 章预算工具直接读，不解析展示文本
+        # 档位必须**无条件写入**（表单未预选时兜底经济型）。
+        # 行程步 requires 硬校验 selected_accommodation_types，字段缺失会直接抛错卡死流程
+        "selected_accommodation_types": _accom_types(state) or ["economy_hotel"],
+        **extra,
+    }
+    await agent.aupdate_state(config, upd)
+    app_logger.info(f"✅ 住宿自动模式已代选 {len(texts)} 站，推进到 {step}")
+    return texts
+
+
+===== block 680 c8494e703776 lines 1-85 source 知行旅行助手代码-v2#280 =====
+import re
+_DAY_MARK = re.compile(r"第\s*(\d+|[一二三四五六七八九十]+)\s*天|Day\s*\d", re.IGNORECASE)
+def _history_has_itinerary(msgs: list) -> bool:
+    """判断本回合历史里是否已输出过逐日行程正文
+    行程轮规则：先展示正文+预算征询、用户满意后才落库，确认轮的必要条件是
+    历史里存在 Day X 正文；若没有（例如用户第一轮直接说"满意"），不能强制落库
+    """
+    for m in msgs:
+        if getattr(m, "type", None) != "ai":
+            continue
+        content = getattr(m, "content", "") or ""
+        if isinstance(content, str) and _DAY_MARK.search(content):
+            return True
+    return False
+_TOOL_ABORTED_HINT = (
+    "【系统提示】该工具调用未执行完成（回合内被中断），没有可用结果，请勿据此作答。"
+)
+
+def _repair_dangling_tool_calls(msgs: list) -> tuple[list, int, int]:
+    """修复悬空 tool_calls / 孤立 tool 消息
+    返回 (处理后的消息列表, 补入的 ToolMessage 条数, 丢弃的孤立 ToolMessage 条数)；
+    无需修复时原样返回入参对象（零拷贝，不影响正常路径）
+    """
+    out: list = []
+    inserted = dropped = 0
+    i, n = 0, len(msgs)
+    while i < n:
+        m = msgs[i]
+        mtype = getattr(m, "type", None)
+        if mtype == "ai" and getattr(m, "tool_calls", None):
+            out.append(m)
+            # 记录本AI消息的tool_call_id，后续匹配已响应的工具消息
+            pending = {
+                tc.get("id"): tc.get("name")
+                for tc in m.tool_calls if tc.get("id")
+            }
+            j = i + 1
+            while j < n and getattr(msgs[j], "type", None) == "tool":
+                pending.pop(getattr(msgs[j], "tool_call_id", None), None)
+                out.append(msgs[j])
+                j += 1
+            # 对未得到响应的tool_call，补入占位ToolMessage
+            for tid, tname in pending.items():
+                out.append(ToolMessage(
+                    content=_TOOL_ABORTED_HINT, tool_call_id=tid, name=tname or "tool"
+                ))
+                inserted += 1
+            i = j
+            continue
+        # 没有对应AI tool_call的孤立tool消息，直接丢弃
+        if mtype == "tool":
+            dropped += 1
+            i += 1
+            continue
+        out.append(m)
+        i += 1
+    if inserted or dropped:
+        return out, inserted, dropped
+    return msgs, 0, 0
+
+# ============== 上下文窗口兜底（按"用户轮"边界丢弃最旧历史） ==============
+# 仅裁剪发往模型的视图，checkpoint持久化历史完整保留；
+# 切点只在HumanMessage边界，不切割AI-Tool消息配对，避免产生残缺工具历史
+_WINDOW_TRIGGER = 40   # 消息数超过该阈值才执行裁剪
+_WINDOW_KEEP = 24      # 目标最少保留消息条数
+
+def _trim_window(msgs: list) -> list:
+    """按用户轮边界丢弃最旧历史，找不到安全切点则原样返回"""
+    if len(msgs) <= _WINDOW_TRIGGER:
+        return msgs
+    last_human = -1
+    for i in range(len(msgs) - 1, -1, -1):
+        if isinstance(msgs[i], HumanMessage):
+            last_human = i
+            break
+    if last_human <= 0:
+        # 无更早可裁剪的用户轮
+        return msgs
+    # 寻找裁剪切点
+    cut = min(len(msgs) - _WINDOW_KEEP, last_human - 1)
+    for i in range(cut, -1, -1):
+        if isinstance(msgs[i], HumanMessage):
+            kept_system = [m for m in msgs[:i] if getattr(m, "type", None) == "system"]
+            return kept_system + msgs[i:]
+    return msgs
+
+
+===== block 681 e4dea79e0898 lines 1-11 source 知行旅行助手代码-v2#281 =====
+"""_is_confirm_reply 演示：整句去掉首尾空白与结尾标点后，正好等于一个确认词才算确认（纯函数，无需密钥）"""
+from app.core.middleware import _is_confirm_reply
+
+for text in ["确认", "好的。", "OK！", " 满意 ", "满意，但第二天换一下",
+             "G1630吧", "好的，但换个酒店", "确认一下行程", ""]:
+    print(f"{text!r:26} → {_is_confirm_reply(text)}") #_is_confirm_reply 演示：整句去掉首尾空白与结尾标点后，正好等于一个确认词才算确认（纯函数，无需密钥）"""
+from app.core.middleware import _is_confirm_reply
+
+for text in ["确认", "好的。", "OK！", " 满意 ", "满意，但第二天换一下",
+             "G1630吧", "好的，但换个酒店", "确认一下行程", ""]:
+    print(f"{text!r:26} → {_is_confirm_reply(text)}")
+
+
+===== block 682 507af8c996fd lines 1-9 source 知行旅行助手代码-v2#282 =====
+'确认'                       → True
+'好的。'                      → True
+'OK！'                      → True
+' 满意 '                     → True
+'满意，但第二天换一下'               → False
+'G1630吧'                   → False
+'好的，但换个酒店'                 → False
+'确认一下行程'                   → False
+''                         → False
+
+
+===== block 683 ec474316d303 lines 1-53 source 知行旅行助手代码-v2#335 =====
+# ============== 多目的地覆盖校验 ==============
+
+def _multi_city_names(state) -> list[str]:
+    """多目的地城市列表（按游览顺序）；单目的地返回空列表（调用方跳过校验）
+
+    单城返回空列表是刻意设计：单目的地流程保持完全不变，不引入任何新校验
+    """
+    from app.services.express_planning_service import _split_cities
+    cities = _split_cities(state.get("selected_destination") or "")
+    return cities if len(cities) > 1 else []
+
+def _expected_legs(state) -> list[str]:
+    """应有的交通段：出发地→第一城 + 城际转场 + 末城→出发地返程（节点相邻城市不同才生成）。
+
+ 单目的地同样纳入段级校验（此前单城返回空列表跳过校验）。
+ （用户规格）：按 _build_legs 口径——末城→出发地返程段一并计入，
+    北京→上海 = 2 段、北京→天津→上海 = 3 段、北京→北京 = 0 段；出发地缺失时返回空列表
+    """
+    from app.services.express_planning_service import _build_legs, _split_cities
+    departure = ((state.get("user_requirement") or {}).get("departure_city") or "").strip()
+    if not departure:
+        return []
+    cities = _split_cities(state.get("selected_destination") or "")
+    # ★ "应有几段"的唯一口径：交通步和第 12 章的执行器都认它
+    return [f"{a}→{b}" for a, b in _build_legs(departure, cities)]
+
+# 正文完整性守卫（`_itinerary_text_guard`）已按用户要求删除——
+# 正文改由代码渲染后，模型自由正文一律作废重推，守卫已无可校验的对象。
+# 此处仅保留天序号解析器：它仍被早期的"正文覆盖 1~N 天即推进状态机"兜底复用
+# （那是流程推进保证，不是内容格式校验）
+import re
+_DAY_MARK_RE = re.compile(r"第\s*(\d+|[一二三四五六七八九十]+)\s*天|Day\s*(\d+)", re.IGNORECASE)
+_CN_DIGIT = {"一": 1, "二": 2, "三": 3, "四": 4, "五": 5, "六": 6, "七": 7, "八": 8, "九": 9}
+
+def _day_numbers(text: str) -> set[int]:
+    """ 提取正文里出现过的天序号（第3天 / 第三天 / Day 3）"""
+    nums: set[int] = set()
+    for m in _DAY_MARK_RE.finditer(text or ""):
+        if m.group(2):                                  # Day 4 / day 12
+            nums.add(int(m.group(2)))
+            continue
+        g1 = m.group(1)                                 # 第3天 / 第1天 / 第三天
+        if g1.isdigit():
+            nums.add(int(g1))
+            continue
+        cn = g1
+        if len(cn) == 1:
+            nums.add(10 if cn == "十" else _CN_DIGIT.get(cn, 0))
+        elif cn.startswith("十"):
+            nums.add(10 + _CN_DIGIT.get(cn[1], 0))
+        elif cn.endswith("十"):
+            nums.add(_CN_DIGIT.get(cn[0], 0) * 10)
+    return {n for n in nums if n > 0}
+
+
+===== block 684 ddf20e7beaf0 lines 1-31 source 知行旅行助手代码-v2#340 =====
+# ============== 段级循环：用户所选班次回填 ==============
+
+# 车次号（G1197/D50/K507/T10/Z162）或航班号（CA4105/MU5138）。
+# 结尾用 (?![0-9A-Za-z]) 而非 \b：\b 在 Python 里按 Unicode 判定，中文也算 word 字符，
+# "G1197吧"这类用户口语写法会被判成"词内无边界"而漏匹配（实测第一条就没回填上）
+_VEHICLE_CODE_RE = re.compile(r"[GDCKTZ]\d{1,4}(?![0-9A-Za-z])|[A-Z]{2}\d{3,4}(?![0-9A-Za-z])")
+
+def _recent_choice_text(state) -> str:
+    """取"用户本段所选班次"的那条发言（跳过纯确认语，如确认轮里的"确认"）。
+
+    确认轮里最近一条用户消息是"确认"（不含车次号），若只看它就无法回填所选班次，
+    段游标推不动、流程卡死在第一段。故倒序扫描用户发言取最近一个含车次号的；
+    遇到上一条"段已确认"的工具消息即停止——保证不会把**上一段**的车次回填给当前段
+    （用户用"第一个"这类无车次的说法选择时会返回空串，交由调用方拒绝并重新展示）
+    """
+    try:
+        for m in reversed((state or {}).get("messages") or []):
+            kind = getattr(m, "type", None)
+            content = str(getattr(m, "content", "") or "")
+            if kind == "tool":
+                # ★ 遇到"段已确认"就停：绝不把上一段的车次回填给当前段
+                if getattr(m, "name", "") == "select_transport_tool" or "段已确认" in content:
+                    return ""
+                continue
+            if kind != "human":
+                continue
+            if _VEHICLE_CODE_RE.search(content):
+                return content
+    except Exception:
+        pass
+    return ""
+
+
+===== block 685 a6f90738559a lines 1-33 source 知行旅行助手代码-v2#346 =====
+"""select_transport_tool 段级循环：拒绝 / 从用户原话回填车次 / 最后一段完成推进（直接调真实工具，纯逻辑，无需密钥）"""
+from langchain.tools import ToolRuntime
+from langchain_core.messages import HumanMessage
+
+from app.tools.state_transition import select_transport_tool
+
+state = {"messages": [HumanMessage(content="好的")], "current_step": "transport_planning",
+         "user_requirement": {"departure_city": "北京", "travel_days": 4}, "selected_destination": "天津、上海",
+         "leg_cursor": 0, "leg_selections": {}}
+
+def call(**kwargs):
+    """测试驱动：用当前 state 调一次真实工具，返回它的 Command.update"""
+    rt = ToolRuntime(state=state, context=None, config={}, stream_writer=None, tool_call_id="call_1", store=None)
+    return select_transport_tool.func(runtime=rt, **kwargs).update
+
+# 出口 A：当前该确认"北京→天津"，legs 里却只有第 2 段，而且哪儿都抓不到车次号
+up = call(transport_type="train", legs=["天津→上海"])
+print("出口 A 拒绝       →", [k for k in up if k != "messages"] or "不写任何字段", "|", up["messages"][0].content[:30], "…")
+
+# 出口 B：模型忘传 legs，但用户原话里有车次号 → 回填给当前段，游标 +1，current_step 不动
+state["messages"].append(HumanMessage(content="北京到天津坐 G1197吧"))
+up = call(transport_type="train")
+print("出口 B 回填第 1 段 →", {k: v for k, v in up.items() if k != "messages"})
+state.update({k: v for k, v in up.items() if k != "messages"})          # 测试驱动：像 LangGraph 一样合并回 state
+
+# 中间段：照常确认，游标 +1；后面还有返程段，current_step 不动
+up = call(transport_type="train", legs=["天津→上海 G7512 09:05"])
+print("第 2 段确认       →", {k: v for k, v in up.items() if k != "messages"})
+state.update({k: v for k, v in up.items() if k != "messages"})
+
+# 出口 C：最后一段（返程）确认 → 一次写入全部字段，推进到住宿步
+up = call(transport_type="train", legs=["上海→北京 G2 19:00"])
+print("出口 C 最后一段   →", {k: v for k, v in up.items() if k != "messages"})
+
+
+===== block 686 8c368e3eb347 lines 1-4 source 知行旅行助手代码-v2#347 =====
+出口 A 拒绝       → 不写任何字段 | ❌ 当前待确认的是第 1/3 段「北京→天津」，但本次 le …
+出口 B 回填第 1 段 → {'leg_selections': {'北京→天津': 'G1197'}, 'leg_cursor': 1}
+第 2 段确认       → {'leg_selections': {'北京→天津': 'G1197', '天津→上海': 'G7512 09:05'}, 'leg_cursor': 2}
+出口 C 最后一段   → {'selected_transport': 'train', 'selected_transport_legs': ['北京→天津 G1197', '天津→上海 G7512 09:05', '上海→北京 G2 19:00'], 'current_step': 'accommodation_planning', 'leg_selections': {'北京→天津': 'G1197', '天津→上海': 'G7512 09:05', '上海→北京': 'G2 19:00'}, 'leg_cursor': 3}
+
+
+===== block 687 9df5d0a21714 lines 1-3 source 知行旅行助手代码-v2#350 =====
+传错城   → 不写任何字段 | ❌ 当前待确认的是第 1/Chapter_Two/2_ 个城市「天津」，但本次 hot …
+第 1 城  → {'selected_hotels': ['天津 如家酒店 199元/晚'], 'stay_cursor': 1}
+最后一城 → {'selected_accommodation_types': ['economy_hotel'], 'selected_hotels': ['天津 如家酒店 199元/晚', '上海 汉庭酒店 259元/晚'], 'current_step': 'food_planning', 'stay_cursor': 2}

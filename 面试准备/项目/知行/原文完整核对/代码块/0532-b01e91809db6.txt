@@ -1,0 +1,27 @@
+"""run_express_planning 整跑演示：收集 → 选定 → 单次生成 → 预算拼接，看帧一段段出来（需 DashScope + MCP 密钥）"""
+import asyncio
+from datetime import date, timedelta
+
+from app.core.event_stream import EventStream
+from app.services.express_planning_service import ExpressRequirement, run_express_planning
+
+async def main():
+    stream = EventStream()
+    req = ExpressRequirement(departure_city="福州", destination="杭州",
+                             departure_date=(date.today() + timedelta(days=5)).isoformat(),
+                             travel_days=3, adult_count=2, budget_max=3000, auto_confirm=True,
+                             transport_types=["train"], food_preferences=["local"],
+                             accommodation_types=["economy_hotel"])
+
+    async def consume():
+        async for ev in stream:
+            print(ev["content"], end="", flush=True)     # 逐帧打印，就是前端看到的"正在流"
+
+    task = asyncio.create_task(consume())
+    text = await run_express_planning(req, stream)
+    stream.close()
+    await task
+    print(f"\n\n—— 返回全文 {len(text or '')} 字（摘要 + 正文 + 预算表），交给编排总线去生成清单 ——")
+
+if __name__ == "__main__":
+    asyncio.run(main())

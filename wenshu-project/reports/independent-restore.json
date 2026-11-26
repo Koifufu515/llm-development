@@ -1,0 +1,7 @@
+{
+  "first_exit": 0,
+  "second_restore_rejected": true,
+  "scope": "空隔离数据库还原脱敏事实，未执行模型调用；不修改源库",
+  "output": "{\"mode\": \"restore\", \"counts\": {\"departments\": 7, \"documents\": 14, \"chunks\": 67, \"doc_relations\": 0, \"glossary\": 5}, \"vectors\": \"未包含；恢复后执行reindex，必须保持原模型和维度\"}",
+  "vectors_restored": false
+}

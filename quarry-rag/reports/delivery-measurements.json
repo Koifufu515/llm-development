@@ -1,0 +1,373 @@
+{
+  "public_corpus": {
+    "documents": 29,
+    "parents": 977,
+    "children": 1231,
+    "parent_characters": 345984
+  },
+  "facts": {
+    "mentions": 272,
+    "bad_offsets": 0
+  },
+  "official_values": 3,
+  "eval_runs": [
+    {
+      "run_id": "20261107-141443-raw-baseline",
+      "label": "raw-baseline",
+      "config": {
+        "label": "raw-baseline",
+        "top_k": 5,
+        "use_facts": false,
+        "use_rerank": false,
+        "judge_model": null,
+        "rerank_backend": "noop"
+      },
+      "metrics": {
+        "mrr": 0.8292,
+        "top1": 0.7812,
+        "facts": {},
+        "judged": 0,
+        "p50_ms": 188.1,
+        "p95_ms": 557.6,
+        "recall": 0.9062,
+        "queries": 40,
+        "supported": null,
+        "false_abstain": 0.0,
+        "abstain_correct": 0.625
+      }
+    },
+    {
+      "run_id": "20261107-141504-rerank-only",
+      "label": "rerank-only",
+      "config": {
+        "label": "rerank-only",
+        "top_k": 5,
+        "use_facts": false,
+        "use_rerank": true,
+        "judge_model": null,
+        "rerank_backend": "api"
+      },
+      "metrics": {
+        "mrr": 0.9453,
+        "top1": 0.9062,
+        "facts": {},
+        "judged": 0,
+        "p50_ms": 451.5,
+        "p95_ms": 957.5,
+        "recall": 1.0,
+        "queries": 40,
+        "supported": null,
+        "false_abstain": 0.0,
+        "abstain_correct": 0.625
+      }
+    },
+    {
+      "run_id": "20261107-141601-full",
+      "label": "full",
+      "config": {
+        "label": "full",
+        "top_k": 5,
+        "use_facts": true,
+        "use_rerank": true,
+        "judge_model": "qwen-plus",
+        "rerank_backend": "api"
+      },
+      "metrics": {
+        "mrr": 0.9453,
+        "top1": 0.9062,
+        "facts": {
+          "unverified": 247
+        },
+        "judged": 32,
+        "p50_ms": 432.4,
+        "p95_ms": 879.8,
+        "recall": 1.0,
+        "queries": 40,
+        "supported": 0.9375,
+        "false_abstain": 0.0,
+        "abstain_correct": 0.625
+      }
+    },
+    {
+      "run_id": "20261107-142201-rerank-15",
+      "label": "rerank-15",
+      "config": {
+        "label": "rerank-15",
+        "top_k": 5,
+        "use_facts": false,
+        "use_rerank": true,
+        "judge_model": null,
+        "rerank_backend": "api"
+      },
+      "metrics": {
+        "mrr": 0.9688,
+        "top1": 0.9375,
+        "facts": {},
+        "judged": 0,
+        "p50_ms": 429.9,
+        "p95_ms": 654.8,
+        "recall": 1.0,
+        "queries": 40,
+        "supported": null,
+        "false_abstain": 0.0,
+        "abstain_correct": 0.625
+      }
+    },
+    {
+      "run_id": "20261107-143133-degraded",
+      "label": "degraded",
+      "config": {
+        "label": "degraded",
+        "top_k": 1,
+        "use_facts": false,
+        "use_rerank": false,
+        "judge_model": null,
+        "rerank_backend": "noop"
+      },
+      "metrics": {
+        "mrr": 0.7812,
+        "top1": 0.7812,
+        "facts": {},
+        "judged": 0,
+        "p50_ms": 183.8,
+        "p95_ms": 653.7,
+        "recall": 0.7812,
+        "queries": 40,
+        "supported": null,
+        "false_abstain": 0.0,
+        "abstain_correct": 0.625
+      }
+    },
+    {
+      "run_id": "20261107-143936-raw-final",
+      "label": "raw-final",
+      "config": {
+        "label": "raw-final",
+        "top_k": 5,
+        "use_facts": false,
+        "use_rerank": false,
+        "judge_model": null,
+        "rerank_backend": "noop"
+      },
+      "metrics": {
+        "mrr": 0.8292,
+        "top1": 0.7812,
+        "facts": {},
+        "judged": 0,
+        "p50_ms": 184.9,
+        "p95_ms": 316.3,
+        "recall": 0.9062,
+        "queries": 40,
+        "supported": null,
+        "false_abstain": 0.0,
+        "abstain_correct": 0.625
+      }
+    },
+    {
+      "run_id": "20261107-143959-rerank-final",
+      "label": "rerank-final",
+      "config": {
+        "label": "rerank-final",
+        "top_k": 5,
+        "use_facts": false,
+        "use_rerank": true,
+        "judge_model": null,
+        "rerank_backend": "api"
+      },
+      "metrics": {
+        "mrr": 0.9453,
+        "top1": 0.9062,
+        "facts": {},
+        "judged": 0,
+        "p50_ms": 450.2,
+        "p95_ms": 854.8,
+        "recall": 1.0,
+        "queries": 40,
+        "supported": null,
+        "false_abstain": 0.0,
+        "abstain_correct": 0.625
+      }
+    },
+    {
+      "run_id": "20261107-144053-full-final",
+      "label": "full-final",
+      "config": {
+        "label": "full-final",
+        "top_k": 5,
+        "use_facts": true,
+        "use_rerank": true,
+        "judge_model": "qwen-plus",
+        "rerank_backend": "api"
+      },
+      "metrics": {
+        "mrr": 0.9453,
+        "top1": 0.9062,
+        "facts": {
+          "unverified": 262
+        },
+        "judged": 32,
+        "p50_ms": 445.4,
+        "p95_ms": 740.1,
+        "recall": 1.0,
+        "queries": 40,
+        "supported": 0.9375,
+        "false_abstain": 0.0,
+        "abstain_correct": 0.625
+      }
+    },
+    {
+      "run_id": "20261107-150118-release-baseline",
+      "label": "release-baseline",
+      "config": {
+        "label": "release-baseline",
+        "top_k": 5,
+        "use_facts": false,
+        "use_rerank": false,
+        "judge_model": null,
+        "rerank_backend": "noop"
+      },
+      "metrics": {
+        "mrr": 0.8292,
+        "top1": 0.7812,
+        "facts": {},
+        "judged": 0,
+        "p50_ms": 189.0,
+        "p95_ms": 348.0,
+        "recall": 0.9062,
+        "queries": 40,
+        "supported": null,
+        "false_abstain": 0.0,
+        "abstain_correct": 0.625
+      }
+    },
+    {
+      "run_id": "20261107-150138-release-rerank",
+      "label": "release-rerank",
+      "config": {
+        "label": "release-rerank",
+        "top_k": 5,
+        "use_facts": false,
+        "use_rerank": true,
+        "judge_model": null,
+        "rerank_backend": "api"
+      },
+      "metrics": {
+        "mrr": 0.9453,
+        "top1": 0.9062,
+        "facts": {},
+        "judged": 0,
+        "p50_ms": 448.5,
+        "p95_ms": 678.7,
+        "recall": 1.0,
+        "queries": 40,
+        "supported": null,
+        "false_abstain": 0.0,
+        "abstain_correct": 0.625
+      }
+    },
+    {
+      "run_id": "20261107-150240-release-full",
+      "label": "release-full",
+      "config": {
+        "label": "release-full",
+        "top_k": 5,
+        "use_facts": true,
+        "use_rerank": true,
+        "judge_model": "qwen-plus",
+        "rerank_backend": "api"
+      },
+      "metrics": {
+        "mrr": 0.9453,
+        "top1": 0.9062,
+        "facts": {
+          "unverified": 262
+        },
+        "judged": 32,
+        "p50_ms": 448.9,
+        "p95_ms": 997.8,
+        "recall": 1.0,
+        "queries": 40,
+        "supported": 0.9375,
+        "false_abstain": 0.0,
+        "abstain_correct": 0.625
+      }
+    },
+    {
+      "run_id": "20261107-150627-release-full-15",
+      "label": "release-full-15",
+      "config": {
+        "label": "release-full-15",
+        "top_k": 5,
+        "use_facts": true,
+        "use_rerank": true,
+        "judge_model": "qwen-plus",
+        "rerank_backend": "api"
+      },
+      "metrics": {
+        "mrr": 0.9688,
+        "top1": 0.9375,
+        "facts": {
+          "unverified": 250
+        },
+        "judged": 32,
+        "p50_ms": 392.4,
+        "p95_ms": 854.1,
+        "recall": 1.0,
+        "queries": 40,
+        "supported": 0.9375,
+        "false_abstain": 0.0,
+        "abstain_correct": 0.625
+      }
+    }
+  ],
+  "migration": "0008",
+  "key_storage": {
+    "columns": [
+      "key_id",
+      "key_hash",
+      "caller_id",
+      "labels",
+      "collections",
+      "rate_limit",
+      "status",
+      "note",
+      "created_at",
+      "tenant_id"
+    ],
+    "plaintext_stored": false
+  },
+  "query_log_summary": [
+    {
+      "caller_id": "knowgo-travel",
+      "status": 200,
+      "requests": 80
+    },
+    {
+      "caller_id": "knowgo-travel",
+      "status": 403,
+      "requests": 9
+    },
+    {
+      "caller_id": "quarry-ingest",
+      "status": 200,
+      "requests": 1
+    },
+    {
+      "caller_id": "tenant-check",
+      "status": 200,
+      "requests": 2
+    }
+  ],
+  "public_citations": {
+    "checked": 2208,
+    "mismatch": 0
+  },
+  "dataset_sha256": "91d4bac317ff565c20fad588fab6b20fa61d941c385735adf6e26ad0af802a5b",
+  "query_log_p95": [
+    {
+      "caller_id": "knowgo-travel",
+      "requests": 6,
+      "p95_ms": 979.365
+    }
+  ]
+}

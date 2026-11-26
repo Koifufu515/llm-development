@@ -1,0 +1,11 @@
+evaluation/
+├── conftest.py            # 项目根加入 sys.path + 关遥测
+├── qwen_judge.py          # 薄转发 → quality_check_service.QwenJudge
+├── itinerary_metric.py    # 薄转发 → build_itinerary_metrics
+├── router_metric.py       # 路由确定性指标（不上 LLM 裁判）
+├── router_cases.py        # 路由回归用例（踩过的 bug 沉淀下来）
+├── test_router.py         # 路由评测入口：真实调 chat_route → 确定性断言
+├── itinerary_cases.py     # 行程正 / 反样本
+├── test_itinerary.py      # 行程评测入口：样本 × 三维度 × 正反双模式
+├── itinerary_db.py        # 线上数据源：从 ItineraryPlans 表拉真实行程
+└── test_itinerary_db.py   # 线上门禁：真实行程逐份跑三维度

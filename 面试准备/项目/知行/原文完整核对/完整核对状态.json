@@ -1,0 +1,22 @@
+{
+  "date": "2026-10-29",
+  "prose_read": {
+    "technical_lines": 8457,
+    "code_companion_lines": 3865
+  },
+  "code": {
+    "unique_blocks": 709,
+    "groups": 66,
+    "read_groups": 66
+  },
+  "images": {
+    "references": 154,
+    "unique": 125,
+    "contact_sheets_viewed": 11,
+    "ocr_texts_read": 125,
+    "method": "本机Vision OCR结合联系图；细节与源码互证，OCR有误字，不当运行证据"
+  },
+  "implementation_complete": false,
+  "source_frontend_archive_recovered": false,
+  "scope_report": "docs/superpowers/plans/2026-10-29-knowgo-full-reproduction/原文复现范围与差异.md"
+}

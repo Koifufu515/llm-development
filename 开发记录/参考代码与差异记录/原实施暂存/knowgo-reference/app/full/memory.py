@@ -1,0 +1,1 @@
+../../../../../../knowgo-travel/app/full/memory.py

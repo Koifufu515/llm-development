@@ -1,0 +1,51 @@
+图
+knowgo_travel_agent_webv
+master v
+m Nextjs： 服务器端、
+@
+Q
+试用
+X
+项目
+Hit.env.local x
+~ 口 knowgo_travel_agent_web E:Vknowgo_travel_agent_web
+腾讯位置服务 WebGl Js API Key （Lbs.qq.com，需为该 Key 开启 WebGL JS API 产品）
+正在分析…..
+>o.next
+NEXT_PUBLIC_QQ_MAP_KEY=
+0
+app
+1 skill-preview
+globals.css
+I layout.tsx
+口 page.tsx
+w providers.tsx
+a components
+>lib
+> I node_ modules library root
+在第1章的腾讯地图Key
+> Ta store
++.env.local
+-gitignore
+MH AGENTS.md
+終端
+本地
+版权所有（C）
+Microsoft Corporation。保留所有权利。
+安装最新的 PowerShelL，了解新功能和改进：https://aka.ms/PSwindows
+PS E：\knowgo_travel_agent_web> npm install
+added 120 packages in 24s
+27 packages are Looking for funding
+run
+'npm fund’for details
+心
+PS E：\knowgo_travel_agent_web>D
+• knowgo_travel_agent_web >+ih.env.local
+正在分析项目...
+-=+1 11
+日TRAE
+knowgo_travel_agent_web
+M Islands Dark
+•
+LF UTF-8 4个空格
+Python 3.11（伯朗特机械臂）

@@ -1,0 +1,3 @@
+# macOS / Linux
+uv run python -m quarry.scripts.render_report --base baseline --new full
+open eval/report-*.html          # Linux 用 xdg-open

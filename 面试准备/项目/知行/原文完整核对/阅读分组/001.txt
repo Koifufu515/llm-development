@@ -1,0 +1,581 @@
+
+
+===== block 1 aad45d54edcd lines 1-13 source 知行旅行助手-v2#1 =====
+# 1) 先建本机数据目录（必须为空，路径不要有中文或空格）
+mkdir E:\docker-data\postgres
+
+# 2) 运行容器（PowerShell 里换行用反引号 `）
+docker run -d `
+  --name travel_postgres `
+  -e POSTGRES_DB=travel_planner_db `
+  -e POSTGRES_USER=travel_user `
+  -e POSTGRES_PASSWORD=travel123456 `
+  -p 5432:5432 `
+  -v E:\docker-data\postgres:/var/lib/postgresql/data `
+  --restart unless-stopped `
+  pgvector/pgvector:pg17
+
+
+===== block 2 6bfb56a3a6ce lines 1-9 source 知行旅行助手-v2#2 =====
+# 看容器状态：Status 应该是 Up xxx seconds
+docker ps | Select-String travel_postgres
+
+# 进容器连一下：能看到 psql 提示符就 OK
+docker exec -it travel_postgres psql -U travel_user -d travel_planner_db
+
+# 在 psql 里试一句
+travel_planner_db=# SELECT version();
+# 看到 PostgreSQL 17.x on ... 就完事，输入 \q 退出
+
+
+===== block 3 ba5845684b98 lines 1-10 source 知行旅行助手-v2#3 =====
+# 1) 建数据目录
+mkdir E:\docker-data\redis
+
+# 2) 运行容器
+docker run -d `
+  --name travel_redis `
+  -p 6379:6379 `
+  -v E:\docker-data\redis:/data `
+  --restart unless-stopped `
+  redis:7-alpine redis-server --appendonly yes
+
+
+===== block 4 b5b55e0d5b85 lines 1-3 source 知行旅行助手-v2#4 =====
+# 用容器里的 redis-cli 直接 ping
+docker exec -it travel_redis redis-cli ping
+# 返回 PONG 即成功
+
+
+===== block 5 28f519647d5d lines 1-5 source 知行旅行助手-v2#5 =====
+# Windows PowerShell
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+# macOS / Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+
+===== block 6 aee9e0e6cddb lines 1-8 source 知行旅行助手-v2#6 =====
+uv init knowgo_travel_backend
+cd knowgo_travel_backend
+uv venv --python 3.13
+
+# 激活（macOS / Linux）
+source .venv/bin/activate
+# 激活（Windows PowerShell）
+.venv\Scripts\Activate.ps1
+
+
+===== block 7 b96e86e225f2 lines 1-60 source 知行旅行助手-v2#7 =====
+[project]
+name = "knowgo-travel"
+version = "0.1.0"
+description = "旅行规划 Agent"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    # LangChain / LangGraph 全家桶
+    "langchain==1.2.0",
+    "langchain-community==0.4.1",
+    "langchain-core~=1.2.7",
+    "langgraph==1.0.5",
+    "langgraph-checkpoint==3.0.1",
+    "langgraph-checkpoint-postgres==3.0.2",
+    "langgraph-prebuilt==1.0.5",
+    "langsmith==0.4.59",
+    "langchain-openai~=1.1.7",
+    "langchain-text-splitters~=1.1.0",
+    # LLM 集成（阿里千问）
+    "dashscope==1.25.4",
+    # 数据库
+    "psycopg[binary,pool]==3.3.2",
+    "psycopg-pool~=3.3.0",
+    "redis==5.0.0",
+    "SQLAlchemy~=2.0.45",
+    "chromadb==0.5.23",
+    # Web 框架
+    "fastapi==0.124.4",
+    "uvicorn[standard]>=0.35.0",
+    "websockets>=15.0.1",
+    "python-multipart==0.0.20",
+    "aiofiles==24.1.0",
+    # RAG 相关
+    "langchain-chroma>=0.1.4",
+    "sentence-transformers==3.3.0",
+    "rank-bm25==0.2.2",
+    "jieba==0.42.1",
+    # MCP 协议
+    "langchain-mcp-adapters==0.2.1",
+    "fastmcp==2.13.1",
+    # 工具库
+    "pydantic==2.12.5",
+    "pydantic-settings==2.12.0",
+    "python-dotenv==1.2.1",
+    "tenacity==9.1.2",
+    "httpx==0.28.1",
+    "aiohttp==3.13.2",
+    "Jinja2~=3.1.6",
+    "bcrypt~=5.0.0",
+    "PyJWT~=2.10.1",
+    "typing_extensions~=4.15.0",
+    # 监控与日志
+    "loguru==0.7.2",
+    "prometheus-client==0.21.0",
+    # 测试
+    "pytest~=9.0.2",
+    "pytest-asyncio~=1.3.0",
+    "myapplication>=0.1.0",
+    "asyncpg>=0.31.0",
+]
+
+
+===== block 8 93b87e831129 lines 1-2 source 知行旅行助手-v2#8 =====
+# uv sync 会自动创建 .venv/ 并把上面的依赖全部装好
+uv sync
+
+
+===== block 9 2ac8ef0a927e lines 1-2 source 知行旅行助手-v2#9 =====
+Resolved 100+ packages in Xs
+Installed 100+ packages in Xs
+
+
+===== block 10 8afbf6c008e9 lines 1-93 source 知行旅行助手-v2#10 =====
+knowgo_travel/
+├── app/
+│   ├── main.py                          ← 第 01 章：FastAPI 入口（02、06、10、12 章改）
+│   ├── config.py                        ← 第 01 章：配置管理
+│   ├── run.py                           ← 第 10 章：跨平台启动脚本
+│   ├── agents/
+│   │   ├── handoffs/
+│   │   │   ├── step_prompts.py          ← 第 03 章：各步骤提示词
+│   │   │   ├── travel_agent.py          ← 第 03 章：状态机 Agent（04、05、06 章改，11 章终版）
+│   │   │   └── step_config.py           ← 第 04 章：步骤配置（05、06、07 章改）
+│   │   └── routers/
+│   │       ├── destination_router.py    ← 第 08 章：目的地推荐子图
+│   │       └── chat_router.py           ← 第 12 章：意图路由
+│   ├── api/
+│   │   ├── dependencies.py              ← 第 10 章：鉴权依赖 get_current_user
+│   │   └── v1/
+│   │       ├── users.py                 ← 第 10 章：注册 / 登录 / 当前用户
+│   │       ├── conversations.py         ← 第 10 章：会话增删改查
+│   │       ├── cities.py                ← 第 10 章：全国城市
+│   │       ├── messages.py              ← 第 12 章：发消息（SSE 流式）+ 历史消息
+│   │       ├── skills.py                ← 第 12 章：卡片提交
+│   │       └── itinerary_plans.py       ← 第 12 章：行程清单
+│   ├── capabilities/                    ← 第 09 章：多段并行卡片能力
+│   │   ├── train_multi_segment/         ← 多段高铁（契约 / 并行查询 / 接线层）
+│   │   ├── flight_multi_segment/        ← 多段航班
+│   │   ├── driving_multi_segment/       ← 多段自驾
+│   │   └── hotel_multi_segment/         ← 多城住宿（多一个解析核心）
+│   ├── core/
+│   │   ├── state.py                     ← 第 02 章：TravelState
+│   │   ├── checkpointer.py              ← 第 02 章：PostgreSQL Checkpointer
+│   │   ├── store.py                     ← 第 02 章：长期记忆 Store
+│   │   ├── memory_models.py             ← 第 02 章：长期记忆数据模型
+│   │   ├── middleware.py                ← 第 04 章：步骤配置中间件（05、09 章改）
+│   │   ├── events.py                    ← 第 09 章：事件契约 make_event
+│   │   ├── event_stream.py              ← 第 12 章：事件管道
+│   │   └── response.py                  ← 第 12 章：统一响应包裹与异常兜底
+│   ├── data/
+│   │   └── cities.py                    ← 第 10 章：全国城市清单
+│   ├── mcp_core/
+│   │   ├── client.py                    ← 第 06 章：MCP 客户端，接 9 个数据源
+│   │   └── servers/                     ← 第 06 章：自建的搜索、天气 MCP 服务
+│   ├── models/
+│   │   ├── base.py                      ← 第 10 章：ORM 基类与 get_db
+│   │   ├── user.py                      ← 第 10 章：users 表
+│   │   ├── conversation.py              ← 第 10 章：conversation 表
+│   │   ├── message.py                   ← 第 10 章：message 表
+│   │   └── itinerary_plan.py            ← 第 12 章：行程清单表
+│   ├── rag/                             ← 第 07 章：Advanced RAG（加载、切分、检索、重排、缓存等 8 个模块）
+│   ├── schemas/                         ← 第 10 章：请求 / 响应数据契约（user / conversation / message）
+│   ├── scripts/
+│   │   └── sync_cities.py               ← 第 10 章：把城市清单预热进 Redis
+│   ├── services/
+│   │   ├── express_planning_service.py  ← 第 09 章：路段助手（12 章整份重写为快速通道）
+│   │   ├── conversation_service.py      ← 第 10 章：会话所有权
+│   │   ├── city_service.py              ← 第 10 章：城市服务（Redis 优先 + 内置兜底）
+│   │   ├── chat_contract_service.py     ← 第 12 章：编排总线
+│   │   ├── chat_stream_executor.py      ← 第 12 章：执行器
+│   │   ├── chat_compress_service.py     ← 第 12 章：长文压缩
+│   │   ├── itinerary_plan_service.py    ← 第 12 章：行程清单生成（13 章改）
+│   │   └── quality_check_service.py     ← 第 12 章先放桩，13 章换成真身：在线质检
+│   ├── tools/
+│   │   ├── state_transition.py          ← 第 03 章：状态机工具（04、05、09 章改，11 章终版）
+│   │   ├── memory_tools.py              ← 第 05 章：回退与长期记忆工具
+│   │   ├── mcp_tools.py                 ← 第 06 章：MCP 工具筛选（09 章改）
+│   │   ├── router_query.py              ← 第 07 章：目的地信息查询（RAG + 天气并行）
+│   │   └── rag_tools.py                 ← 第 08 章：RAG 检索工具
+│   └── utils/
+│       ├── logger.py                    ← 第 01 章：全局日志器
+│       ├── llm_factory.py               ← 第 03 章：LLM 工厂
+│       └── security.py                  ← 第 10 章：密码哈希与 JWT
+├── evaluation/                          ← 第 13 章：离线评测（pytest）
+│   ├── conftest.py                      ← 项目根加入 sys.path，关闭遥测
+│   ├── qwen_judge.py                    ← 裁判（转发 quality_check_service）
+│   ├── itinerary_metric.py              ← 三维度标尺（转发 quality_check_service）
+│   ├── router_metric.py                 ← 路由确定性指标
+│   ├── router_cases.py                  ← 路由回归用例
+│   ├── test_router.py                   ← 路由评测入口
+│   ├── itinerary_cases.py               ← 行程正 / 反样本
+│   ├── test_itinerary.py                ← 行程质量评测入口
+│   ├── itinerary_db.py                  ← 从库里拉真实落库行程
+│   └── test_itinerary_db.py             ← 线上质检门禁
+├── data/                                ← 第 07 章：RAG 数据
+│   ├── documents/                       ← 知识库文档
+│   └── vectorstore/                     ← 向量库（运行时生成，不进 git）
+├── image/                               ← 第 10 章起：main.py 启动时自动创建的静态图片目录
+├── logs/                                ← 运行日志（logger.py 自动写入）
+├── scripts/                             ← 各章演示脚本（第 01 章的 test_llm.py 起，每章都会往里加）
+├── .env                                 ← 第 01 章：环境变量（不进 git）
+├── .gitignore                           ← uv init 生成，第 01 章追加几行
+├── .python-version                      ← uv init 生成
+├── README.md                            ← uv init 生成
+├── pyproject.toml                       ← 第 01 章 5.2 节：全部依赖
+└── uv.lock                              ← uv sync 生成
+
+
+===== block 11 c72ef39aa799 lines 1-17 source 知行旅行助手-v2#11 =====
+# Python 包：建目录 + 空的 __init__.py
+$packages = @(
+    "app", "app\agents", "app\api", "app\capabilities", "app\core", "app\mcp_core",
+    "app\models", "app\rag", "app\schemas", "app\services", "app\tools", "app\utils","app\scripts"
+)
+# 普通目录：不需要 __init__.py
+$folders = @("app\data", "data", "evaluation", "logs", "scripts")
+
+$packages | ForEach-Object {
+    New-Item -ItemType Directory -Path $_ -Force | Out-Null
+    $init = Join-Path $_ "__init__.py"
+    if (-not (Test-Path $init)) {
+        New-Item -ItemType File -Path $init | Out-Null
+    }
+    # 已存在就不动
+}
+$folders | ForEach-Object { New-Item -ItemType Directory -Path $_ -Force | Out-Null }
+
+
+===== block 12 23ea3a96b1ba lines 1-5 source 知行旅行助手-v2#12 =====
+for d in app app/agents app/api app/capabilities app/core app/mcp_core \
+app/models app/rag app/schemas app/services app/tools app/utils app/scripts; do
+  mkdir -p "$d" && touch "$d/__init__.py"
+done
+mkdir -p app/data data evaluation logs scripts
+
+
+===== block 13 2971aead4771 lines 1-56 source 知行旅行助手-v2#13 =====
+# ============== LLM 配置 ==============
+DASHSCOPE_API_KEY=
+QWEN_MODEL_NAME=qwen-max
+QWEN_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+
+# ============== LangSmith 配置 ==============
+LANGSMITH_API_KEY=
+LANGSMITH_PROJECT=zhixing-travel-planer-dev
+LANGSMITH_TRACING=true
+LANGSMITH_ENDPOINT=https://api.smith.langchain.com
+
+# ============== 数据库配置 ==============
+# PostgreSQL（用于 Checkpointer 和 Store）
+# PostgreSQL（Docker 容器）
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=travel_planner_db
+POSTGRES_USER=travel_user
+POSTGRES_PASSWORD=
+DATABASE_URL=postgresql://travel_user:@localhost:5432/travel_planner_db
+
+# Redis（用于缓存）
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_DB=0
+REDIS_PASSWORD=
+
+# ============== MCP 服务配置 ==============
+# 高德 API（天气和地图）
+AMAP_API_KEY=
+
+# Tavily 搜索 API
+TAVILY_API_KEY=
+
+# Variflight 航班 API
+VARIFLIGHT_API_KEY=
+
+#AIGOHOTEL酒店获取API
+AIGOHOTEL_MCP_API=
+NO_PROXY=mcp.aigohotel.com
+no_proxy=mcp.aigohotel.com
+
+# ============== 应用配置 ==============
+APP_ENV=development
+APP_HOST=0.0.0.0
+APP_PORT=8000
+DEBUG=true
+
+# ==============JWT 密钥 ==============
+JWT_SECRET_KEY=shanyangcoding
+
+# ============== DeepSeek（行程压缩用） ==============
+DEEP_SEEK_API_KEY=
+
+# 腾讯地图key（必填），获取链接：https://lbs.qq.com/dev/console/application/mine
+QQ_MAP_KEY=
+
+
+===== block 14 288a86454326 lines 1-106 source 知行旅行助手-v2#14 =====
+"""
+配置管理模块
+用 pydantic-settings 读 .env 并做类型校验
+"""
+import os
+from functools import lru_cache
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# 项目根目录（这个文件所在的 app/ 的上一级）
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+class Settings(BaseSettings):
+    """应用全局配置"""
+
+    # ============== 应用基础 ==============
+    app_env: str = Field(default="development", alias="APP_ENV")
+    app_host: str = Field(default="0.0.0.0", alias="APP_HOST")
+    app_port: int = Field(default=8000, alias="APP_PORT")
+    debug: bool = Field(default=False, alias="DEBUG")
+
+    # ============== JWT ==============
+    jwt_secret_key: str = Field(
+        default="travel-jwt-secret-change-in-prod",
+        alias="JWT_SECRET_KEY"
+    )
+
+    # ============== LLM ==============
+    dashscope_api_key: str = Field(alias="DASHSCOPE_API_KEY")
+    qwen_model_name: str = Field(default="qwen-max", alias="QWEN_MODEL_NAME")
+    qwen_base_url: str = Field(
+        default="https://dashscope.aliyuncs.com/compatible-mode/v1",
+        alias="QWEN_BASE_URL"
+    )
+    qwen_temperature: float = 0.7
+    qwen_max_tokens: int = 8000
+
+    # ============== LangSmith ==============
+    langsmith_api_key: str = Field(default="", alias="LANGSMITH_API_KEY")
+    langsmith_project: str = Field(default="travel-planner-dev", alias="LANGSMITH_PROJECT")
+    langsmith_tracing: bool = Field(default=False, alias="LANGSMITH_TRACING")
+    langsmith_endpoint: str = Field(
+        default="https://api.smith.langchain.com",
+        alias="LANGSMITH_ENDPOINT"
+    )
+
+    # ============== 数据库 ==============
+    postgres_host: str = Field(default="localhost", alias="POSTGRES_HOST")
+    postgres_port: int = Field(default=5432, alias="POSTGRES_PORT")
+    postgres_db: str = Field(alias="POSTGRES_DB")
+    postgres_user: str = Field(alias="POSTGRES_USER")
+    postgres_password: str = Field(alias="POSTGRES_PASSWORD")
+
+    redis_host: str = Field(default="localhost", alias="REDIS_HOST")
+    redis_port: int = Field(default=6379, alias="REDIS_PORT")
+    redis_db: int = Field(default=0, alias="REDIS_DB")
+    redis_password: str = Field(default="", alias="REDIS_PASSWORD")
+
+    # ============== 外部服务（后续章节用） ==============
+    amap_api_key: str = Field(default="", alias="AMAP_API_KEY")
+    tavily_api_key: str = Field(default="", alias="TAVILY_API_KEY")
+    qq_map_key: str = Field(default="", alias="QQ_MAP_KEY")
+
+    deepseek_api_key: str = Field(default="", alias="DEEP_SEEK_API_KEY")
+    deepseek_base_url: str = Field(
+        default="https://api.deepseek.com",
+        alias="DEEPSEEK_BASE_URL"
+    )
+    deepseek_model_name: str = Field(
+        default="deepseek-v4-flash",
+        alias="DEEPSEEK_MODEL_NAME"
+    )
+
+    # pydantic-settings 的元配置
+    model_config = SettingsConfigDict(
+        env_file=os.path.join(BASE_DIR, ".env"),
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore"  # 忽略 .env 里没定义的多余字段
+    )
+
+    @property
+    def database_url(self) -> str:
+        """生成 PostgreSQL 连接字符串"""
+        return (
+            f"postgresql://{self.postgres_user}:{self.postgres_password}"
+            f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
+        )
+
+    @property
+    def redis_url(self) -> str:
+        """生成 Redis 连接字符串"""
+        if self.redis_password:
+            return (
+                f"redis://:{self.redis_password}"
+                f"@{self.redis_host}:{self.redis_port}/{self.redis_db}"
+            )
+        return f"redis://{self.redis_host}:{self.redis_port}/{self.redis_db}"
+
+@lru_cache
+def get_settings() -> Settings:
+    """获取配置单例（用 lru_cache 保证进程内只创建一次）"""
+    return Settings()
+
+# 全局配置对象，其他模块直接 from app.config import settings 使用
+settings = get_settings()
+
+
+===== block 15 e7266a0c554a lines 1-51 source 知行旅行助手-v2#15 =====
+"""
+全局日志器
+用 loguru 统一日志格式与轮转策略
+"""
+import os
+import sys
+from loguru import logger
+from app.config import BASE_DIR
+
+# 日志目录（不存在则创建）
+LOG_DIR = os.path.join(BASE_DIR, "logs")
+os.makedirs(LOG_DIR, exist_ok=True)
+
+# 清除 loguru 默认的 stderr handler，全部按我们自己的规则来
+logger.remove()
+
+# 1) 控制台输出（彩色、开发时观察用）
+logger.add(
+    sys.stdout,
+    level="INFO",
+    format=(
+        "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | "
+        "<level>{level: <8}</level> | "
+        "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - "
+        "<level>{message}</level>"
+    ),
+    colorize=True,
+)
+
+# 2) 文件输出（应用日志，按天切分，保留 7 天）
+logger.add(
+    os.path.join(LOG_DIR, "app.log"),
+    level="INFO",
+    rotation="00:00",      # 每天 0 点切一个新文件
+    retention="7 days",    # 只保留最近 7 天
+    encoding="utf-8",
+    format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
+)
+
+# 3) 错误日志单独一份，方便排障
+logger.add(
+    os.path.join(LOG_DIR, "error.log"),
+    level="ERROR",
+    rotation="00:00",
+    retention="30 days",
+    encoding="utf-8",
+    format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}\n{exception}",
+)
+
+# 对外统一叫 app_logger，便于其他模块 from app.utils.logger import app_logger
+app_logger = logger
+
+
+===== block 16 e15cb052f58c lines 1-48 source 知行旅行助手-v2#16 =====
+"""
+FastAPI 应用入口
+第 01 章最小版：只暴露一个健康检查接口，验证项目跑得起来
+"""
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.config import settings
+from app.utils.logger import app_logger
+
+app = FastAPI(
+    title="LangGraph 旅行规划系统",
+    description="企业级多 Agent 旅行规划服务",
+    version="0.1.0",
+)
+
+# CORS：允许前端跨域调用（开发环境全放开，生产必收窄）
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.get("/")
+async def root():
+    """健康检查根路径"""
+    app_logger.info("有人访问了根路径")
+    return {
+        "status": "healthy",
+        "service": "LangGraph Travel Planner",
+        "version": "0.1.0",
+        "env": settings.app_env,
+        "docs": "/docs",
+    }
+
+@app.get("/health/config")
+async def check_config():
+    """
+    配置健康检查：验证 .env 是否正确加载
+    （只回显非敏感字段）
+    """
+    return {
+        "app_env": settings.app_env,
+        "qwen_model": settings.qwen_model_name,
+        "database_configured": bool(settings.postgres_password),
+        "langsmith_enabled": settings.langsmith_tracing,
+    }
+
+
+===== block 17 bf1a6b8e1eac lines 1-1 source 知行旅行助手-v2#17 =====
+docker ps
+
+
+===== block 18 689a01c6dcec lines 1-1 source 知行旅行助手-v2#18 =====
+uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+
+===== block 19 d803b74a52f4 lines 1-3 source 知行旅行助手-v2#19 =====
+INFO:     Uvicorn running on http://0.0.0.0:8000
+INFO:     Application startup complete.
+2025-XX-XX 14:XX:XX | INFO     | app.main:root:29 - ...
+
+
+===== block 20 fb4649d07104 lines 1-18 source 知行旅行助手-v2#20 =====
+"""
+第 01 章冒烟测试：验证 LLM API Key 能通
+跑完删掉这个文件即可
+"""
+from langchain_openai import ChatOpenAI
+from app.config import settings
+
+llm = ChatOpenAI(
+    model=settings.qwen_model_name,
+    base_url=settings.qwen_base_url,
+    api_key=settings.dashscope_api_key,
+    temperature=0.3,
+)
+
+response = llm.invoke("用一句话介绍杭州的西湖。")
+print("=" * 60)
+print(response.content)
+print("=" * 60)
+
+
+===== block 21 00a0f93d7369 lines 1-1 source 知行旅行助手-v2#21 =====
+uv run python scripts/Chapter_One/1_test_llm.py
+
+
+===== block 22 8f4cac23acdb lines 1-3 source 知行旅行助手-v2#22 =====
+============================================================
+西湖位于杭州市中心，是中国著名的淡水湖，以秀丽的湖光山色和众多的历史文化古迹闻名于世。
+============================================================

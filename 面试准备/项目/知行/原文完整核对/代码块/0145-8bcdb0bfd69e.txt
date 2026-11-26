@@ -1,0 +1,14 @@
+"""_normalize_train_args 演示：别名纠正 → 本轮上下文回填 → 仍缺就回一句可读提示（纯逻辑，无需密钥）"""
+from datetime import date, timedelta
+
+from app.tools.mcp_tools import _normalize_train_args, set_turn_context
+
+day = (date.today() + timedelta(days=3)).isoformat()
+set_turn_context(departure_city="北京", destination="上海", date=day)
+print("别名纠正    ：", _normalize_train_args({"trainDate": day, "from": "北京", "to": "上海"}))
+print("上下文回填  ：", _normalize_train_args({"fromStation": "北京"}))
+set_turn_context(date=day, multi_leg=True, leg_from="天津", leg_to="上海")
+print("多段按当前段：", _normalize_train_args({}))
+set_turn_context()
+print("仍然缺参    ：", _normalize_train_args({"fromStation": "北京"}))
+print("过去的日期  ：", _normalize_train_args({"date": "2020-01-01", "fromStation": "北京", "toStation": "上海"}))

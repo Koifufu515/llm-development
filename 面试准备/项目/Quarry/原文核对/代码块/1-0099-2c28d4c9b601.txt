@@ -1,0 +1,7 @@
+{
+  "url": "https://zh.wikivoyage.org/wiki/西安",
+  "license": "CC BY-SA",
+  "fetched_at": "2026-09-11",
+  "city": "西安",
+  "topic": ["attraction", "food"]
+}

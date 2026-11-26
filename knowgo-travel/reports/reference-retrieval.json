@@ -1,0 +1,798 @@
+{
+  "scope": "冻结18问检索验证：开发期6城与本集分离。助手按原来源实体标注，未经独立人工复核。\n比较同一3120子块/654父块上的基础RRF与完整MultiQuery+LLM重排，非问答准确率。\n",
+  "dataset_sha256": "cea990183111a49bd610058453a49891b1e5c13598bfe52617f008d6f04c9966",
+  "corpus": {
+    "status": "ready",
+    "documents": 71,
+    "cities": 39,
+    "characters": 404025,
+    "parents": 654,
+    "children": 3120,
+    "version": "82743fa72fa86b29597c16e0",
+    "embedding": "text-embedding-v2",
+    "vector_store": "Chroma",
+    "cache": "Redis",
+    "reranker": "Qwen LLM"
+  },
+  "aggregate": {
+    "rrf": {
+      "n": 18,
+      "recall_at_3": 0.8796296296296297,
+      "hit_at_3": 0.9444444444444444,
+      "mrr_at_3": 0.6759259259259259,
+      "errors": 0,
+      "pipeline_failures": 0
+    },
+    "full": {
+      "n": 18,
+      "recall_at_3": 0.9537037037037037,
+      "hit_at_3": 1.0,
+      "mrr_at_3": 0.787037037037037,
+      "errors": 0,
+      "pipeline_failures": 0
+    }
+  },
+  "rows": [
+    {
+      "index": 0,
+      "city": "成都",
+      "query": "成都大熊猫繁育研究基地有哪些值得看的内容？",
+      "mode": "rrf",
+      "relevant_parent_ids": [
+        "b010ad762cbca4b895db9fd5"
+      ],
+      "recall_at_3": 1.0,
+      "hit_at_3": true,
+      "mrr_at_3": 0.3333333333333333,
+      "returned_parent_ids": [
+        "9b8a1c6da0f63f5a28d4bf0e",
+        "42b43391632cedcbf9007e29",
+        "b010ad762cbca4b895db9fd5"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 0.2689917078241706
+    },
+    {
+      "index": 0,
+      "city": "成都",
+      "query": "成都大熊猫繁育研究基地有哪些值得看的内容？",
+      "mode": "full",
+      "relevant_parent_ids": [
+        "b010ad762cbca4b895db9fd5"
+      ],
+      "recall_at_3": 1.0,
+      "hit_at_3": true,
+      "mrr_at_3": 0.3333333333333333,
+      "returned_parent_ids": [
+        "9b8a1c6da0f63f5a28d4bf0e",
+        "42b43391632cedcbf9007e29",
+        "b010ad762cbca4b895db9fd5"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 2.8923564590513706
+    },
+    {
+      "index": 1,
+      "city": "广州",
+      "query": "广州陈家祠有什么建筑特色？",
+      "mode": "rrf",
+      "relevant_parent_ids": [
+        "50f1ba6a70d9aae0e26672ab"
+      ],
+      "recall_at_3": 1.0,
+      "hit_at_3": true,
+      "mrr_at_3": 1.0,
+      "returned_parent_ids": [
+        "50f1ba6a70d9aae0e26672ab",
+        "aab909e847c8faff4235e881",
+        "b56a2e10d2eb40ad4fadb410"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 0.25477679120376706
+    },
+    {
+      "index": 1,
+      "city": "广州",
+      "query": "广州陈家祠有什么建筑特色？",
+      "mode": "full",
+      "relevant_parent_ids": [
+        "50f1ba6a70d9aae0e26672ab"
+      ],
+      "recall_at_3": 1.0,
+      "hit_at_3": true,
+      "mrr_at_3": 1.0,
+      "returned_parent_ids": [
+        "50f1ba6a70d9aae0e26672ab",
+        "aab909e847c8faff4235e881",
+        "b56a2e10d2eb40ad4fadb410"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 2.5616176249459386
+    },
+    {
+      "index": 2,
+      "city": "深圳",
+      "query": "深圳世界之窗主要能看什么？",
+      "mode": "rrf",
+      "relevant_parent_ids": [
+        "55cad94317460f45a2358c46"
+      ],
+      "recall_at_3": 1.0,
+      "hit_at_3": true,
+      "mrr_at_3": 1.0,
+      "returned_parent_ids": [
+        "55cad94317460f45a2358c46",
+        "10b30eefe6f3ea8b83f3274c",
+        "48b202989b3247589140ed86"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 0.264469665940851
+    },
+    {
+      "index": 2,
+      "city": "深圳",
+      "query": "深圳世界之窗主要能看什么？",
+      "mode": "full",
+      "relevant_parent_ids": [
+        "55cad94317460f45a2358c46"
+      ],
+      "recall_at_3": 1.0,
+      "hit_at_3": true,
+      "mrr_at_3": 1.0,
+      "returned_parent_ids": [
+        "55cad94317460f45a2358c46",
+        "46ac8036e3d962d0d040a98a",
+        "10b30eefe6f3ea8b83f3274c"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 2.50693529099226
+    },
+    {
+      "index": 3,
+      "city": "青岛",
+      "query": "青岛栈桥有哪些看点？",
+      "mode": "rrf",
+      "relevant_parent_ids": [
+        "5fe8b70b9ddcf91f06c50483"
+      ],
+      "recall_at_3": 1.0,
+      "hit_at_3": true,
+      "mrr_at_3": 1.0,
+      "returned_parent_ids": [
+        "5fe8b70b9ddcf91f06c50483",
+        "8d7f6c1df33df99b888774e0",
+        "96eb7e0db6a9e0cf205b8f88"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 0.26027033384889364
+    },
+    {
+      "index": 3,
+      "city": "青岛",
+      "query": "青岛栈桥有哪些看点？",
+      "mode": "full",
+      "relevant_parent_ids": [
+        "5fe8b70b9ddcf91f06c50483"
+      ],
+      "recall_at_3": 1.0,
+      "hit_at_3": true,
+      "mrr_at_3": 1.0,
+      "returned_parent_ids": [
+        "5fe8b70b9ddcf91f06c50483",
+        "96eb7e0db6a9e0cf205b8f88",
+        "8d7f6c1df33df99b888774e0"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 11.985197208821774
+    },
+    {
+      "index": 4,
+      "city": "大理",
+      "query": "大理三塔有什么历史与游览特点？",
+      "mode": "rrf",
+      "relevant_parent_ids": [
+        "58b66bc29fc4159ec9d71c7e"
+      ],
+      "recall_at_3": 1.0,
+      "hit_at_3": true,
+      "mrr_at_3": 0.3333333333333333,
+      "returned_parent_ids": [
+        "344ae5b78038cad46022f6ab",
+        "ee5379398b58556391e39688",
+        "58b66bc29fc4159ec9d71c7e"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 0.22152266697958112
+    },
+    {
+      "index": 4,
+      "city": "大理",
+      "query": "大理三塔有什么历史与游览特点？",
+      "mode": "full",
+      "relevant_parent_ids": [
+        "58b66bc29fc4159ec9d71c7e"
+      ],
+      "recall_at_3": 1.0,
+      "hit_at_3": true,
+      "mrr_at_3": 0.3333333333333333,
+      "returned_parent_ids": [
+        "344ae5b78038cad46022f6ab",
+        "ee5379398b58556391e39688",
+        "58b66bc29fc4159ec9d71c7e"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 2.7423922498710454
+    },
+    {
+      "index": 5,
+      "city": "哈尔滨",
+      "query": "哈尔滨圣索菲亚教堂有什么特点？",
+      "mode": "rrf",
+      "relevant_parent_ids": [
+        "656c1ba7f68bf6bf8c472b84"
+      ],
+      "recall_at_3": 1.0,
+      "hit_at_3": true,
+      "mrr_at_3": 0.3333333333333333,
+      "returned_parent_ids": [
+        "9751b7b39344b3e0c7e6934b",
+        "aad84efa877f78402d2d541f",
+        "656c1ba7f68bf6bf8c472b84"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 0.271845290903002
+    },
+    {
+      "index": 5,
+      "city": "哈尔滨",
+      "query": "哈尔滨圣索菲亚教堂有什么特点？",
+      "mode": "full",
+      "relevant_parent_ids": [
+        "656c1ba7f68bf6bf8c472b84"
+      ],
+      "recall_at_3": 1.0,
+      "hit_at_3": true,
+      "mrr_at_3": 0.3333333333333333,
+      "returned_parent_ids": [
+        "9751b7b39344b3e0c7e6934b",
+        "aad84efa877f78402d2d541f",
+        "656c1ba7f68bf6bf8c472b84"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 2.4461780837737024
+    },
+    {
+      "index": 6,
+      "city": "敦煌",
+      "query": "敦煌莫高窟有哪些文化看点？",
+      "mode": "rrf",
+      "relevant_parent_ids": [
+        "7f1e3026ca530cf9b0f2f8fc"
+      ],
+      "recall_at_3": 1.0,
+      "hit_at_3": true,
+      "mrr_at_3": 0.3333333333333333,
+      "returned_parent_ids": [
+        "589150a6925f87e9ff2b9c73",
+        "243f2999db66845184645e82",
+        "7f1e3026ca530cf9b0f2f8fc"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 0.2265650420449674
+    },
+    {
+      "index": 6,
+      "city": "敦煌",
+      "query": "敦煌莫高窟有哪些文化看点？",
+      "mode": "full",
+      "relevant_parent_ids": [
+        "7f1e3026ca530cf9b0f2f8fc"
+      ],
+      "recall_at_3": 1.0,
+      "hit_at_3": true,
+      "mrr_at_3": 0.3333333333333333,
+      "returned_parent_ids": [
+        "589150a6925f87e9ff2b9c73",
+        "243f2999db66845184645e82",
+        "7f1e3026ca530cf9b0f2f8fc"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 2.352542458102107
+    },
+    {
+      "index": 7,
+      "city": "拉萨",
+      "query": "拉萨布达拉宫有什么历史特点？",
+      "mode": "rrf",
+      "relevant_parent_ids": [
+        "2317c5a917f70c3ad57ff31e",
+        "6cc03ad4bbf901eb3bb1b067",
+        "95281f18e05107c14d247a30",
+        "974e5dd178a9648e3d1a83c6"
+      ],
+      "recall_at_3": 0.5,
+      "hit_at_3": true,
+      "mrr_at_3": 0.5,
+      "returned_parent_ids": [
+        "0802a737189fc366d421432d",
+        "95281f18e05107c14d247a30",
+        "974e5dd178a9648e3d1a83c6"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 0.26837487518787384
+    },
+    {
+      "index": 7,
+      "city": "拉萨",
+      "query": "拉萨布达拉宫有什么历史特点？",
+      "mode": "full",
+      "relevant_parent_ids": [
+        "2317c5a917f70c3ad57ff31e",
+        "6cc03ad4bbf901eb3bb1b067",
+        "95281f18e05107c14d247a30",
+        "974e5dd178a9648e3d1a83c6"
+      ],
+      "recall_at_3": 0.5,
+      "hit_at_3": true,
+      "mrr_at_3": 1.0,
+      "returned_parent_ids": [
+        "974e5dd178a9648e3d1a83c6",
+        "0802a737189fc366d421432d",
+        "95281f18e05107c14d247a30"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 14.845635416917503
+    },
+    {
+      "index": 8,
+      "city": "泉州",
+      "query": "泉州开元寺值得看什么？",
+      "mode": "rrf",
+      "relevant_parent_ids": [
+        "42d27a0559749df742e15308",
+        "b1fcff9fda6d23186db19019"
+      ],
+      "recall_at_3": 1.0,
+      "hit_at_3": true,
+      "mrr_at_3": 1.0,
+      "returned_parent_ids": [
+        "42d27a0559749df742e15308",
+        "7da6b458cfe75b93a8275ba0",
+        "b1fcff9fda6d23186db19019"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 1.6822459581308067
+    },
+    {
+      "index": 8,
+      "city": "泉州",
+      "query": "泉州开元寺值得看什么？",
+      "mode": "full",
+      "relevant_parent_ids": [
+        "42d27a0559749df742e15308",
+        "b1fcff9fda6d23186db19019"
+      ],
+      "recall_at_3": 1.0,
+      "hit_at_3": true,
+      "mrr_at_3": 1.0,
+      "returned_parent_ids": [
+        "b1fcff9fda6d23186db19019",
+        "42d27a0559749df742e15308"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 13.778511125128716
+    },
+    {
+      "index": 9,
+      "city": "太原",
+      "query": "太原晋祠有什么历史看点？",
+      "mode": "rrf",
+      "relevant_parent_ids": [
+        "1891cddb8f3dfab26d60c93d"
+      ],
+      "recall_at_3": 1.0,
+      "hit_at_3": true,
+      "mrr_at_3": 1.0,
+      "returned_parent_ids": [
+        "1891cddb8f3dfab26d60c93d",
+        "afda1eb0d7d528fb23da0932",
+        "4f03caf60702c0fcdb8529ec"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 0.4242160003632307
+    },
+    {
+      "index": 9,
+      "city": "太原",
+      "query": "太原晋祠有什么历史看点？",
+      "mode": "full",
+      "relevant_parent_ids": [
+        "1891cddb8f3dfab26d60c93d"
+      ],
+      "recall_at_3": 1.0,
+      "hit_at_3": true,
+      "mrr_at_3": 1.0,
+      "returned_parent_ids": [
+        "1891cddb8f3dfab26d60c93d",
+        "afda1eb0d7d528fb23da0932",
+        "4f03caf60702c0fcdb8529ec"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 3.491647250019014
+    },
+    {
+      "index": 10,
+      "city": "兰州",
+      "query": "兰州白塔山有哪些景观？",
+      "mode": "rrf",
+      "relevant_parent_ids": [
+        "dc704b9a2dada64c31907a4d"
+      ],
+      "recall_at_3": 1.0,
+      "hit_at_3": true,
+      "mrr_at_3": 0.3333333333333333,
+      "returned_parent_ids": [
+        "9c1523c3ee4a212abdbf3ab0",
+        "3fe2c0aabf3f4c683e760585",
+        "dc704b9a2dada64c31907a4d"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 0.2881174576468766
+    },
+    {
+      "index": 10,
+      "city": "兰州",
+      "query": "兰州白塔山有哪些景观？",
+      "mode": "full",
+      "relevant_parent_ids": [
+        "dc704b9a2dada64c31907a4d"
+      ],
+      "recall_at_3": 1.0,
+      "hit_at_3": true,
+      "mrr_at_3": 0.3333333333333333,
+      "returned_parent_ids": [
+        "9c1523c3ee4a212abdbf3ab0",
+        "3fe2c0aabf3f4c683e760585",
+        "dc704b9a2dada64c31907a4d"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 2.2361535830423236
+    },
+    {
+      "index": 11,
+      "city": "无锡",
+      "query": "无锡鼋头渚适合看哪些景色？",
+      "mode": "rrf",
+      "relevant_parent_ids": [
+        "bd768eb2f033213a04ab6a7e"
+      ],
+      "recall_at_3": 1.0,
+      "hit_at_3": true,
+      "mrr_at_3": 1.0,
+      "returned_parent_ids": [
+        "bd768eb2f033213a04ab6a7e"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 0.23224295815452933
+    },
+    {
+      "index": 11,
+      "city": "无锡",
+      "query": "无锡鼋头渚适合看哪些景色？",
+      "mode": "full",
+      "relevant_parent_ids": [
+        "bd768eb2f033213a04ab6a7e"
+      ],
+      "recall_at_3": 1.0,
+      "hit_at_3": true,
+      "mrr_at_3": 1.0,
+      "returned_parent_ids": [
+        "bd768eb2f033213a04ab6a7e"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 2.4776472500525415
+    },
+    {
+      "index": 12,
+      "city": "济南",
+      "query": "济南趵突泉有什么特色？",
+      "mode": "rrf",
+      "relevant_parent_ids": [
+        "1bf20ad79e4d5cecc1147eac"
+      ],
+      "recall_at_3": 1.0,
+      "hit_at_3": true,
+      "mrr_at_3": 1.0,
+      "returned_parent_ids": [
+        "1bf20ad79e4d5cecc1147eac",
+        "da62136ec88d90b8d9a8d3b5",
+        "d90be20d45a00d3146d16d37"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 0.24301691679283977
+    },
+    {
+      "index": 12,
+      "city": "济南",
+      "query": "济南趵突泉有什么特色？",
+      "mode": "full",
+      "relevant_parent_ids": [
+        "1bf20ad79e4d5cecc1147eac"
+      ],
+      "recall_at_3": 1.0,
+      "hit_at_3": true,
+      "mrr_at_3": 1.0,
+      "returned_parent_ids": [
+        "1bf20ad79e4d5cecc1147eac",
+        "da62136ec88d90b8d9a8d3b5",
+        "d90be20d45a00d3146d16d37"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 2.520432542078197
+    },
+    {
+      "index": 13,
+      "city": "洛阳",
+      "query": "洛阳龙门石窟有哪些看点？",
+      "mode": "rrf",
+      "relevant_parent_ids": [
+        "cce683e1569bd7cfc6080d2f"
+      ],
+      "recall_at_3": 1.0,
+      "hit_at_3": true,
+      "mrr_at_3": 1.0,
+      "returned_parent_ids": [
+        "cce683e1569bd7cfc6080d2f",
+        "19acd78474205c45f58d65af",
+        "2ae3cfafaa6726cc68c37e8d"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 0.25328637519851327
+    },
+    {
+      "index": 13,
+      "city": "洛阳",
+      "query": "洛阳龙门石窟有哪些看点？",
+      "mode": "full",
+      "relevant_parent_ids": [
+        "cce683e1569bd7cfc6080d2f"
+      ],
+      "recall_at_3": 1.0,
+      "hit_at_3": true,
+      "mrr_at_3": 1.0,
+      "returned_parent_ids": [
+        "cce683e1569bd7cfc6080d2f",
+        "2ae3cfafaa6726cc68c37e8d",
+        "19acd78474205c45f58d65af"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 10.606277375016361
+    },
+    {
+      "index": 14,
+      "city": "丽江",
+      "query": "丽江黑龙潭可以欣赏什么？",
+      "mode": "rrf",
+      "relevant_parent_ids": [
+        "839604f9405281ddc5b465bf",
+        "d8eceb5bb70ed2871f10236e",
+        "ea2df70b71cf844fa8b926d3"
+      ],
+      "recall_at_3": 0.3333333333333333,
+      "hit_at_3": true,
+      "mrr_at_3": 0.5,
+      "returned_parent_ids": [
+        "0daf28a18d62e3ecef13e41a",
+        "839604f9405281ddc5b465bf",
+        "efd10aa8d976ec95eb38b736"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 0.2593246251344681
+    },
+    {
+      "index": 14,
+      "city": "丽江",
+      "query": "丽江黑龙潭可以欣赏什么？",
+      "mode": "full",
+      "relevant_parent_ids": [
+        "839604f9405281ddc5b465bf",
+        "d8eceb5bb70ed2871f10236e",
+        "ea2df70b71cf844fa8b926d3"
+      ],
+      "recall_at_3": 0.6666666666666666,
+      "hit_at_3": true,
+      "mrr_at_3": 1.0,
+      "returned_parent_ids": [
+        "d8eceb5bb70ed2871f10236e",
+        "f4d2fc93c8525b83470830af",
+        "839604f9405281ddc5b465bf"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 11.550511541776359
+    },
+    {
+      "index": 15,
+      "city": "三亚",
+      "query": "三亚天涯海角有什么景观？",
+      "mode": "rrf",
+      "relevant_parent_ids": [
+        "944d1a54d72333fb9c517f66"
+      ],
+      "recall_at_3": 0.0,
+      "hit_at_3": false,
+      "mrr_at_3": 0.0,
+      "returned_parent_ids": [
+        "fdd0beee66fb101b8453a7f1",
+        "abcf997701a75f3718752d6b",
+        "2abc9277d47b2e03920dded1"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 0.2449947502464056
+    },
+    {
+      "index": 15,
+      "city": "三亚",
+      "query": "三亚天涯海角有什么景观？",
+      "mode": "full",
+      "relevant_parent_ids": [
+        "944d1a54d72333fb9c517f66"
+      ],
+      "recall_at_3": 1.0,
+      "hit_at_3": true,
+      "mrr_at_3": 1.0,
+      "returned_parent_ids": [
+        "944d1a54d72333fb9c517f66",
+        "2abc9277d47b2e03920dded1",
+        "fdd0beee66fb101b8453a7f1"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 12.14538808260113
+    },
+    {
+      "index": 16,
+      "city": "扬州",
+      "query": "扬州瘦西湖有哪些特色？",
+      "mode": "rrf",
+      "relevant_parent_ids": [
+        "201622e108ebf7f741435707"
+      ],
+      "recall_at_3": 1.0,
+      "hit_at_3": true,
+      "mrr_at_3": 0.5,
+      "returned_parent_ids": [
+        "59d294851ce897f2d3b771cd",
+        "201622e108ebf7f741435707"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 0.288162374868989
+    },
+    {
+      "index": 16,
+      "city": "扬州",
+      "query": "扬州瘦西湖有哪些特色？",
+      "mode": "full",
+      "relevant_parent_ids": [
+        "201622e108ebf7f741435707"
+      ],
+      "recall_at_3": 1.0,
+      "hit_at_3": true,
+      "mrr_at_3": 0.5,
+      "returned_parent_ids": [
+        "59d294851ce897f2d3b771cd",
+        "201622e108ebf7f741435707"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 10.484970541670918
+    },
+    {
+      "index": 17,
+      "city": "长沙",
+      "query": "长沙岳麓山有什么值得游览的？",
+      "mode": "rrf",
+      "relevant_parent_ids": [
+        "8baf22f06c1d4fbf2b45fc09"
+      ],
+      "recall_at_3": 1.0,
+      "hit_at_3": true,
+      "mrr_at_3": 1.0,
+      "returned_parent_ids": [
+        "8baf22f06c1d4fbf2b45fc09",
+        "711e72c137e698f1c2094cc1",
+        "a67dc718bee3a066126e9092"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 0.2517696665599942
+    },
+    {
+      "index": 17,
+      "city": "长沙",
+      "query": "长沙岳麓山有什么值得游览的？",
+      "mode": "full",
+      "relevant_parent_ids": [
+        "8baf22f06c1d4fbf2b45fc09"
+      ],
+      "recall_at_3": 1.0,
+      "hit_at_3": true,
+      "mrr_at_3": 1.0,
+      "returned_parent_ids": [
+        "8baf22f06c1d4fbf2b45fc09",
+        "711e72c137e698f1c2094cc1",
+        "a67dc718bee3a066126e9092"
+      ],
+      "pipeline_complete": true,
+      "query_error": null,
+      "rerank_error": null,
+      "seconds": 2.4380457079969347
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+def route_to_agents(state: DestinationRouterState) -> list[Send]:
+    """路由函数（条件边）：把 classifications 扇出成一批并行任务"""
+    sends = []
+    seen = set()
+    for c in state["classifications"]:
+        # ★ 去重：LLM 偶发对同一子查询重复输出（实测"苏州文化探索"出现两次），
+        #   按 (agent, query) 建 key、重复的跳过，避免同一分支白跑两遍、报告出现重复段。
+        #   .strip() 防"苏州文化探索"和"苏州文化探索 "（尾部空格）被当成两个任务。
+        key = (c["agent"], c["query"].strip())
+        if key in seen:
+            continue
+        seen.add(key)
+        # Send(目标节点名, 发给该节点的输入)：返回列表里有几个 Send，就并行开几个分支。
+        # 发过去的是只含 query/destination 的小 dict（不是整张 State），所以下游节点签名是 state: dict。
+        sends.append(Send(c["agent"], {"query": c["query"], "destination": state["destination"]}))
+
+    app_logger.info(f"并行发送 {len(sends)} 个任务（去重后）")
+    return sends

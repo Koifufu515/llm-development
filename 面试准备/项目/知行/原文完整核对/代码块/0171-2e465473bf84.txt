@@ -1,0 +1,11 @@
+"""parse_driving_rows 演示：高德驾车返回 → 距离 / 耗时 / 过路费 / 红绿灯 / 摘要（纯函数，无需密钥）"""
+import json
+
+from app.tools.mcp_tools import parse_driving_rows
+
+amap = {"status": "1", "route": {"paths": [{"distance": "137000", "duration": "6120", "tolls": "65", "traffic_lights": "12",
+                                            "steps": [{"instruction": "向东出发，沿长安街行驶 2 公里"}, {"road_name": "京津塘高速"}]}]}}
+print("JSON 文本      ：", parse_driving_rows(json.dumps(amap, ensure_ascii=False)))
+print("content blocks ：", parse_driving_rows([{"type": "text", "text": json.dumps(amap)}]))
+print("夹在说明文字里 ：", parse_driving_rows("规划结果如下 " + json.dumps(amap) + " 仅供参考"))
+print("什么都没有     ：", parse_driving_rows("高德服务暂不可用"))

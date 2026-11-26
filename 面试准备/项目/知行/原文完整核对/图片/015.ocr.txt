@@ -1,0 +1,28 @@
+系统整体架构
+用户（浏览器）
+http://Localhost:3000
+（
+HTTP + SSE（流式）
+FastAPI 应用层
+/api/v1/messages• /api/v1/conversations • /api/v1/users
+意图路由层
+②
+"闲聊"vS"行程规划”vS"纯查询"
+（是行程规划）
+LangGraph Agent（单 Agent+状态机）
+状态 State：current_step +用户需求＋已选项…
+Middleware：根据
+current_step
+动态换 Prompt/工具
+步骤7
+日持久化层
+4 外部能力层
+PostgresQL（对话/记忆）
+MCP 服务矩阵
+Redis（缓存）
+•12306 高铁
+Chroma（向量库）
+•高德地图/天气
+•航班/酒店/搜索
+Advanced RAG
+•本地攻略知识库

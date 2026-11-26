@@ -1,0 +1,16 @@
+{
+  "same_slug_same_labels_same_ids_isolated": [
+    {
+      "tenant": 0,
+      "matching_evidence_title": "tenant-0",
+      "same_chunk_id": "same-child"
+    },
+    {
+      "tenant": 1,
+      "matching_evidence_title": "tenant-1",
+      "same_chunk_id": "same-child"
+    }
+  ],
+  "tenant_upload_paths_distinct": true,
+  "foreign_document_status": 404
+}

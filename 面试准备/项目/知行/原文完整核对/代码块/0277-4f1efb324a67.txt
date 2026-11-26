@@ -1,0 +1,8 @@
+"""_price_pair 演示：取（总价, 每晚单价）——嵌套 price 对象 → 扁平键 → 文本换算，缺一方按晚数互补（纯函数，无需密钥）"""
+from app.capabilities.hotel_multi_segment.hotel_parser import _price_pair
+
+for name, rec in {"嵌套对象里只有文案": {"price": {"message": "716CNY 共2晚 358CNY/晚"}},
+                  "只给总价          ": {"totalPrice": 716},
+                  "只给每晚          ": {"pricePerNight": "358"},
+                  "什么都没有        ": {"name": "如家"}}.items():
+    print(f"{name} → {_price_pair(rec, nights=2)}")

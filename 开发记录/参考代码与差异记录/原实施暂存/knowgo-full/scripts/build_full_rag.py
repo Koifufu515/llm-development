@@ -1,0 +1,1 @@
+../../../../../knowgo-travel/scripts/build_full_rag.py

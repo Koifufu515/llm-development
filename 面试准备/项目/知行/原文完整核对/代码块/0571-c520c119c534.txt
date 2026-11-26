@@ -1,0 +1,14 @@
+"""_ticket_table_from_tail 演示：从本轮工具消息里解析真实班次，查了几段就出几张表（纯函数，无需密钥）"""
+from langchain_core.messages import AIMessage, ToolMessage
+
+from app.services.chat_stream_executor import _ticket_table_from_tail
+
+tail = [   # execute_turn 里的 tail：最后一条用户消息之后的所有消息
+    AIMessage(content="我来查一下两段高铁"),
+    ToolMessage(tool_call_id="t1", content="G1650|福州→杭州东|08:12→12:30|4:18|二等座 有 356元\n"
+                                           "G1654|福州→杭州东|10:20→14:41|4:21|二等座 有 356元"),
+    ToolMessage(tool_call_id="t2", content="G7512|杭州东→上海虹桥|09:05→10:02|0:57|二等座 有 73元"),
+    ToolMessage(tool_call_id="t3", content="今天是 2026-09-26"),     # 不是班次 → 跳过
+]
+print(_ticket_table_from_tail(tail))
+print(repr(_ticket_table_from_tail([AIMessage(content="G1234 08:00 出发")])))   # 模型嘴上说的不算 → 空串

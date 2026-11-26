@@ -1,0 +1,4 @@
+SELECT heading_path,
+       heading_path[1]                      AS 第一层,
+       array_to_string(heading_path, ' > ') AS 面包屑
+FROM chunks WHERE level = 0 LIMIT 3;

@@ -1,0 +1,53 @@
+# ============== 多目的地覆盖校验 ==============
+
+def _multi_city_names(state) -> list[str]:
+    """多目的地城市列表（按游览顺序）；单目的地返回空列表（调用方跳过校验）
+
+    单城返回空列表是刻意设计：单目的地流程保持完全不变，不引入任何新校验
+    """
+    from app.services.express_planning_service import _split_cities
+    cities = _split_cities(state.get("selected_destination") or "")
+    return cities if len(cities) > 1 else []
+
+def _expected_legs(state) -> list[str]:
+    """应有的交通段：出发地→第一城 + 城际转场 + 末城→出发地返程（节点相邻城市不同才生成）。
+
+ 单目的地同样纳入段级校验（此前单城返回空列表跳过校验）。
+ （用户规格）：按 _build_legs 口径——末城→出发地返程段一并计入，
+    北京→上海 = 2 段、北京→天津→上海 = 3 段、北京→北京 = 0 段；出发地缺失时返回空列表
+    """
+    from app.services.express_planning_service import _build_legs, _split_cities
+    departure = ((state.get("user_requirement") or {}).get("departure_city") or "").strip()
+    if not departure:
+        return []
+    cities = _split_cities(state.get("selected_destination") or "")
+    # ★ "应有几段"的唯一口径：交通步和第 12 章的执行器都认它
+    return [f"{a}→{b}" for a, b in _build_legs(departure, cities)]
+
+# 正文完整性守卫（`_itinerary_text_guard`）已按用户要求删除——
+# 正文改由代码渲染后，模型自由正文一律作废重推，守卫已无可校验的对象。
+# 此处仅保留天序号解析器：它仍被早期的"正文覆盖 1~N 天即推进状态机"兜底复用
+# （那是流程推进保证，不是内容格式校验）
+import re
+_DAY_MARK_RE = re.compile(r"第\s*(\d+|[一二三四五六七八九十]+)\s*天|Day\s*(\d+)", re.IGNORECASE)
+_CN_DIGIT = {"一": 1, "二": 2, "三": 3, "四": 4, "五": 5, "六": 6, "七": 7, "八": 8, "九": 9}
+
+def _day_numbers(text: str) -> set[int]:
+    """ 提取正文里出现过的天序号（第3天 / 第三天 / Day 3）"""
+    nums: set[int] = set()
+    for m in _DAY_MARK_RE.finditer(text or ""):
+        if m.group(2):                                  # Day 4 / day 12
+            nums.add(int(m.group(2)))
+            continue
+        g1 = m.group(1)                                 # 第3天 / 第1天 / 第三天
+        if g1.isdigit():
+            nums.add(int(g1))
+            continue
+        cn = g1
+        if len(cn) == 1:
+            nums.add(10 if cn == "十" else _CN_DIGIT.get(cn, 0))
+        elif cn.startswith("十"):
+            nums.add(10 + _CN_DIGIT.get(cn[1], 0))
+        elif cn.endswith("十"):
+            nums.add(_CN_DIGIT.get(cn[0], 0) * 10)
+    return {n for n in nums if n > 0}

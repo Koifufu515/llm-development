@@ -1,0 +1,17 @@
+"""
+状态转换工具
+用于 Handoffs 流程中的步骤跳转和数据记录
+"""
+from datetime import datetime
+from langchain.tools import tool, ToolRuntime
+from langchain_core.messages import ToolMessage
+from langgraph.types import Command  # ★ Command(update=…)：写 state + 推进步骤的唯一手段
+from app.core.state import (
+    TravelState,
+    UserRequirement,
+    CLEAR,  # 合并器哨兵：写 CLEAR 才真正清空（写 None 会被 _keep_last_non_none 保留）
+)
+from app.utils.logger import app_logger
+from typing import Annotated, Literal, Optional
+# 行程正文结构化校验（Pydantic v2，校验上下文传 travel_days）
+from pydantic import BaseModel, Field, ValidationError, ValidationInfo, model_validator

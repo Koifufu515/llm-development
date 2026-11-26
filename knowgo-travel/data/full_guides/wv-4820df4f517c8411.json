@@ -1,0 +1,21 @@
+{
+  "city": "兰州",
+  "title": "兰州景点资料 · Lanzhou",
+  "source_url": "https://en.wikivoyage.org/wiki/Lanzhou",
+  "text": "资料城市：兰州。本文是历史开放景点资料，不提供实时开放时间或价格；出行前需要核实。\n\nGansu Provincial Museum (甘肃省博物馆)\nSilk Road history in one place. The museum is divided into two sections-natural resources and historic exhibits. It houses collections of various color-painted potteries of Neolithic Age and treasures of ancient grottoes. In addition, the museum is home to precious linen and silk fabrics, books, wooden and bronze vessels, a great many bamboo slips for writing from the Han Dynasty (206 BC-220), frescos and so many other items. A 4-meter-tall Mammoth fossil replica is stored in the museum whose remains were excavated from the Yellow River basin in 1973. Aside from the prehistoric presentations, there are also rare animal exhibits, such as pandas, golden monkeys and red -crowned cranes.  The world-famous bronze Galloping Horse's Hoof Stepped on a Flying Swallow, also named as Galloping Horse, is a treasure of Gansu Provincial Museum. Excavated in 1969 in Wuwei County, Gansu Province, the piece depicts a vigorous horse with long tail waving and head perking. Its three hooves are in the air, galloping like lightning. What makes this sculpture amazing is the right back hoof of this galloping horse lands on the back of a small flying bird. The bird turns in surprise to look at the big creature on its back. At the same moment, the horse's head also turns slightly in attempt to know what has happened. The whole statue is honored as the mysterious and rare treasure in the history of Chinese ancient sculpture art.\n\nFive-Spring Mountain\n(五泉山) A jumble of a poor amusement park and some renovated temples.\n\nWhite Pagoda Mountain\n(白塔山) Yuan dynasty White Pagoda Temple overlooks the Yellow River.\n\nSun Yat-Sen Bridge\n(中山桥) \"First Bridge across the Yellow River\". An old narrow ironwork bridge that holds important significance to Chinese people. Pedestrian only now in order to preserve the bridge.\n\nWaterwheel Garden\n(水车博览园) Small park along the Yellow River housing impressive traditional waterwheels, originally used to irrigate farmland around Lanzhou.\n\nSculptures of the Mother River\n(黄河母亲像)Gansu sculpture by the famous sculptor He E creation,6 meters long,2.2 meters wide,2.6 meters tall, weighing 40 tons, from \"mother\" and a \"baby\" of composition.\n\nYantan Park\nSince founding a state, here has built up to 20 km ring at the dam and 10 km asphalt road, and across the Yellow River tributary, the Yantan and urban integration. Later turned into parks, gardens lush forests, beautiful scenery, has built a pavilion, and the Yellow River scenery mutual authentic, very magnificent.\n\nSolemn Temple\nThe great cause of thirteen years (617 years ), Xue Ju in Lanzhou later became the emperor, the solemn temple as the palace. Tang Pingdingxue cited later renamed the temple, by the gate, and QianDian rooms, the main hall, houdian constitute HHS falls. Original gate board, \"Chi stately Temple\" six characters, is the famous calligrapher Li Puguang the book, font bold. The main hall after a Buddhism godness Guanyin wall murals, dignified and beautiful, wearing white, wanran such as yarn, Panicum Jingping, Cuise such as the new.",
+  "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+  "license": "CC BY-SA 3.0",
+  "attribution": "Wikivoyage contributors; https://en.wikivoyage.org/wiki/Lanzhou",
+  "sha256": "44154088b09734d42e231e25c0b38e9c9130c60a434412be1efeb678a01de319",
+  "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+  "poi_count": 8,
+  "source_dataset": "https://github.com/wikivoyage/wikivoyage.github.io",
+  "excluded_fields": [
+    "price",
+    "hours",
+    "phone",
+    "email",
+    "hotel",
+    "restaurant"
+  ]
+}

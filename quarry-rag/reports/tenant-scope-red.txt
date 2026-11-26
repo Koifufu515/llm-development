@@ -1,0 +1,24 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___________________ test_same_slug_routes_to_explicit_tenant ___________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x106d06e50>
+
+    @pytest.mark.asyncio
+    async def test_same_slug_routes_to_explicit_tenant(monkeypatch):
+     await init_pool();tenants=[];ids=[];seen=[]
+     try:
+      async with acquire()as c:
+       for _ in range(2):
+        tid=await c.fetchval("INSERT INTO tenants(slug,name)VALUES($1,'隔离验收')RETURNING id",'scope-'+uuid4().hex);tenants.append(tid)
+        ids.append(await c.fetchval("INSERT INTO collections(tenant_id,slug,name,embed_model,embed_dim)VALUES($1,'shared','shared','text-embedding-v4',1024)RETURNING id",tid))
+      async def retrieval(**kw):seen.append(kw['collection_id']);return []
+      monkeypatch.setattr(pipeline,'hybrid_search',retrieval)
+>     for t in tenants:await pipeline.search_evidence('shared','q',['public'],tenant_id=t,use_rerank=False,use_facts=False)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E     TypeError: search_evidence() got an unexpected keyword argument 'tenant_id'
+
+tests/unit/test_tenant_scope.py:16: TypeError
+=========================== short test summary info ============================
+FAILED tests/unit/test_tenant_scope.py::test_same_slug_routes_to_explicit_tenant
+1 failed in 0.37s

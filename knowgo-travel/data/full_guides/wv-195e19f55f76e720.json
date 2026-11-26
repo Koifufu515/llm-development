@@ -1,0 +1,21 @@
+{
+  "city": "北京",
+  "title": "北京景点资料 · Beijing/Tongzhou",
+  "source_url": "https://en.wikivoyage.org/wiki/Beijing/Tongzhou",
+  "text": "资料城市：北京。本文是历史开放景点资料，不提供实时开放时间或价格；出行前需要核实。\n\nRandengfo Pagoda\nThe oldest and tallest pagoda in Beijing and also the symbol and most famous landmark of Tongzhou.  Presently (April 2009) it can not be climbed but only watched from the outside.\n\nArtist Village Gallery\nThis is a very large gallery, which aims at making local Songzhuang artists famous and making it possible for them to stay in the village while they build their fame.\n\nSoemo Fine Arts\nThe first foreign (Dutch) gallery in the area.  Houses some of the very most famous artists in China as well as artists just breaking through.\n\nTS1\nPromotes contemporary art in all forms and media.  Represents now eight artists.\n\nGrand Canal Culture Park\nPark situated at the historic place where the Grand Canal strecting from Hangzhou to Beijing ended.  Great place for a walk along the river and for showing your kite flying skills.  The park also comprises playing grounds, cafés and a small restaurant primarily serving barbeque.  Under the bridge you can roller skate during the day and dance in the evening.  Except for winter, you can usually rent you own boat or try the tourist boats' 1½ hour trip on the canal, but presently (April 2009) this is temporarily suspended as there is almost no water in the river due to bridge construction work.\n\nWest Lake Park\nSmall park next to the old shopping street and market and with a view to Randengfo Pagoda.  Small playground for the children.",
+  "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+  "license": "CC BY-SA 3.0",
+  "attribution": "Wikivoyage contributors; https://en.wikivoyage.org/wiki/Beijing/Tongzhou",
+  "sha256": "ba9a414f95b200fbb7f0989546143246be983caa9ba009688391de5eaca7d0b6",
+  "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+  "poi_count": 6,
+  "source_dataset": "https://github.com/wikivoyage/wikivoyage.github.io",
+  "excluded_fields": [
+    "price",
+    "hours",
+    "phone",
+    "email",
+    "hotel",
+    "restaurant"
+  ]
+}

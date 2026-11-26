@@ -1,0 +1,59 @@
+def _record_score(record: dict) -> int:
+    """判断一个 dict 有多像"酒店记录"：命中名称 + 价格 + 评分 + 地址的键越多越像"""
+    return sum(1 for keys in (_NAME_KEYS, _NIGHT_KEYS, _RATING_KEYS, _ADDR_KEYS)
+               if _pick(record, keys) not in (None, "", [], {}))
+
+def _best_record_list(node: Any, depth: int = 0) -> list[dict]:
+    """递归找"最像酒店列表"的字典数组（按平均像度打分取最高，避免误选城市/分页等数组）"""
+    best: list[dict] = []
+    best_score = 0
+    if depth > 6:
+        return best
+    if isinstance(node, dict):
+        for value in node.values():
+            found = _best_record_list(value, depth + 1)
+            score = sum(_record_score(item) for item in found) / len(found) if found else 0
+            if found and score > best_score:
+                best, best_score = found, score
+    elif isinstance(node, list):
+        dicts = [item for item in node if isinstance(item, dict)]
+        if dicts:
+            avg = sum(_record_score(item) for item in dicts) / len(dicts)
+            # ★ 平均命中名称 / 价格 / 评分 / 地址中的两类以上，才算"酒店列表"
+            if avg >= 2:                          # 至少像"名称 + 一项数值"，才算候选列表
+                return dicts
+        for item in node:
+            found = _best_record_list(item, depth + 1)
+            score = sum(_record_score(r) for r in found) / len(found) if found else 0
+            if found and score > best_score:
+                best, best_score = found, score
+    return best
+
+# ==================== 原始行 → HotelOption（统一定价口径） ====================
+
+def _normalize_hotel(record: dict, index: int, nights: int) -> Optional[HotelOption]:
+    """统一记录 → HotelOption：门店名必须有；价格按 _price_pair 归一（不做业务校验）"""
+    name = _as_text(_pick(record, _NAME_KEYS))
+    if not name:
+        return None
+    total, night = _price_pair(record, nights)
+    return HotelOption(
+        hotel_id=f"h{index}",
+        hotelName=name,
+        totalPrice=total,
+        pricePerNight=night,
+        starRating=_to_number(_pick(record, _RATING_KEYS)),
+        address=_as_text(_pick(record, _ADDR_KEYS)),
+    )
+
+def hotels_from_raw(raw: Any, nights: int, limit: int) -> list[HotelOption]:
+    """原始返回 → 门店候选（两级解析；解析不出返回空列表，由调用方降级 brand 模式）"""
+    text = _raw_text(raw)
+    structured = _load_structured(text)
+    records = _best_record_list(structured) if structured is not None else []
+    options = [opt for i, rec in enumerate(records, 1)
+               if (opt := _normalize_hotel(rec, i, nights)) is not None]
+    app_logger.info(
+        f"🏨 酒店解析：原始 {len(text)} 字 → 门店候选 {len(options)} 个（取前 {limit} 个）"
+    )
+    return options[:limit]

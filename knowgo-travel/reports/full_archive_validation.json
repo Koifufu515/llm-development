@@ -1,0 +1,11 @@
+{
+  "pytest_exit_code": 0,
+  "pytest_output": "........................................................................ [ 98%]\n.                                                                        [100%]Running teardown with pytest sessionfinish...\n\n73 passed in 0.65s\n",
+  "portable_chroma_exit_code": 0,
+  "portable_chroma_output": "{\"status\": \"ready\", \"documents\": 71, \"cities\": 39, \"characters\": 404025, \"parents\": 654, \"children\": 3120, \"version\": \"82743fa72fa86b29597c16e0\", \"embedding\": \"text-embedding-v2\", \"vector_store\": \"Chroma\", \"cache\": \"Redis\", \"reranker\": \"Qwen LLM\"}\nBuilding prefix dict from the default dictionary ...\nLoading model from cache /var/folders/rk/qtxh2ds10vd6_cdg09pdzrbm0000gn/T/jieba.cache\nLoading model cost 0.185 seconds.\nPrefix dict has been built successfully.\n",
+  "zip_sha256": "f3a31f34ea92e60a4dea21ab10e13fbdf3018cd703c71f3fadfc04b7ad081fab",
+  "uses_model_or_service_keys": false,
+  "uses_existing_local_postgres": true,
+  "source": "从最终ZIP解压，只复制.env.example；使用本机已安装依赖和真实PG服务。PG凭证仅经子进程环境传递，不写文件/报告；移除模型/服务密钥，不复用项目源码或索引路径。",
+  "status": "passed"
+}

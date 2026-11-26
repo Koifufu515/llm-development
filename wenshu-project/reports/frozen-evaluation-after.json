@@ -1,0 +1,3105 @@
+{
+  "dataset_sha256": "9a5ca543479b9e51f630328646b0f27725754f63f250ff14a844225998303805",
+  "dataset": "evaluation/frozen_document_qa.json",
+  "total_cases": 24,
+  "completed_cases": 24,
+  "rows": [
+    {
+      "id": "frozen-01",
+      "query": "电子信息专业安排在哪一天开题？",
+      "answerable": true,
+      "relevant_chunk_ids": [
+        "dfecdf1029714ea384b02abfed9efc76:0"
+      ],
+      "label_error": false,
+      "retrieval": {
+        "bm25": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 0.5,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "6f33efdc0b7545fe82d0d884c7b929b9:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:2"
+          ]
+        },
+        "rrf": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 0.5,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "6f33efdc0b7545fe82d0d884c7b929b9:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:2"
+          ]
+        },
+        "rerank": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:1",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:3",
+            "dfecdf1029714ea384b02abfed9efc76:2"
+          ]
+        }
+      },
+      "answer": "电子信息专业安排在2026年7月20日开题 [来源1]。",
+      "verification": {
+        "passed": true,
+        "score": 1.0,
+        "issues": []
+      },
+      "keypoint_coverage": 1.0,
+      "covered_terms": [
+        "7月20日"
+      ],
+      "missing_terms": [],
+      "citation_source_validity": 1.0,
+      "inline_citation_binding": true,
+      "refused": false,
+      "route": {
+        "dept_ids": [
+          "dept_yjsy"
+        ],
+        "dept_names": [
+          "研究生院"
+        ],
+        "matched_by": "keyword",
+        "confidence": 0.7,
+        "reasons": [
+          "命中关键词「开题」"
+        ]
+      },
+      "route_contains_expected": false,
+      "elapsed_seconds": 3.0223,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "embedding",
+            "model": "text-embedding-v4",
+            "usage": {
+              "prompt_tokens": 9,
+              "total_tokens": 9
+            }
+          },
+          {
+            "kind": "rerank",
+            "model": "qwen3-rerank",
+            "usage": {
+              "total_tokens": 1801
+            }
+          },
+          {
+            "kind": "answer",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 1400,
+              "output": 21,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 840
+          },
+          {
+            "kind": "verify",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 1444,
+              "output": 18,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 683
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "id": "frozen-02",
+      "query": "机械专业的开题日期是哪一天？",
+      "answerable": true,
+      "relevant_chunk_ids": [
+        "dfecdf1029714ea384b02abfed9efc76:0"
+      ],
+      "label_error": false,
+      "retrieval": {
+        "bm25": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:2",
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "6f33efdc0b7545fe82d0d884c7b929b9:0"
+          ]
+        },
+        "rrf": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:2",
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "6f33efdc0b7545fe82d0d884c7b929b9:0"
+          ]
+        },
+        "rerank": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:1",
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:3"
+          ]
+        }
+      },
+      "answer": "机械专业的开题日期是2026年7月21日 [来源1]。",
+      "verification": {
+        "passed": true,
+        "score": 1.0,
+        "issues": []
+      },
+      "keypoint_coverage": 1.0,
+      "covered_terms": [
+        "7月21日"
+      ],
+      "missing_terms": [],
+      "citation_source_validity": 1.0,
+      "inline_citation_binding": true,
+      "refused": false,
+      "route": {
+        "dept_ids": [
+          "dept_yjsy"
+        ],
+        "dept_names": [
+          "研究生院"
+        ],
+        "matched_by": "keyword",
+        "confidence": 0.7,
+        "reasons": [
+          "命中关键词「开题」"
+        ]
+      },
+      "route_contains_expected": false,
+      "elapsed_seconds": 3.3013,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "embedding",
+            "model": "text-embedding-v4",
+            "usage": {
+              "prompt_tokens": 10,
+              "total_tokens": 10
+            }
+          },
+          {
+            "kind": "rerank",
+            "model": "qwen3-rerank",
+            "usage": {
+              "total_tokens": 1809
+            }
+          },
+          {
+            "kind": "answer",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 1401,
+              "output": 21,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 1023
+          },
+          {
+            "kind": "verify",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 549,
+              "output": 18,
+              "cacheRead": 896,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 765
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "id": "frozen-03",
+      "query": "每位学生开题答辩至少应持续多久？",
+      "answerable": true,
+      "relevant_chunk_ids": [
+        "dfecdf1029714ea384b02abfed9efc76:0"
+      ],
+      "label_error": false,
+      "retrieval": {
+        "bm25": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "dfecdf1029714ea384b02abfed9efc76:2"
+          ]
+        },
+        "rrf": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:2",
+            "6f33efdc0b7545fe82d0d884c7b929b9:0"
+          ]
+        },
+        "rerank": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:1",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:3"
+          ]
+        }
+      },
+      "answer": "每位学生开题答辩时间不少于20分钟 [来源1]。",
+      "verification": {
+        "passed": true,
+        "score": 1.0,
+        "issues": []
+      },
+      "keypoint_coverage": 1.0,
+      "covered_terms": [
+        "20分钟"
+      ],
+      "missing_terms": [],
+      "citation_source_validity": 1.0,
+      "inline_citation_binding": true,
+      "refused": false,
+      "route": {
+        "dept_ids": [
+          "dept_yjsy"
+        ],
+        "dept_names": [
+          "研究生院"
+        ],
+        "matched_by": "keyword",
+        "confidence": 0.7,
+        "reasons": [
+          "命中关键词「开题」"
+        ]
+      },
+      "route_contains_expected": false,
+      "elapsed_seconds": 3.1808,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "embedding",
+            "model": "text-embedding-v4",
+            "usage": {
+              "prompt_tokens": 11,
+              "total_tokens": 11
+            }
+          },
+          {
+            "kind": "rerank",
+            "model": "qwen3-rerank",
+            "usage": {
+              "total_tokens": 1817
+            }
+          },
+          {
+            "kind": "answer",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 1119,
+              "output": 15,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 906
+          },
+          {
+            "kind": "verify",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 261,
+              "output": 18,
+              "cacheRead": 896,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 805
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "id": "frozen-04",
+      "query": "电子信息和机械专业分别要带多少份纸质开题报告？",
+      "answerable": true,
+      "relevant_chunk_ids": [
+        "dfecdf1029714ea384b02abfed9efc76:1"
+      ],
+      "label_error": false,
+      "retrieval": {
+        "bm25": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:3"
+          ]
+        },
+        "rrf": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:3",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:2"
+          ]
+        },
+        "rerank": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:1",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:3"
+          ]
+        }
+      },
+      "answer": "电子信息专业需带一式5份纸质开题报告，机械专业需带一式6份纸质开题报告 [来源2]。",
+      "verification": {
+        "passed": false,
+        "score": 0.2,
+        "issues": [
+          "关键结论引用来源错误：'一式5份/6份'出自[来源1]第2条（答辩当天），而非[来源2]；[来源2]全文未提及份数要求，属张冠李戴",
+          "与原文矛盾：答案将[来源1]的内容错误归因于[来源2]，构成事实性错误",
+          "引用格式错误：将实际来源于[来源1]的条款标注为[来源2]，违反'来源编号只对应外层[来源N]标记'规则"
+        ]
+      },
+      "keypoint_coverage": 1.0,
+      "covered_terms": [
+        "5份",
+        "6份"
+      ],
+      "missing_terms": [],
+      "citation_source_validity": 1.0,
+      "inline_citation_binding": true,
+      "refused": false,
+      "route": {
+        "dept_ids": [
+          "dept_yjsy"
+        ],
+        "dept_names": [
+          "研究生院"
+        ],
+        "matched_by": "keyword",
+        "confidence": 0.7,
+        "reasons": [
+          "命中关键词「开题」"
+        ]
+      },
+      "route_contains_expected": false,
+      "elapsed_seconds": 4.7332,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "embedding",
+            "model": "text-embedding-v4",
+            "usage": {
+              "prompt_tokens": 15,
+              "total_tokens": 15
+            }
+          },
+          {
+            "kind": "rerank",
+            "model": "qwen3-rerank",
+            "usage": {
+              "total_tokens": 1849
+            }
+          },
+          {
+            "kind": "answer",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 1123,
+              "output": 30,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 954
+          },
+          {
+            "kind": "verify",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 1176,
+              "output": 130,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 3159
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "id": "frozen-05",
+      "query": "开题考核表没有导师意见，能直接参加开题吗？",
+      "answerable": true,
+      "relevant_chunk_ids": [
+        "dfecdf1029714ea384b02abfed9efc76:1"
+      ],
+      "label_error": false,
+      "retrieval": {
+        "bm25": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:2",
+            "dfecdf1029714ea384b02abfed9efc76:2"
+          ]
+        },
+        "rrf": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:2",
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:1"
+          ]
+        },
+        "rerank": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:1",
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:3"
+          ]
+        }
+      },
+      "answer": "不能直接参加开题。  \n开题考核表中未填写指导教师意见的研究生不能开题 [来源1]。",
+      "verification": {
+        "passed": true,
+        "score": 1.0,
+        "issues": []
+      },
+      "keypoint_coverage": 1.0,
+      "covered_terms": [
+        "不能开题"
+      ],
+      "missing_terms": [],
+      "citation_source_validity": 1.0,
+      "inline_citation_binding": true,
+      "refused": false,
+      "route": {
+        "dept_ids": [
+          "dept_yjsy"
+        ],
+        "dept_names": [
+          "研究生院"
+        ],
+        "matched_by": "keyword",
+        "confidence": 0.7,
+        "reasons": [
+          "命中关键词「导师」"
+        ]
+      },
+      "route_contains_expected": false,
+      "elapsed_seconds": 2.4165,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "embedding",
+            "model": "text-embedding-v4",
+            "usage": {
+              "prompt_tokens": 16,
+              "total_tokens": 16
+            }
+          },
+          {
+            "kind": "rerank",
+            "model": "qwen3-rerank",
+            "usage": {
+              "total_tokens": 1857
+            }
+          },
+          {
+            "kind": "answer",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 612,
+              "output": 27,
+              "cacheRead": 512,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 910
+          },
+          {
+            "kind": "verify",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 662,
+              "output": 18,
+              "cacheRead": 512,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 855
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "id": "frozen-06",
+      "query": "开题答辩当天要求几点之前签到？",
+      "answerable": true,
+      "relevant_chunk_ids": [
+        "dfecdf1029714ea384b02abfed9efc76:1"
+      ],
+      "label_error": false,
+      "retrieval": {
+        "bm25": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "dfecdf1029714ea384b02abfed9efc76:2"
+          ]
+        },
+        "rrf": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:2",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:1"
+          ]
+        },
+        "rerank": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:1",
+            "6f33efdc0b7545fe82d0d884c7b929b9:0"
+          ]
+        }
+      },
+      "answer": "开题答辩当天要求在12点50分前签到 [来源2]。",
+      "verification": {
+        "passed": false,
+        "score": 0.2,
+        "issues": [
+          "引用来源错误：签到时间'12点50前'出自[来源1]第2条（答辩当天），而非[来源2]；[来源2]未提及任何具体签到时间",
+          "关键结论有支撑但来源编号错误，违反检查项4（引用格式必须正确，编号严格对应外层[来源N]标记）"
+        ]
+      },
+      "keypoint_coverage": 1.0,
+      "covered_terms": [
+        "12点50"
+      ],
+      "missing_terms": [],
+      "citation_source_validity": 1.0,
+      "inline_citation_binding": true,
+      "refused": false,
+      "route": {
+        "dept_ids": [
+          "dept_yjsy"
+        ],
+        "dept_names": [
+          "研究生院"
+        ],
+        "matched_by": "keyword",
+        "confidence": 0.7,
+        "reasons": [
+          "命中关键词「开题」"
+        ]
+      },
+      "route_contains_expected": false,
+      "elapsed_seconds": 3.8426,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "embedding",
+            "model": "text-embedding-v4",
+            "usage": {
+              "prompt_tokens": 11,
+              "total_tokens": 11
+            }
+          },
+          {
+            "kind": "rerank",
+            "model": "qwen3-rerank",
+            "usage": {
+              "total_tokens": 1817
+            }
+          },
+          {
+            "kind": "answer",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 1247,
+              "output": 20,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 726
+          },
+          {
+            "kind": "verify",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 1290,
+              "output": 94,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 2515
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "id": "frozen-07",
+      "query": "开题后多久内还能修改题目及内容？",
+      "answerable": true,
+      "relevant_chunk_ids": [
+        "dfecdf1029714ea384b02abfed9efc76:1"
+      ],
+      "label_error": false,
+      "retrieval": {
+        "bm25": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:2",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:3"
+          ]
+        },
+        "rrf": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:2",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:3"
+          ]
+        },
+        "rerank": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:0",
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:1",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:3"
+          ]
+        }
+      },
+      "answer": "开题后10日内可修改题目及内容，超过10日就不能修改 [来源3]。",
+      "verification": {
+        "passed": false,
+        "score": 0.2,
+        "issues": [
+          "关键结论引用来源错误：'开题后10日内可修改题目及内容'出自[来源1]第三条，而非[来源3]；[来源3]全文未提及修改期限；引用格式错误导致条款映射失效",
+          "与原文矛盾：[来源3]未规定修改时限，答案将[来源1]内容错误归因于[来源3]，构成事实性错引"
+        ]
+      },
+      "keypoint_coverage": 1.0,
+      "covered_terms": [
+        "10日"
+      ],
+      "missing_terms": [],
+      "citation_source_validity": 1.0,
+      "inline_citation_binding": true,
+      "refused": false,
+      "route": {
+        "dept_ids": [
+          "dept_yjsy"
+        ],
+        "dept_names": [
+          "研究生院"
+        ],
+        "matched_by": "keyword",
+        "confidence": 0.7,
+        "reasons": [
+          "命中关键词「开题」"
+        ]
+      },
+      "route_contains_expected": false,
+      "elapsed_seconds": 4.0821,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "embedding",
+            "model": "text-embedding-v4",
+            "usage": {
+              "prompt_tokens": 12,
+              "total_tokens": 12
+            }
+          },
+          {
+            "kind": "rerank",
+            "model": "qwen3-rerank",
+            "usage": {
+              "total_tokens": 1825
+            }
+          },
+          {
+            "kind": "answer",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 1120,
+              "output": 23,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 843
+          },
+          {
+            "kind": "verify",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 654,
+              "output": 105,
+              "cacheRead": 512,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 2619
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "id": "frozen-08",
+      "query": "首次开题没通过，重新开题要隔多久？",
+      "answerable": true,
+      "relevant_chunk_ids": [
+        "dfecdf1029714ea384b02abfed9efc76:1"
+      ],
+      "label_error": false,
+      "retrieval": {
+        "bm25": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:2",
+            "dfecdf1029714ea384b02abfed9efc76:2"
+          ]
+        },
+        "rrf": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:2",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:1"
+          ]
+        },
+        "rerank": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:1",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:0",
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:3"
+          ]
+        }
+      },
+      "answer": "首次开题报告未通过者，需重新开题，重新开题在1个月之后进行 [来源1]。",
+      "verification": {
+        "passed": true,
+        "score": 1.0,
+        "issues": []
+      },
+      "keypoint_coverage": 1.0,
+      "covered_terms": [
+        "1个月"
+      ],
+      "missing_terms": [],
+      "citation_source_validity": 1.0,
+      "inline_citation_binding": true,
+      "refused": false,
+      "route": {
+        "dept_ids": [
+          "dept_yjsy"
+        ],
+        "dept_names": [
+          "研究生院"
+        ],
+        "matched_by": "keyword",
+        "confidence": 0.7,
+        "reasons": [
+          "命中关键词「开题」"
+        ]
+      },
+      "route_contains_expected": false,
+      "elapsed_seconds": 2.4062,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "embedding",
+            "model": "text-embedding-v4",
+            "usage": {
+              "prompt_tokens": 14,
+              "total_tokens": 14
+            }
+          },
+          {
+            "kind": "rerank",
+            "model": "qwen3-rerank",
+            "usage": {
+              "total_tokens": 1841
+            }
+          },
+          {
+            "kind": "answer",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 1122,
+              "output": 26,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 1114
+          },
+          {
+            "kind": "verify",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 1171,
+              "output": 18,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 692
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "id": "frozen-09",
+      "query": "专业型硕士的专业实践至少需要多少个月？",
+      "answerable": true,
+      "relevant_chunk_ids": [
+        "dfecdf1029714ea384b02abfed9efc76:2"
+      ],
+      "label_error": false,
+      "retrieval": {
+        "bm25": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:2",
+            "6f33efdc0b7545fe82d0d884c7b929b9:0"
+          ]
+        },
+        "rrf": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:2",
+            "6f33efdc0b7545fe82d0d884c7b929b9:0"
+          ]
+        },
+        "rerank": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:1",
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:0"
+          ]
+        }
+      },
+      "answer": "专业型硕士的专业实践至少需要12个月 [来源1]。",
+      "verification": {
+        "passed": true,
+        "score": 1.0,
+        "issues": []
+      },
+      "keypoint_coverage": 1.0,
+      "covered_terms": [
+        "12个月"
+      ],
+      "missing_terms": [],
+      "citation_source_validity": 1.0,
+      "inline_citation_binding": true,
+      "refused": false,
+      "route": {
+        "dept_ids": [
+          "dept_yjsy"
+        ],
+        "dept_names": [
+          "研究生院"
+        ],
+        "matched_by": "keyword",
+        "confidence": 0.7,
+        "reasons": [
+          "命中关键词「硕士」"
+        ]
+      },
+      "route_contains_expected": false,
+      "elapsed_seconds": 1.9589,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "embedding",
+            "model": "text-embedding-v4",
+            "usage": {
+              "prompt_tokens": 11,
+              "total_tokens": 11
+            }
+          },
+          {
+            "kind": "rerank",
+            "model": "qwen3-rerank",
+            "usage": {
+              "total_tokens": 1817
+            }
+          },
+          {
+            "kind": "answer",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 1379,
+              "output": 15,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 630
+          },
+          {
+            "kind": "verify",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 1417,
+              "output": 18,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 701
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "id": "frozen-10",
+      "query": "专业实践的月结需要多长时间交一次？",
+      "answerable": true,
+      "relevant_chunk_ids": [
+        "dfecdf1029714ea384b02abfed9efc76:2"
+      ],
+      "label_error": false,
+      "retrieval": {
+        "bm25": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "6f33efdc0b7545fe82d0d884c7b929b9:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:2"
+          ]
+        },
+        "rrf": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:2",
+            "6f33efdc0b7545fe82d0d884c7b929b9:0"
+          ]
+        },
+        "rerank": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:1",
+            "dfecdf1029714ea384b02abfed9efc76:1"
+          ]
+        }
+      },
+      "answer": "专业实践的月结需每4周提交一次 [来源1]。",
+      "verification": {
+        "passed": true,
+        "score": 1.0,
+        "issues": []
+      },
+      "keypoint_coverage": 1.0,
+      "covered_terms": [
+        "4周"
+      ],
+      "missing_terms": [],
+      "citation_source_validity": 1.0,
+      "inline_citation_binding": true,
+      "refused": false,
+      "route": {
+        "dept_ids": [
+          "dept_jwc"
+        ],
+        "dept_names": [
+          "教务处"
+        ],
+        "matched_by": "llm",
+        "confidence": 0.95,
+        "reasons": [
+          "专业实践属教学培养环节，月结要求通常由教务处统筹管理或协同学院制定，教务处负责实践教学相关规范与时间节点"
+        ]
+      },
+      "route_contains_expected": false,
+      "elapsed_seconds": 4.2595,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "embedding",
+            "model": "text-embedding-v4",
+            "usage": {
+              "prompt_tokens": 12,
+              "total_tokens": 12
+            }
+          },
+          {
+            "kind": "rerank",
+            "model": "qwen3-rerank",
+            "usage": {
+              "total_tokens": 1825
+            }
+          },
+          {
+            "kind": "answer",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 868,
+              "output": 16,
+              "cacheRead": 512,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 636
+          },
+          {
+            "kind": "verify",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 907,
+              "output": 18,
+              "cacheRead": 512,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 1139
+          },
+          {
+            "kind": "completion",
+            "model": "qwen-plus",
+            "usage": {
+              "total_tokens": 193,
+              "completion_tokens": 55,
+              "prompt_tokens": 138,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              }
+            },
+            "runtime": "python"
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "id": "frozen-11",
+      "query": "参加专业实践中期和终期考核分别要交够几次月结？",
+      "answerable": true,
+      "relevant_chunk_ids": [
+        "dfecdf1029714ea384b02abfed9efc76:2"
+      ],
+      "label_error": false,
+      "retrieval": {
+        "bm25": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "dfecdf1029714ea384b02abfed9efc76:1"
+          ]
+        },
+        "rrf": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:2",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:1"
+          ]
+        },
+        "rerank": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:0",
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:1"
+          ]
+        }
+      },
+      "answer": "- 专业实践中期考核需交满6次月结 [来源1]。  \n- 专业实践终期考核需交满12次月结 [来源1]。",
+      "verification": {
+        "passed": true,
+        "score": 1.0,
+        "issues": []
+      },
+      "keypoint_coverage": 1.0,
+      "covered_terms": [
+        "6次",
+        "12次"
+      ],
+      "missing_terms": [],
+      "citation_source_validity": 1.0,
+      "inline_citation_binding": true,
+      "refused": false,
+      "route": {
+        "dept_ids": [
+          "dept_yjsy"
+        ],
+        "dept_names": [
+          "研究生院"
+        ],
+        "matched_by": "keyword",
+        "confidence": 0.7,
+        "reasons": [
+          "命中关键词「中期」"
+        ]
+      },
+      "route_contains_expected": false,
+      "elapsed_seconds": 3.1752,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "embedding",
+            "model": "text-embedding-v4",
+            "usage": {
+              "prompt_tokens": 17,
+              "total_tokens": 17
+            }
+          },
+          {
+            "kind": "rerank",
+            "model": "qwen3-rerank",
+            "usage": {
+              "total_tokens": 1865
+            }
+          },
+          {
+            "kind": "answer",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 1385,
+              "output": 39,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 1609
+          },
+          {
+            "kind": "verify",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 1063,
+              "output": 18,
+              "cacheRead": 384,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 909
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "id": "frozen-12",
+      "query": "赴境外学习的学生在系统里应选择哪一个实践基地？",
+      "answerable": true,
+      "relevant_chunk_ids": [
+        "dfecdf1029714ea384b02abfed9efc76:2"
+      ],
+      "label_error": false,
+      "retrieval": {
+        "bm25": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "6f33efdc0b7545fe82d0d884c7b929b9:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:2"
+          ]
+        },
+        "rrf": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "6f33efdc0b7545fe82d0d884c7b929b9:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:2",
+            "dfecdf1029714ea384b02abfed9efc76:1"
+          ]
+        },
+        "rerank": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:0",
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:1",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:3"
+          ]
+        }
+      },
+      "answer": "赴境外学习的学生在系统里应选择“北航杭州国际创新研究院研究生实践基地”[来源1]。",
+      "verification": {
+        "passed": true,
+        "score": 1.0,
+        "issues": []
+      },
+      "keypoint_coverage": 1.0,
+      "covered_terms": [
+        "北航杭州国际创新研究院研究生实践基地"
+      ],
+      "missing_terms": [],
+      "citation_source_validity": 1.0,
+      "inline_citation_binding": true,
+      "refused": false,
+      "route": {
+        "dept_ids": [
+          "dept_jwc"
+        ],
+        "dept_names": [
+          "教务处"
+        ],
+        "matched_by": "llm",
+        "confidence": 0.95,
+        "reasons": [
+          "境外学习实践基地的选择属于教学安排与学籍管理范畴，由教务处负责课程、实践教学及系统选课/选基地等事务。"
+        ]
+      },
+      "route_contains_expected": false,
+      "elapsed_seconds": 4.2217,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "embedding",
+            "model": "text-embedding-v4",
+            "usage": {
+              "prompt_tokens": 14,
+              "total_tokens": 14
+            }
+          },
+          {
+            "kind": "rerank",
+            "model": "qwen3-rerank",
+            "usage": {
+              "total_tokens": 1841
+            }
+          },
+          {
+            "kind": "answer",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 1058,
+              "output": 25,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 915
+          },
+          {
+            "kind": "verify",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 1106,
+              "output": 18,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 731
+          },
+          {
+            "kind": "completion",
+            "model": "qwen-plus",
+            "usage": {
+              "total_tokens": 196,
+              "completion_tokens": 56,
+              "prompt_tokens": 140,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              }
+            },
+            "runtime": "python"
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "id": "frozen-13",
+      "query": "行李寄存期间可以临时取出物品吗？",
+      "answerable": true,
+      "relevant_chunk_ids": [
+        "6f33efdc0b7545fe82d0d884c7b929b9:0"
+      ],
+      "label_error": false,
+      "retrieval": {
+        "bm25": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "6f33efdc0b7545fe82d0d884c7b929b9:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:3",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:2"
+          ]
+        },
+        "rrf": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "6f33efdc0b7545fe82d0d884c7b929b9:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:2",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:3",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:1",
+            "dfecdf1029714ea384b02abfed9efc76:2"
+          ]
+        },
+        "rerank": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "6f33efdc0b7545fe82d0d884c7b929b9:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:3",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:1",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:2"
+          ]
+        }
+      },
+      "answer": "不可以。寄存期间行李无法取出 [来源1]。",
+      "verification": {
+        "passed": true,
+        "score": 1.0,
+        "issues": []
+      },
+      "keypoint_coverage": 1.0,
+      "covered_terms": [
+        "无法取出"
+      ],
+      "missing_terms": [],
+      "citation_source_validity": 1.0,
+      "inline_citation_binding": true,
+      "refused": false,
+      "route": {
+        "dept_ids": [
+          "dept_zfxy"
+        ],
+        "dept_names": [
+          "中法学院"
+        ],
+        "matched_by": "keyword",
+        "confidence": 0.7,
+        "reasons": [
+          "命中关键词「行李寄存」"
+        ]
+      },
+      "route_contains_expected": true,
+      "elapsed_seconds": 2.1224,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "embedding",
+            "model": "text-embedding-v4",
+            "usage": {
+              "prompt_tokens": 11,
+              "total_tokens": 11
+            }
+          },
+          {
+            "kind": "rerank",
+            "model": "qwen3-rerank",
+            "usage": {
+              "total_tokens": 1817
+            }
+          },
+          {
+            "kind": "answer",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 771,
+              "output": 13,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 769
+          },
+          {
+            "kind": "verify",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 807,
+              "output": 18,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 716
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "id": "frozen-14",
+      "query": "寄存行李损坏或遗失由谁承担？",
+      "answerable": true,
+      "relevant_chunk_ids": [
+        "6f33efdc0b7545fe82d0d884c7b929b9:0"
+      ],
+      "label_error": false,
+      "retrieval": {
+        "bm25": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "6f33efdc0b7545fe82d0d884c7b929b9:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:1",
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "dfecdf1029714ea384b02abfed9efc76:1"
+          ]
+        },
+        "rrf": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "6f33efdc0b7545fe82d0d884c7b929b9:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:1",
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:2"
+          ]
+        },
+        "rerank": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "6f33efdc0b7545fe82d0d884c7b929b9:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:1",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:3",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:2"
+          ]
+        }
+      },
+      "answer": "寄存行李损坏或遗失由寄存人自行承担 [来源1]。",
+      "verification": {
+        "passed": true,
+        "score": 1.0,
+        "issues": []
+      },
+      "keypoint_coverage": 0.5,
+      "covered_terms": [
+        "承担"
+      ],
+      "missing_terms": [
+        "本人"
+      ],
+      "citation_source_validity": 1.0,
+      "inline_citation_binding": true,
+      "refused": false,
+      "route": {
+        "dept_ids": [
+          "dept_hqaq"
+        ],
+        "dept_names": [
+          "后勤与安全保卫部"
+        ],
+        "matched_by": "llm",
+        "confidence": 0.95,
+        "reasons": [
+          "行李寄存属后勤服务与安全管理范畴，涉及保管责任和现场安全，由后勤与安全保卫部直接负责"
+        ]
+      },
+      "route_contains_expected": false,
+      "elapsed_seconds": 3.8912,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "embedding",
+            "model": "text-embedding-v4",
+            "usage": {
+              "prompt_tokens": 12,
+              "total_tokens": 12
+            }
+          },
+          {
+            "kind": "rerank",
+            "model": "qwen3-rerank",
+            "usage": {
+              "total_tokens": 1825
+            }
+          },
+          {
+            "kind": "answer",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 516,
+              "output": 18,
+              "cacheRead": 256,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 862
+          },
+          {
+            "kind": "verify",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 557,
+              "output": 18,
+              "cacheRead": 256,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 741
+          },
+          {
+            "kind": "completion",
+            "model": "qwen-plus",
+            "usage": {
+              "total_tokens": 187,
+              "completion_tokens": 49,
+              "prompt_tokens": 138,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              }
+            },
+            "runtime": "python"
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "id": "frozen-15",
+      "query": "行李具体寄存在学生公寓的哪个楼层区域？",
+      "answerable": true,
+      "relevant_chunk_ids": [
+        "6f33efdc0b7545fe82d0d884c7b929b9:0"
+      ],
+      "label_error": false,
+      "retrieval": {
+        "bm25": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "6f33efdc0b7545fe82d0d884c7b929b9:0",
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:2",
+            "dfecdf1029714ea384b02abfed9efc76:2"
+          ]
+        },
+        "rrf": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "6f33efdc0b7545fe82d0d884c7b929b9:0",
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:2",
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "dfecdf1029714ea384b02abfed9efc76:1"
+          ]
+        },
+        "rerank": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "6f33efdc0b7545fe82d0d884c7b929b9:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:1",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:3",
+            "dfecdf1029714ea384b02abfed9efc76:2"
+          ]
+        }
+      },
+      "answer": "行李寄存在学生公寓D14架空层B区域 [来源1]。",
+      "verification": {
+        "passed": true,
+        "score": 1.0,
+        "issues": []
+      },
+      "keypoint_coverage": 1.0,
+      "covered_terms": [
+        "D14",
+        "架空层"
+      ],
+      "missing_terms": [],
+      "citation_source_validity": 1.0,
+      "inline_citation_binding": true,
+      "refused": false,
+      "route": {
+        "dept_ids": [
+          "dept_hqaq"
+        ],
+        "dept_names": [
+          "后勤与安全保卫部"
+        ],
+        "matched_by": "keyword",
+        "confidence": 0.7,
+        "reasons": [
+          "命中关键词「公寓」"
+        ]
+      },
+      "route_contains_expected": false,
+      "elapsed_seconds": 2.0622,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "embedding",
+            "model": "text-embedding-v4",
+            "usage": {
+              "prompt_tokens": 12,
+              "total_tokens": 12
+            }
+          },
+          {
+            "kind": "rerank",
+            "model": "qwen3-rerank",
+            "usage": {
+              "total_tokens": 1825
+            }
+          },
+          {
+            "kind": "answer",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 514,
+              "output": 18,
+              "cacheRead": 256,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 673
+          },
+          {
+            "kind": "verify",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 811,
+              "output": 18,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 715
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "id": "frozen-16",
+      "query": "防汛响应期间实验室何时开始关闭？",
+      "answerable": true,
+      "relevant_chunk_ids": [
+        "462a55cc9b734893b5ff93120bf42811:1"
+      ],
+      "label_error": false,
+      "retrieval": {
+        "bm25": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "462a55cc9b734893b5ff93120bf42811:1",
+            "462a55cc9b734893b5ff93120bf42811:0",
+            "122863ac4bb746368524c9577c33b0e2:3",
+            "0ff610154d5a4c6480b776f93600fc81:0",
+            "122863ac4bb746368524c9577c33b0e2:5"
+          ]
+        },
+        "rrf": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "462a55cc9b734893b5ff93120bf42811:1",
+            "462a55cc9b734893b5ff93120bf42811:0",
+            "0ff610154d5a4c6480b776f93600fc81:0",
+            "122863ac4bb746368524c9577c33b0e2:5",
+            "122863ac4bb746368524c9577c33b0e2:3"
+          ]
+        },
+        "rerank": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "462a55cc9b734893b5ff93120bf42811:1",
+            "462a55cc9b734893b5ff93120bf42811:8",
+            "462a55cc9b734893b5ff93120bf42811:0",
+            "462a55cc9b734893b5ff93120bf42811:9",
+            "462a55cc9b734893b5ff93120bf42811:3"
+          ]
+        }
+      },
+      "answer": "防汛响应期间，实验室应于8月15日0:00起关闭使用，直至防汛应急响应解除 [来源1]。",
+      "verification": {
+        "passed": true,
+        "score": 1.0,
+        "issues": []
+      },
+      "keypoint_coverage": 1.0,
+      "covered_terms": [
+        "8月15日",
+        "0:00"
+      ],
+      "missing_terms": [],
+      "citation_source_validity": 1.0,
+      "inline_citation_binding": true,
+      "refused": false,
+      "route": {
+        "dept_ids": [
+          "dept_hqaq"
+        ],
+        "dept_names": [
+          "后勤与安全保卫部"
+        ],
+        "matched_by": "keyword",
+        "confidence": 0.7,
+        "reasons": [
+          "命中关键词「防汛」"
+        ]
+      },
+      "route_contains_expected": true,
+      "elapsed_seconds": 2.6724,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "embedding",
+            "model": "text-embedding-v4",
+            "usage": {
+              "prompt_tokens": 9,
+              "total_tokens": 9
+            }
+          },
+          {
+            "kind": "rerank",
+            "model": "qwen3-rerank",
+            "usage": {
+              "total_tokens": 2023
+            }
+          },
+          {
+            "kind": "answer",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 1231,
+              "output": 30,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 910
+          },
+          {
+            "kind": "verify",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 1284,
+              "output": 18,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 1113
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "id": "frozen-17",
+      "query": "防汛期间食堂和超市还正常营业吗？",
+      "answerable": true,
+      "relevant_chunk_ids": [
+        "462a55cc9b734893b5ff93120bf42811:1"
+      ],
+      "label_error": false,
+      "retrieval": {
+        "bm25": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "462a55cc9b734893b5ff93120bf42811:1",
+            "122863ac4bb746368524c9577c33b0e2:8",
+            "122863ac4bb746368524c9577c33b0e2:3",
+            "462a55cc9b734893b5ff93120bf42811:0",
+            "122863ac4bb746368524c9577c33b0e2:7"
+          ]
+        },
+        "rrf": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "462a55cc9b734893b5ff93120bf42811:1",
+            "462a55cc9b734893b5ff93120bf42811:0",
+            "122863ac4bb746368524c9577c33b0e2:3",
+            "122863ac4bb746368524c9577c33b0e2:7",
+            "122863ac4bb746368524c9577c33b0e2:8"
+          ]
+        },
+        "rerank": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "462a55cc9b734893b5ff93120bf42811:1",
+            "462a55cc9b734893b5ff93120bf42811:10",
+            "122863ac4bb746368524c9577c33b0e2:3",
+            "122863ac4bb746368524c9577c33b0e2:2",
+            "462a55cc9b734893b5ff93120bf42811:0"
+          ]
+        }
+      },
+      "answer": "是的，防汛期间食堂和超市正常营业 [来源1]；校内学生公寓及食堂、超市均正常运营，各类生活物资储备充足，可满足师生的基本生活需求 [来源2]。",
+      "verification": {
+        "passed": true,
+        "score": 1.0,
+        "issues": []
+      },
+      "keypoint_coverage": 1.0,
+      "covered_terms": [
+        "正常运营"
+      ],
+      "missing_terms": [],
+      "citation_source_validity": 1.0,
+      "inline_citation_binding": true,
+      "refused": false,
+      "route": {
+        "dept_ids": [
+          "dept_hqaq"
+        ],
+        "dept_names": [
+          "后勤与安全保卫部"
+        ],
+        "matched_by": "keyword",
+        "confidence": 0.7,
+        "reasons": [
+          "命中关键词「食堂」"
+        ]
+      },
+      "route_contains_expected": true,
+      "elapsed_seconds": 2.8026,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "embedding",
+            "model": "text-embedding-v4",
+            "usage": {
+              "prompt_tokens": 11,
+              "total_tokens": 11
+            }
+          },
+          {
+            "kind": "rerank",
+            "model": "qwen3-rerank",
+            "usage": {
+              "total_tokens": 1952
+            }
+          },
+          {
+            "kind": "answer",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 605,
+              "output": 44,
+              "cacheRead": 512,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 1257
+          },
+          {
+            "kind": "verify",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 1184,
+              "output": 18,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 667
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "id": "frozen-18",
+      "query": "看到电线低垂或折断时应该怎么做？",
+      "answerable": true,
+      "relevant_chunk_ids": [
+        "462a55cc9b734893b5ff93120bf42811:1"
+      ],
+      "label_error": false,
+      "retrieval": {
+        "bm25": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "462a55cc9b734893b5ff93120bf42811:1",
+            "462a55cc9b734893b5ff93120bf42811:0",
+            "122863ac4bb746368524c9577c33b0e2:7",
+            "122863ac4bb746368524c9577c33b0e2:8",
+            "0ff610154d5a4c6480b776f93600fc81:0"
+          ]
+        },
+        "rrf": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 0.2,
+          "retrieved_ids": [
+            "122863ac4bb746368524c9577c33b0e2:7",
+            "462a55cc9b734893b5ff93120bf42811:0",
+            "0ff610154d5a4c6480b776f93600fc81:0",
+            "122863ac4bb746368524c9577c33b0e2:8",
+            "462a55cc9b734893b5ff93120bf42811:1"
+          ]
+        },
+        "rerank": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "462a55cc9b734893b5ff93120bf42811:1",
+            "462a55cc9b734893b5ff93120bf42811:6",
+            "122863ac4bb746368524c9577c33b0e2:7",
+            "462a55cc9b734893b5ff93120bf42811:7",
+            "122863ac4bb746368524c9577c33b0e2:4"
+          ]
+        }
+      },
+      "answer": "立即远离，切勿触碰 [来源1]。",
+      "verification": {
+        "passed": true,
+        "score": 1.0,
+        "issues": []
+      },
+      "keypoint_coverage": 1.0,
+      "covered_terms": [
+        "远离",
+        "切勿触碰"
+      ],
+      "missing_terms": [],
+      "citation_source_validity": 1.0,
+      "inline_citation_binding": true,
+      "refused": false,
+      "route": {
+        "dept_ids": [
+          "dept_hqaq"
+        ],
+        "dept_names": [
+          "后勤与安全保卫部"
+        ],
+        "matched_by": "llm",
+        "confidence": 0.95,
+        "reasons": [
+          "电线低垂或折断属于校园安全隐患，涉及后勤保障与安全保卫职责"
+        ]
+      },
+      "route_contains_expected": true,
+      "elapsed_seconds": 3.4323,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "embedding",
+            "model": "text-embedding-v4",
+            "usage": {
+              "prompt_tokens": 12,
+              "total_tokens": 12
+            }
+          },
+          {
+            "kind": "rerank",
+            "model": "qwen3-rerank",
+            "usage": {
+              "total_tokens": 2012
+            }
+          },
+          {
+            "kind": "answer",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 398,
+              "output": 12,
+              "cacheRead": 512,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 527
+          },
+          {
+            "kind": "verify",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 433,
+              "output": 18,
+              "cacheRead": 512,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 858
+          },
+          {
+            "kind": "completion",
+            "model": "qwen-plus",
+            "usage": {
+              "total_tokens": 179,
+              "completion_tokens": 41,
+              "prompt_tokens": 138,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              }
+            },
+            "runtime": "python"
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "id": "frozen-19",
+      "query": "在建项目从什么时候暂停施工？",
+      "answerable": true,
+      "relevant_chunk_ids": [
+        "462a55cc9b734893b5ff93120bf42811:1"
+      ],
+      "label_error": false,
+      "retrieval": {
+        "bm25": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "462a55cc9b734893b5ff93120bf42811:1",
+            "122863ac4bb746368524c9577c33b0e2:4",
+            "122863ac4bb746368524c9577c33b0e2:8"
+          ]
+        },
+        "rrf": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "462a55cc9b734893b5ff93120bf42811:1",
+            "122863ac4bb746368524c9577c33b0e2:4",
+            "122863ac4bb746368524c9577c33b0e2:8",
+            "462a55cc9b734893b5ff93120bf42811:8",
+            "462a55cc9b734893b5ff93120bf42811:9"
+          ]
+        },
+        "rerank": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "462a55cc9b734893b5ff93120bf42811:1",
+            "462a55cc9b734893b5ff93120bf42811:8",
+            "122863ac4bb746368524c9577c33b0e2:1",
+            "462a55cc9b734893b5ff93120bf42811:9",
+            "122863ac4bb746368524c9577c33b0e2:4"
+          ]
+        }
+      },
+      "answer": "在建项目应于8月15日00:00起暂停施工，至防汛应急响应解除为止 [来源1]。",
+      "verification": {
+        "passed": true,
+        "score": 1.0,
+        "issues": []
+      },
+      "keypoint_coverage": 1.0,
+      "covered_terms": [
+        "8月15日",
+        "00:00"
+      ],
+      "missing_terms": [],
+      "citation_source_validity": 1.0,
+      "inline_citation_binding": true,
+      "refused": false,
+      "route": {
+        "dept_ids": [
+          "dept_hqaq"
+        ],
+        "dept_names": [
+          "后勤与安全保卫部"
+        ],
+        "matched_by": "llm",
+        "confidence": 0.92,
+        "reasons": [
+          "项目施工暂停涉及校园基建安全、现场管理及后勤保障，属后勤与安全保卫部职责范围"
+        ]
+      },
+      "route_contains_expected": true,
+      "elapsed_seconds": 3.7418,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "embedding",
+            "model": "text-embedding-v4",
+            "usage": {
+              "prompt_tokens": 9,
+              "total_tokens": 9
+            }
+          },
+          {
+            "kind": "rerank",
+            "model": "qwen3-rerank",
+            "usage": {
+              "total_tokens": 2088
+            }
+          },
+          {
+            "kind": "answer",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 400,
+              "output": 30,
+              "cacheRead": 512,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 940
+          },
+          {
+            "kind": "verify",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 453,
+              "output": 18,
+              "cacheRead": 512,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 755
+          },
+          {
+            "kind": "completion",
+            "model": "qwen-plus",
+            "usage": {
+              "total_tokens": 181,
+              "completion_tokens": 46,
+              "prompt_tokens": 135,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              }
+            },
+            "runtime": "python"
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "id": "frozen-20",
+      "query": "台风影响时正在校外实习，还能照常户外作业和通勤吗？",
+      "answerable": true,
+      "relevant_chunk_ids": [
+        "122863ac4bb746368524c9577c33b0e2:8"
+      ],
+      "label_error": false,
+      "retrieval": {
+        "bm25": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "122863ac4bb746368524c9577c33b0e2:8",
+            "122863ac4bb746368524c9577c33b0e2:3",
+            "122863ac4bb746368524c9577c33b0e2:2",
+            "122863ac4bb746368524c9577c33b0e2:0",
+            "462a55cc9b734893b5ff93120bf42811:0"
+          ]
+        },
+        "rrf": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "122863ac4bb746368524c9577c33b0e2:8",
+            "122863ac4bb746368524c9577c33b0e2:3",
+            "122863ac4bb746368524c9577c33b0e2:2",
+            "462a55cc9b734893b5ff93120bf42811:0",
+            "122863ac4bb746368524c9577c33b0e2:7"
+          ]
+        },
+        "rerank": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "122863ac4bb746368524c9577c33b0e2:8",
+            "122863ac4bb746368524c9577c33b0e2:3",
+            "122863ac4bb746368524c9577c33b0e2:2",
+            "122863ac4bb746368524c9577c33b0e2:0",
+            "462a55cc9b734893b5ff93120bf42811:7"
+          ]
+        }
+      },
+      "answer": "不能照常户外作业和通勤。  \n台风影响期间应暂停户外作业和通勤出行，切勿冒险赶路或涉水通行 [来源1]。  \n此外，台风影响期间非必要不外出，坚决杜绝冒险通行等危险行为 [来源2]。",
+      "verification": {
+        "passed": true,
+        "score": 1.0,
+        "issues": []
+      },
+      "keypoint_coverage": 1.0,
+      "covered_terms": [
+        "暂停",
+        "户外作业",
+        "通勤"
+      ],
+      "missing_terms": [],
+      "citation_source_validity": 1.0,
+      "inline_citation_binding": true,
+      "refused": false,
+      "route": {
+        "dept_ids": [
+          "dept_hqaq"
+        ],
+        "dept_names": [
+          "后勤与安全保卫部"
+        ],
+        "matched_by": "keyword",
+        "confidence": 0.7,
+        "reasons": [
+          "命中关键词「台风」"
+        ]
+      },
+      "route_contains_expected": true,
+      "elapsed_seconds": 3.1536,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "embedding",
+            "model": "text-embedding-v4",
+            "usage": {
+              "prompt_tokens": 18,
+              "total_tokens": 18
+            }
+          },
+          {
+            "kind": "rerank",
+            "model": "qwen3-rerank",
+            "usage": {
+              "total_tokens": 2068
+            }
+          },
+          {
+            "kind": "answer",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 754,
+              "output": 59,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 1586
+          },
+          {
+            "kind": "verify",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 836,
+              "output": 18,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 988
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "id": "frozen-21",
+      "query": "台风过境后是否应马上赶路返校？",
+      "answerable": true,
+      "relevant_chunk_ids": [
+        "122863ac4bb746368524c9577c33b0e2:8"
+      ],
+      "label_error": false,
+      "retrieval": {
+        "bm25": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "122863ac4bb746368524c9577c33b0e2:8",
+            "122863ac4bb746368524c9577c33b0e2:7",
+            "462a55cc9b734893b5ff93120bf42811:1",
+            "122863ac4bb746368524c9577c33b0e2:3",
+            "122863ac4bb746368524c9577c33b0e2:2"
+          ]
+        },
+        "rrf": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "122863ac4bb746368524c9577c33b0e2:8",
+            "122863ac4bb746368524c9577c33b0e2:7",
+            "122863ac4bb746368524c9577c33b0e2:2",
+            "122863ac4bb746368524c9577c33b0e2:3",
+            "462a55cc9b734893b5ff93120bf42811:1"
+          ]
+        },
+        "rerank": {
+          "hit_at_5": true,
+          "recall_at_5": 1.0,
+          "mrr": 1.0,
+          "retrieved_ids": [
+            "122863ac4bb746368524c9577c33b0e2:8",
+            "122863ac4bb746368524c9577c33b0e2:7",
+            "462a55cc9b734893b5ff93120bf42811:7",
+            "122863ac4bb746368524c9577c33b0e2:3",
+            "122863ac4bb746368524c9577c33b0e2:2"
+          ]
+        }
+      },
+      "answer": "不应马上赶路返校。台风过境后应待天气和路况稳定后再安排返程，避免因交通未恢复或次生灾害导致风险 [来源1]。  \n同时，风雨减弱后仍需保持警惕，出行须避开积水路段、倒伏树木和脱落电线等隐患 [来源2]。",
+      "verification": {
+        "passed": true,
+        "score": 1.0,
+        "issues": []
+      },
+      "keypoint_coverage": 1.0,
+      "covered_terms": [
+        "天气和路况稳定"
+      ],
+      "missing_terms": [],
+      "citation_source_validity": 1.0,
+      "inline_citation_binding": true,
+      "refused": false,
+      "route": {
+        "dept_ids": [
+          "dept_hqaq"
+        ],
+        "dept_names": [
+          "后勤与安全保卫部"
+        ],
+        "matched_by": "keyword",
+        "confidence": 0.7,
+        "reasons": [
+          "命中关键词「台风」"
+        ]
+      },
+      "route_contains_expected": true,
+      "elapsed_seconds": 3.2632,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "embedding",
+            "model": "text-embedding-v4",
+            "usage": {
+              "prompt_tokens": 13,
+              "total_tokens": 13
+            }
+          },
+          {
+            "kind": "rerank",
+            "model": "qwen3-rerank",
+            "usage": {
+              "total_tokens": 2018
+            }
+          },
+          {
+            "kind": "answer",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 724,
+              "output": 68,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 1907
+          },
+          {
+            "kind": "verify",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 431,
+              "output": 18,
+              "cacheRead": 384,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 652
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "id": "frozen-22",
+      "query": "学校2027年博士招生最低分数线是多少？",
+      "answerable": false,
+      "relevant_chunk_ids": [],
+      "label_error": false,
+      "retrieval": {
+        "bm25": {
+          "hit_at_5": false,
+          "recall_at_5": null,
+          "mrr": 0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:2",
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "6f33efdc0b7545fe82d0d884c7b929b9:0",
+            "dfecdf1029714ea384b02abfed9efc76:0"
+          ]
+        },
+        "rrf": {
+          "hit_at_5": false,
+          "recall_at_5": null,
+          "mrr": 0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:2",
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "6f33efdc0b7545fe82d0d884c7b929b9:0"
+          ]
+        },
+        "rerank": {
+          "hit_at_5": false,
+          "recall_at_5": null,
+          "mrr": 0,
+          "retrieved_ids": [
+            "2b354e14c26d42ffa6de8a49f0f3d97c:1",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:3",
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "dfecdf1029714ea384b02abfed9efc76:0"
+          ]
+        }
+      },
+      "answer": "根据现有制度文件未找到明确规定。",
+      "verification": {
+        "passed": true,
+        "score": 1.0,
+        "issues": []
+      },
+      "keypoint_coverage": null,
+      "covered_terms": [],
+      "missing_terms": [],
+      "citation_source_validity": 1.0,
+      "inline_citation_binding": false,
+      "refused": true,
+      "route": {
+        "dept_ids": [
+          "dept_yjsy"
+        ],
+        "dept_names": [
+          "研究生院"
+        ],
+        "matched_by": "keyword",
+        "confidence": 0.7,
+        "reasons": [
+          "命中关键词「博士」"
+        ]
+      },
+      "route_contains_expected": false,
+      "elapsed_seconds": 1.9624,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "embedding",
+            "model": "text-embedding-v4",
+            "usage": {
+              "prompt_tokens": 13,
+              "total_tokens": 13
+            }
+          },
+          {
+            "kind": "rerank",
+            "model": "qwen3-rerank",
+            "usage": {
+              "total_tokens": 1833
+            }
+          },
+          {
+            "kind": "answer",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 967,
+              "output": 8,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 533
+          },
+          {
+            "kind": "verify",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 998,
+              "output": 18,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 806
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "id": "frozen-23",
+      "query": "我申请退还学费能获得多少金额？",
+      "answerable": false,
+      "relevant_chunk_ids": [],
+      "label_error": false,
+      "retrieval": {
+        "bm25": {
+          "hit_at_5": false,
+          "recall_at_5": null,
+          "mrr": 0,
+          "retrieved_ids": [
+            "2b354e14c26d42ffa6de8a49f0f3d97c:1",
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "dfecdf1029714ea384b02abfed9efc76:0"
+          ]
+        },
+        "rrf": {
+          "hit_at_5": false,
+          "recall_at_5": null,
+          "mrr": 0,
+          "retrieved_ids": [
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:1",
+            "dfecdf1029714ea384b02abfed9efc76:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:2"
+          ]
+        },
+        "rerank": {
+          "hit_at_5": false,
+          "recall_at_5": null,
+          "mrr": 0,
+          "retrieved_ids": [
+            "2b354e14c26d42ffa6de8a49f0f3d97c:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:1",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:3",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:2",
+            "6f33efdc0b7545fe82d0d884c7b929b9:0"
+          ]
+        }
+      },
+      "answer": "根据现有制度文件未找到明确规定。",
+      "verification": {
+        "passed": true,
+        "score": 1.0,
+        "issues": []
+      },
+      "keypoint_coverage": null,
+      "covered_terms": [],
+      "missing_terms": [],
+      "citation_source_validity": 1.0,
+      "inline_citation_binding": false,
+      "refused": true,
+      "route": {
+        "dept_ids": [
+          "dept_cwc"
+        ],
+        "dept_names": [
+          "财务处"
+        ],
+        "matched_by": "keyword",
+        "confidence": 0.7,
+        "reasons": [
+          "命中关键词「学费」"
+        ]
+      },
+      "route_contains_expected": false,
+      "elapsed_seconds": 1.8303,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "embedding",
+            "model": "text-embedding-v4",
+            "usage": {
+              "prompt_tokens": 10,
+              "total_tokens": 10
+            }
+          },
+          {
+            "kind": "rerank",
+            "model": "qwen3-rerank",
+            "usage": {
+              "total_tokens": 1809
+            }
+          },
+          {
+            "kind": "answer",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 770,
+              "output": 8,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 431
+          },
+          {
+            "kind": "verify",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 801,
+              "output": 18,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 724
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    },
+    {
+      "id": "frozen-24",
+      "query": "学校是否承诺替寄存行李统一购买保险？",
+      "answerable": false,
+      "relevant_chunk_ids": [],
+      "label_error": false,
+      "retrieval": {
+        "bm25": {
+          "hit_at_5": false,
+          "recall_at_5": null,
+          "mrr": 0,
+          "retrieved_ids": [
+            "6f33efdc0b7545fe82d0d884c7b929b9:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:1",
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "dfecdf1029714ea384b02abfed9efc76:0"
+          ]
+        },
+        "rrf": {
+          "hit_at_5": false,
+          "recall_at_5": null,
+          "mrr": 0,
+          "retrieved_ids": [
+            "6f33efdc0b7545fe82d0d884c7b929b9:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:1",
+            "dfecdf1029714ea384b02abfed9efc76:2",
+            "dfecdf1029714ea384b02abfed9efc76:1",
+            "dfecdf1029714ea384b02abfed9efc76:0"
+          ]
+        },
+        "rerank": {
+          "hit_at_5": false,
+          "recall_at_5": null,
+          "mrr": 0,
+          "retrieved_ids": [
+            "6f33efdc0b7545fe82d0d884c7b929b9:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:1",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:0",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:3",
+            "2b354e14c26d42ffa6de8a49f0f3d97c:2"
+          ]
+        }
+      },
+      "answer": "根据现有制度文件未找到明确规定。",
+      "verification": {
+        "passed": true,
+        "score": 1.0,
+        "issues": []
+      },
+      "keypoint_coverage": null,
+      "covered_terms": [],
+      "missing_terms": [],
+      "citation_source_validity": 1.0,
+      "inline_citation_binding": false,
+      "refused": true,
+      "route": {
+        "dept_ids": [
+          "dept_hqaq"
+        ],
+        "dept_names": [
+          "后勤与安全保卫部"
+        ],
+        "matched_by": "llm",
+        "confidence": 0.85,
+        "reasons": [
+          "行李寄存及保险事宜属于后勤服务与安全管理范畴，由后勤与安全保卫部负责统筹协调。"
+        ]
+      },
+      "route_contains_expected": false,
+      "elapsed_seconds": 3.2155,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "embedding",
+            "model": "text-embedding-v4",
+            "usage": {
+              "prompt_tokens": 12,
+              "total_tokens": 12
+            }
+          },
+          {
+            "kind": "rerank",
+            "model": "qwen3-rerank",
+            "usage": {
+              "total_tokens": 1825
+            }
+          },
+          {
+            "kind": "answer",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 772,
+              "output": 8,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 498
+          },
+          {
+            "kind": "verify",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 547,
+              "output": 18,
+              "cacheRead": 256,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 675
+          },
+          {
+            "kind": "completion",
+            "model": "qwen-plus",
+            "usage": {
+              "total_tokens": 185,
+              "completion_tokens": 47,
+              "prompt_tokens": 138,
+              "prompt_tokens_details": {
+                "cached_tokens": 0
+              }
+            },
+            "runtime": "python"
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null
+      }
+    }
+  ],
+  "scope": "7份样例，助手依据源条款标注；非独立人工QA准确率；回答直接生成并另行判分，不以原文降级覆盖生成失败",
+  "summary": {
+    "label_errors": 0,
+    "errors": 0,
+    "retrieval": {
+      "bm25": {
+        "hit_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "mrr": 0.9761904761904762
+      },
+      "rrf": {
+        "hit_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "mrr": 0.9380952380952381
+      },
+      "rerank": {
+        "hit_at_5": 1.0,
+        "recall_at_5": 1.0,
+        "mrr": 1.0
+      }
+    },
+    "keypoint_coverage": 0.9761904761904762,
+    "verifier_pass_rate": 0.875,
+    "refusal_recall": 1.0,
+    "cost_yuan": null
+  }
+}

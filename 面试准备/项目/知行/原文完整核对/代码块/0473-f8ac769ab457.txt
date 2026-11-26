@@ -1,0 +1,19 @@
+const resp = await fetch("/api/v1/messages", {
+  method: "POST",
+  headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+  body: JSON.stringify({ conversation_id, content }),
+});
+const reader = resp.body.getReader();
+const decoder = new TextDecoder();
+let buffer = "";
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+  buffer += decoder.decode(value, { stream: true });    // stream:true 防多字节中文被切两半
+  let idx;
+  while ((idx = buffer.indexOf("\n\n")) !== -1) {       // 按空行切帧：一次 read 可能多帧，也可能半帧
+    const frame = buffer.slice(0, idx);
+    buffer = buffer.slice(idx + 2);
+    if (frame.startsWith("data: ")) dispatchByRole(JSON.parse(frame.slice(6)));   // 按 role 分派渲染
+  }
+}

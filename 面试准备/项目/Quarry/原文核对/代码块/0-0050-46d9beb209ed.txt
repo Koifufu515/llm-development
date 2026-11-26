@@ -1,0 +1,12 @@
+                        List of relations
+ Schema |       Name        | Type  | Owner  | Table
+--------+-------------------+-------+--------+--------
+ public | chunks_acl_gin    | index | quarry | chunks
+ public | chunks_embed_hnsw | index | quarry | chunks
+ public | chunks_meta_gin   | index | quarry | chunks
+ public | chunks_neighbors  | index | quarry | chunks
+ public | chunks_parent     | index | quarry | chunks
+ public | chunks_pkey       | index | quarry | chunks
+ public | chunks_scope      | index | quarry | chunks
+ public | chunks_tokens_gin | index | quarry | chunks
+(8 rows)

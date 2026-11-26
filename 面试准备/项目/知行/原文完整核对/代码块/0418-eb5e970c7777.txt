@@ -1,0 +1,55 @@
+def _normalize_itinerary_days(
+    days: list[dict], need: int, back_text: str = "", cities: list[str] | None = None
+) -> tuple[list[dict], list[str]]:
+    """按旅行天数归一化逐日结构：只补空缺、只裁非法，不改写模型已给出的有效内容
+
+ 补位条目按天轮换 + 写入当天城市（cities 由 _day_city_map 供），
+    并给漏填 city 的天补上城市标注（此前 Day5/Day6 无城市标注、多天出现同一条补位文案）
+    """
+    fixes: list[str] = []
+    kept: dict[int, dict] = {}
+    for raw in days or []:
+        if not isinstance(raw, dict):
+            continue
+        try:
+            day = int(raw.get("day") or 0)
+        except (TypeError, ValueError):
+            continue
+        if day < 1 or (need and day > need) or day in kept:
+            fixes.append(f"忽略第 {day} 天（越界或重复）")
+            continue
+        kept[day] = raw
+    total = need or (max(kept) if kept else 1)
+    out: list[dict] = []
+    for day in range(1, total + 1):
+        d = dict(kept.get(day) or {})
+        d["day"] = day
+        if not str(d.get("city") or "").strip() and cities and 0 < day <= len(cities):
+            d["city"] = cities[day - 1]
+            fixes.append(f"补第 {day} 天城市（{cities[day - 1]}）")
+        if day not in kept:
+            fixes.append(f"补第 {day} 天")
+        last = bool(need) and day == need
+        for key in _SLOT_KEYS:
+            items = [str(x).strip() for x in (d.get(key) or []) if str(x).strip()]
+            items = [x if len(x) >= _ITEM_MIN_CHARS else x + _ITEM_PAD for x in items]
+            # 只在**空时段**补位（floor=1）——模型已给出内容的时段原样保留，
+            # 不再为凑"≥2 条"追加通用句（同槽两条并列会被读成重复安排）
+            floor = 1  # ★ 只给空时段补位：模型已给内容的时段原样保留
+            while len(items) < floor:
+                items.append(_fill_item(key, day, str(d.get("city") or "")))
+                fixes.append(f"补第 {day} 天{_SLOT_LABELS[key]}")
+            d[key] = items
+        tips = [str(x).strip() for x in (d.get("tips") or []) if str(x).strip()]
+        tips = [x if len(x) >= _ITEM_MIN_CHARS else x + _TIP_PAD for x in tips]
+        d["tips"] = tips or [_fill_tip(day, str(d.get("city") or ""))]
+        if not tips:
+            fixes.append(f"补第 {day} 天小贴士")
+        if last and not any(h in " ".join(d["evening"]) for h in _RETURN_HINTS):
+            back = back_text or "傍晚按已确认的交通班次返程"
+            if len(back) < _ITEM_MIN_CHARS:  # 短句会被长度校验拦下，代码补足
+                back += _BACK_PAD
+            d["evening"] = d["evening"] + [back]
+            fixes.append(f"补第 {day} 天返程")
+        out.append(d)
+    return out, fixes

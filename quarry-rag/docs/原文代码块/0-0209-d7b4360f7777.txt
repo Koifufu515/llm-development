@@ -1,0 +1,1 @@
+14:30:00.012 | INFO    | quarry.ingest.worker:run_worker:30 | worker DESKTOP-7Q2K-12345-a3f9c1 启动，监听 quarry:ingest

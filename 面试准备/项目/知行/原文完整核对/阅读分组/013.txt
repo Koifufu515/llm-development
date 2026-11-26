@@ -1,0 +1,672 @@
+
+
+===== block 95 c0dbbb5e403c lines 1-161 source 知行旅行助手-v2#95 =====
+"""
+查询优化：Multi-Query / HyDE / QueryRewriter
+"""
+from typing import List
+
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_community.chat_models import ChatTongyi
+
+from app.config import settings
+from app.utils.logger import app_logger
+
+# 用轻量模型跑查询优化——qwen-turbo 更便宜、更快，效果足够
+_optimizer_model = ChatTongyi(
+    model="qwen-turbo",
+    api_key=settings.dashscope_api_key,
+    temperature=0,   # 优化任务要确定性，不要发散
+)
+
+# ============== 1. Multi-Query 优化器 ==============
+
+class MultiQueryOptimizer:
+    """
+    Multi-Query 优化器
+    生成 3 个语义相似但表述不同的变体
+    """
+
+    def __init__(self, num_variants: int = 3):
+        self.num_variants = num_variants
+        self.prompt = ChatPromptTemplate.from_template(
+            "你是一个查询优化专家。给定一个用户查询，"
+            "生成 {num} 个语义相似但表述不同的查询变体。\n\n"
+            "原始查询：{query}\n\n"
+            "要求：\n"
+            "1. 保持原查询的核心意图\n"
+            "2. 使用不同的词汇和表述方式\n"
+            "3. 考虑同义词、相关概念\n"
+            "4. 每行一个变体，不要编号\n\n"
+            "变体列表："
+        )
+
+    def optimize(self, query: str) -> List[str]:
+        """
+        Returns:
+            [原始查询, 变体1, 变体2, 变体3]
+        """
+        app_logger.info(f"生成查询变体: {query}")
+
+        messages = self.prompt.format_messages(
+            query=query,
+            num=self.num_variants,
+        )
+        response = _optimizer_model.invoke(messages)
+
+        # 按行拆分，过滤空行
+        variants = [
+            line.strip()
+            for line in response.content.strip().split("\n")
+            if line.strip()
+        ]
+
+        all_queries = [query] + variants[: self.num_variants]
+
+        app_logger.debug(f"生成了 {len(all_queries)} 个变体")
+        for i, q in enumerate(all_queries, start=1):
+            app_logger.debug(f"  {i}. {q}")
+
+        return all_queries
+
+# ============== 2. HyDE 优化器 ==============
+
+class HyDEOptimizer:
+    """
+    HyDE (Hypothetical Document Embeddings)
+    让 LLM 先生成一段"假想的回答"，用假答案去检索——
+    因为答案在词汇上更接近文档本身，检索效果反而更好
+    """
+
+    def __init__(self):
+        self.prompt = ChatPromptTemplate.from_template(
+            "请根据以下问题，生成一段假设性的回答文档。这个文档应该包含可能的答案内容。\n\n"
+            "问题：{query}\n\n"
+            "要求：\n"
+            "1. 200-300 字\n"
+            "2. 包含具体的景点名称、特点、推荐理由\n"
+            "3. 使用旅游攻略的语言风格\n\n"
+            "假设性文档："
+        )
+
+    def generate_hypothetical_doc(self, query: str) -> str:
+        app_logger.info(f"生成假设性文档: {query}")
+        messages = self.prompt.format_messages(query=query)
+        response = _optimizer_model.invoke(messages)
+
+        hypothetical_doc = response.content.strip()
+        app_logger.debug(f"假设性文档: {hypothetical_doc[:100]}...")
+        return hypothetical_doc
+
+# ============== 3. 查询改写器 ==============
+
+class QueryRewriter:
+    """
+    查询改写器
+    修正错别字、口语化 → 规范书面语
+    """
+
+    def __init__(self):
+        self.prompt = ChatPromptTemplate.from_template(
+            "你是一个查询改写专家。请将用户的口语化查询改写为更规范的书面表达。\n\n"
+            "原始查询：{query}\n\n"
+            "要求：\n"
+            "1. 修正错别字\n"
+            "2. 将口语转为书面语\n"
+            "3. 保持查询意图不变\n"
+            "4. 只返回改写后的查询，不要解释\n\n"
+            "改写后："
+        )
+
+    def rewrite(self, query: str) -> str:
+        app_logger.info(f"改写查询: {query}")
+        messages = self.prompt.format_messages(query=query)
+        response = _optimizer_model.invoke(messages)
+        rewritten = response.content.strip()
+        app_logger.debug(f"改写结果: {rewritten}")
+        return rewritten
+
+# ============== 综合入口 ==============
+
+class AdvancedQueryOptimizer:
+    """
+    综合查询优化器（可插拔策略）
+
+    strategy 可选：
+      - "multi_query": 默认，生成 3 个变体
+      - "hyde":        生成假设性文档
+      - "rewrite":     只做改写
+      - "hybrid":      先改写、再多变体
+    """
+
+    def __init__(self, strategy: str = "multi_query"):
+        self.strategy = strategy
+        self.multi_query = MultiQueryOptimizer()
+        self.hyde = HyDEOptimizer()
+        self.rewriter = QueryRewriter()
+
+    def optimize(self, query: str) -> List[str]:
+        if self.strategy == "multi_query":
+            return self.multi_query.optimize(query)
+
+        if self.strategy == "hyde":
+            hypothetical_doc = self.hyde.generate_hypothetical_doc(query)
+            return [query, hypothetical_doc]
+
+        if self.strategy == "rewrite":
+            return [self.rewriter.rewrite(query)]
+
+        if self.strategy == "hybrid":
+            rewritten = self.rewriter.rewrite(query)
+            return self.multi_query.optimize(rewritten)
+
+        app_logger.warning(f"未知策略 {self.strategy}，使用原始查询")
+        return [query]
+
+
+===== block 96 98e1c093961d lines 1-9 source 知行旅行助手-v2#96 =====
+class RelevanceScore(BaseModel):
+    document_index: int
+    relevance_score: int = Field(ge=0, le=10)
+    reason: str
+
+class RerankingResult(BaseModel):
+    scores: List[RelevanceScore]
+
+structured_model = model.with_structured_output(RerankingResult)
+
+
+===== block 97 3b3726b18d04 lines 1-159 source 知行旅行助手-v2#97 =====
+"""
+重排序：LLMReranker + LongContextReorder
+"""
+import os
+from typing import List
+
+from langchain_core.documents import Document
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_community.chat_models import ChatTongyi
+from pydantic import BaseModel, Field
+
+from app.utils.logger import app_logger
+
+# 重排也用轻量模型
+_rerank_model = ChatTongyi(
+    model="qwen-turbo",
+    dashscope_api_key=os.getenv("DASHSCOPE_API_KEY"),
+    temperature=0,
+)
+
+# ============== 结构化输出模型 ==============
+
+class RelevanceScore(BaseModel):
+    """单个文档的相关性评分"""
+    document_index: int = Field(description="文档索引（从0开始）")
+    relevance_score: int = Field(description="相关性得分（0-10）", ge=0, le=10)
+    reason: str = Field(description="打分理由（简短）")
+
+class RerankingResult(BaseModel):
+    """重排结果"""
+    scores: List[RelevanceScore] = Field(description="所有文档的评分列表")
+
+# ============== LLMReranker ==============
+
+class LLMReranker:
+    """
+    使用 LLM 为每个文档打分，然后按分数重排
+    """
+
+    def __init__(self, top_k: int = 3):
+        self.top_k = top_k
+
+        self.prompt = ChatPromptTemplate.from_template(
+            "你是一个文档相关性评估专家。请评估以下文档与用户查询的相关性。\n\n"
+            "用户查询：{query}\n\n"
+            "文档列表：\n{documents}\n\n"
+            "任务：为每个文档打分（0-10 分），10 分表示完全相关，0 分表示完全不相关。\n\n"
+            "评分标准：\n"
+            "- 10 分：完美回答查询，信息准确完整\n"
+            "- 7-9 分：大部分相关，有用信息较多\n"
+            "- 4-6 分：部分相关，有一定参考价值\n"
+            "- 1-3 分：相关性很低，几乎没有帮助\n"
+            "- 0 分：完全不相关\n\n"
+            "请返回一个 JSON 对象，包含每个文档的评分和理由。"
+        )
+
+        self.structured_model = _rerank_model.with_structured_output(RerankingResult)
+
+    def rerank(
+            self,
+            query: str,
+            documents: List[Document],
+            top_k: int = None,
+    ) -> List[Document]:
+        """
+        重排文档
+
+        Args:
+            query: 用户查询
+            documents: 待排序的文档列表（一般是混合检索的输出）
+            top_k: 返回前 K 个（覆盖构造时的默认值）
+        """
+        if not documents:
+            return []
+
+        top_k = top_k or self.top_k
+        app_logger.info(f"开始 LLM 重排 {len(documents)} 个文档...")
+
+        # 把文档格式化成模型能读的字符串
+        doc_texts = []
+        for i, doc in enumerate(documents):
+            content = doc.page_content
+            preview = content[:200] + "..." if len(content) > 200 else content
+            doc_texts.append(f"[文档 {i}]\n{preview}\n")
+        documents_str = "\n".join(doc_texts)
+
+        messages = self.prompt.format_messages(
+            query=query,
+            documents=documents_str,
+        )
+
+        try:
+            result: RerankingResult = self.structured_model.invoke(messages)
+
+            # 按分数降序
+            sorted_scores = sorted(
+                result.scores,
+                key=lambda x: x.relevance_score,
+                reverse=True,
+            )
+
+            reranked_docs: List[Document] = []
+            for score_item in sorted_scores[:top_k]:
+                idx = score_item.document_index
+                if 0 <= idx < len(documents):
+                    reranked_docs.append(documents[idx])
+                    app_logger.debug(
+                        f"  [{idx}] 得分 {score_item.relevance_score}/10 - "
+                        f"{score_item.reason}"
+                    )
+
+            app_logger.info(f"✅ 重排完成，返回 {len(reranked_docs)} 个文档")
+            return reranked_docs
+
+        except Exception as e:
+            # 重排失败降级：返回原顺序前 top_k 个
+            app_logger.error(f"❌ 重排失败: {e}，返回原始顺序")
+            return documents[:top_k]
+
+# ============== LongContextReorder ==============
+
+class LongContextReorder:
+    """
+    长上下文重排（Lost in the Middle 的解药）
+
+    研究背景：
+      模型对上下文**开头 + 结尾**位置的信息记忆最好，
+      对**中间位置**的信息容易"迷失"。
+    策略：
+      - 最相关的文档放在开头
+      - 次相关的放在结尾
+      - 中间放不太相关的
+    """
+
+    @staticmethod
+    def reorder(documents: List[Document]) -> List[Document]:
+        """
+        输入：按相关性降序排列的文档列表 [d1, d2, d3, d4, d5]
+        输出：[d1, d3, d5, d4, d2]
+                ↑ 最相关放开头
+                        ↑ 次相关放结尾
+                    ↑ 中间放不太相关的
+        """
+        if len(documents) <= 2:
+            return documents
+
+        app_logger.info(f"🔀 长上下文重排: {len(documents)} 个文档")
+
+        # 分组：偶数索引（相关性排名 1、3、5...）和奇数索引（2、4、6...）
+        odd_rank = [d for i, d in enumerate(documents) if i % 2 == 0]
+        even_rank = [d for i, d in enumerate(documents) if i % 2 == 1]
+
+        # 偶数排名倒序放后面
+        reordered = odd_rank + even_rank[::-1]
+
+        app_logger.debug(
+            f"重排后位置：最相关放头 → 不太相关放中 → 次相关放尾"
+        )
+        return reordered
+
+
+===== block 98 2694c29393b7 lines 1-98 source 知行旅行助手-v2#98 =====
+"""
+RAG 缓存层
+使用 Redis 缓存检索结果
+"""
+import os
+import json
+import hashlib
+from typing import List, Optional
+
+import redis
+from langchain_core.documents import Document
+
+from app.utils.logger import app_logger
+
+class RAGCache:
+    """
+    RAG 检索结果 Redis 缓存
+
+    key: rag:cache:{md5(query + top_k)}
+    value: JSON 序列化的 Document 列表
+    TTL: 默认 3600 秒（1 小时）
+    """
+
+    def __init__(
+            self,
+            ttl: int = 3600,
+            enabled: bool = True,
+    ):
+        self.ttl = ttl
+        self.enabled = enabled
+
+        if not enabled:
+            return
+
+        try:
+            self.redis_client = redis.Redis(
+                host=os.getenv("REDIS_HOST", "localhost"),
+                port=int(os.getenv("REDIS_PORT", 6379)),
+                db=int(os.getenv("REDIS_DB", 0)),
+                password=os.getenv("REDIS_PASSWORD", None),
+                decode_responses=False,   # 用二进制模式（JSON 会先转 bytes）
+            )
+            # 连通性探测
+            self.redis_client.ping()
+            app_logger.info("Redis 缓存已启用")
+        except Exception as e:
+            # Redis 挂了不阻塞主流程——自动降级为无缓存
+            app_logger.warning(f"Redis 连接失败，禁用缓存: {e}")
+            self.enabled = False
+
+    def _generate_key(self, query: str, top_k: int) -> str:
+        """把查询和 K 一起哈希——不同 K 的结果不能互相污染"""
+        content = f"{query}__k{top_k}"
+        hash_value = hashlib.md5(content.encode()).hexdigest()
+        return f"rag:cache:{hash_value}"
+
+    def get(self, query: str, top_k: int) -> Optional[List[Document]]:
+        """从缓存读取"""
+        if not self.enabled:
+            return None
+
+        key = self._generate_key(query, top_k)
+        try:
+            cached = self.redis_client.get(key)
+            if cached:
+                app_logger.info(f"命中缓存: {query[:30]}...")
+                docs_data = json.loads(cached)
+                return [
+                    Document(
+                        page_content=item["page_content"],
+                        metadata=item["metadata"],
+                    )
+                    for item in docs_data
+                ]
+        except Exception as e:
+            app_logger.error(f"缓存读取失败: {e}")
+
+        return None
+
+    def set(self, query: str, top_k: int, documents: List[Document]):
+        """写入缓存"""
+        if not self.enabled:
+            return
+
+        key = self._generate_key(query, top_k)
+        try:
+            docs_data = [
+                {
+                    "page_content": doc.page_content,
+                    "metadata": doc.metadata,
+                }
+                for doc in documents
+            ]
+            serialized = json.dumps(docs_data, ensure_ascii=False)
+            self.redis_client.setex(key, self.ttl, serialized)
+            app_logger.debug(f"已缓存: {query[:30]}...")
+        except Exception as e:
+            app_logger.error(f"缓存写入失败: {e}")
+
+
+===== block 99 a810a883c624 lines 1-106 source 知行旅行助手-v2#99 =====
+"""
+完整的 Advanced RAG 管道
+把 5 层（查询优化 → 混合检索 → 重排 → 父块映射 → 长上下文重排）
+和缓存串成一条流水线
+"""
+from typing import List
+
+from langchain_core.documents import Document
+from langchain_chroma import Chroma
+
+from app.rag.query_optimizer import AdvancedQueryOptimizer
+from app.rag.retriever import AdvancedHybridRetriever
+from app.rag.reranker import LLMReranker, LongContextReorder
+from app.rag.text_splitter import AdvancedParentDocumentSplitter
+from app.rag.cache import RAGCache
+from app.utils.logger import app_logger
+
+class AdvancedRAGPipeline:
+    """
+    Advanced RAG 管道
+
+    对上层就一个 retrieve(query) 方法
+    对下面每层可独立换掉（比如把 Multi-Query 换成 HyDE、把 LLM 重排换成 BGE 重排）
+    """
+
+    def __init__(
+            self,
+            vectorstore: Chroma,
+            all_documents: List[Document],         # 子块列表（BM25 用）
+            parent_splitter: AdvancedParentDocumentSplitter,   # 拿 parent_docs 映射用
+            query_strategy: str = "multi_query",
+            top_k: int = 3,
+            enable_cache: bool = True,
+    ):
+        self.top_k = top_k
+
+        # 1. 查询优化
+        self.query_optimizer = AdvancedQueryOptimizer(strategy=query_strategy)
+
+        # 2. 混合检索（先取 3*k 个子块候选）
+        self.retriever = AdvancedHybridRetriever(
+            vectorstore=vectorstore,
+            documents=all_documents,
+            k=top_k * 3,
+        )
+
+        # 3. LLM 重排（进一步压到 2*k 个）
+        self.reranker = LLMReranker(top_k=top_k * 2)
+
+        # 4. 父块映射器
+        self.parent_splitter = parent_splitter
+
+        # 5. 长上下文重排
+        self.context_reorder = LongContextReorder()
+
+        # 缓存层
+        self.cache = RAGCache(enabled=enable_cache)
+
+    def retrieve(self, query: str) -> List[Document]:
+        """
+        完整 5 层检索流程
+
+        Args:
+            query: 用户查询
+
+        Returns:
+            top_k 个父块（已按长上下文策略重排）
+        """
+        # ---------- 缓存快照 ----------
+        cached = self.cache.get(query, self.top_k)
+        if cached:
+            return cached
+
+        app_logger.info(f"✅ 开始 Advanced RAG 检索: {query}")
+
+        # ---------- 阶段 1：查询优化 ----------
+        optimized_queries = self.query_optimizer.optimize(query)
+        app_logger.info(f"1. 查询优化：生成 {len(optimized_queries)} 个查询")
+
+        # ---------- 阶段 2：混合检索 ----------
+        child_docs = self.retriever.retrieve(
+            query=query,
+            queries=optimized_queries,
+        )
+        app_logger.info(f"2. 混合检索：获得 {len(child_docs)} 个子块")
+
+        # ---------- 阶段 3：LLM 重排 ----------
+        reranked_child_docs = self.reranker.rerank(
+            query=query,
+            documents=child_docs,
+            top_k=self.top_k * 2,
+        )
+        app_logger.info(f"3. LLM 重排：保留 {len(reranked_child_docs)} 个子块")
+
+        # ---------- 阶段 4：映射到父块 ----------
+        parent_docs = self.parent_splitter.get_parent_context(reranked_child_docs)
+        app_logger.info(f"4. 父块映射：获得 {len(parent_docs)} 个完整上下文")
+
+        # ---------- 阶段 5：长上下文重排 ----------
+        final_docs = self.context_reorder.reorder(parent_docs[: self.top_k])
+        app_logger.info(f"✅ RAG 检索完成，最终返回 {len(final_docs)} 个文档")
+
+        # ---------- 写缓存 ----------
+        self.cache.set(query, self.top_k, final_docs)
+
+        return final_docs
+
+
+===== block 100 e42d2245c197 lines 1-34 source 知行旅行助手-v2#100 =====
+# ============== 全局单例 ==============
+
+_pipeline: AdvancedRAGPipeline | None = None
+
+def get_rag_pipeline() -> AdvancedRAGPipeline:
+    """获取全局 RAG Pipeline 单例（懒加载）"""
+    global _pipeline
+    if _pipeline is None:
+        from app.rag.document_loader import DocumentManager
+        from app.rag.vectorstore import VectorStoreManager
+
+        app_logger.info("首次调用 RAG Pipeline，正在初始化...")
+
+        # 加载文档
+        doc_manager = DocumentManager()
+        documents = doc_manager.load_destination_documents()
+
+        # 切分（拿到内存里的父子映射）
+        splitter = AdvancedParentDocumentSplitter()
+        _, child_docs = splitter.split_documents(documents)
+
+        # 加载已有向量库（不重新 embedding）
+        vs_manager = VectorStoreManager()
+        vectorstore = vs_manager.load_vectorstore()
+
+        _pipeline = AdvancedRAGPipeline(
+            vectorstore=vectorstore,
+            all_documents=child_docs,
+            parent_splitter=splitter,
+        )
+
+        app_logger.info("✅ RAG Pipeline 单例已就绪")
+
+    return _pipeline
+
+
+===== block 101 71450cb02207 lines 1-49 source 知行旅行助手-v2#101 =====
+"""
+RAG 目的地信息查询工具
+把 Advanced RAG Pipeline 包成 Agent 能调的工具
+"""
+from langchain.tools import tool
+
+from app.rag.pipeline import get_rag_pipeline
+from app.utils.logger import app_logger
+
+@tool
+def query_destination_info(destination: str, query: str = "") -> str:
+    """
+    查询目的地的沉淀型知识（景点、攻略、开放时间、路线经验等）
+
+    数据源：项目内建的目的地知识库（不是实时数据）
+    检索链路：Advanced RAG（父子分块 + 混合检索 + Multi-Query + LLM 重排 + 缓存）
+
+    参数：
+    - destination: 目的地名称，如 "西安"、"成都"
+    - query: 具体想问的问题（可选），如 "兵马俑值不值得"、"最佳游玩路线"
+        不传就默认查该目的地的综合信息
+
+    返回：
+    - 3-5 段相关的攻略片段拼接文本，可直接展示给用户或供进一步推理
+
+    调用时机：
+    - 目的地推荐步骤：拿目的地亮点 / 景点介绍
+    - 行程生成步骤：拿具体路线 / 开放时间等细节
+    """
+    app_logger.info(f"[RAG] 查询目的地信息: {destination} | {query!r}")
+
+    # 组装最终 query：把目的地拼进去，让 embedding 能捕获"这是哪个城市"
+    final_query = f"{destination} {query}".strip() if query else f"{destination} 旅游攻略"
+
+    # 走 Pipeline
+    pipeline = get_rag_pipeline()
+    docs = pipeline.retrieve(final_query)
+
+    if not docs:
+        return f"知识库里暂无 {destination} 的相关内容"
+
+    # 拼接返回文本（每段前加序号，方便模型引用）
+    parts = [f"### 来自知识库的资料（关于 {destination}）", ""]
+    for i, doc in enumerate(docs, start=1):
+        parts.append(f"**片段 {i}**（来源：{doc.metadata.get('source', 'unknown')}）")
+        parts.append(doc.page_content)
+        parts.append("")
+
+    return "\n".join(parts)
+
+
+===== block 102 b85153d3f384 lines 1-32 source 知行旅行助手-v2#102 =====
+# 顶部 import 加一行
+from app.tools.router_query import query_destination_info
+
+# destination_recommendation 步骤的 tools 里加入 query_destination_info
+"destination_recommendation": {
+    ...
+    "tools": [
+        select_destination_tool,
+        go_back_to_requirement,
+        query_destination_info,     # ← 本章新增：Advanced RAG 目的地知识查询
+        *search_tools,              # 第 06 章的 Tavily 搜索仍保留（互补）
+        *weather_tools,
+        update_travel_style_tool,
+        add_travel_record_tool,
+        check_current_progress,
+    ],
+    ...
+},
+
+# itinerary_generation 步骤同样加入
+"itinerary_generation": {
+    ...
+    "tools": [
+        generate_itinerary_tool,
+        go_back_to_food,
+        ...
+        query_destination_info,     # ← 本章新增
+        *search_tools,
+        check_current_progress,
+    ],
+    ...
+},

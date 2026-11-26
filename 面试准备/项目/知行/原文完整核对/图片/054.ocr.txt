@@ -1,0 +1,36 @@
+朴素 RAG 三步走
+Retrieval-Augmented Generation• 基本流程
+索引（Indexing）
+离线构建
+目文档
+—〉
+%切块
+［chunk1］
+［chunk2］
+［chunk3］
+m embedding 模型
+［向量1］
+［向量2］
+［向量3］
+•••
+• 存进向量库
+2
+检索（Retrieval）
+在线查询
+Q 查询
+embedding
+最近K个向量
+自 对应的chunks
+3
+生成（Generation）
+最终输出
+目
+chunks
++
+Q 查询
+區 LLM
+V 答案
+Step 1
+Step 2
+Step 3
+文档切块 -Embedding向量化一存入向量库一查询时检索最近K向量一取回chunks+查询->LLM 生成答案

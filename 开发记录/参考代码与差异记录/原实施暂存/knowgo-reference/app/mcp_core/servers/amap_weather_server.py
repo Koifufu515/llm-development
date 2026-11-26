@@ -1,0 +1,1 @@
+../../../../../../../knowgo-travel/app/mcp_core/servers/amap_weather_server.py

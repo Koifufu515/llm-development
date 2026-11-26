@@ -1,0 +1,1 @@
+../../../../../../wenshu-project/backend/scripts/snapshot_data.py

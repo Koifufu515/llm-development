@@ -1,0 +1,5 @@
+$body = @{ collection = "corp-policy"; query = "住宿标准是多少" } | ConvertTo-Json
+Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8100/v1/search" `
+  -Headers @{ Authorization = "Bearer $env:QUARRY_KEY" } `
+  -ContentType "application/json" `
+  -Body ([System.Text.Encoding]::UTF8.GetBytes($body))

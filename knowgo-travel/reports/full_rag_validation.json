@@ -1,0 +1,562 @@
+{
+  "dataset_sha256": "1f4c7502762ba07688dd253e347cbd745611a5a03c14f291ac3ca44e90a7809f",
+  "scope": "同一冻结18问；按来源实体所在父块标注，未按结果再调参；不能外推线上QA准确率。",
+  "results": [
+    {
+      "config": "rrf",
+      "city": "成都",
+      "recall_at_5": 1.0,
+      "mrr": 0.2,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 0.2567,
+      "returned_parent_ids": [
+        "9b8a1c6da0f63f5a28d4bf0e",
+        "42b43391632cedcbf9007e29",
+        "ae4a2a49a241b508aa67aa65",
+        "ddbdf89a0c76e28da50b3855",
+        "b010ad762cbca4b895db9fd5"
+      ]
+    },
+    {
+      "config": "rrf",
+      "city": "广州",
+      "recall_at_5": 1.0,
+      "mrr": 1.0,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 0.2523,
+      "returned_parent_ids": [
+        "50f1ba6a70d9aae0e26672ab",
+        "aab909e847c8faff4235e881",
+        "1b18506182da45ed148724b4",
+        "f0cf54257ab8b371110f5835",
+        "b56a2e10d2eb40ad4fadb410"
+      ]
+    },
+    {
+      "config": "rrf",
+      "city": "深圳",
+      "recall_at_5": 1.0,
+      "mrr": 1.0,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 0.2274,
+      "returned_parent_ids": [
+        "55cad94317460f45a2358c46",
+        "10b30eefe6f3ea8b83f3274c",
+        "be37a39d6f453ea6adb76a07",
+        "7cafc91985bbadec5d1d81bc",
+        "48b202989b3247589140ed86"
+      ]
+    },
+    {
+      "config": "rrf",
+      "city": "青岛",
+      "recall_at_5": 1.0,
+      "mrr": 1.0,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 0.2742,
+      "returned_parent_ids": [
+        "5fe8b70b9ddcf91f06c50483",
+        "8d7f6c1df33df99b888774e0",
+        "35d6adb12a0e38407671cc3c",
+        "aecfebb6e1c5c2cb1cefc688",
+        "96eb7e0db6a9e0cf205b8f88"
+      ]
+    },
+    {
+      "config": "rrf",
+      "city": "大理",
+      "recall_at_5": 1.0,
+      "mrr": 0.2,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 0.2694,
+      "returned_parent_ids": [
+        "344ae5b78038cad46022f6ab",
+        "ee5379398b58556391e39688",
+        "7335b719bdd4f8b6e94415e0",
+        "609f675a1166e7e0da1008d2",
+        "58b66bc29fc4159ec9d71c7e"
+      ]
+    },
+    {
+      "config": "rrf",
+      "city": "哈尔滨",
+      "recall_at_5": 1.0,
+      "mrr": 0.2,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 0.2784,
+      "returned_parent_ids": [
+        "9751b7b39344b3e0c7e6934b",
+        "aad84efa877f78402d2d541f",
+        "4bc75074f626af2e92da1d4d",
+        "fb1aea72b54e1939ad96362a",
+        "656c1ba7f68bf6bf8c472b84"
+      ]
+    },
+    {
+      "config": "rrf",
+      "city": "敦煌",
+      "recall_at_5": 1.0,
+      "mrr": 0.2,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 0.2979,
+      "returned_parent_ids": [
+        "589150a6925f87e9ff2b9c73",
+        "243f2999db66845184645e82",
+        "14b5e3c4800f62c20fe679de",
+        "efde772c4f5ac08518f4b267",
+        "7f1e3026ca530cf9b0f2f8fc"
+      ]
+    },
+    {
+      "config": "rrf",
+      "city": "拉萨",
+      "recall_at_5": 1.0,
+      "mrr": 0.5,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 0.2618,
+      "returned_parent_ids": [
+        "0802a737189fc366d421432d",
+        "95281f18e05107c14d247a30",
+        "6cc03ad4bbf901eb3bb1b067",
+        "2317c5a917f70c3ad57ff31e",
+        "974e5dd178a9648e3d1a83c6"
+      ]
+    },
+    {
+      "config": "rrf",
+      "city": "泉州",
+      "recall_at_5": 1.0,
+      "mrr": 1.0,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 0.2985,
+      "returned_parent_ids": [
+        "42d27a0559749df742e15308",
+        "7da6b458cfe75b93a8275ba0",
+        "16b3ceff7aa43c8427b6d781",
+        "7e552694174477b007d89788",
+        "b1fcff9fda6d23186db19019"
+      ]
+    },
+    {
+      "config": "rrf",
+      "city": "太原",
+      "recall_at_5": 1.0,
+      "mrr": 1.0,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 0.3177,
+      "returned_parent_ids": [
+        "1891cddb8f3dfab26d60c93d",
+        "afda1eb0d7d528fb23da0932",
+        "da6dcadde00bb7b71e40c50d",
+        "9d051e3634fea37219131e90",
+        "4f03caf60702c0fcdb8529ec"
+      ]
+    },
+    {
+      "config": "rrf",
+      "city": "兰州",
+      "recall_at_5": 1.0,
+      "mrr": 0.2,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 0.2428,
+      "returned_parent_ids": [
+        "9c1523c3ee4a212abdbf3ab0",
+        "3fe2c0aabf3f4c683e760585",
+        "038b3ac86a3ab82f71a286fe",
+        "f3131f8fd55483b8240a2fd2",
+        "dc704b9a2dada64c31907a4d"
+      ]
+    },
+    {
+      "config": "rrf",
+      "city": "无锡",
+      "recall_at_5": 1.0,
+      "mrr": 1.0,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 0.2714,
+      "returned_parent_ids": [
+        "bd768eb2f033213a04ab6a7e"
+      ]
+    },
+    {
+      "config": "rrf",
+      "city": "济南",
+      "recall_at_5": 1.0,
+      "mrr": 1.0,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 0.2227,
+      "returned_parent_ids": [
+        "1bf20ad79e4d5cecc1147eac",
+        "da62136ec88d90b8d9a8d3b5",
+        "115561d95dcd08502dd73359",
+        "3da054717f3df128c0f1f1da",
+        "d90be20d45a00d3146d16d37"
+      ]
+    },
+    {
+      "config": "rrf",
+      "city": "洛阳",
+      "recall_at_5": 1.0,
+      "mrr": 1.0,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 0.2596,
+      "returned_parent_ids": [
+        "cce683e1569bd7cfc6080d2f",
+        "19acd78474205c45f58d65af",
+        "2ae3cfafaa6726cc68c37e8d"
+      ]
+    },
+    {
+      "config": "rrf",
+      "city": "丽江",
+      "recall_at_5": 0.6666666666666666,
+      "mrr": 0.5,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 0.2464,
+      "returned_parent_ids": [
+        "0daf28a18d62e3ecef13e41a",
+        "839604f9405281ddc5b465bf",
+        "dcaeaca767212154ac762e1b",
+        "d8eceb5bb70ed2871f10236e",
+        "efd10aa8d976ec95eb38b736"
+      ]
+    },
+    {
+      "config": "rrf",
+      "city": "三亚",
+      "recall_at_5": 1.0,
+      "mrr": 0.25,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 0.2601,
+      "returned_parent_ids": [
+        "fdd0beee66fb101b8453a7f1",
+        "abcf997701a75f3718752d6b",
+        "6e55c59b1ecca508ee6dcc9a",
+        "944d1a54d72333fb9c517f66",
+        "2abc9277d47b2e03920dded1"
+      ]
+    },
+    {
+      "config": "rrf",
+      "city": "扬州",
+      "recall_at_5": 1.0,
+      "mrr": 0.5,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 0.279,
+      "returned_parent_ids": [
+        "59d294851ce897f2d3b771cd",
+        "201622e108ebf7f741435707"
+      ]
+    },
+    {
+      "config": "rrf",
+      "city": "长沙",
+      "recall_at_5": 1.0,
+      "mrr": 0.25,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 0.2633,
+      "returned_parent_ids": [
+        "a67dc718bee3a066126e9092",
+        "04f62bf1d1f0e4813c01750e",
+        "711e72c137e698f1c2094cc1",
+        "8baf22f06c1d4fbf2b45fc09"
+      ]
+    },
+    {
+      "config": "expanded_reranked",
+      "city": "成都",
+      "recall_at_5": 1.0,
+      "mrr": 1.0,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 5.7561,
+      "returned_parent_ids": [
+        "b010ad762cbca4b895db9fd5",
+        "9b8a1c6da0f63f5a28d4bf0e",
+        "ddbdf89a0c76e28da50b3855",
+        "42b43391632cedcbf9007e29",
+        "ae4a2a49a241b508aa67aa65"
+      ]
+    },
+    {
+      "config": "expanded_reranked",
+      "city": "广州",
+      "recall_at_5": 1.0,
+      "mrr": 1.0,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 3.9937,
+      "returned_parent_ids": [
+        "50f1ba6a70d9aae0e26672ab",
+        "aab909e847c8faff4235e881",
+        "1b18506182da45ed148724b4",
+        "f0cf54257ab8b371110f5835",
+        "b56a2e10d2eb40ad4fadb410"
+      ]
+    },
+    {
+      "config": "expanded_reranked",
+      "city": "深圳",
+      "recall_at_5": 1.0,
+      "mrr": 1.0,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 4.6568,
+      "returned_parent_ids": [
+        "55cad94317460f45a2358c46",
+        "abd8fe2e6e453c076f73932d",
+        "7cafc91985bbadec5d1d81bc",
+        "10b30eefe6f3ea8b83f3274c",
+        "fce05ca9996d53cc0d1ce430"
+      ]
+    },
+    {
+      "config": "expanded_reranked",
+      "city": "青岛",
+      "recall_at_5": 1.0,
+      "mrr": 1.0,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 5.1388,
+      "returned_parent_ids": [
+        "5fe8b70b9ddcf91f06c50483",
+        "96eb7e0db6a9e0cf205b8f88",
+        "35d6adb12a0e38407671cc3c",
+        "aecfebb6e1c5c2cb1cefc688",
+        "8d7f6c1df33df99b888774e0"
+      ]
+    },
+    {
+      "config": "expanded_reranked",
+      "city": "大理",
+      "recall_at_5": 1.0,
+      "mrr": 1.0,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 5.8881,
+      "returned_parent_ids": [
+        "58b66bc29fc4159ec9d71c7e",
+        "ee5379398b58556391e39688",
+        "b46ed4d19b37ecda0ea140f5",
+        "609f675a1166e7e0da1008d2",
+        "344ae5b78038cad46022f6ab"
+      ]
+    },
+    {
+      "config": "expanded_reranked",
+      "city": "哈尔滨",
+      "recall_at_5": 1.0,
+      "mrr": 1.0,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 8.0867,
+      "returned_parent_ids": [
+        "656c1ba7f68bf6bf8c472b84",
+        "aad84efa877f78402d2d541f",
+        "0aa399f2cb693dd4ef3586ed",
+        "4bc75074f626af2e92da1d4d",
+        "9751b7b39344b3e0c7e6934b"
+      ]
+    },
+    {
+      "config": "expanded_reranked",
+      "city": "敦煌",
+      "recall_at_5": 1.0,
+      "mrr": 1.0,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 9.5817,
+      "returned_parent_ids": [
+        "7f1e3026ca530cf9b0f2f8fc",
+        "243f2999db66845184645e82",
+        "589150a6925f87e9ff2b9c73",
+        "efde772c4f5ac08518f4b267",
+        "14b5e3c4800f62c20fe679de"
+      ]
+    },
+    {
+      "config": "expanded_reranked",
+      "city": "拉萨",
+      "recall_at_5": 1.0,
+      "mrr": 1.0,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 9.6195,
+      "returned_parent_ids": [
+        "974e5dd178a9648e3d1a83c6",
+        "0802a737189fc366d421432d",
+        "6cc03ad4bbf901eb3bb1b067",
+        "2317c5a917f70c3ad57ff31e",
+        "95281f18e05107c14d247a30"
+      ]
+    },
+    {
+      "config": "expanded_reranked",
+      "city": "泉州",
+      "recall_at_5": 1.0,
+      "mrr": 1.0,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 7.0251,
+      "returned_parent_ids": [
+        "42d27a0559749df742e15308",
+        "7da6b458cfe75b93a8275ba0",
+        "7e552694174477b007d89788",
+        "16b3ceff7aa43c8427b6d781",
+        "b1fcff9fda6d23186db19019"
+      ]
+    },
+    {
+      "config": "expanded_reranked",
+      "city": "太原",
+      "recall_at_5": 1.0,
+      "mrr": 1.0,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 5.4283,
+      "returned_parent_ids": [
+        "1891cddb8f3dfab26d60c93d",
+        "afda1eb0d7d528fb23da0932",
+        "9d051e3634fea37219131e90",
+        "da6dcadde00bb7b71e40c50d",
+        "4f03caf60702c0fcdb8529ec"
+      ]
+    },
+    {
+      "config": "expanded_reranked",
+      "city": "兰州",
+      "recall_at_5": 1.0,
+      "mrr": 1.0,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 2.8423,
+      "returned_parent_ids": [
+        "dc704b9a2dada64c31907a4d",
+        "3fe2c0aabf3f4c683e760585",
+        "038b3ac86a3ab82f71a286fe",
+        "f3131f8fd55483b8240a2fd2",
+        "9c1523c3ee4a212abdbf3ab0"
+      ]
+    },
+    {
+      "config": "expanded_reranked",
+      "city": "无锡",
+      "recall_at_5": 1.0,
+      "mrr": 1.0,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 3.9661,
+      "returned_parent_ids": [
+        "bd768eb2f033213a04ab6a7e"
+      ]
+    },
+    {
+      "config": "expanded_reranked",
+      "city": "济南",
+      "recall_at_5": 1.0,
+      "mrr": 1.0,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 8.9488,
+      "returned_parent_ids": [
+        "1bf20ad79e4d5cecc1147eac",
+        "d90be20d45a00d3146d16d37",
+        "d7a510fba022c3351c45fb35",
+        "3da054717f3df128c0f1f1da",
+        "da62136ec88d90b8d9a8d3b5"
+      ]
+    },
+    {
+      "config": "expanded_reranked",
+      "city": "洛阳",
+      "recall_at_5": 1.0,
+      "mrr": 1.0,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 4.7788,
+      "returned_parent_ids": [
+        "cce683e1569bd7cfc6080d2f",
+        "2ae3cfafaa6726cc68c37e8d",
+        "19acd78474205c45f58d65af"
+      ]
+    },
+    {
+      "config": "expanded_reranked",
+      "city": "丽江",
+      "recall_at_5": 1.0,
+      "mrr": 1.0,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 8.2544,
+      "returned_parent_ids": [
+        "839604f9405281ddc5b465bf",
+        "f4d2fc93c8525b83470830af",
+        "ea2df70b71cf844fa8b926d3",
+        "3ca59395178cc14cb9e7f98a",
+        "d8eceb5bb70ed2871f10236e"
+      ]
+    },
+    {
+      "config": "expanded_reranked",
+      "city": "三亚",
+      "recall_at_5": 1.0,
+      "mrr": 1.0,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 3.8324,
+      "returned_parent_ids": [
+        "944d1a54d72333fb9c517f66",
+        "fdd0beee66fb101b8453a7f1",
+        "abcf997701a75f3718752d6b",
+        "2abc9277d47b2e03920dded1",
+        "efc386f588a3d77edb6bfac9"
+      ]
+    },
+    {
+      "config": "expanded_reranked",
+      "city": "扬州",
+      "recall_at_5": 1.0,
+      "mrr": 0.5,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 4.0678,
+      "returned_parent_ids": [
+        "59d294851ce897f2d3b771cd",
+        "201622e108ebf7f741435707"
+      ]
+    },
+    {
+      "config": "expanded_reranked",
+      "city": "长沙",
+      "recall_at_5": 1.0,
+      "mrr": 0.25,
+      "hit_at_5": true,
+      "city_isolation": true,
+      "seconds": 7.3884,
+      "returned_parent_ids": [
+        "a67dc718bee3a066126e9092",
+        "04f62bf1d1f0e4813c01750e",
+        "711e72c137e698f1c2094cc1",
+        "8baf22f06c1d4fbf2b45fc09"
+      ]
+    }
+  ]
+}

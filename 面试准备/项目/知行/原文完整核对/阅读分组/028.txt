@@ -1,0 +1,395 @@
+
+
+===== block 305 ee12818b0819 lines 1-11 source 知行旅行助手-v2#305 =====
+"""build_lead_text（住宿）演示：引导语逐站写明城市和入住日期，品牌模式的站会注明原因（纯逻辑，无需密钥）"""
+from app.capabilities.hotel_multi_segment.hotel_flow import build_lead_text
+from app.capabilities.hotel_multi_segment.hotel_skill_schema import HotelMultiSegmentItem, HotelMultiSegmentPayload
+
+payload = HotelMultiSegmentPayload(segments=[
+    HotelMultiSegmentItem(segment_id="h1", city="杭州", checkInDate="2026-10-01", checkOutDate="2026-10-02", guestCount=2,
+                          priceLevel="经济型", mode="hotel"),
+    HotelMultiSegmentItem(segment_id="h2", city="苏州", checkInDate="2026-10-02", checkOutDate="2026-10-05", guestCount=2,
+                          priceLevel="经济型", mode="brand"),
+])
+print(build_lead_text(payload))
+
+
+===== block 306 1359f9033ed6 lines 1-4 source 知行旅行助手-v2#306 =====
+已为您**并行查询**全部 2 站的住宿候选：
+- 第 1 站 杭州：2026-10-01 入住 · 2026-10-02 离店（门店候选）
+- 第 2 站 苏州：2026-10-02 入住 · 2026-10-05 离店（品牌候选，该城市实时报价暂不可用）
+请在下方卡片中**按城市逐站**选择（每站卡片顶部都标注了所在城市与入住日期），全部选完后在预览页一次性提交。
+
+
+===== block 307 d65085c06559 lines 1-43 source 知行旅行助手-v2#307 =====
+async def auto_select_hotels(conversation_id: str, state: dict) -> list[str]:
+    """自动确认模式：不弹卡片，由代码代选全部站并推进（门店取首条 / 品牌取首个）
+
+    返回已选定站的展示文本（空列表 = 未推进，调用方跳过即可）
+    """
+    segments = _segments(state)
+    if not segments:
+        return []
+    payload = await _payload_for(conversation_id, segments)
+    texts: list[str] = []
+    prices: dict[str, float] = {}
+    for seg in payload.segments:
+        head = f"{seg.city}（{seg.checkInDate} 至 {seg.checkOutDate}）"
+        if seg.hotel_list:
+            hotel = seg.hotel_list[0]
+            texts.append(
+                f"{head}：{hotel.hotelName}，{hotel.pricePerNight:g}元/晚，总价 {hotel.totalPrice:g}元"
+            )
+            if float(hotel.pricePerNight) > 0:     # ★ 同一次循环产出数字账本
+                prices[seg.city] = float(hotel.pricePerNight)
+        elif seg.brand_list:
+            texts.append(
+                f"{head}：{seg.brand_list[0].brandName}（实时报价不可用，仅选定品牌，"
+                f"具体门店到店择优选同档位）"
+            )
+    if len(texts) != len(payload.segments):
+        app_logger.warning(
+            f"⚠️ 住宿自动模式代选不完整（{len(texts)}/{len(payload.segments)} 站有候选），本轮不推进"
+        )
+        return []
+    agent, config, _ = await get_agent_and_state(conversation_id)
+    extra, step = _next_step(state)
+    upd: dict = {
+        "selected_hotels": texts, "stay_cursor": len(texts), "current_step": step,
+        "stay_prices": prices,      # ★ 数字账本：第 11 章预算工具直接读，不解析展示文本
+        # 档位必须**无条件写入**（表单未预选时兜底经济型）。
+        # 行程步 requires 硬校验 selected_accommodation_types，字段缺失会直接抛错卡死流程
+        "selected_accommodation_types": _accom_types(state) or ["economy_hotel"],
+        **extra,
+    }
+    await agent.aupdate_state(config, upd)
+    app_logger.info(f"✅ 住宿自动模式已代选 {len(texts)} 站，推进到 {step}")
+    return texts
+
+
+===== block 308 0c3af5939135 lines 1-47 source 知行旅行助手-v2#308 =====
+async def apply_hotel_selection(
+    conversation_id: str, payload: HotelMultiSegmentSubmitPayload
+) -> HotelMultiSegmentSubmitResult:
+    """前端一次性提交 → 校验 + 写住宿账本 + 推进到餐饮/行程步（**全程不做日期校验**）"""
+    result = validate_hotel_multi_submission(payload, cache_key=conversation_id)
+    if not result.ok:
+        return result
+    agent, config, state = await get_agent_and_state(conversation_id)
+    # 步骤守卫（代码层，不看模型措辞）：只有仍停在住宿步才允许落库推进——
+    # 重复提交（前端连点/已确认过）按幂等成功处理，避免把已推进的状态机拉回住宿步
+    step = str(state.get("current_step") or "")
+    if step != "accommodation_planning":
+        if step in _AFTER_STAY:
+            return HotelMultiSegmentSubmitResult(
+                ok=True, code="OK", msg="该批住宿已确认，无需重复提交",
+                accepted=list(payload.segments),
+                texts=list(state.get("selected_hotels") or []),
+                next_step=step,      # 幂等：反馈文案用当前实际所在步骤
+            )
+        return HotelMultiSegmentSubmitResult(
+            ok=False, code="STEP_MISMATCH",
+            msg=f"当前流程步骤为 {step or '未知'}，不在住宿确认阶段，无法提交住宿",
+        )
+    extra, nxt = _next_step(state)
+    upd: dict = {
+        "selected_hotels": result.texts, "stay_cursor": len(result.texts),
+        "stay_prices": dict(result.prices),   # ★ 校验器已经算好，这里只负责落库
+        "current_step": nxt,
+        # 档位无条件写入（表单未预选 → 兜底经济型），
+        # 否则行程步 requires 校验 selected_accommodation_types 缺失直接抛错
+        "selected_accommodation_types": _accom_types(state) or ["economy_hotel"],
+        **extra,
+    }
+    await agent.aupdate_state(config, upd)
+    app_logger.info(f"🏨 多段住宿已提交并落库：{len(result.texts)} 站，推进到 {nxt}")
+    return result.model_copy(update={
+        "msg": f"已确认 {len(result.texts)} 站住宿，继续为您安排餐饮与行程",
+        "next_step": nxt,   # 提交路由据此挑续跑反馈文案（行程步 → "正在生成行程报告"）
+    })
+
+__all__ = [
+    "hotel_card_mode",
+    "emit_hotel_skill_ui",
+    "auto_select_hotels",
+    "apply_hotel_selection",
+    "build_lead_text",
+]
+
+
+===== block 309 753c913ec0ad lines 1-40 source 知行旅行助手-v2#309 =====
+"""
+多段住宿选择 Agent Skill 包（skill_name = hotel_multi_segment）
+
+对外只需记两个工具：
+  - query_hotel_multi_segment_tool ：按段**并行**调用已有酒店 MCP 工具 → 逐段解析 →
+                                      组装 payload 下发前端（每段独立判定 hotel / brand 模式）
+  - submit_hotel_multi_segment_tool：接收前端一次性回传的全部住宿段选择 → 仅基础合法性校验
+
+契约定义见 hotel_skill_schema.py，实现见 hotel_agent_tool.py；
+解析核心（三级兜底：JSON → 结构化取值 → 文本行解析）见同包 hotel_parser.py。
+"""
+from app.capabilities.hotel_multi_segment.hotel_agent_tool import (
+    build_hotel_multi_segment_payload,
+    hotel_rank,
+    pick_best_hotel,
+    query_hotel_multi_segment_tool,
+    submit_hotel_multi_segment_tool,
+    validate_hotel_multi_submission,
+)
+from app.capabilities.hotel_multi_segment.hotel_skill_schema import (
+    HOTEL_MULTI_SEGMENT_SKILL,
+    HotelMultiSegmentItem,
+    HotelMultiSegmentPayload,
+    HotelMultiSegmentSubmitPayload,
+    HotelMultiSegmentSubmitResult,
+)
+
+__all__ = [
+    "HOTEL_MULTI_SEGMENT_SKILL",
+    "HotelMultiSegmentItem",
+    "HotelMultiSegmentPayload",
+    "HotelMultiSegmentSubmitPayload",
+    "HotelMultiSegmentSubmitResult",
+    "build_hotel_multi_segment_payload",
+    "hotel_rank",
+    "pick_best_hotel",
+    "validate_hotel_multi_submission",
+    "query_hotel_multi_segment_tool",
+    "submit_hotel_multi_segment_tool",
+]
+
+
+===== block 310 9fcc66c5ff41 lines 1-66 source 知行旅行助手-v2#310 =====
+# 本地步骤切换工具：调用即代表本步骤结束，进入下一步骤
+_LOCAL_STEP_TOOLS = {
+    "record_requirement_tool",
+    "select_destination_tool",
+    "select_transport_tool",
+    "select_accommodation_tool",
+    "select_accommodation_food_tool",
+    "select_food_tool",
+    "generate_itinerary_tool",
+    "submit_itinerary_body_tool",
+    "summarize_budget_tool",
+}
+
+# 无轮次上限步骤：允许模型完整跑完生成逻辑，等待用户交由prompt与清单门禁控制
+_NO_ROUND_CAP_STEPS = {
+    "requirement_collection",
+    "itinerary_generation",
+    "budget_summarization",
+    "report_generation",
+}
+
+# 手动模式单次发言最多允许的数据查询轮数，超出则清空工具表收尾
+_MANUAL_MAX_QUERY_ROUNDS = 2
+
+from app.core.intent import detect_intent
+
+def _is_confirm_reply(text: str) -> bool:
+    """判断是否为纯确认语，仅简单肯定回复命中；带修改需求的回复不算确认"""
+    return detect_intent(text).is_confirm_reply
+
+# 手动模式各步骤对应的选择工具
+_MANUAL_STEP_SELECT = {
+    "destination_recommendation": "select_destination_tool",
+    "transport_planning": "select_transport_tool",
+    "accommodation_planning": "select_accommodation_tool",
+    "food_planning": "select_food_tool",
+}
+
+# 手动确认模式：一轮一步 + 确认闸门规则
+_MANUAL_STEP_MODE = (
+    "【手动确认模式 - 一轮一步 + 确认闸门】本步骤严格按下面三种轮次之一作答，禁止跨步骤混写："
+    "① 候选轮：只展示本步骤候选清单，结尾请用户挑选，本轮结束；严禁夹带后续步骤内容。"
+    "② 详单轮：用户选定对象后，只展示该对象详单，结尾询问是否确认；本轮select_*工具被屏蔽，不要调用，不得标记已锁定确认。"
+    "③ 确认轮：用户回复纯确认语时，调用对应select_*工具记录并推进，同轮展示下一步候选清单。"
+    "**判断依据**：工具列表无select_*代表非确认轮，仅允许查询展示，不可声称完成选择或跳过确认。"
+    "**重要**：无可用查询工具时，基于已有结果输出候选清单并结束本轮，禁止反复查询或报错；同一轮每个候选清单仅输出一次。"
+)
+
+# 自动确认模式规则
+_AUTO_CONFIRM_MODE = (
+    "【自动确认模式】AI自动选定推进，无需询问用户。"
+    "**同一回合仅允许输出一次完整行程正文+一次预算明细表**：回合内多轮工具迭代时，中间轮只写一句话说明进展，"
+    "禁止输出Day详情和预算表；仅最终收尾轮一次性输出最新版完整行程与预算。"
+)
+
+# 产出型步骤标识
+_PRODUCE_STEPS = ("itinerary_generation", "budget_summarization")
+
+# 手动模式产出步骤规则
+_MANUAL_PRODUCE_MODE = (
+    "【手动确认模式 - 产出步骤】本步骤无select_*工具，不等待候选挑选确认，按两类用户输入处理："
+    "① 用户表示满意/确认：调用submit_itinerary_body_tool提交定稿落库；"
+    "② 用户提出结构性变更：调用summarize_budget_tool重算预算，再提交新版完整结构，无需二次确认。"
+    "两类场景同一轮完成「调预算 → 提交结构」，不要自行编写正文，正文预算由系统渲染。"
+    "收尾固定措辞：「如需调整（天数/预算/目的地等），直接告诉我即可。」禁止额外确认反问。"
+)
+
+
+===== block 311 39008f505e44 lines 1-95 source 知行旅行助手-v2#311 =====
+import re
+_DAY_MARK = re.compile(r"第\s*(\d+|[一二三四五六七八九十]+)\s*天|Day\s*\d", re.IGNORECASE)
+def _history_has_itinerary(msgs: list) -> bool:
+    """判断本回合历史里是否已输出过逐日行程正文
+    行程轮规则：先展示正文+预算征询、用户满意后才落库，确认轮的必要条件是
+    历史里存在 Day X 正文；若没有（例如用户第一轮直接说"满意"），不能强制落库
+    """
+    for m in msgs:
+        if getattr(m, "type", None) != "ai":
+            continue
+        content = getattr(m, "content", "") or ""
+        if isinstance(content, str) and _DAY_MARK.search(content):
+            return True
+    return False
+
+# 残缺工具调用历史自愈。当工具节点写状态阶段抛异常时，checkpoint 会残留
+# AIMessage 带 tool_calls、但无对应 ToolMessage 的残缺历史；后续传给模型会报400错误：
+# InternalError.Algo.InvalidParameter: An assistant message with "tool_calls" must be followed
+# by tool messages responding to each "tool_call_id"
+# 会话会直接卡死，只能新建会话。每次模型调用前做幂等体检：
+# ① 存在未响应的 tool_call → 紧跟该AIMessage补一条说明性ToolMessage，保证消息顺序合法；
+# ② 找不到对应AIMessage的孤立ToolMessage → 丢弃，避免同类400错误。
+_TOOL_ABORTED_HINT = (
+    "【系统提示】该工具调用未执行完成（回合内被中断），没有可用结果，请勿据此作答。"
+)
+def _repair_dangling_tool_calls(msgs: list) -> tuple[list, int, int]:
+    """修复悬空 tool_calls / 孤立 tool 消息
+    返回 (处理后的消息列表, 补入的 ToolMessage 条数, 丢弃的孤立 ToolMessage 条数)；
+    无需修复时原样返回入参对象（零拷贝，不影响正常路径）
+    """
+    out: list = []
+    inserted = dropped = 0
+    i, n = 0, len(msgs)
+    while i < n:
+        m = msgs[i]
+        mtype = getattr(m, "type", None)
+        if mtype == "ai" and getattr(m, "tool_calls", None):
+            out.append(m)
+            # 本AI消息声明的 tool_call_id → 工具名，已响应的逐条移除
+            pending = {
+                tc.get("id"): tc.get("name")
+                for tc in m.tool_calls if tc.get("id")
+            }
+            j = i + 1
+            while j < n and getattr(msgs[j], "type", None) == "tool":
+                pending.pop(getattr(msgs[j], "tool_call_id", None), None)
+                out.append(msgs[j])
+                j += 1
+            for tid, tname in pending.items():
+                # 补缺失响应：追加中断提示ToolMessage，不删除原AI消息
+                out.append(ToolMessage(
+                    content=_TOOL_ABORTED_HINT, tool_call_id=tid, name=tname or "tool"
+                ))
+                inserted += 1
+            i = j
+            continue
+        # 前面没有对应 tool_calls 的孤立 tool 消息：直接丢弃
+        if mtype == "tool":
+            dropped += 1
+            i += 1
+            continue
+        out.append(m)
+        i += 1
+    if inserted or dropped:
+        return out, inserted, dropped
+    return msgs, 0, 0
+
+# ============== 上下文窗口兜底（按"用户轮"边界丢弃最旧历史） ==============
+# TravelState.messages 采用追加式存储，每次调用模型都会全量传入历史；
+# 入口层已对工具结果做确定性裁剪，但多轮累积仍会触发超长输入超限。窗口规则：
+# ① 仅裁剪发给模型的请求视图，checkpoint内原始历史完整保留；
+# ② 切点落在HumanMessage，整轮丢弃，禁止拆分AIMessage与ToolMessage配对，防止制造残缺历史；
+# ③ 当前轮（最后一条HumanMessage起）永久保留，回合内工具往返上下文不丢失。
+_WINDOW_TRIGGER = 40   # 消息总数超过阈值才触发裁剪，普通会话不会触发
+_WINDOW_KEEP = 24      # 目标保留消息下限；切点向前寻找用户轮边界，保留数量只会更多
+def _trim_window(msgs: list) -> list:
+    """把最旧的历史轮整轮丢弃；找不到安全切点则原样返回
+    切点取目标窗口起点与当前轮起点之间最近的HumanMessage；
+    """
+    if len(msgs) <= _WINDOW_TRIGGER:
+        return msgs
+    last_human = -1
+    for i in range(len(msgs) - 1, -1, -1):
+        if isinstance(msgs[i], HumanMessage):
+            last_human = i
+            break
+    if last_human <= 0:
+        # 没有更早历史轮可裁剪
+        return msgs
+    cut = min(len(msgs) - _WINDOW_KEEP, last_human - 1)
+    for i in range(cut, -1, -1):
+        if isinstance(msgs[i], HumanMessage):
+            kept_system = [m for m in msgs[:i] if getattr(m, "type", None) == "system"]
+            return kept_system + msgs[i:]
+    return msgs
+
+
+===== block 312 500dd6a9ee59 lines 1-8 source 知行旅行助手-v2#312 =====
+"""_history_has_itinerary 演示：本回合的 AI 消息里出现过"第N天 / Day N"，就算已经展示过逐日行程（纯函数，无需密钥）"""
+from langchain_core.messages import AIMessage, HumanMessage
+
+from app.core.middleware import _history_has_itinerary
+
+print(_history_has_itinerary([HumanMessage("帮我排行程"), AIMessage("第一天：上午游西湖，下午灵隐寺……")]))
+print(_history_has_itinerary([HumanMessage("帮我排行程"), AIMessage("Day 2: 苏州园林")]))
+print(_history_has_itinerary([HumanMessage("第一天去哪好？"), AIMessage("建议先确认交通方式")]))
+
+
+===== block 313 9c3edf02bc27 lines 1-3 source 知行旅行助手-v2#313 =====
+True
+True
+False
+
+
+===== block 314 9b7cd705359b lines 1-16 source 知行旅行助手-v2#314 =====
+"""_repair_dangling_tool_calls 演示：有 tool_calls 却没回应的补一条说明，孤立的 tool 消息丢掉（纯函数，无需密钥）"""
+from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
+
+from app.core.middleware import _repair_dangling_tool_calls
+
+msgs = [HumanMessage("查北京到天津的高铁"),
+        AIMessage("", tool_calls=[{"name": "get-tickets", "args": {}, "id": "t1"}, {"name": "maps_weather", "args": {}, "id": "t2"}]),
+        ToolMessage("G1 08:30→09:05", tool_call_id="t1"),          # t2 没有回应（工具中途被打断）
+        HumanMessage("选 G1"),
+        ToolMessage("不知道从哪来的结果", tool_call_id="t9")]      # 前面没有对应的 tool_calls
+fixed, inserted, dropped = _repair_dangling_tool_calls(msgs)
+print(f"补了 {inserted} 条、丢了 {dropped} 条")
+for m in fixed:
+    print(f"{m.type:5} {getattr(m, 'tool_call_id', '') or '':3} {str(m.content)[:40]}")
+same, *_ = _repair_dangling_tool_calls(fixed)
+print("修过一次再修：原样返回", same is fixed)
+
+
+===== block 315 fdc53168d0a9 lines 1-7 source 知行旅行助手-v2#315 =====
+补了 1 条、丢了 1 条
+human     查北京到天津的高铁
+ai
+tool  t1  G1 08:30→09:05
+tool  t2  【系统提示】该工具调用未执行完成（回合内被中断），没有可用结果，请勿据此作答。
+human     选 G1
+修过一次再修：原样返回 True
+
+
+===== block 316 2504f89eca8f lines 1-13 source 知行旅行助手-v2#316 =====
+"""_trim_window 演示：消息超过 40 条才裁，刀口只落在用户消息上，整轮丢最旧的，当前轮永不裁（纯函数，无需密钥）"""
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
+
+from app.core.middleware import _trim_window
+
+msgs = [SystemMessage("你是旅行助手")]
+for turn in range(1, 12):                                     # 11 轮，每轮 用户 + 调工具 + 工具结果 + 回复 = 4 条
+    msgs += [HumanMessage(f"第{turn}轮提问"), AIMessage("", tool_calls=[{"name": "q", "args": {}, "id": f"c{turn}"}]),
+             ToolMessage("结果", tool_call_id=f"c{turn}"), AIMessage(f"第{turn}轮回答")]
+out = _trim_window(msgs)
+print(f"裁剪前 {len(msgs)} 条 → 裁剪后 {len(out)} 条")
+print("保留系统消息：", out[0].type == "system", "| 第一条对话：", out[1].type, out[1].content)
+print("20 条以内不动：", _trim_window(msgs[:20]) is msgs[:20] or len(_trim_window(msgs[:20])) == 20)
+
+
+===== block 317 8cd6662da327 lines 1-3 source 知行旅行助手-v2#317 =====
+裁剪前 45 条 → 裁剪后 25 条
+保留系统消息： True | 第一条对话： human 第6轮提问
+20 条以内不动： True

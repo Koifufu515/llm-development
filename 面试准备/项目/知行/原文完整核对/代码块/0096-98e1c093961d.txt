@@ -1,0 +1,9 @@
+class RelevanceScore(BaseModel):
+    document_index: int
+    relevance_score: int = Field(ge=0, le=10)
+    reason: str
+
+class RerankingResult(BaseModel):
+    scores: List[RelevanceScore]
+
+structured_model = model.with_structured_output(RerankingResult)

@@ -1,0 +1,40 @@
+"""鉴权依赖的五种结局：最小 app 挂上真实的 get_current_user，数据库换成测试驱动（纯逻辑，无需密钥）"""
+from types import SimpleNamespace
+
+from fastapi import Depends, FastAPI
+from fastapi.testclient import TestClient
+
+from app.api.dependencies import get_current_user
+from app.models.base import get_db
+from app.utils.security import create_access_token
+
+USERS = {"u-alice": SimpleNamespace(username="alice")}      # 库里只有 alice；u-ghost 模拟"账号已被删"
+
+class FakeSession:
+    """测试驱动：只认 select(User).where(User.id == xxx) 这一种查询，按 id 查内存字典"""
+    async def execute(self, stmt):
+        user = USERS.get(stmt.whereclause.right.value)
+        return SimpleNamespace(scalar_one_or_none=lambda: user)
+
+async def fake_db():
+    yield FakeSession()
+
+app = FastAPI()
+app.dependency_overrides[get_db] = fake_db
+
+@app.get("/whoami")
+async def whoami(user=Depends(get_current_user)):
+    return {"username": user.username}
+
+client = TestClient(app)
+cases = {
+    "不带令牌": {},
+    "乱码令牌": {"Authorization": "Bearer not.a.jwt"},
+    "令牌里没有 sub": {"Authorization": f"Bearer {create_access_token({'name': 'alice'})}"},
+    "账号已被删": {"Authorization": f"Bearer {create_access_token({'sub': 'u-ghost'})}"},
+    "正常登录": {"Authorization": f"Bearer {create_access_token({'sub': 'u-alice'})}"},
+}
+for name, headers in cases.items():
+    r = client.get("/whoami", headers=headers)
+    print(f"{name:<8} → {r.status_code} {r.json()}")
+print("不带令牌时的响应头 WWW-Authenticate：", client.get("/whoami").headers.get("www-authenticate"))

@@ -1,0 +1,23 @@
+"""_select_choices 演示：把并行收集回来的原始文本，一次选定成"每段交通 + 每城酒店 + 天气"（纯函数，无需密钥）"""
+import json
+
+from app.services.express_planning_service import ExpressRequirement, _select_choices
+
+req = ExpressRequirement(departure_city="福州", destination="杭州", departure_date="2026-10-01",
+                         travel_days=3, auto_confirm=True, transport_types=["train"],
+                         food_preferences=["local"])
+ctx = {   # 形如 _collect_context 的返回：key 自带"哪段/哪城"
+    # ★ train_0 用守卫压缩后的紧凑行——这才是线上 get_train_tools() 交给选定器的真实形态
+    #   （旧演示用的是 12306 原始多行格式，掩盖了"紧凑行选不出"的线上 bug）
+    "train_0": "实时班次（共 1 趟，按发车时间排序，仅列前 1 趟）：\n"
+               "格式：车次|区间|出发→到达|历时|票价\n"
+               "G1650|福州→杭州东|08:12→12:30|04:18|二等座 有票 356元",
+    "hotel_0": json.dumps({"hotelInformationList": [
+        {"name": "湖滨精选酒店", "price": {"message": "358CNY/晚"}, "starRating": 4.6}]}, ensure_ascii=False),
+    "weather_0": json.dumps({"casts": [{"date": "2026-10-01", "dayweather": "晴",
+                                        "daytemp": "27", "nighttemp": "18"}]}, ensure_ascii=False),
+    "_cities": ["杭州"], "_legs": [("福州", "杭州")],
+}
+sel = _select_choices(req, ctx)
+print(sel["summary"])                                # 推给用户看的摘要：每段一行、每城一行
+print("选定结果：", sel["transports"][0]["no"], "|", sel["hotels"][0]["name"], "|", sel["weathers"])

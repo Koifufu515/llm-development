@@ -1,0 +1,29 @@
+{
+  "date": "2026-10-23",
+  "status": "partial",
+  "fullMigrationComplete": false,
+  "projectName": "实习",
+  "projectId": "g-p-6a845a1f511481918ee46e4192ccd693",
+  "chatCount": 4,
+  "turns": 20,
+  "messages": 38,
+  "referenceOnlyMessages": 13,
+  "copiedAttachments": 4,
+  "supplementalFiles": 10,
+  "originalSkillAcquired": false,
+  "originalProjectInstructionsAcquired": false,
+  "verified": [
+    "原始 JSON 可解析",
+    "近期轮次/消息/占位计数一致",
+    "四个附件与来源逐字节相同",
+    "十份补充材料 SHA-256 一致",
+    "整理文档及相对链接存在"
+  ],
+  "remaining": [
+    "较早聊天历史",
+    "十三条纯引用消息正文及部分引用来源",
+    "原始 skill 包及依赖",
+    "项目指令全文",
+    "源项目全部文件清单"
+  ]
+}

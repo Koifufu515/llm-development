@@ -1,0 +1,19 @@
+查询      兵马俑的门票多少钱
+拒答建议  False（原因 None，最高余弦分 0.6565，阈值 0.44）
+重排      api，真的重排过：True
+候选      30 条，上下文共 5549 字
+
+[1] 融合 0.0154  余弦 0.656  重排 0.889
+    来源    travel-guide/西安.md  观光 > 必游名胜
+    区间    [15018, 15189]  定位粒度 char
+    链接    https://zh.wikivoyage.org/wiki/西安
+    上下文  neighbors，5549 字；同节合并 5 条
+    正文    1 秦始皇陵兵马俑（秦兵马俑博物馆）。🕘 8:00-17:00。💰 旺季（每年3...
+
+耗时（毫秒）
+    lookup_ms   49.0
+    recall_ms   876.1
+    rerank_ms   468.6
+    expand_ms   285.1
+    assemble_ms 0.1
+    total_ms    1678.9

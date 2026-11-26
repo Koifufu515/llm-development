@@ -1,0 +1,82 @@
+[
+  {
+    "source": "/Users/jarvis/Downloads/产出/会话编排 状态机.md",
+    "available": true,
+    "copiedTo": "ChatGPT实习项目同步/本地补充资料/会话编排 状态机.md",
+    "bytes": 76127,
+    "sha256": "fd28db7e0b9ae0d82d32a2a19957da1d46024c032a4d486411a17df6bda974f8",
+    "provenance": "本轮聊天中用户提供或本地生成的补充材料；不据此认定为源 ChatGPT 项目文件"
+  },
+  {
+    "source": "/Users/jarvis/Downloads/产出/技术深挖.md",
+    "available": true,
+    "copiedTo": "ChatGPT实习项目同步/本地补充资料/技术深挖.md",
+    "bytes": 45443,
+    "sha256": "ae6516f16a6cae94c261e39631f4675ef890aad4c177ecbc076729a0c8128988",
+    "provenance": "本轮聊天中用户提供或本地生成的补充材料；不据此认定为源 ChatGPT 项目文件"
+  },
+  {
+    "source": "/Users/jarvis/Downloads/产出/面试稿 会话编排.md",
+    "available": true,
+    "copiedTo": "ChatGPT实习项目同步/本地补充资料/面试稿 会话编排.md",
+    "bytes": 8682,
+    "sha256": "4fdf7b41bb9329f05aa3e5d5c3ee39da21535102d6e5e008783942bc3e739d5d",
+    "provenance": "本轮聊天中用户提供或本地生成的补充材料；不据此认定为源 ChatGPT 项目文件"
+  },
+  {
+    "source": "/Users/jarvis/Downloads/产出/热线托管 打断与承接.md",
+    "available": true,
+    "copiedTo": "ChatGPT实习项目同步/本地补充资料/热线托管 打断与承接.md",
+    "bytes": 33739,
+    "sha256": "69f437bfb57e045b4c88b874c9c6c1ef3d0335fec8cf8831856e9ec756e14279",
+    "provenance": "本轮聊天中用户提供或本地生成的补充材料；不据此认定为源 ChatGPT 项目文件"
+  },
+  {
+    "source": "/Users/jarvis/Downloads/产出/线程隔离与虚拟线程.md",
+    "available": true,
+    "copiedTo": "ChatGPT实习项目同步/本地补充资料/线程隔离与虚拟线程.md",
+    "bytes": 25410,
+    "sha256": "7be0f6db29d663e9cc98dc1748325274777cbe9a8410c35f4697fe43083ddba3",
+    "provenance": "本轮聊天中用户提供或本地生成的补充材料；不据此认定为源 ChatGPT 项目文件"
+  },
+  {
+    "source": "/Users/jarvis/Downloads/FastAPI_从入门到实战.zip",
+    "available": true,
+    "copiedTo": "ChatGPT实习项目同步/本地补充资料/FastAPI_从入门到实战.zip",
+    "bytes": 182637,
+    "sha256": "2d8da2984117de4f68b4fabed2a3926ec160dddb9cef5a55c53d8f57371e0030",
+    "provenance": "本轮聊天中用户提供或本地生成的补充材料；不据此认定为源 ChatGPT 项目文件"
+  },
+  {
+    "source": "/Users/jarvis/.codex/attachments/c46642b3-92d0-474c-b0b3-d42a5f294de4/已粘贴的文本.txt",
+    "available": true,
+    "copiedTo": "ChatGPT实习项目同步/本地补充资料/FastAPI补充代码_已粘贴的文本.txt",
+    "bytes": 43969,
+    "sha256": "784d226419c13d5f5b0a63b20983056b2950d51f476216bb51ff763d58000a6f",
+    "provenance": "本轮聊天中用户提供或本地生成的补充材料；不据此认定为源 ChatGPT 项目文件"
+  },
+  {
+    "source": "/Users/jarvis/Downloads/居丽叶的简历项目9：行政助手Agent.html",
+    "available": true,
+    "copiedTo": "ChatGPT实习项目同步/本地补充资料/居丽叶的简历项目9：行政助手Agent.html",
+    "bytes": 1182407,
+    "sha256": "941fbaaba3298717263a04d807425520927359f8946a69b78beac9c06907c5a1",
+    "provenance": "本轮聊天中用户提供或本地生成的补充材料；不据此认定为源 ChatGPT 项目文件"
+  },
+  {
+    "source": "/Users/jarvis/Desktop/大模型开发/wenshu-project.zip",
+    "available": true,
+    "copiedTo": "ChatGPT实习项目同步/本地补充资料/wenshu-project.zip",
+    "bytes": 2200357,
+    "sha256": "716d2022e4c9c7ecad17ef082921f383aa779ff55bc0e86e07c395ee49ca479d",
+    "provenance": "本轮聊天中用户提供或本地生成的补充材料；不据此认定为源 ChatGPT 项目文件"
+  },
+  {
+    "source": "/Users/jarvis/Documents/ChatGPT/大模型开发/哈啰客服Agent_项目梳理与实现路线.md",
+    "available": true,
+    "copiedTo": "ChatGPT实习项目同步/本地补充资料/哈啰客服Agent_项目梳理与实现路线.md",
+    "bytes": 10078,
+    "sha256": "e37a65e03eb9a254914b41092c9ec5432f154bc675d3583e9519068f3a386169",
+    "provenance": "本轮聊天中用户提供或本地生成的补充材料；不据此认定为源 ChatGPT 项目文件"
+  }
+]

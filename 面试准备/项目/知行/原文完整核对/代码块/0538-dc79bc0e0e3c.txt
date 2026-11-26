@@ -1,0 +1,35 @@
+async def mark_skill_ui_submitted(
+    db: AsyncSession, conversation_id, skill_name: str, payload,
+) -> None:
+    """ 把「已提交 + 各段选中」写回卡片帧所在消息的 extra_info
+
+    卡片帧此前已随消息落库，但"提交态"只活在前端组件里——切会话/刷新后
+    卡片按历史帧重渲染时又回到未选可点态（用户实测：切回来还能点）。
+    此处按 skill_name 找到最近一条带同款帧的 assistant 消息，把选中账本并入
+    extra_info["skill_ui"]["submitted"]，历史接口随 extra_info 透出，前端据此直接
+    渲染为已提交锁定态。仅记录展示态，异常只记日志、不影响提交流程。
+    """
+    try:
+        raw = payload.model_dump() if hasattr(payload, "model_dump") else dict(payload)
+        selections: dict[str, str] = {}
+        for seg in raw.get("segments") or []:
+            sid = seg.get("segment_id")
+            picked = seg.get("option_id") or seg.get("hotel_id") or seg.get("brand_id")
+            if sid and picked:
+                selections[str(sid)] = str(picked)
+        rows = (await db.execute(
+            select(Message)
+            .where(Message.conversation_id == conversation_id, Message.role == "assistant")
+            .order_by(Message.created_at.desc())
+            .limit(10)
+        )).scalars().all()
+        for msg in rows:
+            extra = dict(msg.extra_info or {})
+            frame = extra.get("skill_ui")
+            if isinstance(frame, dict) and frame.get("skill_name") == skill_name:
+                extra["skill_ui"] = {**frame, "submitted": {"selections": selections}}
+                msg.extra_info = extra  # ★ 重新赋值整列，SQLAlchemy 才会标记 JSON 变更为脏
+                await db.commit()
+                return
+    except Exception:
+        app_logger.exception("卡片提交态落库失败（仅影响历史回放，不影响主流程）")

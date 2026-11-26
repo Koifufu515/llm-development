@@ -1,0 +1,396 @@
+
+
+===== block 425 353d244ea8f8 lines 1-14 source 知行旅行助手-v2#425 =====
+"""summarize_budget_tool 演示：用户说"多玩 1 天、预算加到 4000"——参数覆盖本次计算，并写回需求真源（纯逻辑，无需密钥）"""
+from langchain.tools import ToolRuntime
+
+from app.tools.state_transition import summarize_budget_tool
+
+state = {"messages": [], "current_step": "budget_summarization", "selected_destination": "杭州",
+         "user_requirement": {"departure_city": "北京", "travel_days": 3, "adult_count": 2, "children_count": 0, "budget_max": 3000}}
+rt = ToolRuntime(state=state, context=None, config={}, stream_writer=None, tool_call_id="call_1", store=None)
+up = summarize_budget_tool.func(transport_price_per_person=560, hotel_price_per_night=358,
+                                attraction_tickets=[{"name": "灵隐寺", "price": 45}],
+                                travel_days=4, budget_max=4000, runtime=rt).update
+print("写进 state 的键：", [k for k in up if k != "messages"], "| current_step 不在其中 → 流程终点")
+print("预算：", {k: v for k, v in up["budget"].items() if not isinstance(v, (list, dict))})
+print("写回真源：travel_days =", up["user_requirement"]["travel_days"], "| budget_max =", up["user_requirement"]["budget_max"])
+
+
+===== block 426 1591f36ec883 lines 1-3 source 知行旅行助手-v2#426 =====
+写进 state 的键： ['budget', 'user_requirement'] | current_step 不在其中 → 流程终点
+预算： {'transport': 1120, 'accommodation': 1074, 'food': 1200, 'attractions': 90.0, 'misc': 800, 'total': 4284.0}
+写回真源：travel_days = 4 | budget_max = 4000
+
+
+===== block 427 63a6cb108db0 lines 1-15 source 知行旅行助手-v2#427 =====
+"""就地补算演示：state 里还没有预算时，行程工具当场调预算工具算一份，和行程同一个 Command 写入（纯逻辑，无需密钥）"""
+from langchain.tools import ToolRuntime
+
+from app.tools.state_transition import submit_itinerary_body_tool
+
+state = {"messages": [], "current_step": "itinerary_generation", "selected_destination": "杭州",
+         "user_requirement": {"departure_city": "北京", "travel_days": 2, "adult_count": 2, "children_count": 0, "budget_max": 3000},
+         "leg_selections": {"北京→杭州": "G35 07:00"}}   # 没有 budget：模型同一轮并行调了预算工具，它的写入此刻还看不见
+rt = ToolRuntime(state=state, context=None, config={}, stream_writer=None, tool_call_id="call_1", store=None)
+days = [{"day": d, "city": "杭州", "morning": ["西湖断桥与苏堤漫步，建议停留 2 小时"], "noon": ["知味观小笼包，人均约 40 元，排队较长"],
+         "afternoon": ["灵隐寺祈福，门票 45 元，飞来峰石刻值得一看"], "evening": ["河坊街夜市小吃，人均约 50 元"]} for d in (1, 2)]
+up = submit_itinerary_body_tool.func(days=days, runtime=rt).update
+print("写进 state 的键：", [k for k in up if k != "messages"])
+print("就地补算的预算：", {k: v for k, v in up["budget"].items() if not isinstance(v, (list, dict))})
+print("补算结果里有 user_requirement 吗？", "user_requirement" in up)
+
+
+===== block 428 178cbdd8fe5b lines 1-3 source 知行旅行助手-v2#428 =====
+写进 state 的键： ['budget', 'itinerary_body', 'itinerary', 'current_step']
+就地补算的预算： {'transport': 1000, 'accommodation': 300, 'food': 600, 'attractions': 800, 'misc': 400, 'total': 3100}
+补算结果里有 user_requirement 吗？ False
+
+
+===== block 429 13a740167267 lines 1-42 source 知行旅行助手-v2#429 =====
+# ============== 回退工具 ==============
+# 全部流程步骤
+ALL_STEPS = [
+    "requirement_collection",       # 步骤1：需求收集
+    "destination_recommendation",   # 步骤2：目的地推荐
+    "transport_planning",           # 步骤3：交通规划
+    "accommodation_planning",       # 步骤4：住宿规划
+    "food_planning",                # 步骤5：餐饮规划
+    "itinerary_generation",         # 步骤6：行程生成
+    "budget_summarization",         # 步骤7：预算汇总
+    "order_generation"              # 步骤8：订单生成
+]
+
+# 步骤-中文名称映射
+STEP_LABELS = {
+    "requirement_collection": "需求收集",
+    "destination_recommendation": "目的地推荐",
+    "transport_planning": "交通规划",
+    "accommodation_planning": "住宿规划",
+    "food_planning": "餐饮规划",
+    "itinerary_generation": "行程生成",
+    "budget_summarization": "预算汇总",
+    "order_generation": "订单生成"
+}
+
+# 各步骤对应的状态字段，执行回退时级联清除
+STEP_STATE_FIELDS = {
+    "requirement_collection": ["user_requirement"],
+    "destination_recommendation": ["selected_destination", "destination_options"],
+    "transport_planning": [
+        "selected_transport", "transport_options",
+        "selected_transport_legs", "leg_cursor", "leg_selections", "leg_prices",
+    ],
+    "accommodation_planning": [
+        "selected_accommodation_types", "accommodation_options",
+        "selected_hotels", "stay_cursor", "stay_prices",
+    ],
+    "food_planning": ["selected_food_types", "food_options"],
+    "itinerary_generation": ["itinerary", "itinerary_body"],
+    "budget_summarization": ["budget"],
+    "order_generation": ["order_id"]
+}
+
+
+===== block 430 d31c88e5a2f9 lines 1-5 source 知行旅行助手-v2#430 =====
+"""两张登记表演示：步骤顺序 ALL_STEPS + 每步产生的字段 STEP_STATE_FIELDS（纯逻辑，无需密钥）"""
+from app.tools.state_transition import ALL_STEPS, STEP_LABELS, STEP_STATE_FIELDS
+
+for i, step in enumerate(ALL_STEPS, 1):
+    print(f"[{i}] {STEP_LABELS.get(step, step):6s} {step:28s} → {STEP_STATE_FIELDS.get(step, [])}")
+
+
+===== block 431 bb586220298e lines 1-8 source 知行旅行助手-v2#431 =====
+[1] 需求收集   requirement_collection       → ['user_requirement']
+[2] 目的地推荐  destination_recommendation   → ['selected_destination', 'destination_options']
+[3] 交通规划   transport_planning           → ['selected_transport', 'transport_options', 'selected_transport_legs', 'leg_cursor', 'leg_selections']
+[4] 住宿规划   accommodation_planning       → ['selected_accommodation_types', 'accommodation_options', 'selected_hotels', 'stay_cursor']
+[5] 餐饮规划   food_planning                → ['selected_food_types', 'food_options']
+[6] 行程生成   itinerary_generation         → ['itinerary', 'itinerary_body']
+[7] 预算汇总   budget_summarization         → ['budget']
+[8] 订单生成   order_generation             → ['order_id']
+
+
+===== block 432 815c1f11d016 lines 1-125 source 知行旅行助手-v2#432 =====
+# ============== 通用回退工具 ==============
+
+@tool
+def go_back_to_step(
+        target_step: Literal[
+            "requirement_collection",
+            "destination_recommendation",
+            "transport_planning",
+            "accommodation_planning",
+            "food_planning",
+            "itinerary_generation",
+            "budget_summarization"
+        ],
+        reason: str,
+        clear_subsequent_data: bool = True,
+        runtime: ToolRuntime = None
+) -> Command:
+    """
+    回退到指定的历史步骤，允许用户重新进行规划。
+
+    使用场景示例：
+    - 用户说"我想重新选择目的地" -> target_step="destination_recommendation"
+    - 用户说"我想重新制定旅行计划" -> target_step="requirement_collection"
+    - 用户说"换个交通方式" -> target_step="transport_planning"
+    - 用户说"住宿要求改一下" -> target_step="accommodation_planning"
+    - 用户说"餐饮偏好不对" -> target_step="food_planning"
+    - 用户说"行程安排需要调整" -> target_step="itinerary_generation"
+    - 用户说"预算超了，重新算" -> target_step="budget_summarization"
+
+    参数说明：
+    - target_step: 要回退到的目标步骤
+        * "requirement_collection" - 重新收集旅行需求（出发日期、人数、预算等）
+        * "destination_recommendation" - 重新选择目的地
+        * "transport_planning" - 重新选择交通方式（航班/高铁/自驾）
+        * "accommodation_planning" - 重新选择住宿类型
+        * "food_planning" - 重新选择餐饮偏好
+        * "itinerary_generation" - 重新生成行程安排
+        * "budget_summarization" - 重新计算预算
+
+    - reason: 回退原因，用于记录和展示给用户
+        示例："用户希望更换目的地为三亚"
+        示例："预算超出用户预期，需要调整住宿标准"
+
+    - clear_subsequent_data: 是否清除目标步骤之后的所有数据（默认 True）
+        * True: 回退时清除后续步骤产生的选择和数据
+        * False: 保留后续数据（谨慎使用，可能导致数据不一致）
+
+    返回：
+        Command 对象，包含状态更新和步骤跳转指令
+
+    注意：
+    - 不能回退到 "order_generation"（订单生成是最终步骤）
+    - 回退会在消息历史中记录，方便追溯
+    """
+
+    app_logger.info(f"回退请求: target_step={target_step}, reason={reason}, clear_data={clear_subsequent_data}")
+
+    # 验证目标步骤
+    if target_step not in ALL_STEPS:
+        app_logger.warning(f"无效的目标步骤: {target_step}")
+        return Command(update={
+            "messages": [
+                ToolMessage(
+                    content=f"无效的目标步骤: {target_step}",
+                    tool_call_id=runtime.tool_call_id
+                )
+            ]
+        })
+
+    # 不允许回退到订单生成（最终步骤）
+    # ★ 终态明确拒绝，不靠默认参数偷偷放行
+    if target_step == "order_generation":
+        app_logger.warning("尝试回退到订单生成步骤，已拒绝")
+        return Command(update={
+            "messages": [
+                ToolMessage(
+                    content="订单生成是最终步骤，无法回退到此步骤。如需修改，请回退到更早的步骤。",
+                    tool_call_id=runtime.tool_call_id
+                )
+            ]
+        })
+
+    # 获取当前步骤（用于日志）
+    current_step = runtime.state.get("current_step", "unknown") if runtime.state else "unknown"
+    app_logger.info(f"执行回退: {current_step} -> {target_step}")
+
+    # 构建状态更新
+    state_update = {
+        "current_step": target_step
+    }
+
+    # 如果需要清除后续数据
+    cleared_fields = []
+    if clear_subsequent_data:
+        # ★ 级联清除：目标步及之后每一步登记的字段全部置 None
+        target_index = ALL_STEPS.index(target_step)
+        for step in ALL_STEPS[target_index:]:
+            for field in STEP_STATE_FIELDS.get(step, []):
+                state_update[field] = None
+                cleared_fields.append(field)
+
+        if cleared_fields:
+            app_logger.debug(f"清除的状态字段: {cleared_fields}")
+
+    # 获取步骤标签
+    step_label = STEP_LABELS.get(target_step, target_step)
+
+    # 构建响应消息
+    response_parts = [
+        f"已回退到【{step_label}】阶段",
+        f"原因: {reason}"
+    ]
+    if clear_subsequent_data and cleared_fields:
+        response_parts.append("已清除后续步骤的数据")
+
+    state_update["messages"] = [
+        ToolMessage(
+            content="\n".join(response_parts),
+            tool_call_id=runtime.tool_call_id
+        )
+    ]
+
+    app_logger.info(f"回退完成: {target_step}, 清除字段数: {len(cleared_fields)}")
+
+    return Command(update=state_update)
+
+
+===== block 433 6d12e35f1446 lines 1-4 source 知行旅行助手-v2#433 =====
+target_index = ALL_STEPS.index(target_step)
+for step in ALL_STEPS[target_index:]:                   # 从目标步到最后一步
+    for field in STEP_STATE_FIELDS.get(step, []):
+        state_update[field] = None                      # 每个字段置 None
+
+
+===== block 434 b5e129db3713 lines 1-18 source 知行旅行助手-v2#434 =====
+"""go_back_to_step 演示：退回目的地步，目的地及之后的字段连同流程游标一起清空；终态明确拒绝（直接调真实工具，纯逻辑，无需密钥）"""
+from langchain.tools import ToolRuntime
+
+from app.tools.state_transition import go_back_to_step
+
+state = {"messages": [], "current_step": "accommodation_planning", "user_requirement": {"departure_city": "北京"},
+         "selected_destination": "天津、上海", "selected_transport": "train", "leg_cursor": 2,
+         "leg_selections": {"北京→天津": "G1", "天津→上海": "G7512"}, "stay_cursor": 1, "selected_hotels": ["天津 如家"]}
+rt = ToolRuntime(state=state, context=None, config={}, stream_writer=None, tool_call_id="call_1", store=None)
+
+up = go_back_to_step.func(target_step="destination_recommendation", reason="用户想换目的地", runtime=rt).update
+cleared = sorted(k for k, v in up.items() if v is None)
+print("current_step →", up["current_step"])
+print("置为 None 的字段：", cleared)
+print("需求还在吗？", "user_requirement" not in cleared)
+
+up = go_back_to_step.func(target_step="order_generation", reason="试试", runtime=rt).update
+print("回退到订单步 →", [k for k in up if k != "messages"] or "只回一条拒绝消息", "|", up["messages"][0].content[:30], "…")
+
+
+===== block 435 700bcb914607 lines 1-4 source 知行旅行助手-v2#435 =====
+current_step → destination_recommendation
+置为 None 的字段： ['accommodation_options', 'budget', 'destination_options', 'food_options', 'itinerary', 'itinerary_body', 'leg_cursor', 'leg_selections', 'order_id', 'selected_accommodation_types', 'selected_destination', 'selected_food_types', 'selected_hotels', 'selected_transport', 'selected_transport_legs', 'stay_cursor', 'transport_options']
+需求还在吗？ True
+回退到订单步 → 只回一条拒绝消息 | 订单生成是最终步骤，无法回退到此步骤。如需修改，请回退到更早 …
+
+
+===== block 436 a927d2418b9e lines 1-32 source 知行旅行助手-v2#436 =====
+# ============== 回退守卫 ==============
+def _recent_human_text(state) -> str:
+    """取最近一条用户消息文本，用于判断用户是否提出回退"""
+    try:
+        for m in reversed((state or {}).get("messages") or []):
+            if getattr(m, "type", None) == "human":
+                return str(getattr(m, "content", "") or "")
+    except Exception:
+        pass
+    return ""
+
+from app.core.intent import detect_intent
+
+def _wants_back(text: str, key: str) -> bool:
+    """判断用户文本是否表达换/改/重新选的回退意图"""
+    return detect_intent(text).wants_back(key)
+
+def _guard_back(runtime, key: str, tool_desc: str) -> Command | None:
+    """回退意图守卫：无用户明确回退意图则返回拒绝Command，返回None代表放行"""
+    text = _recent_human_text(runtime.state)
+    if text and _wants_back(text, key):
+        return None
+    app_logger.info(f"[guard] 用户未明确要求{tool_desc}，拒绝自动回退")
+    return Command(update={
+        "messages": [
+            ToolMessage(
+                content=(f"未检测到您要求『{tool_desc}』。若您确实想{'换目的地' if key=='destination' else ('换交通方式' if key=='transport' else '重新规划')}，"
+                         f"请直接在对话中说明（如『换个目的地』『重新选』），我会照办；当前继续本步骤"),
+                tool_call_id=runtime.tool_call_id,
+            )
+        ]
+    })
+
+
+===== block 437 3c1cfb7c6237 lines 1-75 source 知行旅行助手-v2#437 =====
+"""第 11 章综合冒烟：不调 LLM，用真实工具把七步前向链走完，再按用户原话回退（纯逻辑，无需密钥）
+
+两个测试驱动函数只做"LangGraph 本来会做的事"：把用户发言塞进 messages、把工具返回的 Command.update
+合并回 state（messages 追加，其余字段覆盖）。所有业务判定都在真实工具里。
+"""
+from langchain.tools import ToolRuntime
+from langchain_core.messages import HumanMessage
+
+from app.tools import state_transition as st
+
+state = {"messages": [], "current_step": "requirement_collection"}
+
+def say(text):
+    state["messages"].append(HumanMessage(content=text))
+
+def run(tool, **kwargs):
+    rt = ToolRuntime(state=state, context=None, config={}, stream_writer=None,
+                     tool_call_id=f"call_{len(state['messages'])}", store=None)
+    up = tool.func(runtime=rt, **kwargs).update
+    state["messages"] += up.get("messages", [])
+    state.update({k: v for k, v in up.items() if k != "messages"})
+    return up
+
+say("我想去天津、上海旅行\n- 出发地：北京\n- 出发日期：2026-10-01\n- 旅行天数：4 天\n- 出行人数：2 成人")
+run(st.record_requirement_tool, departure_city="北京", departure_date="2026-10-01", travel_days=3,
+    budget_min=2000, budget_max=3000, travel_styles=["culture"], adult_count=2)
+assert state["user_requirement"]["travel_days"] == 4 and state["current_step"] == "destination_recommendation"
+print("✅ 1 需求收集：天数以表单为准（4），推进到目的地步")
+
+say("就去天津、上海")
+run(st.select_destination_tool, destination="天津、上海")
+assert state["current_step"] == "transport_planning" and st._expected_legs(state) == ["北京→天津", "天津→上海"]
+print("✅ 2 目的地：写入完整多城串，应有 2 段交通")
+
+say("北京到天津坐 G1")
+run(st.select_transport_tool, transport_type="train",
+    legs=[{"from_city": "北京", "to_city": "天津", "vehicle_no": "G1", "depart_time": "08:00", "price": 54.5}])
+assert state["leg_cursor"] == 1 and state["current_step"] == "transport_planning"
+say("天津到上海坐 G7512")
+run(st.select_transport_tool, transport_type="train",
+    legs=[{"from_city": "天津", "to_city": "上海", "vehicle_no": "G7512", "depart_time": "09:05", "price": 553}])
+assert state["current_step"] == "accommodation_planning" and state["leg_prices"] == {"北京→天津": 54.5, "天津→上海": 553.0}
+print("✅ 3 交通：段级循环两轮，最后一段才推进；两段票价同步进数字账本")
+
+say("天津住如家")
+run(st.select_accommodation_tool, accommodation_types=["economy_hotel"], hotels=["天津 如家酒店 199元/晚"])
+say("上海住汉庭")
+run(st.select_accommodation_tool, accommodation_types=["economy_hotel"], hotels=["上海 汉庭酒店 259元/晚"])
+assert state["current_step"] == "food_planning" and len(state["selected_hotels"]) == 2
+print("✅ 4 住宿：逐城循环两轮，推进到餐饮步")
+
+say("本地小吃就行")
+run(st.select_food_tool, food_types=["local"])
+assert state["current_step"] == "itinerary_generation"
+print("✅ 5 餐饮：推进到行程步")
+
+run(st.submit_itinerary_body_tool, days=[{"day": 1, "city": "天津", "morning": ["五大道骑行，建议停留 2 小时，沿途拍照"]}])
+assert len(state["itinerary_body"]) == 4 and state.get("budget")
+print("✅ 6 行程：只交 1 天，代码归一补齐到 4 天，并就地补算预算")
+
+run(st.summarize_budget_tool, transport_price_per_person=560, hotel_price_per_night=229, travel_days=4, budget_max=3500)
+assert state["user_requirement"]["budget_max"] == 3500 and state["current_step"] == "budget_summarization"
+print("✅ 7 预算：参数覆盖并写回需求真源，流程停在终点")
+
+run(st.go_back_to_destination)
+assert state["selected_destination"] == "天津、上海"
+print("✅ 8 回退守卫：用户没说要换，快捷回退被拒，数据原样保留")
+
+say("换个目的地吧")
+run(st.go_back_to_destination)
+assert state["current_step"] == "destination_recommendation"
+assert state["selected_destination"] is None and state["leg_cursor"] is None and state["stay_cursor"] is None
+assert state["user_requirement"]["travel_days"] == 4
+print("✅ 9 回退：目的地及之后全部清空（含两个游标），需求保留")
+print("\n🎉 第 11 章综合冒烟全部通过")
+
+
+===== block 438 657b7dc2b007 lines 1-6 source 知行旅行助手-v2#438 =====
+destination '换个目的地吧'         → 放行
+destination '我想去别的地方'        → 放行
+destination '这个不错就它了'        → 拒绝
+transport   '还是坐高铁吧'         → 放行
+transport   '行程挺好的'          → 拒绝
+requirement '全部重来'           → 放行

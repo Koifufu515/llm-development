@@ -1,0 +1,107 @@
+knowgo_travel_backend
+Y masterv
+吧 4_test_handoffs v
+@
+Q
+试用
+X
+项目
+r state_transition.py x
+v step_config.py
+e middleware.py
+4_test_handoffs.py
+travel_agent.py
+rag
+def summarize_budget_tool（
+A3
+asehemas
+323
+m1SC=m1SC_Cost，
+total=total，
+nn scrijpts
+325
+• services
+回
+w.tons
+327
+# 与需求预算做个简单对比
+_Init_：py
+328
+req = runtime.state.get（'user_requirement"） or f
+> state_transition.py
+b_min = float（req.get（"budget_min"） or 0）
+330
+b_max = float（req.get（"budget_max"） or 0）
+331
+ovennun_note =
+_Init_：py
+332
+if b_max and total > b_max：
+>心 ||m_factory.py
+overrun_note = f"《超出预算上限 ｛total -b_max：.0f｝ 元）
+心 logger.py
+elif b_min and total < b_min：
+init_ py
+overrun_note = f"《低于预算下限 ｛b_min- total：.0f｝ 元）•
+>心 config.py
+356
+337
+app_Logger.info（
+>心 main.py
+338
+f ［STEP］ 预算已汇总：｛total：.0f｝ 元/人 ｛overrun_note｝ > report_generation"
+a data
+339
+• evaluation
+340
+>logs
+return Command（update=｛
+v Cu scripts
+342
+'messages'：［TooLMessage（
+心 1_test_lIm.py
+content=（f" 预算已汇总（人均全程）：In"
+344
+f"
+交通 ｛transport_cost：.0f｝ + 住宿 ｛accommodation_cost：.0f｝ +"
+>心2._test_state_persistence.py
+345
+f"餐饮 ｛food_cost：.0f｝ + 景点 ｛attpactions_cost：.0f｝ +"
+>心 3_test_requirement_agent.py
+346
+f"其他 ｛misc_cost：.0f｝\n"
+苷
+>心4_test_handoffs.py
+347
+合计 ｛total：.0f｝元/人 foverrun_note｝"）.
++it.env
+348
+tool_call_id=runtime.toet_call_id
+-gitignore
+349
+）I.
+心
+众
+350
+s.python-version
+"budget"： budue
+'current
+ep"：'repont_generation"，
+心 main.py
+352
+｝）
+［rl pyproject.toml
+353
+團 README.md
+354
+9 wv.lock
+> 外部库
+i
+>目 临时文件和控制台
+• knowgo_travel_backend >app >tools
+> state_transition.py
+354:1 日TRAE
+knowgo_travel_backend
+M Islands Dark • CRLF UTF-8 艮4个空格
+wv （knowgo_travel_backend） ［Python 3.13.13］
+鱼

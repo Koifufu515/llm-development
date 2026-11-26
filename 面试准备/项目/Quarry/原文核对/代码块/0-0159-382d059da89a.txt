@@ -1,0 +1,3 @@
+# macOS / Linux
+find corpus -name "*.md" | wc -l
+ls corpus/

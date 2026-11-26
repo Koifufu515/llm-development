@@ -1,0 +1,172 @@
+规则选定• 零模型调用：每个”选哪个"都是写死的排序键
+_select_choices 替代了状态机里“让模型挑班次、挑酒店”的那几轮。同样的查询结果进来，选出来的一定是同一趟车、同一家店；选不出的段和城不
+硬凑，只在摘要里如实写"未查询到”。
+_select_choices 怎么逐段逐城做决定 从ct里按疑名取原始文本，交给对应的批选器
+交通 逐段•legsii
+住宿 逐城•cities［i］
+天气 逐城
+餐饮 一次定
+顺序
+按表里公元顺泽逐“记，取第一个自给果的
+先试
+_P1CK_hoteL（hote _1）
+train
+_piCk_train（train_1）
+有一用这家
+_p1CK_weathel
+表单给了
+原样使用
+flight
+_pick_flight（flight_i, flightprice_i）
+沿有
+取 出发日
+风格含food 特色美食＋本地小吃
+那天，没有就取第一天；取不
+都汝伺
+× 摘要写「未查询到实时班次」
+_fallback_hotel_brands
+全就个与
+炉口
+本地小吃＋特色美食
+不写死高铁优先：用户先勾航班就先看航班；查询侧也只给勾选的
+模式建了job。
+三个挑选器的排序键 全部纯代码、无随机；解析失败一律返回 None，由上一层降级
+1 高铁_pick.train
+2 航班_pick_flight
+酒店 _pickhotel
+"有票的里面，哪趟又快又不贵？”
+“时刻表没价，还能不能选？"
+"评分够高的里面谁最便宜？“
+规则
+规则
+每趟车按二等座一硬座一一等座一硬卧一软卧一无座
+先解析时刻表，再按航班号从票价接口补价。
+规则
+读 hotelInformationList，从「xxxCNY/晚」里抠出每晚
+取第一个有数据的席别；余票不可买就整趟跳过。
+综合分=历时分钟＋票价+10、取最小（1分钟约等干0.1
+有价的取最便且，全都没价就取敢早起（那班，价褡记0，
+价，先剔掉低于25元的失真价。
+個罢与！价格待下一
+评分≥4.5里取最便宜；没有4.5以上就取评分最高，同分
+元）。
+取便宜的。
+例：2:30、553元 150+ 55.3=205.3；3:10、309元
+不再丢弃无价航班：时刻表接口多数航线本来就不带票价。
+价格解析不出的酒店不进候选；整城都解析不出时，摘要里换
+190+30.9=220.9一选前者。
+成品牌兜底。
+sel 字典交给谁_select_choices的返回值被三个函数分着用
+唯住F
+summary
+给用户看的多行摘要：每段交通、每城住宿、餐饮偏好、出发日天气
+run_express_planning 推给前端，并拼进返回的全文
+transports total_legs
+选中的交通（只含成功段）与总段数
+_build_budget 算交通费，缺的段按均价补
+hotels
+_bu1ld_budget 取均价，_generate_1tinerary 拼潤店行
+leg_results
+全部段的结果，失败段也在
+generate_itinerary 拼元整路线，避免型目己脑补转场
+weathers Too0
+每城天气、餐饮偏好
+_generate_itinerary 写进提示词
+cities hotel_results
+城市序列；全部域的住宿结果
+冰邻早升话考
+cities 给 _build_budget 数城市；hotel_results 只在本
+函数卡 本组10个函数，全部只在本文件内被调用
+-select_choices F
+_547
+_pick_train ［n
+L435
+pick_flight Fn
+_46
+替用户做选择：每段按表单勾选的交通顺序挑，取第一个有结
+从 12306 结果里挑一趟又快又不贵、而且能买到票的车。
+解析航班时刻、按航班号补票价，有价挑最便宜，没价挑最早
+果的；每城挑一家酒店、取一条天气，定好餐饮，再拼一段摘
+何时调用 逐段处理、轮到train 模式时
+起飞。
+何时调用
+_collect_context 返旦之后（编排弟 步）
+谁来调用 本文件_select_choices
+何时调用 逐段处理、轮到flight模式时
+谁来调用
+结果交给
+本文件 run_express_planning
+｛no，dep，arr，mins，price｝或 None；解析借
+谁兴谙用
+本文件 select choices
+mcp_tools.parse_ticket_rows，紧凑行再借
+结果父到
+｛flight_no,price, dep,arr｝或None；解析借
+结果交给
+seL 子典，個要回编排层准刖蜢，具宋勿给
+train_agent_tool._compact_to_rows
+mcp toOLs.parse tuight rows/
+_generate_itinerary 和 _build_budget
+parse tLiant prices
+_pick_hotel （如n
+L489
+_pick_weather（tn
+L517
+_fallback_hotel_brands （fn
+_52
+在评分够高的酒店里挑最便宜的一家，顺手剔掉明显失真的低
+从高德预报里取出发日那天（没有就取第一天），拼成「晴
+某城拿不到酒店报价时，按住宿档位给出前3个常见连锁品
+价。
+25~18°C」一行字。
+牌。
+何时调用
+逐城炒坤卧
+何时调用 逐城处理时
+何时调用 拼摘要时遇到没洗出酒店的坊
+璀架调用
+本文件_select_choices
+谁来调用 本文件 _select_choices
+堐米倜庄
+本文件 _select_choices
+结祟伞绐
+｛name,price, score, address｝ 或 None; None 时
+结果交给 文本存进 sel.weathers，进摘要和生成提示词；解析失
+结果邳罕
+「如家、汉庭、7天」这样的字符串写进摘要；品牌表借
+该取什個罢呈决成品阵咒
+chat_stream_executor. _COMMON_HOTELS，导入失败
+用人直二次
+_dur_to_mins （tn
+L422
+_seat_available （fn
+L430
+_number_before （fn
+把「05:30」换成330分钟；解析不了给一个极大值，让它排
+到最后。
+算能买。
+判断余票状态能不能买：有票、有、候补、剩余N张、N张都
+从「均价356CNY/晚」里取出紧挨在单位前面的那串数字。
+何的调用 读每家酒店的价格文案时
+何时调用 给每趟车打综合分时
+何时调用 每趟车选定席别之后
+谁来调用 本文件_pick_hotel
+谁来调用 本文件_pick_train
+谁来调用 本文件_pick_train
+结果交给
+结果交给 分钟数回 _pick_train，作为综合分的主项
+结果交给 True / False，False 这趟车直接跳过
+550.0uS pick notel、及必早返回0，
+占个 條
+-to_float 四
+L26
+读码备注：
+安全地转成小数，转不了就给默认值，不抛异常。
+•没价不等于0元：航班价为0时摘要写「价格待定」，_build_budget 只用大于0的票价求均价。
+何时调用 抠价格、读评分时
+谁来调用
+本文件 _number_before、_pick_hotel
+结果交给
+邻子口给佶用万
+这一层零模型调用：高铁按 历时分钟＋票价+10、航班按最低价-最早起飞、酒店按 评分≥ 4.5 里最便宜，同样的输入一定得到同样的结果。选不出的段和城不硬凑，只在摘要里如实写未查询到，费用
+留给_build_budget 按估算补。

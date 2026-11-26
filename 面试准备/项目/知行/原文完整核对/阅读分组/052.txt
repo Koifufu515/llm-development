@@ -1,0 +1,482 @@
+
+
+===== block 620 20a4c7a97989 lines 1-83 source 知行旅行助手-v2#622 =====
+"""交通步「对话内改选 + 航班结构性不可查降级」回归演示（纯逻辑，无需密钥 / 数据库 / 网络）
+复现故障会话：表单只勾选航班、目的地苏州（无机场码）→航班卡片每轮为空；用户回复改高铁，状态不变，兜底话术重复。
+脚本断言3个核心判定，任一不满足直接抛出 AssertionError：
+① detect_transport_switch：用户原话识别改选目标，支持前置/后置否定词
+② apply_transport_switch 落库后，卡片路由切换为新交通方式
+③ flight_unreachable_cities：区分结构性不可查与可查航班线路
+"""
+import asyncio
+
+from app.capabilities.flight_multi_segment.flight_flow import flight_card_mode, flight_unreachable_cities
+from app.capabilities.train_multi_segment.train_flow import multi_leg_train
+from app.services.transport_switch_service import (
+    apply_transport_switch,
+    current_transport_mode,
+    detect_transport_switch,
+)
+
+# 测试用例：(用户原话, 当前生效方式, 期望改选目标)；None代表不修改状态
+CASES = [
+    ("高铁吧", "flight", "train"),                   # 故障现场用例
+    ("我说我选择高铁", "flight", "train"),
+    ("要不高铁吧", "flight", "train"),                # "要不"不属于否定
+    ("不如坐动车", "flight", "train"),
+    ("不坐飞机了，改高铁", "flight", "train"),        # 前置否定，句尾为目标
+    ("飞机没有的话就自驾吧", "flight", "driving"),    # 后置否定
+    ("高铁太慢了，还是坐飞机吧", "train", "flight"),
+    ("改自驾", "train", "driving"),
+    ("航班", "flight", None),                        # 重申当前方式，不修改
+    ("确认", "flight", None),                        # 纯确认语句
+    ("G1234", "train", None),                        # 选择车次，不修改
+    ("我已按卡片选定全部车次：北京→苏州 G1", "train", None),   # 卡片自动合成消息，不触发改选
+]
+
+def state(transport: list, dest: str) -> dict:
+    return {"current_step": "transport_planning", "selected_destination": dest,
+            "user_requirement": {"departure_city": "北京", "departure_date": "2026-09-30",
+                                 "travel_days": 4, "transport_types": transport}}
+
+class FakeAgent:
+    """FakeAgent，仅记录状态写入操作，不访问数据库"""
+    def __init__(self) -> None:
+        self.updates: list[dict] = []
+
+    async def aupdate_state(self, config: dict, values: dict) -> None:
+        self.updates.append(values)
+
+def routes(st: dict) -> str:
+    return (f"当前方式 {current_transport_mode(st)!s:6} | 航班卡片 {flight_card_mode(st)!s:5} "
+            f"| 高铁卡片 {multi_leg_train(st)}")
+
+async def main() -> None:
+    print("① 改选意图识别")
+    for text, current, want in CASES:
+        got = detect_transport_switch(text, current)
+        print(f"  {'✅' if got == want else '❌'} 「{text}」（当前 {current}）→ {got}")
+        assert got == want, f"{text!r}: 期望 {want}，实际 {got}"
+
+    print("\n② 重放故障会话：北京出发、表单只勾航班、目的地苏州")
+    st = state(["flight"], "苏州")
+    print(f"  改选前：{routes(st)}")
+    agent = FakeAgent()
+    label = await apply_transport_switch(agent, {"configurable": {"thread_id": "demo"}}, st, "高铁吧")
+    after = {**st, **agent.updates[-1]}
+    print(f"  用户回「高铁吧」→ 回执「{label}」，落库 transport_types="
+          f"{after['user_requirement']['transport_types']}")
+    print(f"  改选后：{routes(after)}")
+    assert label == "高铁" and multi_leg_train(after) and not flight_card_mode(after)
+    # 清空交通步旧字段，防止残留字段干扰路由判断
+    assert after["selected_transport"] is None and after["leg_selections"] is None
+    # 非交通步骤不触发改选逻辑
+    other = {**st, "current_step": "destination_recommendation"}
+    assert await apply_transport_switch(agent, {}, other, "坐高铁去") is None
+    assert len(agent.updates) == 1, "非交通步不应写入状态"
+
+    print("\n③ 航班结构性不可查判定（用于降级高铁/提示重试）")
+    for dest, want in (("苏州", ["苏州"]), ("上海", []), ("上海、苏州", [])):
+        got = flight_unreachable_cities(state(["flight"], dest))
+        print(f"  {'✅' if got == want else '❌'} 北京出发 → {dest}：结构性不可查城市 {got}")
+        assert got == want, f"{dest}: 期望 {want}，实际 {got}"
+
+    print("\n全部断言通过 ✅")
+
+asyncio.run(main())
+
+
+===== block 621 a3daa7fba12b lines 1-25 source 知行旅行助手-v2#623 =====
+① 改选意图识别
+  ✅ 「高铁吧」（当前 flight）→ train
+  ✅ 「我说我选择高铁」（当前 flight）→ train
+  ✅ 「要不高铁吧」（当前 flight）→ train
+  ✅ 「不如坐动车」（当前 flight）→ train
+  ✅ 「不坐飞机了，改高铁」（当前 flight）→ train
+  ✅ 「飞机没有的话就自驾吧」（当前 flight）→ driving
+  ✅ 「高铁太慢了，还是坐飞机吧」（当前 train）→ flight
+  ✅ 「改自驾」（当前 train）→ driving
+  ✅ 「航班」（当前 flight）→ None
+  ✅ 「确认」（当前 flight）→ None
+  ✅ 「G1234」（当前 train）→ None
+  ✅ 「我已按卡片选定全部车次：北京→苏州 G1」（当前 train）→ None
+
+② 重放故障会话：北京出发、表单只勾航班、目的地苏州
+  改选前：当前方式 flight | 航班卡片 True  | 高铁卡片 False
+  用户回「高铁吧」→ 回执「高铁」，落库 transport_types=['train']
+  改选后：当前方式 train  | 航班卡片 False | 高铁卡片 True
+
+③ 航班结构性不可查判定（决定"降级高铁"还是"提示稍后重试"）
+  ✅ 北京出发 → 苏州：结构性不可查城市 ['苏州']
+  ✅ 北京出发 → 上海：结构性不可查城市 []
+  ✅ 北京出发 → 上海、苏州：结构性不可查城市 []
+
+全部断言通过 ✅
+
+
+===== block 622 d65681864a0b lines 1-28 source 知行旅行助手-v2#624 =====
+# 住宿轮外部酒店服务不可用，代码层确定性兜底逻辑
+# 触发条件：①工具返回降级标记；②酒店查询工具加载失败。兜底仅输出品牌档位，不编造门店与价格
+_DEGRADE_MARK = "【外部服务暂时不可用】"
+_ACCOMMODATION_STEP = "accommodation_planning"
+
+# 交通规划步骤采用整块缓冲，回合结束一次性推送，避免大量班次逐字流式造成卡顿
+_TRANSPORT_STEP = "transport_planning"
+
+# 行程生成步骤改为代码确定性推进，减少一轮用户确认交互
+_ITINERARY_STEP = "itinerary_generation"
+
+# 需要整块缓冲的步骤：一次性推送结果，防止流式重置造成前端内容闪变
+_BUFFER_ALL_STEPS = {
+    _TRANSPORT_STEP,
+    "destination_recommendation",
+    _ITINERARY_STEP,
+    "requirement_collection",
+}
+# 住宿、餐饮确认轮也加入缓冲集合，防止前端内容闪变
+_BUFFER_ALL_STEPS |= {_ACCOMMODATION_STEP, "food_planning"}
+
+def _covers_all_days(text: str, days: int) -> bool:
+    """校验正文是否完整覆盖第1~days天，复用落库守卫的天数解析器，统一口径"""
+    if days <= 0 or not text:
+        return False
+    from app.tools.state_transition import _day_numbers  # 局部导入，防止循环引用
+    have = _day_numbers(text)
+    return all(d in have for d in range(1, days + 1))
+
+
+===== block 623 ce0e71c5ca13 lines 1-7 source 知行旅行助手-v2#625 =====
+"""_covers_all_days 演示：正文是否覆盖第 1~N 天（复用第 11 章 _day_numbers 的口径）（纯函数，无需密钥）"""
+from app.services.chat_stream_executor import _covers_all_days
+
+full = "#### Day 1 杭州 …… #### Day 2 杭州 …… 第三天：返程"
+print("要 3 天，覆盖了吗？", _covers_all_days(full, 3))    # Day 1 / Day 2 / 第三天 → True
+print("要 4 天，覆盖了吗？", _covers_all_days(full, 4))    # 缺第 4 天 → False
+print("天数未知（0）    ？", _covers_all_days(full, 0))    # 没有天数就不推进 → False
+
+
+===== block 624 70e157796316 lines 1-324 source 知行旅行助手-v2#627 =====
+async def execute_turn(
+        user_id: str, conversation_id: str, content: str, planning: bool, stream: EventStream
+) -> tuple[str, str | None, bool, list | None]:
+    """
+    处理单轮对话请求
+    planning=true 代表是行程规划，交给 LangGraph Agent 状态机跑
+    planning=false 就是普通闲聊，直接丢给LLM
+    
+    返回结果元组：(回复文本, 当前状态步骤, 是否保存行程入库, 结构化行程数据)
+    - current_step：状态机当前到哪一步，服务层靠这个判断能不能生成行程清单
+    - committed：标记本轮有没有调用生成行程的工具、把行程存到数据库
+    - itinerary_body：已经用Pydantic校验好的逐日行程结构体，兜底用来渲染清单
+    - 闲聊不走状态机，所以后面三个返回：None / False / None
+    """
+    if planning:
+        # 创建行程Agent实例
+        agent = await create_travel_agent()
+        # 组装传给agent的输入消息，带上用户id
+        input_data = {"messages": [HumanMessage(content=content)], "user_id": user_id}
+        # 调高LangGraph递归上限，防止多轮调用工具时报递归超限
+        config = {"configurable": {"thread_id": conversation_id}, "recursion_limit": 60}
+        try:
+            # 拿到这一轮执行前的状态快照
+            pre_snap = await agent.aget_state(config)
+            # 获取执行前处于哪个状态步骤
+            turn_step = (pre_snap.values or {}).get("current_step")
+            # 判断是否开启全量缓冲模式，缓冲模式就是先攒完所有文字再一次性输出
+            buffer_all = turn_step in _BUFFER_ALL_STEPS
+        except Exception:
+            # 读状态快照报错，直接关闭缓冲，步骤置空
+            buffer_all = False
+            turn_step = None
+
+        # 记录交通方式变更的提示文案
+        _switch_note = ""
+        # 如果当前刚好在交通选择阶段，处理用户切换交通方式的请求
+        if turn_step == _TRANSPORT_STEP:
+            from app.services.transport_switch_service import apply_transport_switch
+            # 执行交通方式切换，更新agent状态
+            _switched = await apply_transport_switch(agent, config, pre_snap.values or {}, content)
+            # 切换成功，准备提示文字给用户看
+            if _switched:
+                _switch_note = f"好的，已按您的要求把交通方式改为「{_switched}」。"
+
+        # 启动agent流式执行，buffer_all控制是否延后推送消息
+        text = await _stream_agent(
+            agent, input_data, config, stream,
+            buffer_all=buffer_all,
+            defer_push=buffer_all,
+        )
+
+        # agent跑完一轮，读取最新的状态快照
+        try:
+            snap = await agent.aget_state(config)
+            # 获取执行结束后的状态步骤
+            state_step = (snap.values or {}).get("current_step")
+        except Exception:
+            # 读取状态失败，打警告日志，这一轮禁止生成行程清单
+            app_logger.warning("读取状态机 current_step 失败，本轮禁止生成行程清单")
+            state_step = None
+
+        # 标记：本轮是否成功生成行程并落库
+        committed = False
+        # 收集最后面的消息（只取agent/工具返回的消息，跳过用户消息）
+        tail: list = []
+        try:
+            msgs = (snap.values or {}).get("messages") or []
+            # 倒着遍历消息列表，遇到用户消息就停止
+            for m in reversed(msgs):
+                if getattr(m, "type", None) == "human":
+                    break
+                tail.append(m)
+            # 只要工具返回消息里包含"已生成"，就代表行程入库成功
+            committed = any(
+                getattr(m, "type", None) == "tool" and "已生成" in str(getattr(m, "content", ""))
+                for m in tail
+            )
+        except Exception:
+            # 解析消息异常，直接标记为没有落库
+            committed = False
+
+        # 取出结构化行程body，后面渲染行程清单要用
+        try:
+            body = (snap.values or {}).get("itinerary_body") or None
+        except Exception:
+            body = None
+
+        # ==========后处理①：行程生成完成，自动跳过用户确认这一轮，直接推进到预算汇总==========
+        if state_step == _ITINERARY_STEP and not committed:
+            # 拿到用户填写的出行天数
+            _days = int(((snap.values or {}).get("user_requirement") or {}).get("travel_days") or 0)
+            # 判断模型输出的文字已经完整覆盖全部天数行程
+            if _covers_all_days(text, _days):
+                try:
+                    # 手动更新状态机，写入每日行程框架，直接跳到预算步骤
+                    await agent.aupdate_state(config, {
+                        "itinerary": [{"day_number": d} for d in range(1, _days + 1)],
+                        "current_step": "budget_summarization",
+                    })
+                    state_step = "budget_summarization"
+                    app_logger.info(
+                        f"✅ 行程正文已覆盖第1~{_days}天，代码层推进到预算步（去掉确认轮）"
+                    )
+                except Exception:
+                    # 更新状态失败，日志记录，维持原有状态不走下一步
+                    app_logger.warning("正文达标但状态推进失败，本轮按原步骤处理", exc_info=True)
+
+        # ==========后处理②：同城本地游玩，没有跨城交通，直接跳到住宿环节==========
+        # 判断是否属于无跨城行程，拿到出发城市名称
+        _zero_leg, _dep0 = _zero_leg_guard(snap.values or {})
+        _zero_note = ""
+        # 当前在交通步骤，并且判定是本地游玩
+        if state_step == _TRANSPORT_STEP and _zero_leg:
+            from app.capabilities.train_multi_segment.train_flow import advance_zero_leg
+            # 执行本地游玩的状态跳转逻辑
+            if await advance_zero_leg(conversation_id):
+                _zero_note = (f"出发地与目的地同为{_dep0}，本次为本地游玩，无需城际交通段，"
+                              "直接为您安排住宿。")
+                text = _zero_note
+                state_step = _ACCOMMODATION_STEP
+
+        # ==========后处理③：住宿查询异常降级兜底逻辑，防止会话卡死==========
+        if state_step == _ACCOMMODATION_STEP:
+            # 检查工具返回消息里有没有降级标记
+            degraded = any(
+                getattr(m, "type", None) == "tool" and _DEGRADE_MARK in str(getattr(m, "content", ""))
+                for m in tail
+            )
+            # 两种情况触发降级：工具主动降级 或者 酒店查询工具不可用
+            if degraded or not await _has_hotel_search_tool():
+                _vals = snap.values or {}
+                _last_human = ""
+                # 倒着找，拿到用户上一轮输入的消息
+                for _m in reversed(_vals.get("messages") or []):
+                    if getattr(_m, "type", None) == "human":
+                        _last_human = str(getattr(_m, "content", "") or "")
+                        break
+                # 从用户输入里，提取用户选定的酒店类型
+                _chosen = _match_hotel_choice(_last_human, _vals.get("user_requirement"))
+                if _chosen:
+                    from app.tools.state_transition import _multi_city_names
+                    # 获取所有途经城市
+                    _cities = _multi_city_names(_vals)
+                    _rec = list(_vals.get("selected_hotels") or [])
+                    # 给每个城市追加选中的酒店类型记录
+                    for _c in (_cities or []):
+                        if not any(_c in _r for _r in _rec):
+                            _rec.append(f"{_c}：{_chosen}（具体门店到店选定）")
+                    # 组装状态更新数据，跳转到餐饮规划步骤
+                    _upd: dict = {
+                        "selected_hotels": _rec,
+                        "current_step": "food_planning",
+                    }
+                    # 同步用户选择的住宿类型
+                    _types = list((_vals.get("user_requirement") or {}).get("accommodation_types") or [])
+                    if _types:
+                        _upd["selected_accommodation_types"] = _types
+                    try:
+                        # 更新agent状态
+                        await agent.aupdate_state(config, _upd)
+                        state_step = "food_planning"
+                        app_logger.warning(
+                            f"✅ 住宿轮降级且用户已选「{_chosen}」：代码层直接推进到餐饮步"
+                        )
+                    except Exception:
+                        app_logger.warning("住宿轮降级推进失败，本轮仍按住宿步处理", exc_info=True)
+                # 生成兜底酒店推荐文案
+                recommendation = _build_hotel_fallback(
+                    _vals.get("user_requirement"),
+                    bool(_vals.get("auto_confirm")),
+                    _chosen,
+                )
+                # 非缓冲模式，直接推送兜底推荐给前端
+                if not buffer_all:
+                    stream.push(make_event(ROLE_ASSISTANT, recommendation))
+                # 把兜底推荐拼到回复文本末尾
+                text += recommendation
+                app_logger.warning(
+                    f"⚠️ 住宿轮{'酒店服务降级' if degraded else '无酒店查询工具'}："
+                    f"已补推常见连锁酒店品牌推荐（防止会话卡死）"
+                )
+
+        # ==========后处理④：多城市住宿卡片UI逻辑==========
+        if state_step == _ACCOMMODATION_STEP:
+            from app.capabilities.hotel_multi_segment.hotel_flow import (
+                auto_select_hotels,
+                build_lead_text,
+                emit_hotel_skill_ui,
+                hotel_card_mode,
+            )
+            _hv = snap.values or {}
+            # 判断当前是否启用酒店卡片模式（前端卡片展示而不是纯文本）
+            if hotel_card_mode(_hv):
+                # 自动确认模式：代码直接帮用户选好住宿
+                if _hv.get("auto_confirm"):
+                    _hp = await auto_select_hotels(conversation_id, _hv)
+                    if _hp:
+                        text = ("已按您表单中的住宿档位为您选定各站住宿：\n"
+                                + "\n".join(f"- {t}" for t in _hp))
+                else:
+                    # 非自动确认，向前端推送酒店选择卡片
+                    _hold, _hst = await emit_hotel_skill_ui(stream, conversation_id, _hv)
+                    if _hst == "pushed":
+                        # 卡片推送成功，用卡片配套引导文字作为回复
+                        text = build_lead_text(_hold)
+                    elif _hst == "empty" and buffer_all:
+                        # 查不到酒店数据源，给用户提示
+                        text = ("⚠️ 各站住宿实时候选暂时查询不到（酒店数据源未返回结果），"
+                                "请稍后在对话中重新查询。")
+            # 如果有本地游玩提示，并且还没拼到回复里，追加进去
+            if _zero_note and _zero_note not in text:
+                text = f"{_zero_note}\n\n{text}"
+
+        # ==========后处理⑤：天气交给代码渲染，删掉模型自己瞎写的天气文字==========
+        if state_step == "destination_recommendation":
+            _vals = snap.values or {}
+            _req = _vals.get("user_requirement") or {}
+            from app.services.express_planning_service import _split_cities
+            # 解析目的地列表
+            _cities = _split_cities(
+                str(_vals.get("selected_destination") or _req.get("destination") or "")
+            )
+            # 解析失败，尝试从工具消息里面提取目的地
+            if not _cities:
+                _cities = _queried_cities(tail)
+            # 把模型输出文本里自带的天气内容删掉
+            stripped = _strip_model_weather(text)
+            if stripped != text:
+                app_logger.warning("⚠️ 已剔除模型自写天气行/占位语（改由代码渲染）")
+            text = stripped
+            # 如果本轮只是后续轮次，目的地已经在上一轮渲染天气，不再重复生成
+            if turn_step == "destination_recommendation":
+                app_logger.info(
+                    f"⏭️ 目的地步非进入轮：跳过天气块追加（{_cities} 已在进入轮渲染过）"
+                )
+            else:
+                # 调用函数生成天气段落
+                block = await _weather_paragraph(
+                    _cities, str(_req.get("departure_date") or ""), int(_req.get("travel_days") or 0)
+                )
+                if block:
+                    _tail_q = ""
+                    _lines = text.rstrip().splitlines()
+                    # 把末尾的问句单独摘出来，天气内容插在问句前面
+                    if _lines and ("是否确认选择" in _lines[-1] or _lines[-1].strip().startswith("请问")):
+                        _tail_q = _lines.pop()
+                        text = "\n".join(_lines).rstrip()
+                    # 拼接天气段落
+                    text = f"{text}\n\n{block}" if text else block
+                    if _tail_q:
+                        text = f"{text}\n\n{_tail_q}"
+                    app_logger.info(
+                        f"✅ 天气已由代码渲染（{_cities} / 行程 {_req.get('travel_days')} 天，版式：引导句+每天一行）"
+                    )
+                    # 非缓冲模式单独推送天气块给前端
+                    if not buffer_all:
+                        await _push_rendered(stream, f"\n\n{block}")
+                else:
+                    # 生成天气段落为空，不强行编造天气文案
+                    app_logger.warning(f"⚠️ 代码渲染天气为空（城市={_cities}，不追加、不编造）")
+
+        # ==========后处理⑥：交通清单交给代码生成，高铁/航班/自驾用前端卡片==========
+        if state_step == _TRANSPORT_STEP:
+            # 获取当前正在处理的这一段行程
+            leg = _leg_context(snap.values or {})[0]
+            _vals = snap.values or {}
+            from app.capabilities.train_multi_segment.train_flow import multi_leg_train
+            from app.capabilities.flight_multi_segment.flight_flow import flight_card_mode
+            from app.capabilities.driving_multi_segment.driving_flow import driving_card_mode
+            # 判断是否启用交通卡片模式
+            _card_mode = bool(
+                multi_leg_train(_vals) or flight_card_mode(_vals) or driving_card_mode(_vals)
+            )
+            # 收集所有工具消息，用来解析车次/航班数据
+            pool = list(tail)
+            try:
+                pool += [
+                    m for m in (snap.values or {}).get("messages") or []
+                    if getattr(m, "type", None) == "tool"
+                ]
+            except Exception:
+                pass
+            # 从工具消息里提取班次表格
+            table = _ticket_table_from_tail(pool, only_leg=leg)
+            from app.tools.mcp_tools import parse_compact_rows, parse_ticket_rows
+            # 判断工具有没有返回新鲜的班次数据
+            fresh = any(
+                getattr(m, "type", None) == "tool"
+                and bool(parse_compact_rows(getattr(m, "content", "") or "")
+                         or parse_ticket_rows(getattr(m, "content", "") or ""))
+                for m in tail
+            )
+            # 有班次数据、是最新数据、并且不开卡片模式，就直接文本输出班次表
+            if table and fresh and not _card_mode:
+                # 删掉模型自己写的班次清单，避免两套数据冲突
+                cleaned = _strip_transport_lists(text)
+                if cleaned != text:
+                    # 如果清理完剩下的文字太短，替换成默认引导文案
+                    if len(cleaned) < _TRANSPORT_LEAD_MIN:
+                        cleaned = _TRANSPORT_LEAD
+                    text = cleaned + table
+                    app_logger.warning(
+                        f"⚠️ 交通步骤正文含模型自编清单，已剔除并改用代码直出（{len(text)} 字）"
+                    )
+                else:
+                    text += table
+                app_logger.info("✅ 交通步骤已追加代码层权威班次清单（清单内为唯一有效车次）")
+            elif table and _card_mode:
+                # 卡片模式不输出文本表格，班次放到前端卡片里展示，防止重复
+                app_logger.info(
+                    "🚄 卡片模式：不直出 12306 班次表（班次已在选择卡片内，避免两套数据重复）"
+                )
+
+            # 找不到航班的城市，自动降级切换为高铁查询
+            _fallback_note = ""
+            from app.capabilities.flight_multi_segment.flight_flow import (
+                flight_card_mode as _flight_card_mode,
+                flight_unreachable_cities,
+            )
+            # 获取没有航班的城市列表
+            _no_air = flight_unreachable_cities(_vals) if _flight_card_mode(_vals) else []
+            if _no_air:
+                from app.services.transport_switch_service import switch_transport_mode
+                try:

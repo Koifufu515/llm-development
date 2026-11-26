@@ -1,0 +1,37 @@
+第四章•多步骤 Agent设计
+create_agent 演进对比：第03 章一本章
+×tools:1把一7把总表
+prompt=：已移除
+林 middleware=：新增
+旧第03 章版本
+新本章版本
+create_agent（
+create_agent（
+mode L=LIm，
+model=l m，
+toots=-
+tools=［ 一从1把变成7把总表
+record_req_tool，
+record_req_tool，
+—］，
+select_dest_tool，
+prompt="需求收集..”
+seLect_trans_tool，
+select_acc_tool，
+演进
+select_food_tooL，
+gen_itin_tool，
+sum_budget_too L，
+#个 prompt=已移除
+middleware=［ 新增
+step_config_midd Leware
+state_Schema=Trave LState，
+checkpointer=Cp，
+state_schema=Trave LState，
+store=store，
+checkpointer=Cp，
+）
+Store=store，
+）
+三处关键变化：tools 从单个工具扩展为7步工具总表；prompt=参数移除，改由 Middleware 按 current_step 动态注入；新增
+middleware= 参数挂载 step_config_middleware。骨架接口 create_agent（）保持不变。

@@ -1,0 +1,9 @@
+from quarry.infra.db import acquire
+
+async def blue_green_switch(old_coll_id, new_coll_id):
+    """在一个事务里把两个集合的 active 状态对调。"""
+    async with acquire() as conn, conn.transaction():
+        await conn.execute(
+            "UPDATE collections SET status = 'retired' WHERE id = $1", old_coll_id)
+        await conn.execute(
+            "UPDATE collections SET status = 'active' WHERE id = $1", new_coll_id)

@@ -1,0 +1,46 @@
+def _pick_best(options: list[Any]) -> Optional[Any]:
+    """自动模式代选：价格更低优先（价格未知=0 视为不可用，排在已知价格之后）"""
+    if not options:
+        return None
+    # ★ 价格未知（0）排到最后；全都未知时 min 取第一班（最早起飞）
+    return min(options, key=lambda o: float(o.price) if float(o.price) > 0 else float("inf"))
+
+async def auto_select_flights(conversation_id: str, state: dict) -> list[str]:
+    """自动确认模式：不弹卡片，由代码按「价格低」代选全部段并推进到住宿步
+
+    返回已选定段的展示文本（空列表 = 未推进，调用方跳过即可）
+    """
+    legs = _legs_with_dates(state)
+    if not legs:
+        return []
+    payload = await _payload_for(conversation_id, legs)
+    selections: dict[str, str] = {}
+    prices: dict[str, float] = {}
+    texts: list[str] = []
+    for index, leg in enumerate(legs):
+        seg = payload.segments[index] if index < len(payload.segments) else None
+        best = _pick_best(list(seg.flight_list) if seg else [])
+        if best is None:
+            continue                          # 该段无候选：不硬推进，交回原流程如实告知
+        key = f"{leg.from_}→{leg.to}"
+        selections[key] = _fmt_option(best)
+        # ★ 航班票价常常查不到（时刻表接口不返回价）：查不到就不写，别拿 0 冒充真实价
+        if float(getattr(best, "price", 0) or 0) > 0:
+            prices[key] = float(best.price)
+        texts.append(f"{key} {_fmt_option(best)}")
+    if len(selections) != len(legs):
+        app_logger.warning(
+            f"⚠️ 自动模式航班代选不完整（{len(selections)}/{len(legs)} 段有候选），本轮不推进"
+        )
+        return []
+    agent, config, _ = await get_agent_and_state(conversation_id)
+    await agent.aupdate_state(config, {
+        "leg_selections": selections,
+        "leg_prices": prices,
+        "leg_cursor": len(legs),
+        "selected_transport": "flight",
+        "selected_transport_legs": texts,
+        "current_step": "accommodation_planning",
+    })
+    app_logger.info(f"✅ 自动模式已代选 {len(selections)} 段航班（价格最优），推进到住宿步")
+    return texts

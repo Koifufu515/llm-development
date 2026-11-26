@@ -1,0 +1,372 @@
+
+
+===== block 439 231e36446a90 lines 1-223 source 知行旅行助手-v2#439 =====
+# ============== 快捷回退工具 ==============
+
+@tool
+def go_back_to_requirement(
+        reason: str = "用户需要修改旅行需求",
+        runtime: ToolRuntime = None
+) -> Command:
+    """
+    快捷回退：返回到需求收集步骤，重新开始规划。
+
+    使用场景：
+    - 用户说"我想重新规划"
+    - 用户说"出发日期要改"
+    - 用户说"预算变了"
+    - 用户说"人数不对"
+    - 用户说"从头开始"
+
+    参数：
+    - reason: 回退原因（可选，默认为"用户需要修改旅行需求"）
+
+    效果：
+    - 清除所有已收集的数据
+    - 返回到最初的需求收集阶段
+    """
+    app_logger.info(f"快捷回退到需求收集: {reason}")
+
+    blocked = _guard_back(runtime, "requirement", "重新规划")
+    if blocked:
+        return blocked
+
+    # ★ 守卫通过后委托给通用回退：7 个快捷工具共用一个内核
+    return go_back_to_step.invoke({
+        "target_step": "requirement_collection",
+        "reason": reason,
+        "clear_subsequent_data": True,
+        "runtime": runtime
+    })
+
+@tool
+def go_back_to_destination(
+        reason: str = "用户需要重新选择目的地",
+        runtime: ToolRuntime = None
+) -> Command:
+    """
+    快捷回退：返回到目的地推荐步骤。
+
+    使用场景：
+    - 用户说"换个目的地"
+    - 用户说"这个地方不想去了"
+    - 用户说"有没有其他推荐"
+    - 用户说"目的地选错了"
+
+    参数：
+    - reason: 回退原因（可选）
+
+    效果：
+    - 保留用户需求
+    - 清除目的地选择及后续所有数据
+    """
+    app_logger.info(f"快捷回退到目的地推荐: {reason}")
+
+    blocked = _guard_back(runtime, "destination", "更换目的地")
+    if blocked:
+        return blocked
+
+    return go_back_to_step.invoke({
+        "target_step": "destination_recommendation",
+        "reason": reason,
+        "clear_subsequent_data": True,
+        "runtime": runtime
+    })
+
+@tool
+def go_back_to_transport(
+        reason: str = "用户需要更换交通方式",
+        runtime: ToolRuntime = None
+) -> Command:
+    """
+    快捷回退：返回到交通规划步骤。
+
+    使用场景：
+    - 用户说"不想坐飞机了"
+    - 用户说"改成高铁"
+    - 用户说"还是自驾吧"
+    - 用户说"交通方式重新选"
+
+    参数：
+    - reason: 回退原因（可选）
+
+    效果：
+    - 保留用户需求和目的地选择
+    - 清除交通方式及后续数据
+    """
+    app_logger.info(f"快捷回退到交通规划: {reason}")
+
+    blocked = _guard_back(runtime, "transport", "更换交通方式")
+    if blocked:
+        return blocked
+
+    return go_back_to_step.invoke({
+        "target_step": "transport_planning",
+        "reason": reason,
+        "clear_subsequent_data": True,
+        "runtime": runtime
+    })
+
+@tool
+def go_back_to_accommodation(
+        reason: str = "用户需要调整住宿偏好",
+        runtime: ToolRuntime = None
+) -> Command:
+    """
+    快捷回退：返回到住宿规划步骤。
+
+    使用场景：
+    - 用户说"住宿要求改一下"
+    - 用户说"想住民宿"
+    - 用户说"酒店太贵了"
+    - 用户说"换个住宿类型"
+
+    参数：
+    - reason: 回退原因（可选）
+
+    效果：
+    - 保留需求、目的地、交通方式
+    - 清除住宿选择及后续数据
+    """
+    app_logger.info(f"快捷回退到住宿规划: {reason}")
+
+    return go_back_to_step.invoke({
+        "target_step": "accommodation_planning",
+        "reason": reason,
+        "clear_subsequent_data": True,
+        "runtime": runtime
+    })
+
+@tool
+def go_back_to_food(
+        reason: str = "用户需要调整餐饮偏好",
+        runtime: ToolRuntime = None
+) -> Command:
+    """
+    快捷回退：返回到餐饮规划步骤。
+
+    使用场景：
+    - 用户说"餐饮偏好改一下"
+    - 用户说"想多吃特色美食"
+    - 用户说"简单点就行"
+
+    参数：
+    - reason: 回退原因（可选）
+
+    效果：
+    - 保留需求、目的地、交通、住宿
+    - 清除餐饮选择及后续数据
+    """
+    app_logger.info(f"快捷回退到餐饮规划: {reason}")
+
+    return go_back_to_step.invoke({
+        "target_step": "food_planning",
+        "reason": reason,
+        "clear_subsequent_data": True,
+        "runtime": runtime
+    })
+
+@tool
+def go_back_to_itinerary(
+        reason: str = "用户需要调整行程安排",
+        runtime: ToolRuntime = None
+) -> Command:
+    """
+    快捷回退：返回到行程生成步骤。
+
+    使用场景：
+    - 用户说"行程安排不太合理"
+    - 用户说"想加点景点"
+    - 用户说"太累了，减少活动"
+    - 用户说"重新排一下行程"
+
+    参数：
+    - reason: 回退原因（可选）
+
+    效果：
+    - 保留所有偏好设置
+    - 仅清除行程和预算数据
+    """
+    app_logger.info(f"快捷回退到行程生成: {reason}")
+
+    return go_back_to_step.invoke({
+        "target_step": "itinerary_generation",
+        "reason": reason,
+        "clear_subsequent_data": True,
+        "runtime": runtime
+    })
+
+@tool
+def go_back_to_budget(
+        reason: str = "用户需要重新计算预算",
+        runtime: ToolRuntime = None
+) -> Command:
+    """
+    快捷回退：返回到预算汇总步骤。
+
+    使用场景：
+    - 用户说"预算超了"
+    - 用户说"重新算一下费用"
+    - 用户说"看看能不能便宜点"
+
+    参数：
+    - reason: 回退原因（可选）
+
+    效果：
+    - 保留行程安排
+    - 仅清除预算和订单数据
+    """
+    app_logger.info(f"快捷回退到预算汇总: {reason}")
+
+    return go_back_to_step.invoke({
+        "target_step": "budget_summarization",
+        "reason": reason,
+        "clear_subsequent_data": True,
+        "runtime": runtime
+    })
+
+
+===== block 440 9006a71a0b11 lines 1-17 source 知行旅行助手-v2#440 =====
+"""快捷回退演示：go_back_to_destination 有守卫、go_back_to_food 没有——防御力度匹配风险等级（直接调真实工具，纯逻辑，无需密钥）"""
+from langchain.tools import ToolRuntime
+from langchain_core.messages import HumanMessage
+
+from app.tools.state_transition import go_back_to_destination, go_back_to_food
+
+def runtime(user_text):
+    state = {"messages": [HumanMessage(content=user_text)], "current_step": "transport_planning",
+             "selected_destination": "杭州", "leg_cursor": 0, "selected_food_types": ["local"]}
+    return ToolRuntime(state=state, context=None, config={}, stream_writer=None, tool_call_id="call_1", store=None)
+
+up = go_back_to_destination.func(runtime=runtime("第一段坐 G35")).update           # 用户没说要换，模型自作主张
+print("没说要换 → go_back_to_destination：", up.get("current_step", "原地不动"), "|", up["messages"][0].content[:24], "…")
+up = go_back_to_destination.func(runtime=runtime("换个目的地吧")).update
+print("说了要换 → go_back_to_destination：", up["current_step"], "| 清空：", sorted(k for k, v in up.items() if v is None)[:4], "…")
+up = go_back_to_food.func(runtime=runtime("第一段坐 G35")).update
+print("没有守卫 → go_back_to_food        ：", up["current_step"])
+
+
+===== block 441 77c1538f123e lines 1-3 source 知行旅行助手-v2#441 =====
+没说要换 → go_back_to_destination： 原地不动 | 未检测到您要求『更换目的地』。若您确实想换目的地 …
+说了要换 → go_back_to_destination： destination_recommendation | 清空： ['accommodation_options', 'budget', 'destination_options', 'food_options'] …
+没有守卫 → go_back_to_food        ： food_planning
+
+
+===== block 442 57bf26804450 lines 1-84 source 知行旅行助手-v2#442 =====
+# ============== 查询当前进度工具 ==============
+
+@tool
+def check_current_progress(
+        runtime: ToolRuntime = None
+) -> str:
+    """
+    查询当前规划进度，展示已完成和待完成的步骤。
+
+    使用场景：
+    - 用户问"现在到哪一步了"
+    - 用户问"还有几步"
+    - 用户问"进度如何"
+    - 需要向用户汇报当前状态
+
+    返回：
+        格式化的进度信息字符串
+    """
+    state = runtime.state
+    current_step = state.get("current_step", "requirement_collection")
+
+    app_logger.debug(f"查询进度: current_step={current_step}")
+
+    try:
+        current_index = ALL_STEPS.index(current_step)
+    except ValueError:
+        app_logger.warning(f"未知的当前步骤: {current_step}")
+        current_index = 0
+
+    # 构建进度展示
+    progress_lines = ["当前规划进度", ""]
+
+    for i, step in enumerate(ALL_STEPS):
+        label = STEP_LABELS.get(step, step)
+        step_num = i + 1
+        if i < current_index:
+            progress_lines.append(f"  [{step_num}] {label} - 已完成")
+        elif i == current_index:
+            progress_lines.append(f"  [{step_num}] {label} - 当前步骤")
+        else:
+            progress_lines.append(f"  [{step_num}] {label} - 待完成")
+
+    # 添加已收集的关键信息
+    progress_lines.append("")
+    progress_lines.append("已收集信息:")
+
+    if state.get("user_requirement"):
+        req = state["user_requirement"]
+        progress_lines.append(f"  - 出发日期: {req.get('departure_date', '未设置')}")
+        progress_lines.append(f"  - 出行天数: {req.get('travel_days', '未设置')} 天")
+        progress_lines.append(f"  - 人数: {req.get('adult_count', 0)} 成人 + {req.get('children_count', 0)} 儿童")
+
+    if state.get("selected_destination"):
+        progress_lines.append(f"  - 目的地: {state['selected_destination']}")
+
+    if state.get("selected_transport"):
+        transport_labels = {"flight": "航班", "train": "高铁", "driving": "自驾"}
+        progress_lines.append(
+            f"  - 交通: {transport_labels.get(state['selected_transport'], state['selected_transport'])}")
+
+    if state.get("selected_accommodation_types"):
+        progress_lines.append(f"  - 住宿: {', '.join(state['selected_accommodation_types'])}")
+
+    if state.get("selected_food_types"):
+        progress_lines.append(f"  - 餐饮: {', '.join(state['selected_food_types'])}")
+
+    app_logger.info(f"进度查询完成: 当前步骤={current_step}, 进度={current_index + 1}/{len(ALL_STEPS)}")
+
+    # ★ 全文件唯一返回字符串的工具：只读、不改状态
+    return "\n".join(progress_lines)
+
+# ============== 导出所有回退工具 ==============
+
+ALL_ROLLBACK_TOOLS = [
+    go_back_to_step,            # 通用回退（推荐）
+    go_back_to_requirement,     # 快捷：回到需求收集
+    go_back_to_destination,     # 快捷：回到目的地
+    go_back_to_transport,       # 快捷：回到交通
+    go_back_to_accommodation,   # 快捷：回到住宿
+    go_back_to_food,            # 快捷：回到餐饮
+    go_back_to_itinerary,       # 快捷：回到行程
+    go_back_to_budget,          # 快捷：回到预算
+    check_current_progress      # 查询进度
+]
+
+
+===== block 443 6fd20fd9da8c lines 1-10 source 知行旅行助手-v2#443 =====
+"""check_current_progress 演示：全文件唯一返回字符串的工具——只读、不改状态（直接调真实工具，纯逻辑，无需密钥）"""
+from langchain.tools import ToolRuntime
+
+from app.tools.state_transition import check_current_progress
+
+state = {"messages": [], "current_step": "accommodation_planning", "selected_destination": "天津、上海",
+         "selected_transport": "train",
+         "user_requirement": {"departure_date": "2026-10-01", "travel_days": 4, "adult_count": 2, "children_count": 0}}
+rt = ToolRuntime(state=state, context=None, config={}, stream_writer=None, tool_call_id="call_1", store=None)
+print(check_current_progress.func(runtime=rt))
+
+
+===== block 444 d8c5bb4d0984 lines 1-17 source 知行旅行助手-v2#444 =====
+当前规划进度
+
+  [1] 需求收集 - 已完成
+  [2] 目的地推荐 - 已完成
+  [3] 交通规划 - 已完成
+  [4] 住宿规划 - 当前步骤
+  [5] 餐饮规划 - 待完成
+  [6] 行程生成 - 待完成
+  [7] 预算汇总 - 待完成
+  [8] 订单生成 - 待完成
+
+已收集信息:
+  - 出发日期: 2026-10-01
+  - 出行天数: 4 天
+  - 人数: 2 成人 + 0 儿童
+  - 目的地: 天津、上海
+  - 交通: 高铁

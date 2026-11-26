@@ -1,0 +1,39 @@
+@router.post("/train_multi_segment/submit")
+async def submit_train_multi_segment(
+        req: TrainSubmitRequest,
+        user: User = Depends(get_current_user),
+        db: AsyncSession = Depends(get_db),
+):
+    """多段高铁提交：基础合法性校验（**不做任何列车时间校验**）→ 落库推进 → SSE 续跑住宿步"""
+    conv = await get_owned_conversation(db, req.conversation_id, user.id)
+    if not conv:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="会话不存在")
+
+    async def event_generator():
+        # ★ ① 校验 + 落库推进（第 9 章 capability）
+        result = await apply_train_selection(req.conversation_id, req.payload)
+        if not result.ok:
+            # 校验未过：只在流内如实告知（前端渲染为一条助手气泡，卡片保持展开供用户重选）
+            yield _sse(make_event(ROLE_ERROR, result.msg))
+            yield _sse(make_event(ROLE_DONE, "finish", code=400))
+            return
+        # 提交态 + 选中账本写回卡片帧消息（切会话/刷新后卡片仍为已提交锁定态）
+        # ★ ② 回填卡片提交态（切会话回来仍是锁定态）
+        await mark_skill_ui_submitted(db, conv.id, TRAIN_MULTI_SEGMENT_SKILL, req.payload)
+        app_logger.info(f"🚄 卡片提交成功，SSE 续跑后续步骤：已确认 {len(result.texts)} 段")
+        # 先在对话里回显用户已选定的车次（再续跑下一步），界面才能"看到选了什么"
+        # ★ ③ 先回显已选结果：服务端的权威回执
+        yield _sse(make_event(ROLE_ASSISTANT, _confirmed_content("车次（按行程段顺序）", result.texts)))
+        # ★ ④ 续跑：合成发言 + 三个续跑参数，复用整条编排链
+        stream = await run_chat_turn(
+            db, str(user.id), req.conversation_id, _resume_content(result),
+            force_planning=True,  # 续跑必须成立：不走概率性意图路由，由代码指定进规划状态机
+            persist_user=False,   # 合成发言不落库：历史里不该冒出用户没打过的句子
+            resume_stage="accommodation_planning",  # 反馈文案：车次已确认 → 正在规划住宿
+        )
+        async for event in stream:
+            yield _sse(event)
+
+    return StreamingResponse(
+        event_generator(), media_type="text/event-stream", headers=_SSE_HEADERS
+    )

@@ -1,0 +1,1 @@
+uv run alembic merge -m "merge two heads" 你的版本号 同事的版本号

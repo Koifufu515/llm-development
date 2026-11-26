@@ -1,0 +1,527 @@
+
+
+===== block 587 bc35ac51de70 lines 1-78 source 知行旅行助手-v2#589 =====
+# ===== 同回合内长正文去重 =====
+# 去除模型重复粘贴的完整行程正文与预算表；短文本不参与去重，无重复直接返回原文
+_DEDUPE_MIN_LEN = 200
+
+def _dedupe_texts(rounds: list[str]) -> list[str]:
+    """轮次文本去重，支持两种重复场景：
+    1. 两段文本完全相同
+    2. 后一段为完整版，前一段是截断版本（后段包含前段）
+    长文本（≥200字）判定子串重复，保留时间靠后的完整版；短文本不参与去重。
+    """
+    kept: list[str] = []
+    kept_long: list[str] = []
+    for t in reversed(rounds):
+        drop = False
+        if len(t) >= _DEDUPE_MIN_LEN:
+            for p in kept_long:
+                if p in t or t in p:
+                    drop = True
+                    break
+        if not drop:
+            kept.append(t)
+            if len(t) >= _DEDUPE_MIN_LEN:
+                kept_long.append(t)
+    kept.reverse()
+    return kept
+
+# ===== 散文段落换措辞重述折叠 =====
+# 对普通散文段落做相似度去重；表格、列表、编号行不参与去重
+_DEDUPE_PARA_MIN = 25
+_DEDUPE_COMMON = 14
+
+def _norm_para(text: str) -> str:
+    return re.sub(r"\s+", "", text or "")
+
+def _is_prose_para(para: str) -> bool:
+    """判断是否为普通散文段落；列表、表格、标题行不参与折叠"""
+    p = para.strip()
+    return bool(p) and p[0] not in "-|*#·•0123456789"
+
+def _common_len(a: str, b: str) -> int:
+    from difflib import SequenceMatcher
+    m = SequenceMatcher(None, a, b).find_longest_match(0, len(a), 0, len(b))
+    return m.size
+
+# 预告等待话术正则，同一回合只保留一次预告
+_NOTICE_RE = re.compile(r"(请稍等|稍等片刻|请稍候|正在为您|马上为您|我将计算|我将为您)")
+
+def _fold_restatements(text: str, state: dict) -> str:
+    """移除重复重述散文段落与重复等待预告语。
+    state：跨段落共享状态，保存已见过的散文段落、预告标记。
+    表格/列表/编号行全部保留，不参与折叠。
+    """
+    seen: list[str] = state.setdefault("paras", [])
+    kept: list[str] = []
+    for para in re.split(r"\n\s*\n", text or ""):
+        key = _norm_para(para)
+        prose = bool(key) and _is_prose_para(para)
+        is_notice = prose and bool(_NOTICE_RE.search(para))
+
+        if len(key) >= _DEDUPE_PARA_MIN and prose:
+            if any(_common_len(key, s) >= _DEDUPE_COMMON for s in seen):
+                app_logger.info(f"去重：删除换措辞重述段（{len(key)} 字）")
+                continue
+            seen.append(key)
+        elif is_notice and state.get("notice"):
+            app_logger.info(f"去重：删除重复预告语（{len(key)} 字）")
+            continue
+        if is_notice:
+            state["notice"] = True
+        kept.append(para)
+    return "\n\n".join(kept)
+
+def _chunk_has_tool_call(chunk) -> bool:
+    """判断流式块是否携带工具调用增量，用于识别工具执行轮"""
+    if getattr(chunk, "tool_call_chunks", None):
+        return True
+    kwargs = getattr(chunk, "additional_kwargs", None) or {}
+    return bool(kwargs.get("tool_calls"))
+
+
+===== block 588 b711fc5af4e5 lines 1-9 source 知行旅行助手-v2#590 =====
+"""_fold_restatements 演示：跨轮折叠"换措辞重述"和重复的预告语，列表行一律保留（纯函数，无需密钥）"""
+from app.services.chat_stream_executor import _fold_restatements
+
+state = {"paras": [], "notice": False}      # 跨轮共享的折叠状态（_stream_agent 里一回合一份）
+round1 = "预算超出了您的上限，我将自动调整住宿选择，以降低总成本。\n\n请稍等片刻，我将为您重新计算。"
+round2 = ("考虑到预算，我们需要自动调整住宿选择，以降低总成本，请您放心。\n\n"
+          "请稍候，马上为您生成新的预算。\n\n- 住宿：经济型 199 元/晚")
+print("第 1 轮 →", repr(_fold_restatements(round1, state)))
+print("第 2 轮 →", repr(_fold_restatements(round2, state)))   # 重述段、第二次预告都被删，列表行留下
+
+
+===== block 589 706b7b57766e lines 1-7 source 知行旅行助手-v2#591 =====
+"""_dedupe_texts 演示：同回合整篇重贴只留"更靠后的完整版"，短段不参与比较（纯函数，无需密钥）"""
+from app.services.chat_stream_executor import _dedupe_texts
+
+body = "#### Day 1 杭州\n- 上午：西湖断桥、白堤、孤山\n" * 12          # ≥200 字的长正文
+rounds = [body[:260], "预算合计 4128 元。", body, "如需调整，直接告诉我即可。"]   # 第 1 轮是被截断的半篇
+kept = _dedupe_texts(rounds)
+print([f"{len(t)}字" for t in rounds], "→", [f"{len(t)}字" for t in kept])
+
+
+===== block 590 7e7f674966b4 lines 1-1 source 知行旅行助手-v2#592 =====
+['260字', '12字', '360字', '13字'] → ['12字', '360字', '13字']
+
+
+===== block 591 287c76cabf1e lines 1-13 source 知行旅行助手-v2#593 =====
+"""_is_protocol_leak / _chunk_has_tool_call 演示：流式 chunk 的两个即时判定（纯函数，无需密钥）"""
+from langchain_core.messages import AIMessageChunk
+
+from app.services.chat_stream_executor import _chunk_has_tool_call, _is_protocol_leak
+
+for text in ["为您查询到以下班次", "✿FUNCTION✿: get-tickets", "你可以在回复中插入以下命令……"]:
+    print(f"协议泄漏？{_is_protocol_leak(text)!s:5}  {text}")
+
+text_chunk = AIMessageChunk(content="让我查一下")
+tool_chunk = AIMessageChunk(content="", tool_call_chunks=[
+    {"name": "get-tickets", "args": "{", "id": "c1", "index": 0}])
+print("文本 chunk 带工具调用？", _chunk_has_tool_call(text_chunk))
+print("工具 chunk 带工具调用？", _chunk_has_tool_call(tool_chunk), "← 工具轮常常 0 文本，只能靠它认出来")
+
+
+===== block 592 9cb9f9d8f8e7 lines 1-5 source 知行旅行助手-v2#594 =====
+协议泄漏？False  为您查询到以下班次
+协议泄漏？True   ✿FUNCTION✿: get-tickets
+协议泄漏？True   你可以在回复中插入以下命令……
+文本 chunk 带工具调用？ False
+工具 chunk 带工具调用？ True ← 工具轮常常 0 文本，只能靠它认出来
+
+
+===== block 593 1f5ac673a577 lines 1-95 source 知行旅行助手-v2#595 =====
+async def _stream_agent(
+        agent, input_data: dict, config: dict, stream: EventStream,
+        buffer_all: bool = False,
+        defer_push: bool = False,
+) -> str:
+    """
+    框架流式：astream_events 捕获 LLM token，工具调用由 Agent 自主决策
+    buffer_all=True（交通规划步骤）：全程只缓冲不逐字推，回合末一次性推送
+    完整拼接。用于高铁/航班类班次巨多、逐字流式渲染缓慢的步骤。
+    """
+    rounds: list[str] = []        # 每一轮的完整文本
+    round_buf: list[str] = []     # 当前轮的 token 缓冲
+    pushed: list[str] = []        # 已实时推送给前端的 token
+    round_meta: list[tuple[int, bool]] = []   # 诊断：每轮 (字数, 是否工具轮)
+    first_round_done = False      # 首轮是否已结束
+    round_had_tool = False        # 当前轮是否出现工具调用
+    leaky = False                 # 是否检测到协议泄漏句（需回合末复位重推）
+    seen_state: dict = {"paras": [], "notice": False}   # 跨轮折叠状态（重述段 / 预告语）
+
+    async for event in agent.astream_events(input_data, config=config, version="v2"):
+        etype = event.get("event")
+        if etype == "on_chat_model_stream":
+            chunk = event.get("data", {}).get("chunk")
+            if chunk is None:
+                continue
+            if _chunk_has_tool_call(chunk):
+                round_had_tool = True
+            content = getattr(chunk, "content", None)
+            if content:
+                if _is_protocol_leak(content):
+                    continue
+                round_buf.append(content)
+                if first_round_done and not buffer_all:
+                    pushed.append(content)
+                    stream.push(make_event(ROLE_ASSISTANT, content))
+        elif etype == "on_chat_model_end":
+            text = "".join(round_buf)
+            round_buf.clear()
+            cleaned = _scrub_leak_text(text)
+            cleaned = _fold_restatements(cleaned, seen_state)
+            if cleaned != text:
+                leaky = True
+            if cleaned.strip():
+                rounds.append(cleaned)
+            round_meta.append((len(text), round_had_tool))
+            round_had_tool = False
+            first_round_done = True
+
+    # 兜底处理未收到 end 事件的残留片段
+    if round_buf:
+        text = "".join(round_buf)
+        cleaned = _scrub_leak_text(text)
+        cleaned = _fold_restatements(cleaned, seen_state)
+        if cleaned != text:
+            leaky = True
+        if cleaned.strip():
+            rounds.append(cleaned)
+            round_meta.append((len(cleaned), round_had_tool))
+
+    rounds = _dedupe_texts(rounds)
+    if not rounds:
+        return ""
+
+    if defer_push:
+        return "".join(rounds)
+
+    shown = "".join(pushed)
+    app_logger.info(f"🧩 轮次明细（字数, 是否工具轮）：{round_meta}，已推送 {len(shown)} 字")
+
+    # 出口1：全程没有实时推送，回合末整块推送
+    if not shown:
+        text = "".join(rounds)
+        stream.push(make_event(ROLE_ASSISTANT, text))
+        app_logger.info(f"🔇 首轮未实时推送，回合末补推 {len(text)} 字")
+        return text
+
+    # 出口2：检测泄漏/重述，复位并重推清洗后完整文本
+    if leaky and shown:
+        text = "".join(rounds)
+        stream.push(make_event(ROLE_ASSISTANT_RESET))
+        stream.push(make_event(ROLE_ASSISTANT, text))
+        app_logger.info(f"↩️ 检测到泄漏/重述内容，撤销已推送 {len(shown)} 字，改推清洗后 {len(text)} 字")
+        return text
+
+    # 出口3：首轮为空或工具旁白，保留已推送内容，不回退
+    if round_meta[0][0] == 0 or round_meta[0][1]:
+        app_logger.info(f"✅ 首轮无可保留正文（0 字或工具轮旁白），保留已推送 {len(shown)} 字（不回退，防内容丢失）")
+        return shown
+
+    # 出口4：首轮是正文开头但被缓冲，复位并推送完整拼接文本
+    text = "".join(rounds)
+    stream.push(make_event(ROLE_ASSISTANT_RESET))
+    stream.push(make_event(ROLE_ASSISTANT, text))
+    app_logger.info(f"↩️ 首轮为正文开头，撤销已推送 {len(shown)} 字，改推完整 {len(text)} 字")
+    return text
+
+
+===== block 594 0fa3b5188185 lines 1-47 source 知行旅行助手-v2#596 =====
+"""_stream_agent 演示：用"按剧本吐事件"的最小假 Agent 驱动真实 _stream_agent（纯逻辑，无需密钥）
+
+ScriptedAgent 只是测试驱动：把写好的 astream_events 事件原样吐出来，不含任何业务逻辑——
+首轮缓冲、泄漏清洗、reset 重推、buffer_all，全是真实 _stream_agent 在做。
+"""
+import asyncio
+
+from langchain_core.messages import AIMessageChunk
+
+from app.core.event_stream import EventStream
+from app.services.chat_stream_executor import _stream_agent
+
+class ScriptedAgent:
+    def __init__(self, rounds):
+        self.rounds = rounds                  # [(是否工具轮, [token, ...]), ...]，一项 = 一次 LLM 调用
+
+    async def astream_events(self, input_data, config=None, version="v2"):
+        for is_tool, tokens in self.rounds:
+            if is_tool:                       # 工具轮：带 tool_call_chunks 的 chunk
+                chunk = AIMessageChunk(content="", tool_call_chunks=[
+                    {"name": "get-tickets", "args": "{}", "id": "c1", "index": 0}])
+                yield {"event": "on_chat_model_stream", "data": {"chunk": chunk}}
+            for tok in tokens:
+                yield {"event": "on_chat_model_stream", "data": {"chunk": AIMessageChunk(content=tok)}}
+            yield {"event": "on_chat_model_end", "data": {}}
+
+async def run(title, rounds, **kw):
+    stream = EventStream()
+    text = await _stream_agent(ScriptedAgent(rounds), {}, {}, stream, **kw)
+    stream.close()
+    frames = [(e["role"], e["content"]) if e["content"] else e["role"] async for e in stream]
+    print(f"【{title}】\n  推给前端：{frames}\n  返回文本：{text!r}")
+
+async def main():
+    await run("① 首轮是工具轮旁白 → 旁白丢弃，已推内容即答案",
+              [(True, ["让我", "查一下"]), (False, ["为您查到", "G1650"])])
+    await run("② 首轮是正文开头却被缓冲 → 回合末 reset + 补推完整拼接",
+              [(False, ["Day 1 西湖。"]), (True, []), (False, ["预算合计 4128 元"])])
+    await run("③ 后续轮夹带系统指令泄漏 → reset + 推清洗版",
+              [(True, []), (False, ["总计 4128 元。", "请记住，只有在收集到足够信息后才能调用工具。"])])
+    await run("④ 协议泄漏片段 → 直接丢弃，不进流也不进返回",
+              [(True, []), (False, ["✿FUNCTION✿: get-tickets", "为您查到班次"])])
+    await run("⑤ buffer_all + defer_push → 全程零推送，文本交给调用方",
+              [(True, []), (False, ["| G1650 | 08:12→12:30 |"])], buffer_all=True, defer_push=True)
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+
+===== block 595 e68e20d1e57f lines 1-15 source 知行旅行助手-v2#597 =====
+【① 首轮是工具轮旁白 → 旁白丢弃，已推内容即答案】
+  推给前端：[('assistant', '为您查到'), ('assistant', 'G1650')]
+  返回文本：'为您查到G1650'
+【② 首轮是正文开头却被缓冲 → 回合末 reset + 补推完整拼接】
+  推给前端：[('assistant', '预算合计 4128 元'), 'assistant_reset', ('assistant', 'Day 1 西湖。预算合计 4128 元')]
+  返回文本：'Day 1 西湖。预算合计 4128 元'
+【③ 后续轮夹带系统指令泄漏 → reset + 推清洗版】
+  推给前端：[('assistant', '总计 4128 元。'), ('assistant', '请记住，只有在收集到足够信息后才能调用工具。'), 'assistant_reset', ('assistant', '总计 4128 元。')]
+  返回文本：'总计 4128 元。'
+【④ 协议泄漏片段 → 直接丢弃，不进流也不进返回】
+  推给前端：[('assistant', '为您查到班次')]
+  返回文本：'为您查到班次'
+【⑤ buffer_all + defer_push → 全程零推送，文本交给调用方】
+  推给前端：[]
+  返回文本：'| G1650 | 08:12→12:30 |'
+
+
+===== block 596 79b154cec6f6 lines 1-67 source 知行旅行助手-v2#598 =====
+_ACCOMMODATION_LABELS: dict[str, str] = {
+    "star_hotel": "星级酒店",
+    "economy_hotel": "经济酒店",
+    "hostel": "特色民宿",
+    "youth_hostel": "青年旅社",
+}
+
+# 各档位常见连锁品牌，仅作参考，不含实时门店与价格
+_COMMON_HOTELS: dict[str, list[str]] = {
+    "economy_hotel": ["如家", "汉庭", "7 天", "锦江之星", "格林豪泰", "莫泰"],
+    "star_hotel": ["希尔顿", "万豪", "洲际", "香格里拉", "凯悦", "雅高"],
+    "hostel": ["花间堂", "途家民宿", "小猪民宿", "美团民宿"],
+    "youth_hostel": ["国际青年旅舍（YHA）", "万里路青年旅舍", "如家青旅"],
+}
+
+def _match_hotel_choice(text: str, requirement: dict | None) -> str:
+    """识别用户住宿选择，命中品牌名/委托语返回选中品牌，未命中返回空串
+    两类命中：①品牌清单内品牌；②委托语。委托语自动选用户已勾选档位的首个品牌
+    """
+    raw = (text or "").strip()
+    if not raw:
+        return ""
+    for brand in [b for v in _COMMON_HOTELS.values() for b in v]:
+        if brand.replace(" ", "") in raw.replace(" ", ""):
+            return brand
+    if detect_intent(raw).hotel_accept:
+        selected = list((requirement or {}).get("accommodation_types") or [])
+        types = [t for t in selected if t in _COMMON_HOTELS] or ["economy_hotel"]
+        return _COMMON_HOTELS[types[0]][0]
+    return ""
+
+def _build_hotel_fallback(requirement: dict | None, auto_confirm: bool = False,
+                          chosen: str = "") -> str:
+    """酒店服务不可用时生成降级推荐文案，同时用于流式推送与落库
+    自动确认模式不再向用户索要品牌，直接按档位安排；普通模式等待用户选择
+    """
+    selected = list((requirement or {}).get("accommodation_types") or [])
+    types = [t for t in selected if t in _COMMON_HOTELS] or list(_COMMON_HOTELS)
+    lines = [
+        "\n\n---\n",
+        "⚠️ 实时酒店报价服务当前不可用，无法展示具体门店与实时价格。\n",
+        "以下按您的住宿类型，列出该档位市面上常见的连锁品牌，供您参考（具体门店与价格到店/官网再定）：\n",
+    ]
+    for t in types:
+        lines.append(f"- **{_ACCOMMODATION_LABELS[t]}**：{'、'.join(_COMMON_HOTELS[t])}\n")
+    if chosen:
+        lines.append(
+            f"✅ 已记录您的住宿选择：**{chosen}**（具体门店与实时价格到店择优选同档位），"
+            f"并继续规划后续行程。"
+        )
+    elif auto_confirm:
+        lines.append("已按以上该档位的常见品牌为您直接安排住宿（不指定具体门店与实时价格，到店择优选同档位），并继续规划后续行程。")
+    else:
+        lines.append("请回复您想选的品牌（或「按推荐来」），我将按该档位继续安排行程。")
+    return "".join(lines)
+
+async def _has_hotel_search_tool() -> bool:
+    """校验是否存在酒店查询工具；异常时返回False，进入降级兜底"""
+    try:
+        from app.tools.mcp_tools import get_hotel_tools
+        tools = await get_hotel_tools()
+    except Exception:
+        return False
+    return any(
+        any(hint in getattr(t, "name", "").lower() for hint in ("searchhotels", "find-hotels"))
+        for t in tools
+    )
+
+
+===== block 597 338421a16b6f lines 1-7 source 知行旅行助手-v2#599 =====
+"""_match_hotel_choice 演示：降级轮里识别"用户已经答了"（品牌名或委托语）（纯函数，无需密钥）"""
+from app.services.chat_stream_executor import _match_hotel_choice
+
+req = {"accommodation_types": ["star_hotel"]}
+for text in ["就住如家快捷酒店吧", "按推荐来", "随便，你决定", "我再想想"]:
+    print(f"{text:10s} → {_match_hotel_choice(text, req)!r}")
+print("没选档位 + 委托语 →", repr(_match_hotel_choice("都行", None)))    # 回落经济型的第一个品牌
+
+
+===== block 598 6ec39fe394f2 lines 1-5 source 知行旅行助手-v2#600 =====
+就住如家快捷酒店吧  → '如家'
+按推荐来       → '希尔顿'
+随便，你决定     → '希尔顿'
+我再想想       → ''
+没选档位 + 委托语 → '如家'
+
+
+===== block 599 b3a050903a0a lines 1-8 source 知行旅行助手-v2#601 =====
+"""_build_hotel_fallback 演示：酒店服务不可用时，三种模式各自怎么收尾（纯函数，无需密钥）"""
+from app.services.chat_stream_executor import _build_hotel_fallback
+
+req = {"accommodation_types": ["economy_hotel"]}
+print("【手动模式】", _build_hotel_fallback(req))
+print("【自动确认】", _build_hotel_fallback(req, auto_confirm=True).splitlines()[-1])   # 不再向用户索要选择
+print("【用户已选】", _build_hotel_fallback(req, chosen="如家").splitlines()[-1])
+print("【没带偏好】列出", _build_hotel_fallback(None).count("- **"), "个档位")
+
+
+===== block 600 eeb72e048ee3 lines 1-10 source 知行旅行助手-v2#602 =====
+【手动模式】 
+
+---
+⚠️ 实时酒店报价服务当前不可用，无法展示具体门店与实时价格。
+以下按您的住宿类型，列出该档位市面上常见的连锁品牌，供您参考（具体门店与价格到店/官网再定）：
+- **经济酒店**：如家、汉庭、7 天、锦江之星、格林豪泰、莫泰
+请回复您想选的品牌（或「按推荐来」），我将按该档位继续安排行程。
+【自动确认】 已按以上该档位的常见品牌为您直接安排住宿（不指定具体门店与实时价格，到店择优选同档位），并继续规划后续行程。
+【用户已选】 ✅ 已记录您的住宿选择：**如家**（具体门店与实时价格到店择优选同档位），并继续规划后续行程。
+【没带偏好】列出 4 个档位
+
+
+===== block 601 89174acd01ca lines 1-76 source 知行旅行助手-v2#603 =====
+# ===== 交通步骤"清单归代码"——正文里禁止出现任何班次/航班/自驾数字 =====
+# 正则用来匹配各种交通相关内容，后面直接删掉模型自己写的班次信息
+_TRANSPORT_LIST_RE = re.compile(
+    r"[GDCKTZ]\d{1,4}\b"                       # 车次号（G330 / D50 / K507 / T10 / Z162）
+    r"|\b[A-Z0-9]{2}\d{3,4}\b"                 # 航班号（CA4105 / 3U8885）
+    r"|经济舱|公务舱|头等舱|商务座|一等座|二等座|硬座|硬卧|软卧|机票|航班"
+    r"|历时|耗时|过路费|自驾|路程|里程"
+    r"|\d+(?:\.\d+)?\s*元"     # 模型自写的"残行"——只有时刻没有车次号，旧正则认不出来（实测
+    # "- 出发-到达时刻：07:21 - 14:31" 三条与代码直出表并存，用户看到两套互相矛盾的班次）
+    r"|出发\s*[-—~～至]?\s*到达|到达时刻|发车时刻"
+    r"|\d{1,2}:\d{2}\s*[-—~～至]\s*\d{1,2}:\d{2}"
+)
+# 匹配交通板块的标题行，带圈序号标题、交通查询结果标题都会命中
+_TRANSPORT_HEAD_RE = re.compile(
+    r"^#{2,4}\s*[①②③④⑤⑥⑦⑧⑩]"                # #### ① 重庆 → 石家庄
+    r"|^#{2,4}\s*交通(方式)?查询结果"
+    r"|^\s*[-*•]\s*\*\*(高铁|航班|自驾|火车|飞机)\*\*"
+)
+# 交通卡片模式下展示给用户的引导文字
+_TRANSPORT_LEAD = "已为您查询到以下真实班次，请选择各段的交通方式：\n"
+# 引导文案最少字符长度，清理完文字太短就替换成上面这句引导语
+_TRANSPORT_LEAD_MIN = 8
+
+def _zero_leg_guard(vals: dict) -> tuple[bool, str]:
+    """ 零段直通判定——出发地与目的地同城（本地游玩）时没有任何城际段
+     返回 (是否零段, 出发地城市)。出发地/目的地缺失、或存在城际段时返回 (False, 出发地)，
+     单目的地与多目的地均按同一口径（_expected_legs 已按"相邻节点城市不同"计算）
+    """
+    # 导入工具函数，拆分城市列表、计算需要多少城际交通段
+    from app.services.express_planning_service import _split_cities
+    from app.tools.state_transition import _expected_legs
+    # 取出用户填的出发城市，清理空格
+    dep = str(((vals.get("user_requirement") or {}).get("departure_city")) or "").strip()
+    # 出发城市为空，或者目的地解析不出城市，直接判定不是本地游玩
+    if not dep or not _split_cities(vals.get("selected_destination") or ""):
+        return False, dep
+    # 调用_expected_legs判断有没有城际段，没有就是本地零段游玩
+    return (not _expected_legs(vals)), dep  # ★ 段数口径只认第 11 章 _expected_legs
+
+def _leg_context(state: dict) -> tuple[str, int, int]:
+    """ 取"当前待确认段" → (段文本, 序号从1起, 总段数)。
+     多目的地段级循环专用；单目的地/未进入段级循环时返回 ("", 0, 0)，
+     调用方据此走老逻辑，单城行为完全不变
+    """
+    from app.tools.state_transition import _expected_legs
+    try:
+        # 算出全部城际交通段列表
+        legs = _expected_legs(state)
+    except Exception:
+        # 计算报错，直接返回空，走旧逻辑
+        return "", 0, 0
+    # 没有交通段，返回空
+    if not legs:
+        return "", 0, 0
+    # 拿到当前游标，限制范围防止越界
+    cur = max(0, min(int(state.get("leg_cursor") or 0), len(legs) - 1))
+    # 返回当前这段内容、当前段序号（从1开始）、总共有多少段
+    return legs[cur], cur + 1, len(legs)
+
+def _strip_transport_lists(text: str) -> str:
+    """剔除交通步骤正文里模型自编的班次/航班/自驾清单行及其小标题，只留引导语"""
+    # 用来存放过滤后保留的文本行
+    kept: list[str] = []
+    # 按行遍历所有文本
+    for line in (text or "").splitlines():
+        stripped = line.strip()
+        # 如果这一行命中交通班次正则或者交通标题正则，直接跳过这一行，不加入结果
+        if stripped and (
+            _TRANSPORT_LIST_RE.search(stripped) or _TRANSPORT_HEAD_RE.match(stripped)
+        ):
+            continue
+        kept.append(line)
+    # 合并文本，把连续多个空行压缩成最多两个换行
+    cleaned = re.sub(r"\n{3,}", "\n\n", "\n".join(kept)).strip()
+    # 文案微调，统一用词
+    return cleaned.replace("以上选项", "以下班次")
+
+
+===== block 602 a77090c72c4d lines 1-10 source 知行旅行助手-v2#604 =====
+"""_strip_transport_lists 演示：删掉模型自编的车次/价格/时刻行，只留引导语（纯函数，无需密钥）"""
+from app.services.chat_stream_executor import _strip_transport_lists
+
+model_text = """已为您查询到重庆到石家庄的交通方案，请从以上选项中选择：
+#### ① 重庆 → 石家庄
+- G1704 08:12→16:35 二等座 792.5元
+- 出发-到达时刻：07:21 - 14:31
+- 航班 CA4105 经济舱 860 元
+选好后告诉我车次即可。"""
+print(_strip_transport_lists(model_text))
+
+
+===== block 603 09766d30c20c lines 1-6 source 知行旅行助手-v2#605 =====
+"""_zero_leg_guard 演示：出发地与目的地同城 = 零段，交通步直接跳过（纯函数，无需密钥）"""
+from app.services.chat_stream_executor import _zero_leg_guard
+
+for dep, dest in [("北京", "北京"), ("北京", "天津、上海"), ("", "杭州")]:
+    vals = {"user_requirement": {"departure_city": dep}, "selected_destination": dest}
+    print(f"{dep or '（空）'} → {dest:6s} 零段？{_zero_leg_guard(vals)}")
+
+
+===== block 604 1245fb8e2c5e lines 1-7 source 知行旅行助手-v2#606 =====
+"""_leg_context 演示：多段行程一次只问"当前待确认段"（纯函数，无需密钥）"""
+from app.services.chat_stream_executor import _leg_context
+
+trip = {"user_requirement": {"departure_city": "北京"}, "selected_destination": "天津、上海"}
+for cursor in (0, 1, 5):                    # leg_cursor 越界会被夹回合法范围
+    print(f"leg_cursor={cursor} →", _leg_context({**trip, "leg_cursor": cursor}))
+print("出发地缺失 →", _leg_context({"selected_destination": "杭州"}))
+
+
+===== block 605 402fde7151a4 lines 1-4 source 知行旅行助手-v2#607 =====
+leg_cursor=0 → ('北京→天津', 1, 3)
+leg_cursor=1 → ('天津→上海', 2, 3)
+leg_cursor=5 → ('上海→北京', 3, 3)
+出发地缺失 → ('', 0, 0)

@@ -1,0 +1,20 @@
+name: local-contracts
+on: [push, pull_request]
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    env:
+      POSTGRES_PASSWORD: fixture-not-used
+      LLM_BASE_URL: https://example.invalid/v1
+      LLM_API_KEY: fixture-not-used
+      MODEL_EMBED: text-embedding-v4
+      EMBED_BACKEND: fake
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.9.5'
+      - run: uv sync --frozen --extra dev --extra parse
+      - run: uv run --no-sync pytest tests/contract tests/unit --ignore=tests/unit/test_index_identity.py --ignore=tests/unit/test_query_log_ids.py --ignore=tests/unit/test_api_boundaries.py --ignore=tests/unit/test_tenant_scope.py -q
+      - run: uv run --no-sync ruff check quarry sdk tests scripts --select F821,F822,F823
+# 真实PG/Redis/模型11红线与评测闸门在发版前本地跑，不能用Fake数字代替。

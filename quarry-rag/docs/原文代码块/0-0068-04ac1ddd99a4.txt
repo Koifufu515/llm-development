@@ -1,0 +1,7 @@
+INFO:     Will watch for changes in these directories: ['D:\\pycharm_project\\quarry-rag-1']
+INFO:     Uvicorn running on http://127.0.0.1:8100 (Press CTRL+C to quit)
+INFO:     Started reloader process [24896] using WatchFiles
+INFO:     Started server process [32332]
+INFO:     Waiting for application startup.
+15:17:30.570 | INFO    | quarry.api.app:lifespan:17 | quarry-rag 启动完成，开关：{'embed_backend': 'api', 'embed_model': 'text-embedding-v4', 'embed_dim': 1024, 'default_top_k': 8}
+INFO:     Application startup complete.

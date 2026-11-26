@@ -1,0 +1,131 @@
+生成 •预算 •同步•模型只交一次结构，其余全由代码兜底
+快速通道里唯一的长输出发生在 _generate_itinerary：模型按 ItineraryBody 交逐日结构，代码负责补缺和校验；预算由_build_budget 纯代
+码算出；最后 sync_express_state 把结果一次写回状态机，让用户下一句话能接着聊。
+_generate_itinerary 三级保底 任何一级拿不到合规结构都返回None，编排层整条回溶状态机
+输入•拼提示词
+① 模型提交
+（2110
+③ 再校验
+已锁定的信息+8 条硬规则
+bind_tools（［ItineraryBo
+_normalize_itinerary_days
+ItineraryBody.model_val
+V days
+• 目的地/出发日/天数/ 人数/预算
+dy］）
+只补空缺、只裁非法：丟越界和重复的
+idate
+• 交通用 Leg_results 拼完整路线，失败
+Listldict］：渲染正
+段写"按常识安排"
+强制 tool_choice，取
+天、补缺的天、空时段补一条、短条目补
+文，并随返回值交
+•酒店、天气、风格、餐饮偏好
+tool_calls［0］.args.days；
+尾巴、补小贴士、末日补返程、补城市
+_produce 作清单兜
+• 正好N天、四个时段、每条≥15字、未
+模型用ChatTongy立，温度取配
+（来自 _day_cities）。
+context=｛'travel.days"：N：
+天序号 1~N 不重不漏、每条≥
+底。
+日含返程、只按 schema 交数据
+置。
+15字、末日晚上含返程。
+借自 tools/state_transition
+× 调用异常/没有tooL_calls一
+X 仍不过 None，不回头解析正
+None
+和状态机共用一份 schema：状态机行程步的 submit_itinerary_body_tool 用的也是 ItineraryBody 和 _normalize_itinerary_days，两条通道产出的逐日结构字段完全一致，所以清单生成、正文渲染可以
+共用同一套下游。
+_build_budget 怎么算纯代码，数字不经过模型；N=天数，P=人数；同时返回展示文本和结构化明细
+项目
+公式
+说明
+交通
+（z 已查到票价 + 缺失段数×已知段均价）×P
+一段票价都没有时按500元×段数
+住宿
+各城均价 ×（N- 1）晚 xIP 21间
+没有任何房价时按300元/晚
+餐饮
+150 × Nx P
+固定估算
+门票
+200 x N x P
+固定估算
+杂费
+100 × N x P
+固定估算
+结论
+人均 = 总计 + P，对比 budget_max
+未超/ 超预算/未提供上限
+收尾：_produce 拿到返回值之后 清单与状态同步解耦：清单失败也照样同步
+state_step = itinerary_generation 清单帧 pending
+generate_plan（.，structure=days）
+一—>
+清单帧 success/ error sync_express_state（…，sync）
+- done 帧
+超2000 字先压缩，再写 Message
+messages
+user_id
+auto_conTirm
+user_requirement
+selected_destination
+一条人类摘要＋回复全文前2000字
+写空串；下一轮 execute_turn 的入参会
+True
+11项；预算上下限同值，档位按3000/
+最终目的地（可能是自动选的）
+覆盖
+8000分三档
+selected_transport
+selected_accommodation_types
+selected_food_types
+itinerary
+current_step
+表单里第一个勾选的模式
+表单值，空则 economy_hotel
+表单值，空则local+ specialty
+清单 JSON的 itinerary_list
+budget_summarization
+leg_prices
+stay_prices
+itinerary_body
+budget
+各段已选票价，大于0才写
+各城已选房价，大于0才写
+校验过的逐日结构
+五项＋总计的结构化明细
+后4个键来自编排层返回的 sync；14个键一次 aupdate_state 写完，下一轮预算步可直接复用账本和预算：同—thread 分两次写会触发Ambiguous update 异常（函数注释原话）。
+函数卡 本组4个函数
+_generate_itinerary lasyna
+L05L
+算出第1到第 N天各在哪座城，口径和住宿站点、段日期是同一套（图6）。
+谁来调用
+结果交给 城市序列传给 _normalize_itinerary_days，只补模型漏填的city，不改已填的
+结果交给
+校验过的 List［dict］回编排层渲染正文，并随返回值交 _produce 作清单兜底；None 时编排
+层返回（None，None）
+_build_budget［如
+L755
+sync_express_state lasyns
+跨模块
+L888
+纯代码把五项费用算出来，拼成Markdown 预算表，再和人均上限比一下给结论。
+快速通道没走状态机，事后把需求、选择、清单、账本和预算一次写进 LangGraph会话，让用户
+下一句”改成5天”能接着在状态机里聊。
+何时调用
+谁来调用
+何时调用
+清单生成之后，不管成没成功；包在try 里，失败只记日志
+结果交给
+（展示文本，结构化明细）：文本推给前端并拼进全文；明细放进 sync，由
+谁来调用
+chat_contract_service._produce L308 跨模块
+sync_express_state 写进状态机的 budget
+结果交给
+itinerary_plan_service.get_plan 读回，账本、逐日结构和预算取自 sync
+模型只交一次结构化数据：正文由执行器的_render_itinerary_body 渲染，预算由_build_budget 计算，清单由generate_plan 生成，状态由sync_express_state 一次写入。逐日结构拿不到

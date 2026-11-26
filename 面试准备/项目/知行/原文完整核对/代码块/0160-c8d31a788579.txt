@@ -1,0 +1,18 @@
+"""parse_flight_prices 演示：票价接口三种返回形态都认；解析不出返回空表，绝不编造（纯函数，无需密钥）"""
+import json
+
+from app.tools.mcp_tools import parse_flight_prices
+
+CASES = {
+    "严格 JSON（同号取最低）": json.dumps({"data": [
+        {"flightNo": "CA1501", "price": 780}, {"flightNo": "MU5104", "price": 1280},
+        {"flightNo": "CA1501", "price": 990}]}, ensure_ascii=False),
+    "Python dict 文本      ": str([{'FlightNo': 'HO1252', 'FlightYPrice': '650'},
+                                   {'FlightNo': '9C8891', 'LowestPrice': 420}]),
+    "纯文本一句话          ": "北京飞上海 2026-10-01 最低票价 780 元起，含税另计。",
+    "暂无数据              ": "error_code=10 暂无数据",
+    "机建费 50 / 里程 99999": '[{"flightNo":"CA1501","price":50},{"flightNo":"MU5104","price":99999}]',
+}
+for name, raw in CASES.items():
+    by_flight, lowest = parse_flight_prices(raw)
+    print(f"{name} → 按航班号 {by_flight}｜航线最低 {lowest}")

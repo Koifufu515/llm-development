@@ -1,0 +1,36 @@
+FF                                                                       [100%]Running teardown with pytest sessionfinish...
+
+=================================== FAILURES ===================================
+_______________ test_attraction_not_its_parking_or_other_branch ________________
+
+    def test_attraction_not_its_parking_or_other_branch():
+>       assert not poi_matches('苏州博物馆参观','苏州博物馆本馆地下停车场(内部专用)')
+E       AssertionError: assert not True
+E        +  where True = poi_matches('苏州博物馆参观', '苏州博物馆本馆地下停车场(内部专用)')
+
+tests/test_reference_poi.py:7: AssertionError
+______________ test_map_chooses_main_attraction_before_auxiliary _______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x117cba2c0>
+
+    @pytest.mark.asyncio
+    async def test_map_chooses_main_attraction_before_auxiliary(monkeypatch):
+        import app.full.plans as p
+        monkeypatch.setattr(p,'Settings',lambda:SimpleNamespace(amap_api_key=SecretStr('')))
+        class Remote:
+            async def query(self,*args):
+                return {'data':{'pois':[{'name':'苏州博物馆本馆地下停车场(内部专用)','location':'120.628,31.325'},{'name':'苏州博物馆(本馆)','location':'120.629,31.325'}]}}
+        services=SimpleNamespace(remote=Remote(),mcp_manager=SimpleNamespace(tools={}))
+        body={'days':[{'city':'苏州','day':1,'morning':[{'kind':'attraction','name':'苏州博物馆参观'}],'noon':[],'afternoon':[],'evening':[]}]}
+        result=await enrich_map(services,body)
+>       assert [p['name']for p in result['points']]==['苏州博物馆(本馆)']
+E       AssertionError: assert ['苏州博物馆本馆地下停车场(内部专用)'] == ['苏州博物馆(本馆)']
+E         
+E         At index 0 diff: '苏州博物馆本馆地下停车场(内部专用)' != '苏州博物馆(本馆)'
+E         Use -v to get more diff
+
+tests/test_reference_poi.py:23: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_reference_poi.py::test_attraction_not_its_parking_or_other_branch
+FAILED tests/test_reference_poi.py::test_map_chooses_main_attraction_before_auxiliary
+2 failed in 0.07s

@@ -1,0 +1,16 @@
+"""parse_flight_rows 演示：航班返回是 Python dict 文本（单引号），按块抠字段、去重、按起飞时间排（纯函数，无需密钥）"""
+from app.tools.mcp_tools import parse_flight_rows
+
+RAW = str([
+    {"fcategory": "0", "FlightNo": "MU5104", "FlightCompany": "中国东方航空股份有限公司", "FlightDepAirport": "首都国际机场",
+     "FlightArrAirport": "虹桥国际机场", "FlightDeptimePlanDate": "2026-10-01 10:00:00", "FlightArrtimePlanDate": "2026-10-01 12:15:00",
+     "FlightHTerminal": "T2", "OntimeRate": "91%", "StopCity": "", "FlightState": "计划"},
+    {"fcategory": "0", "FlightNo": "CA1501", "FlightCompany": "中国国际航空股份有限公司", "FlightDepAirport": "首都国际机场",
+     "FlightArrAirport": "虹桥国际机场", "FlightDeptimePlanDate": "2026-10-01 08:00:00", "FlightArrtimePlanDate": "2026-10-01 10:10:00",
+     "FlightHTerminal": "T3", "OntimeRate": "93%", "StopCity": "", "FlightState": "计划"},
+    {"fcategory": "0", "FlightNo": "CA1501", "FlightCompany": "中国国际航空股份有限公司", "FlightDepAirport": "首都国际机场",
+     "FlightArrAirport": "虹桥国际机场", "FlightDeptimePlanDate": "2026-10-01 08:00:00", "FlightArrtimePlanDate": "2026-10-01 10:10:00"},
+    {"fcategory": "0", "FlightNo": "HU7605", "FlightCompany": "海南航空控股股份有限公司", "FlightDeptimePlanDate": ""},
+])
+for row in parse_flight_rows(RAW):
+    print(row)

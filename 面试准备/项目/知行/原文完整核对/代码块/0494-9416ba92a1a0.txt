@@ -1,0 +1,5 @@
+"""_clean_keyword 演示：剥掉序号前缀和括号注解，提高高德 POI 关键词命中率（纯函数，无需密钥）"""
+from app.services.itinerary_plan_service import _clean_keyword
+
+for raw in ["1.杭州东站（返程）", "2、灵隐寺(需预约)", "  3：西湖断桥 ", "河坊街"]:
+    print(f"{raw!r:24} → {_clean_keyword(raw)!r}")

@@ -1,0 +1,22 @@
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8   # 让终端正确显示中文
+
+$key = "sk-你的key"
+$body = @{
+  model = "qwen-flash"
+  enable_thinking = $false
+  response_format = @{ type = "json_object" }
+  messages = @(
+    @{ role = "system"; content = "从用户的话里找出景点名和门票价格，输出 JSON，包含 entity 和 value 两个字段" },
+    @{ role = "user";   content = "兵马俑博物馆门票 120 元，8:30 开门" }
+  )
+} | ConvertTo-Json -Depth 5
+
+$resp = Invoke-WebRequest -Method Post -UseBasicParsing `
+  -Uri "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions" `
+  -Headers @{ Authorization = "Bearer $key" } `
+  -ContentType "application/json; charset=utf-8" `
+  -Body ([System.Text.Encoding]::UTF8.GetBytes($body))
+
+# 按 UTF-8 解码原始响应，避免 Windows PowerShell 5.1 把中文解成乱码
+$r = [System.Text.Encoding]::UTF8.GetString($resp.RawContentStream.ToArray()) | ConvertFrom-Json
+$r.choices[0].message.content

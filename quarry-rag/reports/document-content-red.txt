@@ -1,0 +1,51 @@
+FFFF                                                                     [100%]
+=================================== FAILURES ===================================
+___________________ test_docx_table_is_not_silently_dropped ____________________
+
+tmp_path = PosixPath('/private/var/folders/rk/qtxh2ds10vd6_cdg09pdzrbm0000gn/T/pytest-of-jarvis/pytest-56/test_docx_table_is_not_silentl0')
+
+    def test_docx_table_is_not_silently_dropped(tmp_path):
+     p=tmp_path/'x.docx';d=Document();d.add_heading('差旅',level=1);d.add_paragraph('以下是限额。');t=d.add_table(rows=2,cols=2);t.cell(0,0).text='城市';t.cell(0,1).text='限额';t.cell(1,0).text='苏州';t.cell(1,1).text='300元';d.save(p)
+     sections=DocxParser().parse(p);text='\n'.join(s.content for s in sections)
+>    assert '苏州'in text and '300元'in text and '| --- |'in text
+E    AssertionError: assert ('苏州' in '以下是限额。')
+
+tests/unit/test_document_content.py:10: AssertionError
+________________ test_markdown_text_before_heading_is_preserved ________________
+
+tmp_path = PosixPath('/private/var/folders/rk/qtxh2ds10vd6_cdg09pdzrbm0000gn/T/pytest-of-jarvis/pytest-56/test_markdown_text_before_head0')
+
+    def test_markdown_text_before_heading_is_preserved(tmp_path):
+     p=tmp_path/'x.md';p.write_text('前置说明不得丢失。\n\n## 正文\n后续内容。')
+>    ss=MarkdownParser().parse(p);assert ss[0].content=='前置说明不得丢失。'
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E    AssertionError: assert '后续内容。' == '前置说明不得丢失。'
+E      
+E      - 前置说明不得丢失。
+E      + 后续内容。
+
+tests/unit/test_document_content.py:15: AssertionError
+____________ test_tilde_code_fence_is_atomic_even_with_empty_lines _____________
+
+    def test_tilde_code_fence_is_atomic_even_with_empty_lines():
+     text='~~~python\n'+('print(1)\n\n'*100)+'~~~';_,children=split(Section([],text,0,len(text)))
+>    assert len(children)==1 and children[0].content==text
+E    AssertionError: assert (3 == 1)
+E     +  where 3 = len([ChildBlock(heading_path=[], content='~~~python\nprint(1)\n\nprint(1)\n\nprint(1)\n\nprint(1)\n\nprint(1)\n\nprint(1)\...n\nprint(1)\n\nprint(1)\n\nprint(1)\n\nprint(1)\n\nprint(1)\n\nprint(1)\n\n~~~', char_start=800, char_end=1013, ord=2)])
+
+tests/unit/test_document_content.py:20: AssertionError
+______________ test_four_backtick_fence_contains_three_backticks _______________
+
+    def test_four_backtick_fence_contains_three_backticks():
+     text='````text\n```\n'+('x\n\n'*400)+'````';_,children=split(Section([],text,0,len(text)))
+>    assert len(children)==1 and children[0].content==text
+E    AssertionError: assert (5 == 1)
+E     +  where 5 = len([ChildBlock(heading_path=[], content='````text\n```', char_start=0, char_end=12, ord=0), ChildBlock(heading_path=[], c...r_start=817, char_end=1211, ord=3), ChildBlock(heading_path=[], content='````', char_start=1213, char_end=1217, ord=4)])
+
+tests/unit/test_document_content.py:24: AssertionError
+=========================== short test summary info ============================
+FAILED tests/unit/test_document_content.py::test_docx_table_is_not_silently_dropped
+FAILED tests/unit/test_document_content.py::test_markdown_text_before_heading_is_preserved
+FAILED tests/unit/test_document_content.py::test_tilde_code_fence_is_atomic_even_with_empty_lines
+FAILED tests/unit/test_document_content.py::test_four_backtick_fence_contains_three_backticks
+4 failed in 0.08s

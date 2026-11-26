@@ -1,0 +1,19 @@
+CREATE TABLE collections (
+  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id      UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  slug           TEXT NOT NULL,
+  name           TEXT NOT NULL,
+
+  embed_model    TEXT NOT NULL,
+  embed_dim      INT  NOT NULL,
+
+  chunk_policy   JSONB NOT NULL DEFAULT '{}'::jsonb,
+  meta_schema    JSONB NOT NULL DEFAULT '{}'::jsonb,
+  abstain_config JSONB NOT NULL DEFAULT '{}'::jsonb,
+  default_acl_labels TEXT[] NOT NULL DEFAULT '{public}',
+
+  status         TEXT NOT NULL DEFAULT 'active',
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+  CONSTRAINT collections_dim_ck CHECK (embed_dim = 1024)
+);

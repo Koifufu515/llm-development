@@ -1,0 +1,17 @@
+Traceback (most recent call last):
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/scripts/verify_live_api.py", line 23, in <module>
+    if __name__=='__main__':asyncio.run(main())
+                            ^^^^^^^^^^^^^^^^^^^
+  File "/Users/jarvis/anaconda3/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/jarvis/anaconda3/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jarvis/anaconda3/lib/python3.11/asyncio/base_events.py", line 653, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/scripts/verify_live_api.py", line 18, in main
+    assert state.get('status')=='ready',state
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'status': 'failed', 'stage_error': "'utf-8' codec can't decode byte 0xa3 in position 45: invalid start byte", 'indexed_at': None}

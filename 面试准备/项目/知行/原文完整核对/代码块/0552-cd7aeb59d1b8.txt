@@ -1,0 +1,23 @@
+class TrainSubmitRequest(BaseModel):
+    """提交请求体：会话 id + 前端 Skill 一次性选择结果"""
+
+    conversation_id: str = Field(min_length=1, description="会话 id（= LangGraph thread_id）")
+    payload: TrainSubmitPayload = Field(description="前端 onSubmit 抛出的选择结果")
+
+class HotelSubmitRequest(BaseModel):
+    """住宿提交请求体：会话 id + 前端 HotelMultiSegment 的 onSubmit 结果"""
+
+    conversation_id: str = Field(min_length=1, description="会话 id（= LangGraph thread_id）")
+    payload: HotelMultiSegmentSubmitPayload = Field(description="前端 onSubmit 抛出的选择结果")
+
+class FlightSubmitRequest(BaseModel):
+    """航班提交请求体：会话 id + 前端 FlightMultiSegment 的 onSubmit 结果 """
+
+    conversation_id: str = Field(min_length=1, description="会话 id（= LangGraph thread_id）")
+    payload: FlightSubmitPayload = Field(description="前端 onSubmit 抛出的选择结果")
+
+class DrivingSubmitRequest(BaseModel):
+    """自驾提交请求体：会话 id + 前端 DrivingMultiSegment 的 onSubmit 结果 """
+
+    conversation_id: str = Field(min_length=1, description="会话 id（= LangGraph thread_id）")
+    payload: DrivingSubmitPayload = Field(description="前端 onSubmit 抛出的确认结果")

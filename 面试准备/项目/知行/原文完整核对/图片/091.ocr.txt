@@ -1,0 +1,118 @@
+state_transition•状态机的推进键：模型来按，代码来守
+这个文件有18把工具和24个助手函数。工具由模型发起调用、LangGraph 按名执行，返回 Command（update=..）改写状态，current_step 往哪走基
+本都由它们决定。卡片模式下，交通和住宿两步改由卡片代码直接推进，这里的选择工具退成了兜底路线。
+谁在写 current_step 七步主线（第8步订单已删除）；左列是本文件的工具，右列是别的模块绕过工具、直接 aupdatestate推进的地方
+需求收集
+— 目的地推荐
+交通规划 — 住宿规划
+餐饮规划 行程生成
+预算汇总
+推进
+本文件的工具（模型调用）
+别的模块直接推进（代码）
+需求收集 目的地推荐
+record_requirement_tool
+目的地推荐 交通规划
+select_destination_tool
+交通规划 住宿规划
+select_transport_tool 全部段确认完才推
+train / flight / driving_flow 卡片提交与自动代选 advance_zero_leg 零段直通
+住宿规划 餐饮规划
+select_accommodation_tool 全部城确认完才推
+execute_turn 后处理③：酒店服务降级时推进
+住宿规划 行程生成
+select_accommodation_food_tool 仅自动确认，跳过餐饮步
+hotel_flow 卡片提交与自动代选，同样跳过餐饮步
+餐饮规划 行程生成
+select_food_tool
+行程生成 预算汇总
+submit_itinerary_body_tool generate_itinerary_tool
+execute_turn 后处理①：正文覆盖第1~N天 sync_express_state 快速通道直接落在预算步
+任意 更早的步
+go_back_to_step 及7个快捷回退（图6）
+summarize_budget_tool 不动 current_step，只写 budget 和 user_requirement。
+一把工具从注册到生效 工具的“调用方“是模型；代码能做的只有决定它看不看得到、要不要强推
+①
+②
+③
+④
+⑤
+⑦
+注册全集
+每步工具表
+中间件裁剪
+模型发起
+按名执行
+写状态
+落盘
+travel agent 把18把一
+step_config 规定每一一
+middleware 按模式屏
+输出tool_call：工具名＋
+LangGraph ToolNode 到
+Command （update）经字
+PostgreSQL checkpoint，下一
+工具全交给
+步给模型哪几把
+蔽、按轮次强推
+参数
+注册全集里取对象执行
+段合并器写入
+轮读回
+create_ agent
+tool_choice
+第3步和第5步对不上：中间件只决定"模型看不看得到”，执行时却是按名到注册全集里取对象，所以模型硬写出被屏蔽的工具名照样能执行——真正的守卫必须写在工具里（select_accommodation_food_tool 的
+手动模式拦截就是这么补上的）。
+文件分组 42 个函数（含2个嵌套、2个方法）+3个数据模型；按AST 统计，每个函数都有引用方
+1 需求与目的地
+7个。图2
+②
+选择工具与循环
+9个。图3
+3
+行程结构
+11个•图4
+record_requirement_tool
+select_destination_tool
+select_transport_tool
+select_accommodation_tool
+submit_itinerary_body_tool generate_itinerary_tool
+_form_travel_days _form_destination _value_after
+select_accommodation_food_tool
+select_food_tool
+_multi_city_day_floor_error ItineraryBody._check_days
+_leading_int _between
+_expected_legs _multi_city_names
+_parse_leg_choices
+_normalize_itinerary_days_fill_item _fill_tip
+_match_leg LegChoice.summary
+_back_hint _day_city_map _fill_day_cities
+_day_numbers
+预算
+3个。图5
+5 回退与进度
+12个•图6
+被别的模块直接借用
+非工具调用
+summarize_budget_tool_legs_price_per_person
+go_back_to_step
+1个go_back_to_*）_guard_back
+_expected_legs
+8处：中间件3、三个交通卡片3、执行器2
+_hotel_price_per_night_from_book
+wants_back_recent_human_text
+_multi_city_names 中间件、执行器
+两个嵌套函数分别从交通、住宿账本取价。
+check_current_progress
+day numbers
+执行器 _covers_all_days
+_value_after
+连同_leading_int_between：编排层天数
+告警
+ItineraryBody
+连同 _normalize_itinerary_days ：快速通
+STEP_STATE_FIELDS transport_switch_service 改交通方式
+数据模型
+LegChoice 一段交通选择的7个字段 DayPlan 一天的四时段＋小贴士 ItineraryBody 整份逐日结构＋校验器
+这个文件定义了状态机的全部推进动作，但推进权正在往代码手里转：交通、住宿两步由卡片代码直接 aupdate_state，行程步的正文由代码渲染，模型手里真正常用的推进键只剩
+record_requirement tool、select destination tool 和 submit_itinerary body_tooL。剩下的选择工具多数时候被中间件摘掉，成了兜底路线——兜底路线和卡片写的是同一套状态字段。

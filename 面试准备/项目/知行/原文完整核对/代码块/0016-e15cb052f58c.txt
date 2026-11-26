@@ -1,0 +1,48 @@
+"""
+FastAPI 应用入口
+第 01 章最小版：只暴露一个健康检查接口，验证项目跑得起来
+"""
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.config import settings
+from app.utils.logger import app_logger
+
+app = FastAPI(
+    title="LangGraph 旅行规划系统",
+    description="企业级多 Agent 旅行规划服务",
+    version="0.1.0",
+)
+
+# CORS：允许前端跨域调用（开发环境全放开，生产必收窄）
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.get("/")
+async def root():
+    """健康检查根路径"""
+    app_logger.info("有人访问了根路径")
+    return {
+        "status": "healthy",
+        "service": "LangGraph Travel Planner",
+        "version": "0.1.0",
+        "env": settings.app_env,
+        "docs": "/docs",
+    }
+
+@app.get("/health/config")
+async def check_config():
+    """
+    配置健康检查：验证 .env 是否正确加载
+    （只回显非敏感字段）
+    """
+    return {
+        "app_env": settings.app_env,
+        "qwen_model": settings.qwen_model_name,
+        "database_configured": bool(settings.postgres_password),
+        "langsmith_enabled": settings.langsmith_tracing,
+    }

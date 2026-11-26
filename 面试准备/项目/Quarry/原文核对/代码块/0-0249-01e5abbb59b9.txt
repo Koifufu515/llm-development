@@ -1,0 +1,5 @@
+-- ❌ 静默越权：A 租户的检索会把 B 租户那一行也 JOIN 出来
+JOIN chunks c USING (chunk_id)
+
+-- ✅
+JOIN chunks c ON c.collection_id = $1 AND c.chunk_id = m.chunk_id

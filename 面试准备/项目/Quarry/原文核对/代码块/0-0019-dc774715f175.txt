@@ -1,0 +1,2 @@
+# macOS / Linux
+cp .env.example .env

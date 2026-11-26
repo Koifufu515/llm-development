@@ -1,0 +1,101 @@
+提交与校验•只校验"选的在不在候选里”，不校验任何时间
+前端一次提交全部段的选择，走技能 API 的SSE接口：先校验并落库，失败就在流里如实告知、卡片保持展开；成功则把卡片标记为已提交，回显已选车
+次，再用一句合成发言续跑住宿步。校验只做基础合法性检查，按设计不比对任何到站、发车先后。
+提交接口的五步 PosT /pi/V1/SkiLLs/train_multi_segment/submit•skills.Submit_train_multi_segment
+②
+③
+⑤
+鉴权与归属
+校验并落库
+卡片锁定
+回显已选
+续跑住宿步
+当前用户必须拥有这个会话
+— apply_train_selection：校验一
+—》 mark_skill_ui_submitted 把提交 — 推一条助手消息，按段列出已确认的车
+run_chat_turn：合成一句“我已选定全部
+X 不是 404
+步骤守卫一按 option_id 回查一写
+态写回卡片消息，切会话或刷新后仍是
+次，文本来自回执里的 texts
+车次⋯"，强制进规划、不落库这句话，阶
+段账本（图 6）
+已提交
+段提示为住宿
+X不通过一流内报错，卡片保持展开
+validate_train_submission 的七道检查 按顺序执行，第一道不通过就返回；对照的是 PayloadCache里本会话最近下发的候选
+#
+结果码
+什么时候返回
+为什么这样设计
+NO_PAYLOAD
+本会话没有下发过候选
+没查过班次就提交，拦下，避免写进不存在的车次
+2
+EMPTY_SELECTION
+一段都没选
+至少要选一段
+3
+MISSING_OPTION_ID
+有的段只带了车次号、没带 option_id
+车次号不唯一，不拿它兜底匹配，要求重选
+4
+SEGMENT_NOT_FOUND
+segment_id 不在候选里
+回执里列出合法的段号
+5
+TRAIN_NOT_FOUND
+option_id 不在该段的候选里
+只认真正下发过的那几趟
+6
+INCOMPLETE
+有候选的段没选
+候选为空、卡片里置灰的段不算漏选，否则用户永远凑不齐
+7
+OK
+以上都通过
+回执注明”未做任何时间校验"
+函数卡 本组4个，都在train_agent_tool.py；其中2个 @tool没有注册给模型
+validate_train_submission
+跨模块
+L234
+get_cached_payload
+跨模块
+L43
+query_train_multi_segment_tool etool
+未注册
+核对提交的每一段：段号存不存在、选的那趟在不在候选里、
+取本会话最近一次下发的候选，作为提交校验和回查的依据。
+L295
+有候选的段是不是都选了。
+给模型用的查询工具：并行查多段，返回可直接下发前端的
+何时调用 校验时、落库回查车次时
+JSON.
+何时调用
+前端提交、落库之前
+谁来调用
+本文件 validate_train_submission；
+谁来调用
+train_flow.apply_train_selection；本文件
+train_flow.apply_train_selection
+何时调用
+没有注册给 agent，也不在任何一步的工具表里，模型调
+submit_train_multi_segment_tool
+结果交给 候选 payload 或 None
+不到
+结果交给
+TrainSubmitResult：不通过时由提交接口推成流内报
+谁来调用 无；只在 _init_•py 里被重新导出
+错
+结果交给 一（实际查询由 train_flow 直接调组装函数完成）
+subnit_train_multi_segment_tool ［etool
+未注册
+L323
+给模型用的提交工具：接收选择、做基础校验，返回 JSON 回
+执。
+何时调用
+同上，模型调不到
+谁来调用 无；只在 _init—•py 里被重新导出
+结果交给 —（实际提交走技能API- apply_train_selection）
+提交侧只回答一个问题：“选的在不在候选里”：候选以PayloadCache 里本会话最近下发的那份为准，身份以option_id为准，空段不算漏选。时间先后一概不校验，这是写在契约里的职责边界，
+不是遗漏。

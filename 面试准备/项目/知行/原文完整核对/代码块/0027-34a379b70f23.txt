@@ -1,0 +1,4 @@
+profile, history = await asyncio.gather(
+    self.get_user_profile(user_id),
+    self.get_travel_history(user_id)
+)

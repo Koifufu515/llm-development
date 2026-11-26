@@ -1,0 +1,1 @@
+New-Item -ItemType Directory -Force -Path corpus/travel-guide, corpus/corp-policy, corpus/internal-notes, corpus/_manifest | Out-Null

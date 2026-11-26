@@ -1,0 +1,39 @@
+{
+  "source_package": "/Users/jarvis/Downloads/Skills分享安装包.zip",
+  "source_sha256": "15630c1bcbb11856a3a01996fc9702b336f41d39422eb0d7bb4e4f626fbc4ea1",
+  "skills": [
+    {
+      "name": "response-format",
+      "files": 3,
+      "validated": true,
+      "package_file_hashes_match": true
+    },
+    {
+      "name": "document-organization-and-formatting",
+      "files": 19,
+      "validated": true,
+      "package_file_hashes_match": true
+    },
+    {
+      "name": "backend-interview-bagua",
+      "files": 3,
+      "validated": true,
+      "package_file_hashes_match": true
+    },
+    {
+      "name": "project-interview",
+      "files": 3,
+      "validated": true,
+      "package_file_hashes_match": true
+    },
+    {
+      "name": "algorithm-teaching",
+      "files": 3,
+      "validated": true,
+      "package_file_hashes_match": true
+    }
+  ],
+  "templates": "已安装：讲义PDF参考、学位论文DOCX、Typst骨架、厦大Beamer主题及图片/LICENSE",
+  "compilation_verified": false,
+  "replaced_previous_missing_template_note": true
+}

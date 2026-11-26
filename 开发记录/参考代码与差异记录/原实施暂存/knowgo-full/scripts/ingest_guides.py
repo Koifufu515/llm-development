@@ -1,0 +1,1 @@
+../../../../../knowgo-travel/scripts/ingest_guides.py

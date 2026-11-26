@@ -1,0 +1,1 @@
+../../../../../../wenshu-project/backend/scripts/doctor.py

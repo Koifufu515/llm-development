@@ -1,0 +1,77 @@
+一条消息的全链路•请求逐层往下走，事件一帧帧往上推
+浏览器一次 POST 带着JWT进来，经中间件、messages.py 到run_chat_turn：它立刻返回
+EventStream，活儿交给后台 _produce；产出的事
+件被 async for 逐帧取出、写成SSE 推回浏览器。卡片提交走另一个入口，但复用同一个run_chat_turn。
+浏览器
+𠄌发请求
+亻收事件流。一帧一帧
+fetch （POST /api/v1/messages）
+text/event-stream
+Authorization: Bearer <jwt>
+data：｛...｝\nln
+请求
+SSE
+response.py
+JSON
+wrap_json_middleware
+- 包成 ｛code,msg,data｝
+SSE
+原样放行
+环节 2
+messages.py
+鉴权 run_chat_turn（）
+async for event: yield _sse（event）
+环节 3
+chat_contract_service
+.run_chat_turn
+立即返回
+EventStream
++ 后台跑
+-produce
+环节 9-10
+_produce：
+标题
+存用户消息
+路由
+分流
+清单
+压缩
+落库
+done
+路由
+环节4
+分流
+清单
+环节 5
+压缩
+环节 6
+chat_route
+generate_plan
+compress_content
+① 直查
+环节 14
+try_direct_ticket_query
+②
+快速通道
+环节 7-8
+try_express_planning / run_express_planning
+③ 状态机
+环节 13-17
+execute_turn -_stream_agent / _stream_plain
+EventStream
+生产者
+push
+— 消费者
+async for
+结束必 close
+环节 1
+复用
+卡片提交
+POST /api/v1/skills/*/submit
+校验落库
+复用
+run_chat_turn
+续跑
+环节 11
+读图顺序：请求沿左侧往下，到 run_chat_turn 立刻拿回 Eventstream；后台_produce 边跑边 push,messages.py 用async for 逐帧写成SSE，沿右侧推回浏览器。
+EventStream 结束必须 close：消费者的 async for 才会退出，这条流才算收尾。

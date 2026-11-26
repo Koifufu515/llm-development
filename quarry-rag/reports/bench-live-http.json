@@ -1,0 +1,1040 @@
+{
+  "concurrency": 4,
+  "warmup": [
+    {
+      "i": 0,
+      "query": "北京地铁如何防扒窃？",
+      "status": 200,
+      "ms": 957.49,
+      "timings": {
+        "lookup_ms": 1.4,
+        "recall_ms": 516.3,
+        "rerank_ms": 355.3,
+        "expand_ms": 5.4,
+        "facts_ms": 2.2,
+        "assemble_ms": 0.1,
+        "total_ms": 880.9
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 1,
+      "query": "西康宾馆价格多少？",
+      "status": 200,
+      "ms": 665.73,
+      "timings": {
+        "lookup_ms": 13.5,
+        "recall_ms": 233.7,
+        "rerank_ms": 362.6,
+        "expand_ms": 6.8,
+        "facts_ms": 1.2,
+        "assemble_ms": 0.1,
+        "total_ms": 618.0
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 2,
+      "query": "天津大学始建于哪年？",
+      "status": 200,
+      "ms": 671.94,
+      "timings": {
+        "lookup_ms": 18.4,
+        "recall_ms": 265.3,
+        "rerank_ms": 357.2,
+        "expand_ms": 1.6,
+        "facts_ms": 0.8,
+        "assemble_ms": 0.1,
+        "total_ms": 643.6
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 3,
+      "query": "去蜈支洲岛从哪个码头坐船？",
+      "status": 200,
+      "ms": 1112.58,
+      "timings": {
+        "lookup_ms": 2.0,
+        "recall_ms": 571.4,
+        "rerank_ms": 426.0,
+        "expand_ms": 10.3,
+        "facts_ms": 2.3,
+        "assemble_ms": 0.8,
+        "total_ms": 1013.2
+      },
+      "rerank_real": true
+    }
+  ],
+  "measured_requests": 60,
+  "success": 60,
+  "failed": 0,
+  "rerank_degraded": 0,
+  "p50_ms": 461.2,
+  "p95_ms": 755.3,
+  "p99_ms": 1344.3,
+  "qps": 7.86,
+  "query_vector_cache": false,
+  "rows": [
+    {
+      "i": 0,
+      "query": "北京地铁如何防扒窃？",
+      "status": 200,
+      "ms": 755.31,
+      "timings": {
+        "lookup_ms": 1.2,
+        "recall_ms": 466.3,
+        "rerank_ms": 267.7,
+        "expand_ms": 5.3,
+        "facts_ms": 1.8,
+        "assemble_ms": 0.2,
+        "total_ms": 742.8
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 1,
+      "query": "西康宾馆价格多少？",
+      "status": 200,
+      "ms": 473.91,
+      "timings": {
+        "lookup_ms": 1.1,
+        "recall_ms": 187.6,
+        "rerank_ms": 270.5,
+        "expand_ms": 3.3,
+        "facts_ms": 0.9,
+        "assemble_ms": 0.1,
+        "total_ms": 463.6
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 2,
+      "query": "天津大学始建于哪年？",
+      "status": 200,
+      "ms": 477.3,
+      "timings": {
+        "lookup_ms": 5.2,
+        "recall_ms": 161.5,
+        "rerank_ms": 281.3,
+        "expand_ms": 7.4,
+        "facts_ms": 3.4,
+        "assemble_ms": 0.2,
+        "total_ms": 459.1
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 3,
+      "query": "去蜈支洲岛从哪个码头坐船？",
+      "status": 200,
+      "ms": 477.02,
+      "timings": {
+        "lookup_ms": 3.0,
+        "recall_ms": 166.6,
+        "rerank_ms": 275.9,
+        "expand_ms": 10.3,
+        "facts_ms": 4.3,
+        "assemble_ms": 2.2,
+        "total_ms": 462.5
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 4,
+      "query": "昆明长水机场到新迎小区怎么坐车？",
+      "status": 200,
+      "ms": 540.28,
+      "timings": {
+        "lookup_ms": 1.8,
+        "recall_ms": 205.7,
+        "rerank_ms": 313.6,
+        "expand_ms": 13.3,
+        "facts_ms": 1.5,
+        "assemble_ms": 0.1,
+        "total_ms": 536.2
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 5,
+      "query": "后海酒吧街怎么去？",
+      "status": 200,
+      "ms": 871.19,
+      "timings": {
+        "lookup_ms": 1.4,
+        "recall_ms": 491.1,
+        "rerank_ms": 362.5,
+        "expand_ms": 5.4,
+        "facts_ms": 5.0,
+        "assemble_ms": 0.2,
+        "total_ms": 865.9
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 6,
+      "query": "三亚半山半岛洲际酒店房价多少？",
+      "status": 200,
+      "ms": 964.61,
+      "timings": {
+        "lookup_ms": 0.5,
+        "recall_ms": 573.5,
+        "rerank_ms": 381.7,
+        "expand_ms": 4.4,
+        "facts_ms": 1.1,
+        "assemble_ms": 0.1,
+        "total_ms": 961.5
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 7,
+      "query": "武汉地铁票价怎么算？",
+      "status": 200,
+      "ms": 537.98,
+      "timings": {
+        "lookup_ms": 0.9,
+        "recall_ms": 292.2,
+        "rerank_ms": 234.3,
+        "expand_ms": 2.7,
+        "facts_ms": 1.5,
+        "assemble_ms": 0.2,
+        "total_ms": 532.0
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 8,
+      "query": "贺龙墓地址在哪？",
+      "status": 200,
+      "ms": 453.2,
+      "timings": {
+        "lookup_ms": 0.8,
+        "recall_ms": 173.0,
+        "rerank_ms": 267.1,
+        "expand_ms": 2.0,
+        "facts_ms": 2.6,
+        "assemble_ms": 0.2,
+        "total_ms": 445.9
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 9,
+      "query": "西安威斯汀酒店在哪",
+      "status": 200,
+      "ms": 425.81,
+      "timings": {
+        "lookup_ms": 1.3,
+        "recall_ms": 161.0,
+        "rerank_ms": 251.1,
+        "expand_ms": 3.0,
+        "facts_ms": 1.4,
+        "assemble_ms": 0.1,
+        "total_ms": 418.1
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 10,
+      "query": "广州地铁5号线滘口早班车几点出发？",
+      "status": 200,
+      "ms": 494.36,
+      "timings": {
+        "lookup_ms": 0.7,
+        "recall_ms": 198.7,
+        "rerank_ms": 287.0,
+        "expand_ms": 2.3,
+        "facts_ms": 0.9,
+        "assemble_ms": 0.1,
+        "total_ms": 489.9
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 11,
+      "query": "拉萨贡嘎机场到市区怎么去？",
+      "status": 200,
+      "ms": 452.98,
+      "timings": {
+        "lookup_ms": 0.5,
+        "recall_ms": 170.3,
+        "rerank_ms": 271.2,
+        "expand_ms": 2.2,
+        "facts_ms": 1.0,
+        "assemble_ms": 0.1,
+        "total_ms": 445.4
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 12,
+      "query": "大理古城城墙怎么上去？",
+      "status": 200,
+      "ms": 400.68,
+      "timings": {
+        "lookup_ms": 0.7,
+        "recall_ms": 161.9,
+        "rerank_ms": 223.3,
+        "expand_ms": 3.6,
+        "facts_ms": 2.1,
+        "assemble_ms": 0.5,
+        "total_ms": 392.3
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 13,
+      "query": "长沙地铁2号线经过哪些站点？",
+      "status": 200,
+      "ms": 566.18,
+      "timings": {
+        "lookup_ms": 0.6,
+        "recall_ms": 248.4,
+        "rerank_ms": 303.0,
+        "expand_ms": 3.8,
+        "facts_ms": 3.4,
+        "assemble_ms": 0.2,
+        "total_ms": 559.6
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 14,
+      "query": "增城出租车每公里多少钱？",
+      "status": 200,
+      "ms": 478.71,
+      "timings": {
+        "lookup_ms": 0.5,
+        "recall_ms": 201.1,
+        "rerank_ms": 262.1,
+        "expand_ms": 4.1,
+        "facts_ms": 1.9,
+        "assemble_ms": 0.1,
+        "total_ms": 470.1
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 15,
+      "query": "昆明236路走哪条公交车道？",
+      "status": 200,
+      "ms": 466.71,
+      "timings": {
+        "lookup_ms": 0.7,
+        "recall_ms": 172.7,
+        "rerank_ms": 276.5,
+        "expand_ms": 8.8,
+        "facts_ms": 1.6,
+        "assemble_ms": 0.1,
+        "total_ms": 460.6
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 16,
+      "query": "機場快綫到香港站要多久？",
+      "status": 200,
+      "ms": 443.67,
+      "timings": {
+        "lookup_ms": 0.5,
+        "recall_ms": 191.6,
+        "rerank_ms": 234.9,
+        "expand_ms": 6.5,
+        "facts_ms": 2.5,
+        "assemble_ms": 0.2,
+        "total_ms": 436.5
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 17,
+      "query": "天津出租车起步价多少？",
+      "status": 200,
+      "ms": 440.31,
+      "timings": {
+        "lookup_ms": 1.4,
+        "recall_ms": 148.7,
+        "rerank_ms": 281.2,
+        "expand_ms": 1.4,
+        "facts_ms": 0.8,
+        "assemble_ms": 0.1,
+        "total_ms": 433.6
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 18,
+      "query": "南普陀寺开放时间",
+      "status": 200,
+      "ms": 492.53,
+      "timings": {
+        "lookup_ms": 2.7,
+        "recall_ms": 175.8,
+        "rerank_ms": 299.1,
+        "expand_ms": 3.6,
+        "facts_ms": 1.9,
+        "assemble_ms": 0.4,
+        "total_ms": 483.8
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 19,
+      "query": "天津有哪些高速公路？",
+      "status": 200,
+      "ms": 376.33,
+      "timings": {
+        "lookup_ms": 1.0,
+        "recall_ms": 169.3,
+        "rerank_ms": 198.4,
+        "expand_ms": 1.5,
+        "facts_ms": 0.4,
+        "assemble_ms": 0.0,
+        "total_ms": 370.8
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 20,
+      "query": "北京中轴线连接哪些主要地点？",
+      "status": 200,
+      "ms": 670.62,
+      "timings": {
+        "lookup_ms": 0.4,
+        "recall_ms": 266.1,
+        "rerank_ms": 396.2,
+        "expand_ms": 2.6,
+        "facts_ms": 1.2,
+        "assemble_ms": 0.2,
+        "total_ms": 666.8
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 21,
+      "query": "通江街到一湖三岛票价多少？",
+      "status": 200,
+      "ms": 389.09,
+      "timings": {
+        "lookup_ms": 0.5,
+        "recall_ms": 139.0,
+        "rerank_ms": 237.7,
+        "expand_ms": 3.6,
+        "facts_ms": 1.2,
+        "assemble_ms": 0.6,
+        "total_ms": 382.8
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 22,
+      "query": "北京中轴线贯穿哪些区？",
+      "status": 200,
+      "ms": 423.0,
+      "timings": {
+        "lookup_ms": 0.3,
+        "recall_ms": 161.6,
+        "rerank_ms": 249.0,
+        "expand_ms": 3.6,
+        "facts_ms": 1.9,
+        "assemble_ms": 0.5,
+        "total_ms": 417.2
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 23,
+      "query": "西安公共自行车租车时间限制",
+      "status": 200,
+      "ms": 381.87,
+      "timings": {
+        "lookup_ms": 0.6,
+        "recall_ms": 146.3,
+        "rerank_ms": 225.4,
+        "expand_ms": 2.1,
+        "facts_ms": 0.9,
+        "assemble_ms": 0.1,
+        "total_ms": 375.5
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 24,
+      "query": "灵隐寺门票多少钱？",
+      "status": 200,
+      "ms": 477.12,
+      "timings": {
+        "lookup_ms": 0.8,
+        "recall_ms": 170.0,
+        "rerank_ms": 295.7,
+        "expand_ms": 2.7,
+        "facts_ms": 1.9,
+        "assemble_ms": 0.3,
+        "total_ms": 471.5
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 25,
+      "query": "昆明冬季会下雪吗",
+      "status": 200,
+      "ms": 478.06,
+      "timings": {
+        "lookup_ms": 0.5,
+        "recall_ms": 207.6,
+        "rerank_ms": 261.7,
+        "expand_ms": 2.8,
+        "facts_ms": 1.1,
+        "assemble_ms": 0.1,
+        "total_ms": 474.0
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 26,
+      "query": "中央大街有多长？",
+      "status": 200,
+      "ms": 471.53,
+      "timings": {
+        "lookup_ms": 0.5,
+        "recall_ms": 166.7,
+        "rerank_ms": 294.6,
+        "expand_ms": 3.6,
+        "facts_ms": 1.2,
+        "assemble_ms": 0.2,
+        "total_ms": 466.8
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 27,
+      "query": "苏州诚品书店怎么去？",
+      "status": 200,
+      "ms": 406.31,
+      "timings": {
+        "lookup_ms": 0.6,
+        "recall_ms": 132.0,
+        "rerank_ms": 262.4,
+        "expand_ms": 3.0,
+        "facts_ms": 1.6,
+        "assemble_ms": 0.4,
+        "total_ms": 400.3
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 28,
+      "query": "大泽山风景名胜区在哪？",
+      "status": 200,
+      "ms": 420.07,
+      "timings": {
+        "lookup_ms": 1.4,
+        "recall_ms": 164.1,
+        "rerank_ms": 241.9,
+        "expand_ms": 3.5,
+        "facts_ms": 1.4,
+        "assemble_ms": 0.1,
+        "total_ms": 412.7
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 29,
+      "query": "五仙观怎么去？",
+      "status": 200,
+      "ms": 667.53,
+      "timings": {
+        "lookup_ms": 0.7,
+        "recall_ms": 344.5,
+        "rerank_ms": 310.4,
+        "expand_ms": 4.0,
+        "facts_ms": 1.1,
+        "assemble_ms": 0.8,
+        "total_ms": 661.6
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 30,
+      "query": "圓山大飯店在哪個區？",
+      "status": 200,
+      "ms": 465.94,
+      "timings": {
+        "lookup_ms": 2.5,
+        "recall_ms": 175.2,
+        "rerank_ms": 271.5,
+        "expand_ms": 5.4,
+        "facts_ms": 2.5,
+        "assemble_ms": 0.2,
+        "total_ms": 457.5
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 31,
+      "query": "乐山大佛旅游一天花费多少？",
+      "status": 200,
+      "ms": 454.04,
+      "timings": {
+        "lookup_ms": 1.1,
+        "recall_ms": 171.6,
+        "rerank_ms": 257.2,
+        "expand_ms": 6.7,
+        "facts_ms": 5.5,
+        "assemble_ms": 0.7,
+        "total_ms": 443.0
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 32,
+      "query": "北京地铁如何防扒窃？",
+      "status": 200,
+      "ms": 384.17,
+      "timings": {
+        "lookup_ms": 0.8,
+        "recall_ms": 170.3,
+        "rerank_ms": 197.0,
+        "expand_ms": 1.7,
+        "facts_ms": 0.9,
+        "assemble_ms": 0.1,
+        "total_ms": 370.9
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 33,
+      "query": "西康宾馆价格多少？",
+      "status": 200,
+      "ms": 570.96,
+      "timings": {
+        "lookup_ms": 0.7,
+        "recall_ms": 305.4,
+        "rerank_ms": 246.5,
+        "expand_ms": 3.2,
+        "facts_ms": 2.0,
+        "assemble_ms": 0.2,
+        "total_ms": 558.2
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 34,
+      "query": "天津大学始建于哪年？",
+      "status": 200,
+      "ms": 396.08,
+      "timings": {
+        "lookup_ms": 2.5,
+        "recall_ms": 137.2,
+        "rerank_ms": 243.7,
+        "expand_ms": 1.4,
+        "facts_ms": 0.8,
+        "assemble_ms": 0.1,
+        "total_ms": 385.7
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 35,
+      "query": "去蜈支洲岛从哪个码头坐船？",
+      "status": 200,
+      "ms": 1344.3,
+      "timings": {
+        "lookup_ms": 0.4,
+        "recall_ms": 1045.7,
+        "rerank_ms": 289.1,
+        "expand_ms": 5.5,
+        "facts_ms": 1.2,
+        "assemble_ms": 0.4,
+        "total_ms": 1342.5
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 36,
+      "query": "昆明长水机场到新迎小区怎么坐车？",
+      "status": 200,
+      "ms": 418.92,
+      "timings": {
+        "lookup_ms": 0.5,
+        "recall_ms": 159.2,
+        "rerank_ms": 247.2,
+        "expand_ms": 2.9,
+        "facts_ms": 1.2,
+        "assemble_ms": 0.1,
+        "total_ms": 411.2
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 37,
+      "query": "后海酒吧街怎么去？",
+      "status": 200,
+      "ms": 461.16,
+      "timings": {
+        "lookup_ms": 0.4,
+        "recall_ms": 181.5,
+        "rerank_ms": 263.8,
+        "expand_ms": 5.2,
+        "facts_ms": 2.2,
+        "assemble_ms": 0.2,
+        "total_ms": 453.5
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 38,
+      "query": "三亚半山半岛洲际酒店房价多少？",
+      "status": 200,
+      "ms": 461.98,
+      "timings": {
+        "lookup_ms": 1.2,
+        "recall_ms": 180.4,
+        "rerank_ms": 258.3,
+        "expand_ms": 7.6,
+        "facts_ms": 2.9,
+        "assemble_ms": 0.1,
+        "total_ms": 450.8
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 39,
+      "query": "武汉地铁票价怎么算？",
+      "status": 200,
+      "ms": 616.63,
+      "timings": {
+        "lookup_ms": 1.3,
+        "recall_ms": 384.3,
+        "rerank_ms": 211.3,
+        "expand_ms": 7.7,
+        "facts_ms": 1.5,
+        "assemble_ms": 0.8,
+        "total_ms": 607.1
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 40,
+      "query": "贺龙墓地址在哪？",
+      "status": 200,
+      "ms": 467.08,
+      "timings": {
+        "lookup_ms": 0.6,
+        "recall_ms": 170.6,
+        "rerank_ms": 280.2,
+        "expand_ms": 3.1,
+        "facts_ms": 1.9,
+        "assemble_ms": 0.3,
+        "total_ms": 456.9
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 41,
+      "query": "西安威斯汀酒店在哪",
+      "status": 200,
+      "ms": 418.55,
+      "timings": {
+        "lookup_ms": 0.6,
+        "recall_ms": 154.3,
+        "rerank_ms": 249.5,
+        "expand_ms": 5.0,
+        "facts_ms": 1.2,
+        "assemble_ms": 0.1,
+        "total_ms": 411.0
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 42,
+      "query": "广州地铁5号线滘口早班车几点出发？",
+      "status": 200,
+      "ms": 506.0,
+      "timings": {
+        "lookup_ms": 0.7,
+        "recall_ms": 257.6,
+        "rerank_ms": 237.8,
+        "expand_ms": 1.4,
+        "facts_ms": 0.8,
+        "assemble_ms": 0.1,
+        "total_ms": 498.4
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 43,
+      "query": "拉萨贡嘎机场到市区怎么去？",
+      "status": 200,
+      "ms": 403.39,
+      "timings": {
+        "lookup_ms": 0.9,
+        "recall_ms": 175.1,
+        "rerank_ms": 216.9,
+        "expand_ms": 1.4,
+        "facts_ms": 0.8,
+        "assemble_ms": 0.1,
+        "total_ms": 395.2
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 44,
+      "query": "大理古城城墙怎么上去？",
+      "status": 200,
+      "ms": 392.02,
+      "timings": {
+        "lookup_ms": 0.8,
+        "recall_ms": 152.7,
+        "rerank_ms": 219.4,
+        "expand_ms": 3.5,
+        "facts_ms": 1.6,
+        "assemble_ms": 0.7,
+        "total_ms": 378.9
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 45,
+      "query": "长沙地铁2号线经过哪些站点？",
+      "status": 200,
+      "ms": 403.95,
+      "timings": {
+        "lookup_ms": 0.5,
+        "recall_ms": 165.7,
+        "rerank_ms": 225.3,
+        "expand_ms": 3.0,
+        "facts_ms": 1.3,
+        "assemble_ms": 0.2,
+        "total_ms": 396.2
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 46,
+      "query": "增城出租车每公里多少钱？",
+      "status": 200,
+      "ms": 416.93,
+      "timings": {
+        "lookup_ms": 0.4,
+        "recall_ms": 170.3,
+        "rerank_ms": 232.7,
+        "expand_ms": 4.7,
+        "facts_ms": 1.7,
+        "assemble_ms": 0.1,
+        "total_ms": 410.2
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 47,
+      "query": "昆明236路走哪条公交车道？",
+      "status": 200,
+      "ms": 484.11,
+      "timings": {
+        "lookup_ms": 0.5,
+        "recall_ms": 201.1,
+        "rerank_ms": 269.6,
+        "expand_ms": 3.7,
+        "facts_ms": 2.1,
+        "assemble_ms": 0.2,
+        "total_ms": 477.3
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 48,
+      "query": "機場快綫到香港站要多久？",
+      "status": 200,
+      "ms": 493.81,
+      "timings": {
+        "lookup_ms": 0.7,
+        "recall_ms": 207.5,
+        "rerank_ms": 271.0,
+        "expand_ms": 2.3,
+        "facts_ms": 1.3,
+        "assemble_ms": 0.1,
+        "total_ms": 483.2
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 49,
+      "query": "天津出租车起步价多少？",
+      "status": 200,
+      "ms": 420.87,
+      "timings": {
+        "lookup_ms": 1.0,
+        "recall_ms": 141.6,
+        "rerank_ms": 263.5,
+        "expand_ms": 3.7,
+        "facts_ms": 2.0,
+        "assemble_ms": 0.1,
+        "total_ms": 412.1
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 50,
+      "query": "南普陀寺开放时间",
+      "status": 200,
+      "ms": 457.93,
+      "timings": {
+        "lookup_ms": 1.1,
+        "recall_ms": 160.3,
+        "rerank_ms": 281.3,
+        "expand_ms": 4.0,
+        "facts_ms": 1.4,
+        "assemble_ms": 0.4,
+        "total_ms": 448.6
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 51,
+      "query": "天津有哪些高速公路？",
+      "status": 200,
+      "ms": 354.36,
+      "timings": {
+        "lookup_ms": 0.8,
+        "recall_ms": 151.5,
+        "rerank_ms": 185.9,
+        "expand_ms": 2.5,
+        "facts_ms": 2.4,
+        "assemble_ms": 0.2,
+        "total_ms": 343.5
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 52,
+      "query": "北京中轴线连接哪些主要地点？",
+      "status": 200,
+      "ms": 474.86,
+      "timings": {
+        "lookup_ms": 0.6,
+        "recall_ms": 181.3,
+        "rerank_ms": 278.4,
+        "expand_ms": 2.2,
+        "facts_ms": 1.0,
+        "assemble_ms": 0.2,
+        "total_ms": 463.8
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 53,
+      "query": "通江街到一湖三岛票价多少？",
+      "status": 200,
+      "ms": 551.57,
+      "timings": {
+        "lookup_ms": 0.5,
+        "recall_ms": 176.0,
+        "rerank_ms": 361.5,
+        "expand_ms": 3.5,
+        "facts_ms": 1.2,
+        "assemble_ms": 1.5,
+        "total_ms": 544.4
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 54,
+      "query": "北京中轴线贯穿哪些区？",
+      "status": 200,
+      "ms": 447.13,
+      "timings": {
+        "lookup_ms": 0.8,
+        "recall_ms": 172.2,
+        "rerank_ms": 256.7,
+        "expand_ms": 3.6,
+        "facts_ms": 3.3,
+        "assemble_ms": 0.4,
+        "total_ms": 437.2
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 55,
+      "query": "西安公共自行车租车时间限制",
+      "status": 200,
+      "ms": 543.01,
+      "timings": {
+        "lookup_ms": 0.3,
+        "recall_ms": 185.9,
+        "rerank_ms": 343.0,
+        "expand_ms": 4.6,
+        "facts_ms": 2.0,
+        "assemble_ms": 0.2,
+        "total_ms": 536.2
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 56,
+      "query": "灵隐寺门票多少钱？",
+      "status": 200,
+      "ms": 413.86,
+      "timings": {
+        "lookup_ms": 1.0,
+        "recall_ms": 154.2,
+        "rerank_ms": 246.6,
+        "expand_ms": 2.1,
+        "facts_ms": 1.0,
+        "assemble_ms": 0.2,
+        "total_ms": 405.3
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 57,
+      "query": "昆明冬季会下雪吗",
+      "status": 200,
+      "ms": 454.88,
+      "timings": {
+        "lookup_ms": 0.8,
+        "recall_ms": 197.6,
+        "rerank_ms": 242.3,
+        "expand_ms": 3.5,
+        "facts_ms": 1.1,
+        "assemble_ms": 0.1,
+        "total_ms": 445.6
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 58,
+      "query": "中央大街有多长？",
+      "status": 200,
+      "ms": 419.79,
+      "timings": {
+        "lookup_ms": 1.0,
+        "recall_ms": 135.4,
+        "rerank_ms": 270.0,
+        "expand_ms": 2.4,
+        "facts_ms": 1.0,
+        "assemble_ms": 0.2,
+        "total_ms": 410.0
+      },
+      "rerank_real": true
+    },
+    {
+      "i": 59,
+      "query": "苏州诚品书店怎么去？",
+      "status": 200,
+      "ms": 415.28,
+      "timings": {
+        "lookup_ms": 2.7,
+        "recall_ms": 165.5,
+        "rerank_ms": 229.8,
+        "expand_ms": 3.0,
+        "facts_ms": 1.4,
+        "assemble_ms": 0.2,
+        "total_ms": 402.8
+      },
+      "rerank_real": true
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+1. FastMCP("service-name")
+2. 从环境变量读 API Key
+3. @mcp.tool() 装饰器定义一个/多个工具
+4. 工具内部用 httpx.AsyncClient 调外部 HTTP API
+5. 返回 JSON 字符串（错误也用 JSON）
+6. if __name__ == "__main__": mcp.run(transport="stdio")

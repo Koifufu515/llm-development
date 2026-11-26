@@ -1,0 +1,84 @@
+行程清单生成门禁•三个条件同时成立才出清单，源料按三级回退来找
+门禁位于 _produce L272-299。三路执行交出的四元组在这里汇合：state_step 管「到没到该出清单的步骤」，full_text、committed、body
+管「拿什么去提炼」。
+三个条件（284-286，三个都为真才进入生成
+① 是规划回合
+2 步骤已就绪
+3
+有料可提炼
+router.is_itinerary_planning
+state_step in _ready_steps
+-source or body
+闲聊不出清单。值来自 chat_route 的判断；卡片续跑时合成的
+路由结果恒为 True。
+自动模式
+手动模式
+_source 是给 DeepSeek 提炼的Markdown 源料，按下面的三
+级回退来找；body 是状态机里已过 Pydantic 校验的逐日结构，
+_auto_quick_hit or
+（其余情况）
+提炼失败时由代码直接拼清单。
+express_req
+buaget_summarization
+itinerary-generation
+report_generation
+buaget_summarization
+行程步本身不算就绪
+report_generation
+report_generation 只出现在白名单里，状态机实际不会走到这一
+步。
+源料三级回退
+L278-282：前一级拿不到，才往下一级找
+第1级 本轮正文
+第2级 历史全文
+第3级 结构兜底
+本轮 full_text 过得了
+只有本轮 committed 为真（调过
+前两级都没有、但有 body：_source设为
+X 不生成
+_looks_like_itinerary，就直接用它：超过150
+generate_itinerary_tool，ToolMessage 含「已
+full_text or ""，交给 generate_plan，由它用
+字，且有「第X天/ Day N」，或者上午/中午/下午/晚
+生成」）才去翻：_recent_itinerary_text 查最近
+structure=body 代码兜底。
+三级都落空，条件③ 不成
+上至少出现3次。
+8 条 assistant 消息，优先取
+立，本轮不推任何清单帧
+extra_info.original。
+三条通道各自怎么过门禁 决定性因素是四元组里的 state _step和body
+通道
+② state_step
+③ 源料/ 结构
+结果
+直查
+None
+body 为 None
+x
+永不出清单：state_step 为 None，条件② 必然不成立
+快速通道
+itinerary_generation
+body=逐日结构 days，必定存在
+只要快速通道跑成功，同一轮就出清单
+（L260写死），又是自动模
+式，直接就绪
+状态机
+取 execute_turn 回合末的|
+代码渲染的正文（第1级），或
+提交行程结构那一轮：submit_itinerary_body_tool 把步骤推到预算步，同一轮出清单
+current_step ；手动模式要
+itinerary_body（第3级）
+到 budget_summarization
+帧与落库顺序 （287-299与L321
+itinerary_plans •pending generate_plan（db, conversation_id， _source or "" ， structure=body）一
+DeepSeek 提炼
+_plan_defect 守卫 — 不可用转代码兜底
+— 高德 POl/路线增强
+按会话覆盖落库 后台质检
+返回后：
+itinerary_plans •success + plan_id - plan_id 写进 assistant 消息 extra_info.itinerary_plans （L321）
+抛异常：
+itinerary_plans •error 只推失败帧，本轮照常收尾
+门禁把两件事分开判：「该不该出清单」看is_itinerary_planning和state_step，「拿什么出清单」走本轮正文 -历史全文-结构兜底三级回退。最后一级保证：只要状态机里有过一份校验过的
+逐日结构，即使 DeepSeek 提炼失败，清单也能由代码生成。

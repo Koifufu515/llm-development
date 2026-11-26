@@ -1,0 +1,19 @@
+"""落库的结构化清单 → 裁判读得懂的正文；键名层级写错，正文就只剩标题（纯函数，无需密钥）"""
+from app.services.quality_check_service import plan_to_text
+
+plan = {
+    "title": "杭州3日游 上海出发 2人 高铁 文化探索",
+    "itinerary_list": [
+        {"day": "Day 1", "itinerary": [
+            {"time": "上午", "scenic_spots_list": [
+                {"toponym": "西湖", "toponym_desc": "沿白堤走到断桥残雪，打卡平湖秋月与孤山，约1.5小时"}]},
+            {"time": "中午", "scenic_spots_list": [
+                {"toponym": "楼外楼", "toponym_desc": "西湖醋鱼与龙井虾仁，人均约120元"},
+                {"toponym": "孤山公园", "toponym_desc": "饭后散步消食"}]},
+        ]},
+    ],
+}
+print(plan_to_text(plan))
+print("---")
+wrong = {"title": plan["title"], "days": plan["itinerary_list"]}      # 把 itinerary_list 写成了 days
+print("键名写错 →", repr(plan_to_text(wrong)))

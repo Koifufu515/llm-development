@@ -1,0 +1,10 @@
+14:23:11.120 | INFO    | quarry.ingest.indexer:index_document:66 | corp-policy/travel-reimbursement.md: 子块 3 个，已存在 0 个，需要向量化 3 个
+14:23:12.408 | INFO    | quarry.ingest.indexer:index_document:66 | travel-guide/上海.md: 子块 31 个，已存在 0 个，需要向量化 31 个
+...
+==================================================
+文件数        31
+整份跳过      9
+新向量化子块  768
+复用子块      0
+清掉孤儿块    0
+清掉旧版本块  0

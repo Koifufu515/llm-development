@@ -1,0 +1,2 @@
+嵌套： {'originQuery': '杭州 经济型酒店 2晚 2人', 'place': '杭州', 'placeType': '城市', 'checkInParam': {'checkInDate': '2026-10-01', 'stayNights': 2, 'adultCount': 2}, 'filterOptions': {'starRatings': [0.0, 3.0]}, 'size': 5}
+扁平： {'place': '杭州', 'placeType': '城市', 'checkIn': '2026-10-01', 'stayNights': 2, 'starRatings': [4.5, 5.0], 'adultCount': 2, 'size': 5}

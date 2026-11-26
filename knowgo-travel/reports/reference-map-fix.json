@@ -1,0 +1,16 @@
+{
+  "scope": "修复真实浏览器发现的景点误匹配停车场，仅更新合成基准账号的地图展示，不改正文/预算/历史版本。",
+  "probe_matched": true,
+  "repaired_synthetic_plans": [
+    {
+      "plan_id": "fc6a5733-597d-4c8d-b32a-3b2faee913fb",
+      "bad_before": [],
+      "points_after": [
+        "平江路",
+        "苏州博物馆(本馆)",
+        "太平天国忠王府"
+      ],
+      "no_auxiliary_mismatch": true
+    }
+  ]
+}

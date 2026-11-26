@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>知行 · 需求收集实验</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f5f6f3;color:#20372f;font:16px/1.7 system-ui,-apple-system,sans-serif}main{max-width:1100px;margin:32px auto;padding:0 24px}h1{margin-bottom:0}p{color:#607169}.grid{display:grid;grid-template-columns:1.1fr 1fr;gap:20px}.panel{background:white;border:1px solid #dfe7df;border-radius:16px;padding:22px}#chat{height:350px;overflow:auto}.bubble{padding:12px 16px;margin-bottom:12px;border-radius:12px;background:#f0f4ef;white-space:pre-wrap}.user{background:#e0eee8}.table-wrap{overflow-x:auto;margin:10px 0}.bubble table{border-collapse:collapse;white-space:normal;font-size:13px;min-width:600px}.bubble th,.bubble td{padding:8px;border:1px solid #cbd9cf;text-align:left}.bubble th{background:#dce8de}textarea{width:100%;padding:12px;border:1px solid #bacfc1;border-radius:8px;resize:vertical;font:inherit}button{background:#2b6350;color:white;border:0;border-radius:8px;padding:10px 20px;cursor:pointer;margin-top:10px}button:disabled{opacity:.5;cursor:wait}.secondary{background:#e9eeea;color:#315044;margin-left:8px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px}#status{font-size:14px;color:#607169;min-height:28px}h2{font-size:18px}small{color:#607169}@media(max-width:760px){.grid{grid-template-columns:1fr}main{margin-top:16px}}
+</style></head><body><main>
+<h1>知行 · 需求收集实验</h1><p>把旅行想法变成可保存的需求。信息齐全后单独发送“确认”；修改目的地后，观察旧确认如何失效。</p>
+<div class="grid"><section class="panel"><div id="chat"><div class="bubble">可以从一句话开始，例如：我想去杭州玩三天，每人预算两千元。</div></div>
+<form id="form"><label for="message">你的旅行需求</label><textarea id="message" rows="3" maxlength="4000" required placeholder="输入需求，或补充上一轮遗漏的信息"></textarea><button id="send">发送</button><button type="button" class="secondary" id="new">新建会话</button></form><div id="status" role="status"></div><small>每次发送会调用真实 DeepSeek；已接入城市、天气与高铁/动车查询。确认需求后可查当前行程车票；超出查询窗口会明确说明。</small></section>
+<section class="panel"><h2>当前旅行状态</h2><pre id="state">等待加载会话……</pre><h2>这一轮经过的工具</h2><pre id="tools">尚未发送</pre><h2>外部工具原始结果</h2><pre id="results">尚未查询</pre><small>messages 保存对话历史；user_requirement 保存已确认口径的字段。刷新页面后可恢复状态，聊天展示区暂不回放历史正文。</small></section></div>
+</main><script>
+const chat=document.querySelector('#chat'),state=document.querySelector('#state'),status=document.querySelector('#status'),tools=document.querySelector('#tools');
+const controls=[...document.querySelectorAll('button,textarea')];
+let session=localStorage.getItem('knowgo-learning-session'),busy=false;
+function bubble(text,isUser=false){
+ const el=document.createElement('div');el.className='bubble'+(isUser?' user':'');
+ const lines=String(text).split('\n');let start=lines.findIndex((line,i)=>line.trim().startsWith('|')&&i+1<lines.length&&/^\s*\|[\s:|\-]+\|\s*$/.test(lines[i+1]));
+ if(isUser||start<0){el.textContent=text;}else{
+  const before=document.createElement('div');before.textContent=lines.slice(0,start).join('\n');el.append(before);
+  const wrap=document.createElement('div');wrap.className='table-wrap';const table=document.createElement('table');
+  const cells=line=>line.trim().replace(/^\||\|$/g,'').split('|').map(v=>v.trim());
+  const head=document.createElement('thead'),headRow=document.createElement('tr');for(const value of cells(lines[start])){const cell=document.createElement('th');cell.textContent=value;headRow.append(cell);}head.append(headRow);table.append(head);
+  let end=start+2;const body=document.createElement('tbody');while(end<lines.length&&lines[end].trim().startsWith('|')){const row=document.createElement('tr');for(const value of cells(lines[end])){const cell=document.createElement('td');cell.textContent=value;row.append(cell);}body.append(row);end++;}table.append(body);wrap.append(table);el.append(wrap);
+  const after=document.createElement('div');after.textContent=lines.slice(end).join('\n');el.append(after);
+ }chat.append(el);chat.scrollTop=chat.scrollHeight;
+}
+function show(data){state.textContent=JSON.stringify(data,null,2);}
+async function api(path,body){const r=await fetch(path,{method:body?'POST':'GET',headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});const d=await r.json();if(!r.ok)throw new Error(typeof d.detail==='string'?d.detail:'输入不合法，请检查后重试');return d;}
+async function fresh(){const d=await api('/api/sessions',{});session=d.session_id;localStorage.setItem('knowgo-learning-session',session);return api('/api/sessions/'+session);}
+function setBusy(value){busy=value;controls.forEach(c=>c.disabled=value);}
+(async()=>{setBusy(true);try{if(session){try{show(await api('/api/sessions/'+session));}catch{show(await fresh());}}else show(await fresh());const c=await api('/health/config');status.textContent=c.model_configured?'DeepSeek 已配置 · PostgreSQL 会话已就绪':'请先在 .env 填写 DEEPSEEK_API_KEY';}catch(e){status.textContent=e.message;}finally{setBusy(false);}})();
+document.querySelector('#new').onclick=async()=>{if(busy)return;setBusy(true);try{show(await fresh());chat.replaceChildren();bubble('新会话已创建。告诉我你想去哪里。');tools.textContent='尚未发送';document.querySelector('#results').textContent='尚未查询';status.textContent='新会话与旧会话独立';}catch(e){status.textContent=e.message;}finally{setBusy(false);}};
+document.querySelector('#form').onsubmit=async e=>{e.preventDefault();if(busy)return;const input=document.querySelector('#message'),text=input.value.trim();if(!text)return;setBusy(true);status.textContent='模型处理中……';bubble(text,true);input.value='';try{const d=await api('/api/chat',{session_id:session,message:text});bubble(d.reply);tools.textContent=d.tool_calls.length?d.tool_calls.join('\n'):'本轮未调用工具';document.querySelector('#results').textContent=JSON.stringify((d.tool_results||[]).map(item=>{let value=item.content;if(Array.isArray(value))value=value.filter(b=>b.type==='text').map(b=>b.text).join('\n');try{value=JSON.parse(value)}catch{}return {name:item.name,data:value}}),null,2);const {reply,tool_calls,tool_results,...snapshot}=d;show(snapshot);status.textContent='本轮完成，可以继续补充或新建会话';}catch(err){status.textContent=err.message;}finally{setBusy(false);}};
+</script></body></html>

@@ -1,0 +1,56 @@
+# ============== 行程正文结构化（Pydantic） ==============
+_SLOT_KEYS = ("morning", "noon", "afternoon", "evening")
+_SLOT_LABELS = {"morning": "上午", "noon": "中午", "afternoon": "下午", "evening": "晚上"}
+_RETURN_HINTS = ("返程", "返回", "回程")
+_ITEM_MIN_CHARS = 60
+
+PlanItem = Annotated[str, Field(min_length=1)]
+
+class DayPlan(BaseModel):
+    """单日行程：分4个时段，配套当日小贴士"""
+    day: int = Field(ge=1, description="第几天（从1开始，连续覆盖1~旅行天数）")
+    city: str = Field(default="", description="当天所在城市，如“重庆”")
+    morning: list[PlanItem] = Field(min_length=1, description="上午安排（1~2条，含玩法/看点/门票或耗时）")
+    noon: list[PlanItem] = Field(min_length=1, description="中午安排（1~2条，午餐写店名+招牌菜+人均）")
+    afternoon: list[PlanItem] = Field(min_length=1, description="下午安排（1~2条，含玩法与建议停留时长）")
+    evening: list[PlanItem] = Field(min_length=1, description="晚上安排（1~2条；末日晚上必须含返程）")
+    tips: list[PlanItem] = Field(default_factory=list, description="当天实用小贴士（1~3条：门票/预约/交通接驳/避坑）")
+
+class ItineraryBody(BaseModel):
+    """完整行程结构化模型，校验天数连续性、条目长度、末日返程规则"""
+    days: list[DayPlan] = Field(min_length=1, description="逐日行程列表，按天序号升序")
+
+    @model_validator(mode="after")
+    def _check_days(self, info: ValidationInfo) -> "ItineraryBody":
+        nums = [d.day for d in self.days]
+        if len(set(nums)) != len(nums):
+            raise ValueError(f"天序号重复：{sorted(nums)}，每天只能出现一次")
+
+        need = (info.context or {}).get("travel_days") or 0
+
+        for d in self.days:
+            if not d.tips:
+                raise ValueError(f"第 {d.day} 天缺少 tips：每天至少 1 条实用小贴士（预约/门票/交通接驳/避坑）")
+            for key in _SLOT_KEYS + ("tips",):
+                for item in getattr(d, key):
+                    if len(str(item).strip()) >= _ITEM_MIN_CHARS:
+                        continue
+                    raise ValueError(
+                        f"第 {d.day} 天「{_SLOT_LABELS.get(key, '小贴士')}」的条目「{str(item).strip()}」"
+                        f"只有 {len(str(item).strip())} 字：每条不少于 {_ITEM_MIN_CHARS} 字"
+                        f"（时间/地点 + 玩法或看点 + 价格或时长）"
+                    )
+
+        if not need:
+            return self
+
+        miss = [d for d in range(1, need + 1) if d not in nums]
+        if miss:
+            raise ValueError(f"缺少第 {'、'.join(str(d) for d in miss)} 天：必须恰好覆盖第 1~{need} 天")
+        if max(nums) > need:
+            raise ValueError(f"超出旅行天数：全程仅 {need} 天，却出现第 {max(nums)} 天")
+
+        tail = next((d for d in self.days if d.day == need), None)
+        if tail and not any(h in " ".join(tail.evening) for h in _RETURN_HINTS):
+            raise ValueError(f"第 {need} 天（末日）晚上必须包含返程安排，如“乘 G1710 返回天津”")
+        return self

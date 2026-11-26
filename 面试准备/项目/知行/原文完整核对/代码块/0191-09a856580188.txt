@@ -1,0 +1,2 @@
+入参别名： 北京 天津 2026-10-01
+下发给前端： train_multi_segment | 段字段： ['segment_id', 'from', 'to', 'date', 'train_list'] | 票价： 54

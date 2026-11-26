@@ -1,0 +1,4 @@
+async with acquire() as conn, conn.transaction():
+    await conn.execute("SET LOCAL hnsw.iterative_scan = relaxed_order")
+    await conn.execute("SET LOCAL hnsw.max_scan_tuples = 20000")
+    rows = await conn.fetch(_HYBRID_SQL, ...)

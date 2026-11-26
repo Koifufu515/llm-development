@@ -1,0 +1,1 @@
+../../../../../../knowgo-travel/app/full/legacy_contract.py

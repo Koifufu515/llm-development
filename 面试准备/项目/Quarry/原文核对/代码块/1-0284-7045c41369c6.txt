@@ -1,0 +1,2 @@
+qvec_list = await get_embedder().embed([query])
+tsq = build_tsquery(query)

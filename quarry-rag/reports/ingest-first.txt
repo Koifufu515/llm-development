@@ -1,0 +1,43 @@
+[32m13:53:39.339[0m | [1mINFO   [0m | [36mquarry.ingest.indexer[0m:[36mindex_document[0m:[36m74[0m | [1mtravel-guide/三亚.md: 子块 99 个，已存在 0 个，需要向量化 99 个[0m
+Building prefix dict from the default dictionary ...
+Dumping model to file cache /var/folders/rk/qtxh2ds10vd6_cdg09pdzrbm0000gn/T/jieba.cache
+Loading model cost 0.226 seconds.
+Prefix dict has been built successfully.
+[32m13:53:50.552[0m | [1mINFO   [0m | [36mquarry.ingest.indexer[0m:[36mindex_document[0m:[36m74[0m | [1mtravel-guide/上海.md: 子块 37 个，已存在 0 个，需要向量化 37 个[0m
+[32m13:53:54.216[0m | [1mINFO   [0m | [36mquarry.ingest.indexer[0m:[36mindex_document[0m:[36m74[0m | [1mtravel-guide/丽江.md: 子块 9 个，已存在 0 个，需要向量化 9 个[0m
+[32m13:53:55.475[0m | [1mINFO   [0m | [36mquarry.ingest.indexer[0m:[36mindex_document[0m:[36m74[0m | [1mtravel-guide/乌鲁木齐.md: 子块 13 个，已存在 0 个，需要向量化 13 个[0m
+[32m13:53:56.216[0m | [1mINFO   [0m | [36mquarry.ingest.indexer[0m:[36mindex_document[0m:[36m74[0m | [1mtravel-guide/北京.md: 子块 73 个，已存在 0 个，需要向量化 73 个[0m
+[32m13:54:00.234[0m | [1mINFO   [0m | [36mquarry.ingest.indexer[0m:[36mindex_document[0m:[36m74[0m | [1mtravel-guide/南京.md: 子块 58 个，已存在 0 个，需要向量化 58 个[0m
+[32m13:54:06.796[0m | [1mINFO   [0m | [36mquarry.ingest.indexer[0m:[36mindex_document[0m:[36m74[0m | [1mtravel-guide/厦门.md: 子块 21 个，已存在 0 个，需要向量化 21 个[0m
+[32m13:54:08.365[0m | [1mINFO   [0m | [36mquarry.ingest.indexer[0m:[36mindex_document[0m:[36m74[0m | [1mtravel-guide/台北.md: 子块 37 个，已存在 0 个，需要向量化 37 个[0m
+[32m13:54:10.553[0m | [1mINFO   [0m | [36mquarry.ingest.indexer[0m:[36mindex_document[0m:[36m74[0m | [1mtravel-guide/哈尔滨.md: 子块 117 个，已存在 0 个，需要向量化 117 个[0m
+[32m13:54:23.219[0m | [1mINFO   [0m | [36mquarry.ingest.indexer[0m:[36mindex_document[0m:[36m74[0m | [1mtravel-guide/大理.md: 子块 27 个，已存在 0 个，需要向量化 27 个[0m
+[32m13:54:25.598[0m | [1mINFO   [0m | [36mquarry.ingest.indexer[0m:[36mindex_document[0m:[36m74[0m | [1mtravel-guide/天津.md: 子块 22 个，已存在 0 个，需要向量化 22 个[0m
+[32m13:54:26.860[0m | [1mINFO   [0m | [36mquarry.ingest.indexer[0m:[36mindex_document[0m:[36m74[0m | [1mtravel-guide/平遥.md: 子块 9 个，已存在 0 个，需要向量化 9 个[0m
+[32m13:54:27.785[0m | [1mINFO   [0m | [36mquarry.ingest.indexer[0m:[36mindex_document[0m:[36m74[0m | [1mtravel-guide/广州.md: 子块 131 个，已存在 0 个，需要向量化 131 个[0m
+[32m13:54:39.108[0m | [1mINFO   [0m | [36mquarry.ingest.indexer[0m:[36mindex_document[0m:[36m74[0m | [1mtravel-guide/张家界.md: 子块 24 个，已存在 0 个，需要向量化 24 个[0m
+[32m13:54:40.497[0m | [1mINFO   [0m | [36mquarry.ingest.indexer[0m:[36mindex_document[0m:[36m74[0m | [1mtravel-guide/成都.md: 子块 42 个，已存在 0 个，需要向量化 42 个[0m
+[32m13:54:44.836[0m | [1mINFO   [0m | [36mquarry.ingest.indexer[0m:[36mindex_document[0m:[36m74[0m | [1mtravel-guide/拉萨.md: 子块 13 个，已存在 0 个，需要向量化 13 个[0m
+[32m13:54:46.044[0m | [1mINFO   [0m | [36mquarry.ingest.indexer[0m:[36mindex_document[0m:[36m74[0m | [1mtravel-guide/敦煌.md: 子块 6 个，已存在 0 个，需要向量化 6 个[0m
+[32m13:54:46.779[0m | [1mINFO   [0m | [36mquarry.ingest.indexer[0m:[36mindex_document[0m:[36m74[0m | [1mtravel-guide/昆明.md: 子块 23 个，已存在 0 个，需要向量化 23 个[0m
+[32m13:54:48.042[0m | [1mINFO   [0m | [36mquarry.ingest.indexer[0m:[36mindex_document[0m:[36m74[0m | [1mtravel-guide/杭州.md: 子块 37 个，已存在 0 个，需要向量化 37 个[0m
+[32m13:54:50.022[0m | [1mINFO   [0m | [36mquarry.ingest.indexer[0m:[36mindex_document[0m:[36m74[0m | [1mtravel-guide/桂林.md: 子块 17 个，已存在 0 个，需要向量化 17 个[0m
+[32m13:54:50.765[0m | [1mINFO   [0m | [36mquarry.ingest.indexer[0m:[36mindex_document[0m:[36m74[0m | [1mtravel-guide/武汉.md: 子块 29 个，已存在 0 个，需要向量化 29 个[0m
+[32m13:54:52.416[0m | [1mINFO   [0m | [36mquarry.ingest.indexer[0m:[36mindex_document[0m:[36m74[0m | [1mtravel-guide/洛阳.md: 子块 13 个，已存在 0 个，需要向量化 13 个[0m
+[32m13:54:53.268[0m | [1mINFO   [0m | [36mquarry.ingest.indexer[0m:[36mindex_document[0m:[36m74[0m | [1mtravel-guide/苏州.md: 子块 22 个，已存在 0 个，需要向量化 22 个[0m
+[32m13:54:54.552[0m | [1mINFO   [0m | [36mquarry.ingest.indexer[0m:[36mindex_document[0m:[36m74[0m | [1mtravel-guide/西安.md: 子块 111 个，已存在 0 个，需要向量化 111 个[0m
+[32m13:55:02.447[0m | [1mINFO   [0m | [36mquarry.ingest.indexer[0m:[36mindex_document[0m:[36m74[0m | [1mtravel-guide/重庆.md: 子块 41 个，已存在 0 个，需要向量化 41 个[0m
+[32m13:55:07.983[0m | [1mINFO   [0m | [36mquarry.ingest.indexer[0m:[36mindex_document[0m:[36m74[0m | [1mtravel-guide/长沙.md: 子块 19 个，已存在 0 个，需要向量化 19 个[0m
+[32m13:55:09.167[0m | [1mINFO   [0m | [36mquarry.ingest.indexer[0m:[36mindex_document[0m:[36m74[0m | [1mtravel-guide/青岛.md: 子块 47 个，已存在 0 个，需要向量化 47 个[0m
+[32m13:55:15.328[0m | [1mINFO   [0m | [36mquarry.ingest.indexer[0m:[36mindex_document[0m:[36m74[0m | [1mtravel-guide/香港.md: 子块 118 个，已存在 0 个，需要向量化 118 个[0m
+[32m13:55:27.684[0m | [1mINFO   [0m | [36mquarry.ingest.indexer[0m:[36mindex_document[0m:[36m74[0m | [1mtravel-guide/黄山.md: 子块 16 个，已存在 0 个，需要向量化 16 个[0m
+[32m13:55:28.939[0m | [1mINFO   [0m | [36mquarry.ingest.indexer[0m:[36mindex_document[0m:[36m74[0m | [1mcorp-policy/差旅报销制度.md: 子块 3 个，已存在 0 个，需要向量化 3 个[0m
+[32m13:55:29.183[0m | [1mINFO   [0m | [36mquarry.ingest.indexer[0m:[36mindex_document[0m:[36m74[0m | [1minternal-notes/新人入职笔记.md: 子块 3 个，已存在 0 个，需要向量化 3 个[0m
+
+==================================================
+文件数        31
+整份跳过      0
+新向量化子块  1237
+复用子块      0
+清掉孤儿块    0
+清掉旧版本块  0

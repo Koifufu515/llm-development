@@ -1,0 +1,15 @@
+Model ToolNode 循环
+Model 节点
+调LLM，让它决定
+LLM 决策？
+要调工具
+不需要工具
+（
+（
+ToolNode
+END
+执行工具函数
+返回最终消息
+工具返回 ToolMessage
++ Command（update=...）
+回到 Model 节点

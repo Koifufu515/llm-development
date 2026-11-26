@@ -1,0 +1,21 @@
+"""SignatureCache 演示：is_complete 在读、写两头把关；换个会话不命中；超过容量踢掉最早写入的一条（纯逻辑，无需密钥）"""
+from app.capabilities.base.payload_cache import SignatureCache
+
+def every_leg(payload: list) -> bool:     # 测试口径：每段都有结果（高铁那种）
+    return all(payload)
+
+def any_leg(payload: list) -> bool:       # 测试口径：有一段有结果就行（航班那种）
+    return any(payload)
+
+SIG = "北京→天津@2026-10-01|天津→上海@2026-10-02"
+partial = [["G1"], []]                                       # 两段，第二段为空
+cache: SignatureCache[list] = SignatureCache("demo", capacity=2)
+cache.store("conv-A", SIG, partial, is_complete=every_leg)
+print("口径\"每段都要有\"，部分为空 → 写进去了吗：", cache.get("conv-A", SIG) is not None)
+cache.store("conv-A", SIG, partial, is_complete=any_leg)
+print("口径\"有一段就行\"，部分为空 → 写进去了吗：", cache.get("conv-A", SIG) is not None)
+print("同一批段换个会话 → 命中吗：", cache.get("conv-B", SIG) is not None)
+print("读的时候按\"每段都要有\"把关 → ", cache.get("conv-A", SIG, is_complete=every_leg))
+cache.store("conv-A", "批次2", [["G3"]])
+cache.store("conv-A", "批次3", [["G5"]])
+print("容量 2，再写两批后最早那条还在吗：", cache.get("conv-A", SIG) is not None)

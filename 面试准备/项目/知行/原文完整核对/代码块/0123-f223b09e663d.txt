@@ -1,0 +1,6 @@
+"""make_event 演示：文本帧、卡片帧、结束帧走同一个构造函数，前端只认 {role, content, code}（纯函数，无需密钥）"""
+from app.core.events import ROLE_ASSISTANT, ROLE_DONE, ROLE_SKILL_UI, make_event
+
+print(make_event(ROLE_ASSISTANT, "北京到天津、天津到上海两段高铁，候选班次如下："))
+print(make_event(ROLE_SKILL_UI, {"skill_name": "train_multi_segment", "data": {"segments": []}}))
+print(make_event(ROLE_DONE, "finish", code=200))

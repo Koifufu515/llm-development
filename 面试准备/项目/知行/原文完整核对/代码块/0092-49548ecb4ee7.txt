@@ -1,0 +1,2 @@
+RRF_score(d) = Σ 1 / (k + rank_r(d))
+                r

@@ -1,0 +1,3 @@
+# macOS / Linux
+mkdir -p quarry/retrieval/pg/sql
+touch quarry/retrieval/__init__.py quarry/retrieval/pg/__init__.py

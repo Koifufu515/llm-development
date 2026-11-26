@@ -1,0 +1,23 @@
+chat_contract_service._produce（环节 10）
+ ├─ try_direct_ticket_query(content, stream, conv_id) ── 命中返回文本 / 不命中返回 None
+ │    ├─ _parse_city_pair / _parse_query_date             起讫城市、日期
+ │    ├─ _flight_table → _render_flight_table             航班支线
+ │    └─ 12306 → _rows_to_seg → _render_ticket_table      高铁班次表
+ │
+ └─ execute_turn(user_id, conv_id, content, planning, stream) → (text, state_step, committed, body)
+      ├─ planning=False ─┬─ 识别到交通查询意图 → _query_fallback_text（确定性澄清，零 LLM）
+      │                  └─ 其余闲聊 → _stream_plain ─────── get_llm().astream 直连
+      └─ planning=True
+           ├─ create_travel_agent() + aget_state()          预读当前步骤 → 决定 buffer_all
+           ├─ apply_transport_switch(...)                   交通步前处理：对话内改选先落库（16.17）
+           ├─ _stream_agent(...)                            astream_events 流式跑一轮
+           │     └─ _is_protocol_leak / _chunk_has_tool_call / _scrub_leak_text
+           │        / _fold_restatements / _dedupe_texts
+           ├─ aget_state()                                  回合末快照 → state_step / committed / body
+           └─ 七处后处理（改 text，必要时推进状态机）
+                 ① 去确认轮 _covers_all_days       ② 零段直通 _zero_leg_guard
+                 ③ 住宿降级 _match_hotel_choice / _build_hotel_fallback
+                 ④ 多段住宿卡片（第 9 章 capability）
+                 ⑤ 目的地天气 _strip_model_weather / _queried_cities / _weather_paragraph
+                 ⑥ 交通清单 _ticket_table_from_tail / _strip_transport_lists（+ 第 9 章三类卡片；航班结构性不可查先降级高铁）
+                 ⑦ 行程正文 _render_itinerary_body / _push_rendered

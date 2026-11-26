@@ -1,0 +1,1 @@
+../../../../../wenshu-project/scripts/local_manage.py

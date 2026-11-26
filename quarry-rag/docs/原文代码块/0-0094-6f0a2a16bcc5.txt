@@ -1,0 +1,1 @@
+SELECT to_tsvector('simple', '兵马俑博物馆门票120元');

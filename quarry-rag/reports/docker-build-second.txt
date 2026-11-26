@@ -1,0 +1,104 @@
+time="2026-11-07T14:21:43+08:00" level=warning msg="buildx Docker CLI plugin not found: falling back to the classic builder. BuildKit-only build features (multi-arch, secrets, ssh, additional contexts, ...) will not be available"
+ Image quarry-rag:local Building 
+ Image quarry-rag:local Building 
+Sending build context to Docker daemon  524.5kBSending build context to Docker daemon  1.022MB
+Step 1/10 : FROM python:3.12-slim
+ ---> 4840d514c583
+Step 2/10 : COPY --from=ghcr.io/astral-sh/uv:0.9.5 /uv /uvx /bin/
+ ---> Using cache
+ ---> e6ae80ae46e7
+Step 3/10 : WORKDIR /app
+ ---> Using cache
+ ---> 5f108c34a286
+Step 4/10 : COPY pyproject.toml uv.lock ./
+ ---> Using cache
+ ---> e7fd53fa7220
+Step 5/10 : RUN uv sync --frozen --no-dev --extra parse --no-install-project
+ ---> Running in 9b4f1ff992c3
+[91mUsing CPython 3.12.16 interpreter at: /usr/local/bin/python3
+Creating virtual environment at: .venv
+[0m[91mDownloading pydantic-core (2.0MiB)
+[0m[91mDownloading uvloop (4.2MiB)
+[0m[91mDownloading psycopg2-binary (5.6MiB)
+[0m[91mDownloading openai (2.3MiB)
+[0m[91mDownloading asyncpg (3.5MiB)
+[0m[91mDownloading sqlalchemy (4.5MiB)
+[0m[91mDownloading lxml (4.8MiB)
+[0m[91m Downloading pydantic-core
+[0m[91m Downloading openai
+[0m[91m Downloading asyncpg
+[0m[91m Downloading uvloop
+[0m[91m Downloading sqlalchemy
+[0m[91m Downloading lxml
+[0m[91m Downloading psycopg2-binary
+[0m[91m   Building jieba==0.42.1
+[0m[91m      Built jieba==0.42.1
+[0m[91mPrepared 42 packages in 8.33s
+[0m[91mInstalled 42 packages in 27ms
+[0m[91m + alembic==1.20.1
+ + annotated-doc==0.0.5
+ + annotated-types==0.8.0
+ + anyio==4.16.0
+ + asyncpg==0.32.0
+ + certifi==2026.10.23
+ + click==8.5.1
+ + fastapi==0.162.0
+ + h11==0.16.0
+ + httpcore==1.0.9
+ + httpcore2==2.16.0
+ + httptools==0.9.0
+ + httpx==0.28.1
+ + httpx2==2.16.0
+ + idna==3.20
+ + jieba==0.42.1
+ + jiter==0.19.0
+ + loguru==0.7.3
+ + lxml==6.1.3
+ + mako==1.4.3
+[0m[91m + markupsafe==3.0.4[0m[91m
+ + [0m[91mopenai==3.46.0
+ [0m[91m+ opentelemetry-api==1.[0m[91m45.2
+ + [0m[91mpsycopg2-binary==2.9.13
+ + pydantic==2.14.3
+ +[0m[91m pydantic-core==2.50.4
+ + pydantic-settings==2.16.2
+ + python-docx==1.2.0
+ [0m[91m+ python-dotenv==1.2.4
+ + python-multipart==0.0.33
+ + [0m[91mpyyaml==6.0.3
+ +[0m[91m redis==8.1.0
+ + sniffio==[0m[91m1.3.1
+ + sqlalchemy==2.1.8
+ + starlette==1.10.0
+ + truststore==0.10.5[0m[91m
+ + typing-extensions==4.16.0
+ + typing-inspection==0.4.5
+ + uvicorn==[0m[91m0.54.0
+ +[0m[91m uvloop==0.23.0
+ + watchfiles==1.3.0
+ + websockets==17.4
+[0m ---> Removed intermediate container 9b4f1ff992c3
+ ---> 3ff7a8d35fbb
+Step 6/10 : COPY . .
+ ---> 037267dc28b3
+Step 7/10 : RUN uv sync --frozen --no-dev --extra parse
+ ---> Running in 25fe876f242e
+[91mAudited 42 packages in 0.24ms
+[0m ---> Removed intermediate container 25fe876f242e
+ ---> 21b1182f5250
+Step 8/10 : EXPOSE 8000
+ ---> Running in cdaa8ced3de9
+ ---> Removed intermediate container cdaa8ced3de9
+ ---> f2333339e247
+Step 9/10 : CMD ["uv", "run", "--no-sync", "uvicorn", "quarry.api.app:app",      "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
+ ---> Running in cd1be98850fc
+ ---> Removed intermediate container cd1be98850fc
+ ---> b72a2f93309a
+Step 10/10 : LABEL com.docker.compose.image.builder=classic
+ ---> Running in a80a2c2c9239
+ ---> Removed intermediate container a80a2c2c9239
+ ---> 5ccc89b9f438
+Successfully built 5ccc89b9f438
+Successfully tagged quarry-rag:local
+ Image quarry-rag:local Built 
+ Image quarry-rag:local Built 

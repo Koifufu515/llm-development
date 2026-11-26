@@ -1,0 +1,4 @@
+uv run alembic upgrade head
+uv run alembic downgrade -1
+uv run alembic upgrade head
+uv run alembic current

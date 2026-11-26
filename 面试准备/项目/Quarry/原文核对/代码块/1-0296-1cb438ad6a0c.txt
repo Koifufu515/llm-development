@@ -1,0 +1,13 @@
+    def switches(self) -> dict[str, object]:
+        """给 /healthz 回显用。只返回开关与参数，不返回地址和密钥。"""
+        return {
+            "embed_backend": self.embed_backend,
+            "embed_model": self.model_embed,
+            "embed_dim": self.embed_dim,
+            "rerank_backend": self.rerank_backend,
+            "rerank_model": self.rerank_model if self.rerank_backend == "api" else None,
+            "rerank_candidates": self.rerank_candidates,
+            "context_max_chars": self.context_max_chars,
+            "neighbor_radius": self.neighbor_radius,
+            "default_top_k": self.default_top_k,
+        }

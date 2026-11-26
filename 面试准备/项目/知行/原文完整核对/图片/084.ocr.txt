@@ -1,0 +1,26 @@
+请求生命周期 • POST /api/v1/conversations
+前端 fetch（）打过来后，FastAPI端点靠依赖注入把鉴权、连接池、Pydantic 校验、领域服务四件事装进函数签名，最后白名单序列化回前端。
+前端
+fetch（'/api/v1/conversations'
+-｛
+headers：｛'Authorization'：'Bearer eyJhbGci...•｝，
+method：'POST'
+body: JSON.stringify（｛ title：'福州-杭州 3 天'｝）
+1
+FastAPI•conversations.py
+create_conversation（data,user,db）
+— Depends（get_current_user） 个 从header decode JWT，查 User 表拿对象
+鉴权
+— Depends （get_db） 从连接池借 AsyncSession
+连接
+— ConversationCreate 校验 Pydantic 挡掉空字符串、null id、类型错
+校验
+L conversation_service.create_conversation（db，user.id,data.title）
+服务
+— Conversation ORM:db.add + commit + refresh
+1
+序列化
+ConversationResponse.from_orm（conv）一白名单序列化，只放出该给前端的字段
+1
+前端拿到
+｛ id,user_id, title, status, created_at,updated_at ｝

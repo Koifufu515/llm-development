@@ -1,0 +1,21 @@
+{
+  "city": "上海",
+  "title": "上海景点资料 · Shanghai/Jinshan",
+  "source_url": "https://en.wikivoyage.org/wiki/Shanghai/Jinshan",
+  "text": "资料城市：上海。本文是历史开放景点资料，不提供实时开放时间或价格；出行前需要核实。\n\nDonglin temple\nDonglin Temple has over 700 years of history. The temple has been renovated, and is a magnificent sight to see. Donglin Temple has large-scale, high artistic value, and three Guinness World Records: The Goddess of Mercy and the world's tallest Buddha Cloisonné—Sudhana (5.4 m) the highest bronze door in the world-qian fo door (20.1 m), The world's tallest indoor statue —- the statue of Guanyin Bodhisattva with one thousand hands and several heads (34.1 m).\n\nCity Beach\nJinshan City Beach is on the north bank of Hangzhou Bay, at the southern end of Jinshan District. The area combines great scenery, points of interest and entertainment all in one strip, and is composed of 2 square kilometers of blue waters, 120,000 square meters of golden sands and a 1.7 kilometer silver walkway. Every spring, Jinshan beach hosts the national kite flying competition and the world beach volleyball tournament; in the summer thousands of visitors come for the Fengxia Music Festival. Sail boating, speed boating, bungee jumping and 4-wheeling activities makes this place a great spot for athletics as well.",
+  "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+  "license": "CC BY-SA 3.0",
+  "attribution": "Wikivoyage contributors; https://en.wikivoyage.org/wiki/Shanghai/Jinshan",
+  "sha256": "02977a0e8d6bce840a7e75671fcb0a79b82503daa5e26d8fd20fcfadb5e9aa8f",
+  "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+  "poi_count": 2,
+  "source_dataset": "https://github.com/wikivoyage/wikivoyage.github.io",
+  "excluded_fields": [
+    "price",
+    "hours",
+    "phone",
+    "email",
+    "hotel",
+    "restaurant"
+  ]
+}

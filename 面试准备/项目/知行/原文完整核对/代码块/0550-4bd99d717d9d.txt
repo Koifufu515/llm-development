@@ -1,0 +1,3 @@
+{'role': 'error', 'content': '路由服务不可用', 'code': None}
+{'role': 'done', 'content': 'finish', 'code': 500}
+✅ 异常路径：error 帧 + done(500) 收尾，流正常关闭

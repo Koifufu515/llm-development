@@ -1,0 +1,14 @@
+time="2026-11-07T14:44:14+08:00" level=warning msg="volume \"quarry-rag_init_sql\" already exists but was not created by Docker Compose. Use `external: true` to use an existing volume"
+time="2026-11-07T14:44:14+08:00" level=warning msg="volume \"quarry-rag_corpusdata\" already exists but was not created by Docker Compose. Use `external: true` to use an existing volume"
+ Container quarry-rag-api-1 Recreate 
+ Container quarry-rag-devapi-1 Recreate 
+ Container quarry-rag-worker-1 Recreate 
+ Container quarry-rag-worker-1 Recreated 
+ Container quarry-rag-devapi-1 Recreated 
+ Container quarry-rag-api-1 Recreated 
+ Container quarry-rag-devapi-1 Starting 
+ Container quarry-rag-worker-1 Starting 
+ Container quarry-rag-api-1 Starting 
+ Container quarry-rag-devapi-1 Started 
+ Container quarry-rag-worker-1 Started 
+ Container quarry-rag-api-1 Started 

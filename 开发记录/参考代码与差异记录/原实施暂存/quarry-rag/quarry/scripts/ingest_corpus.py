@@ -1,0 +1,1 @@
+../../../../../../quarry-rag/quarry/scripts/ingest_corpus.py

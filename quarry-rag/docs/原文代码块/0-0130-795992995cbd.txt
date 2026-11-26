@@ -1,0 +1,8 @@
+# 原来：
+parent_id = make_chunk_id(SAMPLE_DOC["source_uri"], path, content)
+child_id = make_chunk_id(
+    SAMPLE_DOC["source_uri"], [*path, "#0"], content)
+
+# 改成：
+parent_id = make_chunk_id("hello", SAMPLE_DOC["source_uri"], path, content)
+child_id = make_chunk_id("hello", SAMPLE_DOC["source_uri"], [*path, "#0"], content)

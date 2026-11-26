@@ -1,0 +1,32 @@
+"""
+两种缓存（泛型，四类共用）：
+
+- PayloadCache：提交侧候选缓存——查询侧下发卡片时 store，提交侧校验时 get，比对"选的在不在候选里"；
+- SignatureCache：段签名查询缓存——同一批段第二次访问直接复用，避免重复打外部服务。
+
+两者都用 Generic[T] 参数化 Payload 类型（TrainMultiSegmentPayload / HotelMultiSegmentPayload…），
+一套代码装四种 payload，类型检查器还能帮你查错。
+"""
+from typing import Callable, Generic, Optional, TypeVar
+
+from app.utils.logger import app_logger
+
+# 泛型 T：某个 capability 的 Payload 类型
+T = TypeVar("T")
+
+class PayloadCache(Generic[T]):
+    """提交侧候选缓存：按 cache_key（= conversation_id）分桶，多会话并发互不污染"""
+
+    _DEFAULT_KEY = "_"
+
+    def __init__(self, name: str):
+        self.name = name
+        self._data: dict[str, T] = {}
+
+    def get(self, cache_key: Optional[str] = None) -> Optional[T]:
+        """取某会话最近下发的候选；不存在返回 None"""
+        return self._data.get(cache_key or self._DEFAULT_KEY)
+
+    def store(self, payload: T, cache_key: Optional[str] = None) -> None:
+        """写入本会话的候选（供后续提交侧校验）"""
+        self._data[cache_key or self._DEFAULT_KEY] = payload

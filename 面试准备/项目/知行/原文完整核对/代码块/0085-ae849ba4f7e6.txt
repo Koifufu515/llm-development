@@ -1,0 +1,2 @@
+⏱️ MCP 工具 get_weather_forecast 开始调用
+⏱️ MCP 工具 get_weather_forecast 完成，耗时 0.85s

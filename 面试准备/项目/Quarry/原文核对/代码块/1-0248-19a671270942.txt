@@ -1,0 +1,2 @@
+SELECT chunk_id, row_number() OVER (ORDER BY embedding <=> $4) AS rk
+FROM chunks WHERE ... ORDER BY embedding <=> $4 LIMIT 50;

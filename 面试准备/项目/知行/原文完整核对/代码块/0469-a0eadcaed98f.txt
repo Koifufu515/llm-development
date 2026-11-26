@@ -1,0 +1,10 @@
+"""_sse 帧格式演示：剔掉 None 字段、中文原样输出、末尾两个换行（纯函数，无需密钥）"""
+from app.api.v1.messages import _sse
+from app.core.events import make_event, ROLE_ASSISTANT, ROLE_ITINERARY, ROLE_DONE
+
+for event in [
+    make_event(ROLE_ASSISTANT, "你好"),                   # code=None → 帧里不出现 code
+    make_event(ROLE_ITINERARY, {"status": "pending", "id": "", "message": "行程清单生成中..."}),
+    make_event(ROLE_DONE, "finish", code=200),            # 只有 done/end 帧带 code
+]:
+    print(repr(_sse(event)))                              # repr 让你看见结尾的 \n\n

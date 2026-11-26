@@ -1,0 +1,5 @@
+# macOS / Linux / Git Bash
+curl -s https://dashscope.aliyuncs.com/compatible-api/v1/reranks \
+  -H "Authorization: Bearer sk-你的key" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "qwen3-rerank", "query": "兵马俑门票多少钱", "documents": ["量子计算是前沿领域", "兵马俑博物馆门票 120 元"], "top_n": 2}'

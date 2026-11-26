@@ -1,0 +1,32 @@
+import json
+from typing import TypedDict, Annotated, Literal
+from operator import add                      # reducer 用的"列表拼接"函数
+from pydantic import BaseModel, Field
+from langchain_community.chat_models import ChatTongyi
+from langchain.agents import create_agent
+from langgraph.graph import StateGraph, START, END
+from langgraph.types import Send              # 动态扇出的"信封"
+from app.config import settings
+
+from app.utils.logger import app_logger
+
+class Classification(TypedDict):
+    # 分类器产出的"一个待派任务"
+    # agent 用 Literal 钉死取值：它下一步要当"节点名"用，拼错会跳到不存在的节点报错
+    agent: Literal["explore", "weather"]
+    query: str                                 # 派给该 agent 的子查询
+
+class AgentOutput(TypedDict):
+    # 一个分支跑完交回来的"一条结果"
+    agent_name: str                            # 出处章：并行产出顺序不定，盖章才分得清谁是谁
+    result: str
+
+class DestinationRouterState(TypedDict):
+    original_query: str                        # 用户原始问题
+    destination: str                           # 目的地城市
+    classifications: list[Classification]       # 分类器决定要派的任务列表
+    # ★ 默认更新规则是"覆盖"——后写的盖掉先写的，那样两个分支跑完只剩一个结果。
+    #   加 Annotated[..., add] 声明 reducer 后，框架改用 add（列表拼接）合并：
+    #   explore 交 [A]、weather 交 [B] → [A, B]，一条不丢、还不用你加锁。
+    agent_results: Annotated[list[AgentOutput], add]
+    final_report: str

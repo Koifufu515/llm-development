@@ -1,0 +1,12 @@
+"""_queried_cities 演示：从本轮 query_destination_info 的调用参数里取城市（纯函数，无需密钥）"""
+from langchain_core.messages import AIMessage
+
+from app.services.chat_stream_executor import _queried_cities
+
+tail = [AIMessage(content="", tool_calls=[
+    {"name": "query_destination_info", "args": {"destination": "重庆"}, "id": "1"},
+    {"name": "query_destination_info", "args": {"destination": "成都"}, "id": "2"},
+    {"name": "query_destination_info", "args": {"destination": "重庆"}, "id": "3"},   # 重复 → 去重
+    {"name": "get-tickets", "args": {"fromStation": "重庆"}, "id": "4"},               # 别的工具 → 不算
+])]
+print(_queried_cities(tail))

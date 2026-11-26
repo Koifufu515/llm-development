@@ -1,0 +1,72 @@
+"""
+FastAPI 应用入口
+"""
+import os
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.config import settings
+from app.utils.logger import app_logger
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """应用生命周期管理
+
+    启动顺序：Checkpointer → Store → (第 06 章会加 MCP)
+    关闭顺序：反过来（Python 上下文管理器自然保证）
+    """
+    import asyncio
+
+    # 打印当前事件循环信息（Windows 兼容排查用）
+    loop = asyncio.get_running_loop()
+    app_logger.info(f"FastAPI 使用的事件循环: {type(loop).__name__}")
+
+    # 延迟 import：Checkpointer/Store 会创建 psycopg 连接池，
+    # 必须在事件循环切换到 SelectorEventLoop 之后再 import
+    from app.core.checkpointer import checkpointer_lifespan
+    from app.core.store import store_lifespan
+
+    app_logger.info("🚀 启动应用...")
+
+    # 嵌套 lifespan：外层先启动、后关闭；内层后启动、先关闭
+    async with checkpointer_lifespan():
+        app_logger.info("✅ Checkpointer 已就绪")
+
+        async with store_lifespan():
+            app_logger.info("✅ Store 已就绪")
+
+            # 第 06 章会在这里嵌套 MCP 客户端
+
+            yield  # ← FastAPI 在这里处理请求
+
+            # (第 06 章会在此关闭 MCP)
+
+        # store_lifespan 的 __aexit__ 会在这里自动执行
+
+    # checkpointer_lifespan 的 __aexit__ 会在这里自动执行
+
+    app_logger.info("应用已关闭")
+
+app = FastAPI(
+    title="LangGraph 旅行规划系统",
+    description="企业级 Agent 旅行规划服务",
+    version="1.0.0",
+    lifespan=lifespan
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.get("/")
+async def root():
+    return {
+        "status": "healthy",
+        "service": "LangGraph Travel Planner",
+        "version": "1.0.0",
+        "docs": "/docs"
+    }

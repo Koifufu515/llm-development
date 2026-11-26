@@ -1,0 +1,26 @@
+"""validate_train_submission 演示：只校验"段存在、车次在候选里、每段都选了"，不比对任何时间先后（纯逻辑，无需密钥）"""
+from app.capabilities.train_multi_segment.train_agent_tool import store_cached_payload, validate_train_submission
+from app.capabilities.train_multi_segment.train_skill_schema import (TrainMultiSegmentPayload, TrainOption, TrainSegment,
+                                                                     TrainSubmitPayload)
+
+def opt(no: str, dep: str, to: str) -> TrainOption:
+    return TrainOption(trainNo=no, startTime=dep, endTime="--", startStation="--", endStation=to, duration="01:00",
+                       price=100, seatType="二等座", ticketStatus="有票", option_id=f"{no}-{dep}-{to}")
+
+store_cached_payload(TrainMultiSegmentPayload(segments=[
+    TrainSegment(segment_id="s1", from_="北京", to="天津", date="2026-10-01", train_list=[opt("G1", "08:30", "天津")]),
+    TrainSegment(segment_id="s2", from_="天津", to="上海", date="2026-10-02", train_list=[opt("G101", "09:10", "上海虹桥")]),
+]), cache_key="conv-1")
+cases = {
+    "两段都选对  ": [{"segment_id": "s1", "option_id": "G1-08:30-天津"}, {"segment_id": "s2", "option_id": "G101-09:10-上海虹桥"}],
+    "什么都没选  ": [],
+    "缺 option_id": [{"segment_id": "s1", "trainNo": "G1"}],
+    "段不存在    ": [{"segment_id": "s9", "option_id": "G1-08:30-天津"}],
+    "车次不在候选": [{"segment_id": "s1", "option_id": "G9-10:00-天津"}],
+    "漏选一段    ": [{"segment_id": "s1", "option_id": "G1-08:30-天津"}],
+}
+for name, segs in cases.items():
+    r = validate_train_submission(TrainSubmitPayload.model_validate({"segments": segs}), cache_key="conv-1")
+    print(f"{name} → {r.code:17} {r.msg}")
+r = validate_train_submission(TrainSubmitPayload.model_validate({"segments": cases["两段都选对  "]}), cache_key="别的会话")
+print(f"没下发过卡片 → {r.code:17} {r.msg}")

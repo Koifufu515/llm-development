@@ -1,0 +1,1 @@
+../../../../../../../quarry-rag/quarry/context/sql/fetch_parents.sql

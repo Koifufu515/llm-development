@@ -1,0 +1,21 @@
+"""_render_itinerary_body 演示：结构化逐日数据 + 已确认交通/住宿 → Markdown 正文 + 预算表（纯函数，无需密钥）"""
+from app.services.chat_stream_executor import _render_itinerary_body
+
+days = [
+    {"day": 1, "city": "杭州", "morning": ["西湖断桥"], "noon": ["知味观·片儿川"],
+     "afternoon": ["灵隐寺（需预约）"], "evening": ["河坊街夜市"], "tips": ["灵隐寺需提前 1 天预约"]},
+    {"day": 2, "city": "杭州", "morning": ["西溪湿地"], "noon": [], "afternoon": ["茶叶博物馆"],
+     "evening": ["返程 G1653"]},
+]
+budget = {"transport": 712, "accommodation": 716, "food": 900, "attractions": 1200, "misc": 600, "total": 4128}
+# ★ 已确认账本：apply_train_selection / apply_hotel_selection 落库的形态
+legs = ["福州→杭州 G1650 08:12-12:30 二等座356元", "杭州→福州 G1653 15:20-19:36 二等座356元"]
+hotels = ["杭州（10-01 至 10-03）：湖滨精选酒店，358元/晚，总价 716元"]
+
+print(_render_itinerary_body(days, budget, {"adult_count": 2, "budget_max": 3000},
+                             transport_legs=legs, hotels=hotels))
+
+# 两账本为空（本地零段游）→ 不出"已确认的交通与住宿"块
+body_empty = _render_itinerary_body(days, budget, {"adult_count": 2}, transport_legs=[], hotels=[])
+print("\n本地零段时有已确认块吗？", "### 已确认的交通与住宿" in body_empty)   # False：不硬凑
+print("缺预算数据时还有预算表吗？", "### 预算明细" in _render_itinerary_body(days[:1], {}, {}))   # False：绝不编造数字

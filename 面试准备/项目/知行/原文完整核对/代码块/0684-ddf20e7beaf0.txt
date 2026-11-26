@@ -1,0 +1,31 @@
+# ============== 段级循环：用户所选班次回填 ==============
+
+# 车次号（G1197/D50/K507/T10/Z162）或航班号（CA4105/MU5138）。
+# 结尾用 (?![0-9A-Za-z]) 而非 \b：\b 在 Python 里按 Unicode 判定，中文也算 word 字符，
+# "G1197吧"这类用户口语写法会被判成"词内无边界"而漏匹配（实测第一条就没回填上）
+_VEHICLE_CODE_RE = re.compile(r"[GDCKTZ]\d{1,4}(?![0-9A-Za-z])|[A-Z]{2}\d{3,4}(?![0-9A-Za-z])")
+
+def _recent_choice_text(state) -> str:
+    """取"用户本段所选班次"的那条发言（跳过纯确认语，如确认轮里的"确认"）。
+
+    确认轮里最近一条用户消息是"确认"（不含车次号），若只看它就无法回填所选班次，
+    段游标推不动、流程卡死在第一段。故倒序扫描用户发言取最近一个含车次号的；
+    遇到上一条"段已确认"的工具消息即停止——保证不会把**上一段**的车次回填给当前段
+    （用户用"第一个"这类无车次的说法选择时会返回空串，交由调用方拒绝并重新展示）
+    """
+    try:
+        for m in reversed((state or {}).get("messages") or []):
+            kind = getattr(m, "type", None)
+            content = str(getattr(m, "content", "") or "")
+            if kind == "tool":
+                # ★ 遇到"段已确认"就停：绝不把上一段的车次回填给当前段
+                if getattr(m, "name", "") == "select_transport_tool" or "段已确认" in content:
+                    return ""
+                continue
+            if kind != "human":
+                continue
+            if _VEHICLE_CODE_RE.search(content):
+                return content
+    except Exception:
+        pass
+    return ""

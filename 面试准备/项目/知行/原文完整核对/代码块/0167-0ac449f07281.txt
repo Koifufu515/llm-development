@@ -1,0 +1,8 @@
+"""_loads_first_json 演示：整体解析不了，就扫出第一段括号配平的 {...} 再解析（纯函数，无需密钥）"""
+from app.tools.mcp_tools import _loads_first_json
+
+for text in ['{"status": "1", "count": "1"}',
+             '高德返回：{"route": {"paths": [{"distance": "137000"}]}} 以上为结果',
+             '先有一段坏的 {不是json} 再有好的 {"ok": true}',
+             "没有任何 JSON"]:
+    print(f"{text[:26]!r:32} → {_loads_first_json(text)!r}")

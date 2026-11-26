@@ -1,0 +1,5 @@
+别名纠正    ： {'date': '2026-09-30', 'fromStation': '北京', 'toStation': '上海'}
+上下文回填  ： {'fromStation': '北京', 'date': '2026-09-30', 'toStation': '上海'}
+多段按当前段： {'date': '2026-09-30', 'fromStation': '天津', 'toStation': '上海'}
+仍然缺参    ： 【调用参数不完整】缺少 date / toStation。请补全后重新调用本工具：fromStation=出发站中文名，toStation=到达站中文名，date=YYYY-MM-DD。
+过去的日期  ： 【日期无效】2020-01-01 已是过去的日期，12306 只能查询今天及之后的班次。请先向用户确认出发日期，再用今天或之后的日期（YYYY-MM-DD）重新调用。

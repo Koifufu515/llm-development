@@ -1,0 +1,3 @@
+目的地       → {'selected_destination': '天津、上海', 'current_step': 'transport_planning'}
+餐饮·非法值  → 只有一条错误消息，不写字段、不推进 | ❌ 餐饮类型无效，请从以下选择：specialty, chain, local
+餐饮·合法值  → {'selected_food_types': ['local', 'specialty'], 'current_step': 'itinerary_generation'}

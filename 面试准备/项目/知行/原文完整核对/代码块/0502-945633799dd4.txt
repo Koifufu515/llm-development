@@ -1,0 +1,18 @@
+"""compress_content 演示：超过阈值的长正文压成 300 字以内摘要（需 .env 配 DeepSeek 密钥）"""
+import asyncio
+
+from app.services.chat_compress_service import COMPRESS_THRESHOLD, compress_content
+
+DAY = ("#### Day {d} 杭州\n- **上午**：西湖断桥、白堤、孤山，沿湖步行拍照，建议 8 点前到避开人流\n"
+       "- **中午**：知味观，片儿川 + 小笼包，人均 60 元\n- **下午**：灵隐寺、飞来峰，需提前一天预约\n"
+       "- **晚上**：河坊街、南宋御街夜市，尝定胜糕和葱包桧\n")
+LONG = "### 详细行程\n" + "".join(DAY.format(d=d) for d in range(1, 11))
+
+async def main():
+    print(f"阈值 {COMPRESS_THRESHOLD} 字；样例正文 {len(LONG)} 字 → "
+          f"{'超阈值，要压' if len(LONG) > COMPRESS_THRESHOLD else '不压'}")
+    summary = await compress_content(LONG)
+    print(f"摘要 {len(summary)} 字：\n{summary}")
+
+if __name__ == "__main__":
+    asyncio.run(main())

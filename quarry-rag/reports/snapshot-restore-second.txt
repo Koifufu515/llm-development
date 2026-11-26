@@ -1,0 +1,34 @@
+Traceback (most recent call last):
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/scripts/restore_snapshot.py", line 43, in <module>
+    if __name__=='__main__':asyncio.run(main())
+                            ^^^^^^^^^^^^^^^^^^^
+  File "/Users/jarvis/anaconda3/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/jarvis/anaconda3/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jarvis/anaconda3/lib/python3.11/asyncio/base_events.py", line 653, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/scripts/restore_snapshot.py", line 40, in main
+    try:out=await restore(args.path,args.tenant)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/scripts/restore_snapshot.py", line 28, in restore
+    cid=await c.fetchval("INSERT INTO collections(tenant_id,slug,name,embed_model,embed_dim,chunk_policy,status)VALUES($1,$2,$2,$3,$4,$5,'building')RETURNING id",tenant,coll['slug'],coll['embed_model'],coll['embed_dim'],coll['chunk_policy'])
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/asyncpg/connection.py", line 741, in fetchval
+    data = await self._execute(query, args, 1, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/asyncpg/connection.py", line 1904, in _execute
+    result, _ = await self.__execute(
+                ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/asyncpg/connection.py", line 2003, in __execute
+    result, stmt = await self._do_execute(
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/asyncpg/connection.py", line 2069, in _do_execute
+    result = await executor(stmt, timeout)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "asyncpg/protocol/protocol.pyx", line 197, in bind_execute
+asyncpg.exceptions.UniqueViolationError: duplicate key value violates unique constraint "collections_one_building"
+DETAIL:  Key (tenant_id, slug)=(5c9b40d0-59c6-45d4-b20d-fff84f80f09f, travel-guide) already exists.

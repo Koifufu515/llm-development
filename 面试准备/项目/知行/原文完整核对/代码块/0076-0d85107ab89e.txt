@@ -1,0 +1,3 @@
+# 教学要点：每服务独立 client，并行 gather 收集
+clients = {n: MultiServerMCPClient({n: cfg}) for n, cfg in configs.items()}
+results = await asyncio.gather(*(load_one(n, c) for n, c in clients.items()))

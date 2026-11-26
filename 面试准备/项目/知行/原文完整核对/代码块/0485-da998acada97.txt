@@ -1,0 +1,25 @@
+"""建表脚本（幂等，可反复跑）：uv run python scripts/Chapter_Twelve/12_init_db.py
+
+在第 10 章三张表的基础上，把本章新增的 ItineraryPlan 一并建出来。
+create_all 只补缺的表——已存在的 users / conversation / message 原样不动。
+"""
+import os
+import sys
+import asyncio
+
+if sys.platform.startswith("win"):
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# ★ 从 app.models 顶层 import 会触发 models/__init__.py，把四张表都注册进 Base.metadata
+from app.models import User, Conversation, Message, ItineraryPlan  # noqa: F401
+from app.models.base import init_db
+
+async def main():
+    print("[init_db] 开始建表...")
+    await init_db()
+    print("[init_db] 完成：user, conversation, message, itinerary_plans")
+
+if __name__ == "__main__":
+    asyncio.run(main())

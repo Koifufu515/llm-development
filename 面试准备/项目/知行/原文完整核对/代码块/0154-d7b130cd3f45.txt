@@ -1,0 +1,41 @@
+class _ArgGuardTool(BaseTool):
+    """ 入参兜底包装（name/description/args_schema 原样透传，仅拦截调用入参）"""
+    name: str
+    description: str
+    inner: Any = None
+
+    def _run(self, *args, **kwargs):
+        raise NotImplementedError("仅支持异步调用")
+
+    async def _arun(self, **kwargs):
+        args = _normalize_train_args(kwargs)
+        if isinstance(args, str):
+            app_logger.warning(f"⚠️ {self.name} 入参不完整，已拦下并提示补全：{kwargs}")
+            return args
+        # ★ 只拦截入参：纠正、回填之后交给原工具去查
+        result = await self.inner.ainvoke(args)
+        # 结果裁剪后再交给模型（防海量班次淹没上下文诱发编造）
+        # ★ 结果顺手压成"一行一趟"：模型看得清，上下文也不会被撑爆
+        return compact_ticket_text(result)
+
+def _guard_train_tool(tool: BaseTool) -> BaseTool:
+    """仅包装"必填 date/fromStation/toStation"的车票查询工具（按 schema 判定，不写死工具名）"""
+    schema = tool.args_schema if isinstance(tool.args_schema, dict) else {}
+    # ★ 按 schema 认车票工具，不写死工具名
+    if not {"date", "fromStation", "toStation"} <= set(schema.get("required") or []):
+        return tool
+    return _ArgGuardTool(
+        name=tool.name, description=tool.description,
+        args_schema=tool.args_schema, inner=tool,
+    )
+
+def apply_train_arg_guard(tools: List[BaseTool]) -> List[BaseTool]:
+    """ 对全量工具套用车票守卫（注册侧同源，供 create_agent 使用）
+
+    A 的包装此前只作用于 get_train_tools() 的返回值——那是 middleware 注入给模型
+    "看"的一份；而 LangGraph 的 ToolNode 是按工具名到 create_agent(tools=...) 的注册表里取对象
+    **执行**的，那里注册的是 get_all_mcp_tools() 的原始工具。两者不是同一批对象，
+    导致参数兜底与结果裁剪在真实跑图时被整体绕过（实测：跑图时 ToolMessage 是 39,265 字
+    12306 原文、日志无"车票结果裁剪"，并因此撑爆模型 30720 输入上限）。
+    """
+    return [_guard_train_tool(t) for t in tools]

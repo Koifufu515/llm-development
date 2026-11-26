@@ -1,0 +1,67 @@
+async def _query_one_segment(
+    tool: Optional[BaseTool], segment_id: str, segment: HotelSegmentInput, limit: int
+) -> HotelMultiSegmentItem:
+    """查询单段住宿（由 asyncio.gather 并行调度）
+
+    任何异常/解析不出门店都**只影响本段**：该段降级为品牌模式，其它段照常返回。
+    """
+    nights = stay_nights(segment.checkInDate, segment.checkOutDate)
+    options: list[Any] = []
+    if tool is not None:
+        args = build_args(
+            tool, segment.city, segment.checkInDate, nights,
+            segment.guestCount, segment.priceLevel, limit,
+        )
+        try:
+            raw = await tool.ainvoke(args)
+            options = hotels_from_raw(raw, nights, limit)
+        except Exception as exc:                  # 单段服务抖动/超时/配额：本段降级，不影响其它段
+            app_logger.warning(f"⚠️ hotel_multi_segment {segment_id}（{segment.city}）查询失败，本段降级品牌模式：{exc}")
+    base = {
+        "segment_id": segment_id, "city": segment.city, "checkInDate": segment.checkInDate,
+        "checkOutDate": segment.checkOutDate, "guestCount": segment.guestCount,
+        "priceLevel": segment.priceLevel,
+    }
+    if options:                                   # 场景 A：真实门店可用 → mode="hotel"
+        return HotelMultiSegmentItem(
+            **base, mode="hotel", hotel_list=_reid(segment_id, options, "hotel_id"), brand_list=[],
+        )
+    # 场景 B：实时报价不可用 → mode="brand"（按档位给常见连锁品牌，不编造门店与价格）
+    return HotelMultiSegmentItem(
+        # ★ 查不到门店就降级品牌模式：只给品牌，不编门店和价格
+        **base, mode="brand", hotel_list=[],
+        brand_list=_reid(segment_id, brand_fallback(segment.priceLevel), "brand_id"),
+    )
+
+async def build_hotel_multi_segment_payload(
+    segments: list[Any],
+    max_options_per_segment: int = 10,
+    cache_key: Optional[str] = None,
+) -> HotelMultiSegmentPayload:
+    """核心函数（非工具）：并行查询全部住宿段 → 组装 payload，并缓存供提交侧校验
+
+    段数由入参长度决定（2/3/多段均支持，不写死）；每段模式独立判定，可混合（h1 门店 + h2 品牌）。
+    cache_key：隔离键（调用方传 conversation_id），保证提交侧校验到的是**本会话**的候选表。
+    """
+    try:
+        parsed = [seg if isinstance(seg, HotelSegmentInput) else HotelSegmentInput.model_validate(seg)
+                  for seg in segments]
+    except Exception as exc:
+        app_logger.warning(f"⚠️ hotel_multi_segment 入参不合法，已降级为空 payload：{exc}")
+        return HotelMultiSegmentPayload(segments=[])
+    if not parsed:
+        return HotelMultiSegmentPayload(segments=[])
+    tool = await resolve_hotel_tool()             # 工具缺席时每段都会自动走品牌兜底
+    items = await asyncio.gather(*[                # ← 并行并发，非串行逐段查
+        _query_one_segment(tool, f"h{index}", segment, max_options_per_segment)
+        for index, segment in enumerate(parsed, 1)
+    ])
+    payload = HotelMultiSegmentPayload(segments=list(items))
+    _PAYLOAD_CACHE.store(payload, cache_key)   # 供提交工具做「是否存在」校验
+    app_logger.info(
+        f"🏨 hotel_multi_segment 出参：{len(payload.segments)} 段 / "
+        f"模式 {'、'.join(f'{s.segment_id}={s.mode}' for s in payload.segments)}"
+    )
+    return payload
+
+# ==================== 提交侧：只做基础合法性校验（不做任何日期/时间校验） ====================

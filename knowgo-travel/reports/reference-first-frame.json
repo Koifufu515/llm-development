@@ -1,0 +1,59 @@
+{
+  "scope": "同一完整旅行需求，两种输入格式；量首业务SSE帧（可能skills，非模型首Token），各3轮；读首帧主动断连，另测下一写请求解锁。",
+  "rows": [
+    {
+      "repeat": 1,
+      "mode": "form",
+      "seconds": 0.03051879070699215,
+      "first_role": "skills",
+      "first_text": null,
+      "next_request_done_code": 200,
+      "disconnect_then_next_write_seconds": 4.895644125062972
+    },
+    {
+      "repeat": 1,
+      "mode": "chat",
+      "seconds": 3.047927999868989,
+      "first_role": "assistant",
+      "first_text": "已",
+      "next_request_done_code": 200,
+      "disconnect_then_next_write_seconds": 6.57924749981612
+    },
+    {
+      "repeat": 2,
+      "mode": "form",
+      "seconds": 0.03469566581770778,
+      "first_role": "skills",
+      "first_text": null,
+      "next_request_done_code": 200,
+      "disconnect_then_next_write_seconds": 3.8649108330719173
+    },
+    {
+      "repeat": 2,
+      "mode": "chat",
+      "seconds": 2.746405666228384,
+      "first_role": "assistant",
+      "first_text": "已",
+      "next_request_done_code": 200,
+      "disconnect_then_next_write_seconds": 6.659133292268962
+    },
+    {
+      "repeat": 3,
+      "mode": "form",
+      "seconds": 0.027128625195473433,
+      "first_role": "skills",
+      "first_text": null,
+      "next_request_done_code": 200,
+      "disconnect_then_next_write_seconds": 4.54534029122442
+    },
+    {
+      "repeat": 3,
+      "mode": "chat",
+      "seconds": 2.6590684996917844,
+      "first_role": "assistant",
+      "first_text": "已",
+      "next_request_done_code": 200,
+      "disconnect_then_next_write_seconds": 6.823325457982719
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+knowgo_travel_backend
+master v
+心 6_test_mcp、
+@
+Q
+试用
+X
+项目～
+r document_loader.py
+r text_splitter.py
+心 vectorstore.py
+retriever.py
+r query_optimizer.py
+r reranker.py
+r cache.py
+e pipeline.pyx
+19
+class AdvancedRAGPipeline：
+新
+~口 knowgo_travel_backend E
+60
+def retrieve （self，
+query: str） -> List［Document］： 新
+•.venv library根目录
+app_Logger.info（f"1. 查询优化：生成 fLen（optimized_queries） 个登间-
+wapp
+80
+回
+81
+阶段 2：混合检索--
+agents
+82
+child_docs = self.retriever.netrieved
+api
+83
+query=query.
+% core
+queries=optimized_qveries，
+mcp_core
+Ie models
+86
+app_Logger.info（f"2. 混合检索：获得 ｛Len（child_docs）｝个子块"）
+D rag
+87
+阶段 3:LLM 重排-
+reranked_child_docs = self.reranker.rerank（
+心 cache.py
+90
+query=query，
+>心 document_loader.p
+91
+documents=child_docs，
+>心 pipeline.py
+92
+top_K=SeLf.top_k * 2.
+>心 query_optimizer.py
+93
+>心 reranker.py
+94
+app_Logger.info（f"3. LLM 重排：保留 ｛Len（reranked_child_docs）｝ 个子块-）
+>心 retriever.py
+95
+阶段 4：映射到父块 —-
+>心 text_splitter.py
+97
+parent_docs = self.parent_splitter.get_pavent_context （reranked_child_docs）
+>心 vectorstore.py
+98
+app_logger.info（f"4. 父块映射：获得 ｛Lenkparent_docs）｝ 个完整上下文"）
+• services
+99
+。 拖瘦至此上传
+>Dtools
+100
+-•阶段 5：长上下文重排
+utils
+final_docs
+= self.context_peorder.reorder（parent_docsl: seLf.top_KJ）
+102
+app-logger.info（f"
+检索完成，最终返回 ｛Len（final_docs）｝ 个文档-）
+init
+103
+>心 config.py
+>心 main.py
+self.cache.
+E（query. self.top_K, final_docs）
+a data
+>自logs
+107
+retu
+final_docs
+g scrlpts
+108
+HT+.env
+-gitignore
+w.python-version
+i
+>心 main.py
+｛Tlovproiect.toml
+• knowgo_travel_backend >app >rag
+g pipeline.py
+82:46.
+日 TRAE
+knowgo_travel_backend M Islands Dark • CRLF UTF:8 艮4个空格 wv （knowgo_travel_backend） ［Python 3.12.13］ 1

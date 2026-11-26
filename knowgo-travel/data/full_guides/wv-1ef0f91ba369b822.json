@@ -1,0 +1,21 @@
+{
+  "city": "洛阳",
+  "title": "洛阳景点资料 · Luoyang",
+  "source_url": "https://en.wikivoyage.org/wiki/Luoyang",
+  "text": "资料城市：洛阳。本文是历史开放景点资料，不提供实时开放时间或价格；出行前需要核实。\n\nLongmen Grottoe\nOne of the finest Buddhist rock sculptural sites in China and a UNESCO World Heritage Site.\n\nBaima Temple\nThis is the first officially sanctioned Buddhist temple in China and one of the oldest in the world. It was established almost 2000 years ago but rebuilt many times since.\n\nGuanlin Temple\n(关林庙， bus 81 from the train station stops here and then continues on to the Longmen Caves) Commemorating Guan Yu, great warrior of the Kingdom of Shu and main character from, \"The Romance of the Three Kingdoms\". The temple is built over the mausoleum which houses the general god's head, and contains several halls dedicated to the deified man. The side halls are all under construction. The ticket price is a pretty stiff 50 kuai.\n\nLuoyang Museum\nVery well done museum featuring an extensive collection of ancient Zhou Dynasty bronzes as well as Han and Tang Dynasty porcelains, nearly all of which were made and found in the area, giving a sense of the former grandeur of the ancient capital. The museum itself a sparkling new building, having just opened in 2011 and featuring broad, uncrowded exhibit rooms as well as efficient air conditioning, making it a good way to beat the summer heat after the Longmen Caves. Even those with only a passing interest in porcelain will be satisfied. At time of writing the museum is free, though a ticket price may already have been re-instated.\n\nAncient Han Tombs Museum\nFascinating museum with reconstructed and unearthed tombs from the Western Han dynasty to the Northern Song Dynasty.\n\nWangcheng Park\nSite of the Luoyang Peony Festival in April, something not to be missed.\n\nShangqing Gong\nLocated 4 kilometers northwest of Luoyang City Mangshan Mountain emerald Yunfeng, was built in the Tang Dynasty, said early laojunmiao. Qian Feng the first year (AD 666), made me as too Xuan Yuan emperor, it is also known as the temple of Emperor Xuan yuan. After avoiding Xuanzong taboo, renamed the Yuan emperor temple, finally changed to the palace.\n\nAncient Store Street\nLuoyang has a long, beautiful with fully functioning stores, a lot like Pingyao, another incredible visit.",
+  "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+  "license": "CC BY-SA 3.0",
+  "attribution": "Wikivoyage contributors; https://en.wikivoyage.org/wiki/Luoyang",
+  "sha256": "7406f011d3799f3d44db01435f2c814efeef6927633691458f0b93185c8c9600",
+  "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+  "poi_count": 8,
+  "source_dataset": "https://github.com/wikivoyage/wikivoyage.github.io",
+  "excluded_fields": [
+    "price",
+    "hours",
+    "phone",
+    "email",
+    "hotel",
+    "restaurant"
+  ]
+}

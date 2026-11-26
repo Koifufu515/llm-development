@@ -1,0 +1,214 @@
+{
+  "scope": "原方案最终功能验收；复用先前真实候选，单独验证安全/状态/文字选择/历史版本。\n不会把复用候选的场景计为新一轮模型质量或时延评测。\n",
+  "checks": {
+    "nine_mcp_services_discovered": true,
+    "username_login": true,
+    "duplicate_username_rejected": true,
+    "jwt_required": true,
+    "conversation_foreign_404": true,
+    "anonymous_legacy_cannot_read_formal": true,
+    "forged_options_422": true,
+    "expired_card_409": true,
+    "sse_done_0": true,
+    "text_select_leg_1": true,
+    "sse_done_1": true,
+    "text_select_leg_2": true,
+    "all_legs_before_hotel": true,
+    "sse_done_2": true,
+    "real_image_mcp_query": true,
+    "sse_done_3": true,
+    "budget_change_preserves_body": true,
+    "history_version_preserved": true,
+    "legacy_four_layer_contract": true,
+    "budget_arithmetic": true,
+    "sse_done_4": true,
+    "destination_change_clears_dependents": true,
+    "sse_done_5": true,
+    "typed_memory_saved": true,
+    "memory_user_isolation": true,
+    "soft_delete": true,
+    "deleted_404": true
+  },
+  "services": {
+    "weather": "ready",
+    "search": "ready",
+    "rail": "ready",
+    "amap": "ready",
+    "flight": "ready",
+    "image_search": "ready",
+    "backup_weather": "ready",
+    "bailian_search": "ready",
+    "hotel": "ready"
+  },
+  "candidate_source_conversation": "25ccbe78-71cf-46ba-803a-859de7a400f4",
+  "turns": [
+    {
+      "path": "/api/v1/messages",
+      "roles": [
+        "skills",
+        "skill_ui",
+        "assistant",
+        "done"
+      ],
+      "errors": []
+    },
+    {
+      "path": "/api/v1/messages",
+      "roles": [
+        "skills",
+        "skill_ui",
+        "assistant",
+        "done"
+      ],
+      "errors": []
+    },
+    {
+      "path": "/api/v1/messages",
+      "roles": [
+        "assistant",
+        "done"
+      ],
+      "errors": []
+    },
+    {
+      "path": "/api/v1/messages",
+      "roles": [
+        "itinerary_plans",
+        "assistant",
+        "done"
+      ],
+      "errors": []
+    },
+    {
+      "path": "/api/v1/messages",
+      "roles": [
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "done"
+      ],
+      "errors": []
+    },
+    {
+      "path": "/api/v1/messages",
+      "roles": [
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "assistant",
+        "done"
+      ],
+      "errors": []
+    }
+  ],
+  "memory": {
+    "dietary_restrictions": [
+      "海鲜过敏"
+    ],
+    "accommodation_preferences": [
+      "homestay"
+    ],
+    "profile": {
+      "travel_styles": [],
+      "dietary_restrictions": [
+        "海鲜过敏"
+      ],
+      "food_preferences": [],
+      "updated_at": "2026-10-31T03:03:31.403417+00:00"
+    },
+    "history": {
+      "completed_trips": [],
+      "visited_attractions": [],
+      "accommodation_preference": {
+        "preferred_types": [
+          "homestay"
+        ],
+        "avg_budget_per_night": 400.0
+      },
+      "updated_at": "2026-10-31T03:03:31.302195+00:00"
+    }
+  },
+  "status": "passed"
+}

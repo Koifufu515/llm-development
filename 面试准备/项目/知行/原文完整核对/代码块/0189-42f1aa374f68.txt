@@ -1,0 +1,42 @@
+class TrainSubmitSelection(BaseModel):
+    """【提交】前端回传的单段选中结果（身份 = option_id；trainNo 仅作展示/日志）"""
+
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
+    segment_id: str = Field(description="段标识，必须存在于下发 payload 的 segments 中")
+    option_id: str = Field(
+        default="",
+        description="选中车次的段内唯一标识（下发 payload 里该趟车的 option_id）；"
+                    "同一车次号可能对应多趟，故以本字段为准",
+    )
+    trainNo: str = Field(default="", description="车次号（随 option_id 一起回显，仅作展示）")
+
+class TrainSubmitPayload(BaseModel):
+    """【提交】前端一次性全局提交的 payload（逐段单独确认已取消）"""
+
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+
+    skill_name: Literal["train_multi_segment"] = TRAIN_MULTI_SEGMENT_SKILL
+    segments: list[TrainSubmitSelection] = Field(
+        description="全部段的选中结果，顺序不限（后端按 segment_id 归位）"
+    )
+
+class TrainSubmitResult(BaseModel):
+    """【提交回执】只反映基础合法性校验结果，不含任何时间连续性问题"""
+
+    ok: bool = Field(description="全部段校验通过为 True")
+    code: str = Field(
+        description=(
+            "结果码：OK / EMPTY_SELECTION / SEGMENT_NOT_FOUND / TRAIN_NOT_FOUND / "
+            "INCOMPLETE / NO_PAYLOAD / INVALID_PAYLOAD / MISSING_OPTION_ID / STEP_MISMATCH"
+        )
+    )
+    msg: str = Field(description="面向 Agent 的中文说明")
+    accepted: list[TrainSubmitSelection] = Field(
+        default_factory=list, description="校验通过的选中项（原样回显）"
+    )
+    # 已选定段的展示文本（"A→B G547 08:00-12:00 二等座553元"）：
+    # 提交成功后由路由侧拼成一条合成发言续跑住宿步，故必须把段文本带出本模块
+    texts: list[str] = Field(
+        default_factory=list, description="已选定各段的展示文本，按行程段顺序排列"
+    )

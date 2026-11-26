@@ -1,0 +1,93 @@
+async def try_direct_ticket_query(content: str, stream=None,
+                                   conversation_id: str = "") -> str | None:
+    """命中交通班次单点查询（高铁/航班）则返回代码渲染的真实班次清单
+    确定性门禁规则：
+    ① 含票务对象 +（查询动词/日期词）；② 不含规划词汇；
+    ③ 可解析起讫城市；④ 对应工具已加载。任一不满足返回 None，交由原通道处理
+    """
+    intent = detect_intent(content)
+    slot = _PENDING_QUERY.get(conversation_id or "")
+
+    # 存在待补槽位，但用户输入包含规划类内容，清空查询状态
+    if slot and intent.planning_noise:
+        _PENDING_QUERY.pop(conversation_id or "", None)
+        slot = None
+
+    if not slot and not intent.looks_like_query:
+        app_logger.info(f"[direct] 门禁①②未命中，交回原通道：{content[:30]}")
+        return None
+
+    slot = slot or {"kind": "flight" if intent.flight_object else "train"}
+    _fill_slots(slot, content, intent)
+
+    # 起讫城市缺失，追问补齐槽位，超过轮数上限则退出直查通道
+    if not (slot.get("frm") and slot.get("to")):
+        slot["turns"] = slot.get("turns", 0) + 1
+        if conversation_id and slot["turns"] <= _PENDING_TTL:
+            _PENDING_QUERY[conversation_id] = slot
+            app_logger.info(f"[direct] 槽位待补（第 {slot['turns']} 轮）：{slot}")
+        else:
+            _PENDING_QUERY.pop(conversation_id or "", None)
+            return None
+        text = _missing_slot_text(slot)
+        if stream is not None:
+            stream.push(make_event(ROLE_ASSISTANT, text))
+        return text
+
+    # 槽位收集完成，清除待查询缓存
+    _PENDING_QUERY.pop(conversation_id or "", None)
+    frm, to, day = slot["frm"], slot["to"], slot.get("date") or _parse_query_date(content)
+
+    def _emit(text: str) -> str:
+        """统一流式事件推送，所有分支出口统一调用，防止事件漏推"""
+        if stream is not None:
+            stream.push(make_event(ROLE_ASSISTANT, text))
+        return text
+
+    _note = ""
+    # 航班查询分支，无直飞班次自动降级查询同日高铁
+    if intent.flight_object:
+        if stream is not None:
+            stream.push(make_event(ROLE_ASSISTANT, f"✈️ 正在为您查询 {frm} → {to} 的航班，请稍候…\n"))
+        _ftable = await _flight_table(frm, to, day)
+        if _ftable:
+            app_logger.info(f"✅ 直查通道（航班）：{day} {frm}→{to}（代码渲染，未走状态机）")
+            return _emit(f"为您查询到 **{day}** {frm} → {to} 的航班：{_ftable}")
+        _note = (f"未查询到 **{day}** {frm} → {to} 的直飞航班（航班数据源该航线暂无直飞班次），"
+                 "为您附上同期高铁班次供参考：\n\n")
+
+    # 高铁查询分支
+    try:
+        from app.tools.mcp_tools import get_train_tools, parse_compact_rows, parse_ticket_rows
+        tools = await get_train_tools()
+    except Exception:
+        return None
+
+    tool = next((t for t in tools if t.name.lower() == "get-tickets"), None)
+    if tool is None:
+        return None
+
+    if stream is not None:
+        stream.push(make_event(ROLE_ASSISTANT, f"🚄 正在为您查询 {frm} → {to} 的高铁班次，请稍候…\n"))
+    try:
+        raw = await tool.ainvoke({"date": day, "fromStation": frm, "toStation": to})
+    except Exception:
+        app_logger.warning("[直查] 12306 班次查询失败", exc_info=True)
+        return _emit(_note + f"抱歉，**{day} {frm} → {to}** 的实时班次查询失败，请稍后重试或换一站查询。")
+
+    rows = parse_compact_rows(raw) or parse_ticket_rows(raw)
+    if not rows:
+        return _emit(_note + f"没有查到 **{day} {frm} → {to}** 的可用班次（12306 未返回余票数据），"
+                      "您可以换一个日期或邻近车站再试。")
+
+    table = _render_ticket_table(
+        {(rows[0]["from"], rows[0]["to"]): _rows_to_seg(rows)},
+        header="**以下为 12306 实时班次（数据来源：12306，余票与票价随时变动）**\n",
+        tail="\n以上为查询结果，如需预订请在 12306 官方渠道下单。\n",
+    )
+    if not table:
+        return None
+
+    app_logger.info(f"✅ 直查通道：{day} {frm}→{to} 共 {len(rows)} 趟（代码渲染，未走状态机）")
+    return _emit(_note + f"为您查询到 **{day}** {frm} → {to} 的班次：{table}")
+     

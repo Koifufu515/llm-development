@@ -1,0 +1,37 @@
+def _leg_query_date(state: dict, legs: list, cursor: int) -> str:
+    """ 多段行程的"段日期"按时序分配（代码算，不由模型猜）
+
+    实测多城会话三段城际全按出发日查询（重庆→北京、北京→天津都查 2026-09-18），
+    与实际时序矛盾（人不可能同一天既在重庆又在北京又在天津）。规则：
+      ① 出发地→首城 = 出发日；
+      ② 城市 i-1 → 城市 i = 出发日 + 前 i 站累计晚数（即下一城的首日）；
+      ③ 返程段（末段、终点=出发地）= 末日。
+    晚数分配与酒店侧同源：出发地 1 晚 + 剩余天数在其后城市均分
+    """
+    from datetime import date as _date, timedelta as _timedelta
+    req = state.get("user_requirement") or {}
+    days = int(req.get("travel_days") or 0)
+    try:
+        start = _date.fromisoformat(str(req.get("departure_date") or "")[:10])
+    except Exception:
+        return ""
+    if days <= 0 or not legs:
+        return ""
+    c = max(0, min(int(cursor), len(legs) - 1))
+    from app.services.express_planning_service import _stay_nights, ordered_play_cities
+    # 与住宿站点同源对齐——节点 = ordered_play_cities（目的地城市串，
+    # 出发地仅当本身也在目的地串里才计入并置最前），晚数按**真实节点数**分配（此前按
+    # legs+1 估，3 城以上与酒店侧错位）。出发地本身是游玩首节点时（北京→北京/天津），
+    # 首段（北京→天津）发生在"北京住 1 晚之后"，偏移整体 +1 站
+    dep = str(req.get("departure_city") or "").strip()
+    dest = str(state.get("selected_destination") or "") or str(req.get("destination") or "")
+    # ★ 返程段 = 末日：单独判定，不靠最后一行 min(offset, days - 1) 的截断碰巧落到末日
+    if dep and c == len(legs) - 1 and str(legs[c]).rpartition("→")[2].strip() == dep:
+        return (start + _timedelta(days=days - 1)).isoformat()
+    nodes = ordered_play_cities(dep, dest)
+    # ★ 与住宿步同一口径：首站 1 晚、其余均分
+    nights = _stay_nights(days, len(nodes) or (len(legs) + 1))
+    # ★ 出发地也在目的地里：第一站在本地玩，每段都往后挪一站
+    shift = 1 if (dep and dep in nodes and nodes[0] == dep) else 0
+    offset = sum(nights[:min(c + shift, len(nights))]) if nights else 0
+    return (start + _timedelta(days=min(offset, days - 1))).isoformat()

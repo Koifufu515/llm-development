@@ -1,0 +1,10 @@
+# 1) 建数据目录
+mkdir E:\docker-data\redis
+
+# 2) 运行容器
+docker run -d `
+  --name travel_redis `
+  -p 6379:6379 `
+  -v E:\docker-data\redis:/data `
+  --restart unless-stopped `
+  redis:7-alpine redis-server --appendonly yes

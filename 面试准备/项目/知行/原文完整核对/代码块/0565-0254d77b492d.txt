@@ -1,0 +1,11 @@
+"""_rows_to_seg 演示：同车次只留发车最早的一条；票价文案按常用席别挑（纯函数，无需密钥）"""
+from app.services.chat_stream_executor import _rows_to_seg
+
+rows = [   # 第 9 章 parse_compact_rows / parse_ticket_rows 解析出的两种行
+    {"code": "G1650", "dep": "08:12", "arr": "12:30", "dur": "4:18", "seat": "二等座 有 356元"},   # 紧凑行
+    {"code": "G1650", "dep": "09:40", "arr": "13:58", "dur": "4:18", "seat": "二等座 有 356元"},   # 同车次更晚 → 丢
+    {"code": "D3135", "dep": "07:05", "arr": "13:02", "dur": "5:57",
+     "seats": {"一等座": ("有", 452.0), "二等座": ("无", 283.0)}},                                  # 原始行：席别字典
+]
+for code, item in _rows_to_seg(rows).items():
+    print(code, "→", item)            # (发车, 车次, 到达, 历时, 票价文案)：元组第一位是发车时刻，排序就按它

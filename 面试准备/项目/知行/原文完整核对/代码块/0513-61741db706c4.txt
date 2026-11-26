@@ -1,0 +1,27 @@
+"""_pick_train 演示：原始格式与紧凑格式都能按"历时分钟 + 价格/10"选中同一趟（纯函数，无需密钥）"""
+from app.services.express_planning_service import _pick_train
+from app.tools.mcp_tools import compact_ticket_text
+
+# ① 12306 原始多行格式（模型自己调工具、或未过守卫时的形态）
+RAW = """G1234 福州(telecode:FZS) -> 深圳北(telecode:IOQ) 07:10 -> 12:45 历时：05:35
+- 二等座: 有票 380.5元
+- 一等座: 剩余5张票 609元
+D3111 福州(telecode:FZS) -> 深圳北(telecode:IOQ) 08:02 -> 15:30 历时：07:28
+- 二等座: 有票 310元
+G1601 福州南(telecode:FYS) -> 深圳北(telecode:IOQ) 09:15 -> 14:20 历时：05:05
+- 二等座: 无票 400元"""
+
+# ② 守卫压缩后的紧凑行——这才是 get_train_tools() 交给快速通道的真实形态
+COMPACT = compact_ticket_text(RAW)
+print("紧凑行形态：")
+print(COMPACT)
+
+best_raw = _pick_train(RAW)
+best_compact = _pick_train(COMPACT)
+print("原始格式选中：", best_raw)
+print("紧凑格式选中：", best_compact)
+# G1234：335 分钟 + 38.05 = 373.05 分；D3111：448 + 31 = 479 分；G1601 二等座无票，整趟跳过
+# 关键：两种格式必须选中同一趟 G1234（旧版对紧凑行返回 None，就是这条 assert 会挂）
+assert best_raw and best_raw["no"] == "G1234"
+assert best_compact and best_compact["no"] == "G1234"
+assert _pick_train("") is None

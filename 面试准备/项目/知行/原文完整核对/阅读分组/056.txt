@@ -1,0 +1,530 @@
+
+
+===== block 661 f6ecb954b675 lines 1-51 source 知行旅行助手-v2#664 =====
+"""线上行程质检入口
+
+跑法：uv run pytest evaluation/test_itinerary_db.py -v
+从 ItineraryPlans 表拉取最近 N 份真实落库行程，逐份跑三维度 GEval；
+库里无数据时跳过（不误报）。与 test_itinerary.py 互补：
+- test_itinerary.py：静态样本校准裁判判别力（正反样本）；
+- test_itinerary_db.py：线上产出行程质量门禁（全 positive 断言）。
+"""
+import asyncio
+import os
+
+# Windows 下 Selector 事件循环（与 app/run.py、其他评测入口一致）
+if os.name == "nt":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+import pytest
+
+from evaluation.itinerary_db import fetch_itinerary_cases
+from evaluation.itinerary_metric import build_itinerary_metrics
+
+# 质检阈值与线上行程数量上限（每份 3 次裁判调用，控制时长）
+THRESHOLD = 0.5
+MAX_PLANS = 3
+
+# 参数化在收集期执行 DB 查询；无数据则整组跳过
+_CASES = fetch_itinerary_cases(limit=MAX_PLANS)  # ★ 收集期就查库
+
+@pytest.mark.skipif(not _CASES, reason="ItineraryPlans 表中无落库行程，跳过线上质检")
+@pytest.mark.parametrize("case", _CASES, ids=[c["note"] for c in _CASES])
+def test_online_itinerary_quality(case: dict):
+    """线上质检：每份真实落库行程三维度必须全部达标"""
+    from deepeval.test_case import LLMTestCase
+
+    test_case = LLMTestCase(
+        input=case["input"],
+        actual_output=case["actual_output"],
+    )
+
+    scores = {}
+    reasons = []
+    # 本入口的源料来自 plan_to_text（结构化清单，无预算字段），
+    # 故 require_budget=False——否则"完整性"维度会因恒缺预算而系统性扣分、误报质量不达标
+    for metric in build_itinerary_metrics(threshold=THRESHOLD, require_budget=False):
+        metric.measure(test_case)
+        scores[metric.name] = metric.score
+        if metric.score < THRESHOLD:
+            reasons.append(f"{metric.name}: {metric.reason}")
+
+    # 线上产出全部按正样本断言：任一维度不达标即质检失败
+    low = {k: v for k, v in scores.items() if v < THRESHOLD}
+    assert not low, f"落库行程未达质检标准 {low}\n{chr(10).join(reasons)}"
+
+
+===== block 662 81e4d0ccc584 lines 1-1 source 知行旅行助手-v2#665 =====
+uv run pytest evaluation/test_itinerary_db.py -v
+
+
+===== block 663 5cfd8044fbd1 lines 1-62 source 知行旅行助手-v2#666 =====
+"""第 13 章冒烟：共用裁判、判据开关、清单转正文、确定性路由指标，结构自检一遍
+（不连库、不发真实模型请求；构造裁判客户端仍需 .env 里的 DashScope 密钥）
+"""
+import json
+import os
+
+os.environ.setdefault("DEEPEVAL_TELEMETRY_OPT_OUT", "YES")      # 关遥测，和 conftest.py 一致
+
+from deepeval.test_case import LLMTestCase
+
+from app.services.quality_check_service import QwenJudge, build_itinerary_metrics, plan_to_text
+from evaluation.itinerary_metric import build_itinerary_metrics as fwd_build
+from evaluation.router_metric import RouterCorrectnessMetric
+
+def check(name: str, ok: bool) -> None:
+    print(f"{'✅' if ok else '❌'} {name}")
+    assert ok, name
+
+def route_case(planning: bool, skills: list[str]) -> LLMTestCase:
+    """把"路由器输出"序列化成 actual_output，与 test_router.py 的写法一致"""
+    return LLMTestCase(input="-", actual_output=json.dumps(
+        {"is_itinerary_planning": planning, "skills": [{"skill_name": s} for s in skills]}))
+
+judge = QwenJudge()
+check(f"裁判可构造：{judge.get_model_name()}", judge.get_model_name().startswith("qwen-judge("))
+metrics = build_itinerary_metrics()
+check("三个维度：" + "、".join(m.name for m in metrics), len(metrics) == 3)
+check("每次 build 都是新实例", build_itinerary_metrics()[0] is not metrics[0])
+check("require_budget 只切完整性判据",
+      build_itinerary_metrics(require_budget=False)[0].criteria != metrics[0].criteria
+      and build_itinerary_metrics(require_budget=False)[1].criteria == metrics[1].criteria)
+check("evaluation/ 的标尺是薄转发", fwd_build is build_itinerary_metrics)
+text = plan_to_text({"title": "杭州3日游", "itinerary_list": [{"day": "Day 1", "itinerary": [
+    {"time": "上午", "scenic_spots_list": [{"toponym": "西湖", "toponym_desc": "白堤到断桥"}]}]}]})
+check("plan_to_text 摊出时段和景点", "上午：西湖" in text)
+
+# ===== 确定性路由指标：planning 精确匹配 + skills 三种语义 + 矛盾入参守卫 =====
+check("路由指标：规划请求判对得 1",
+      RouterCorrectnessMetric(True, ["itinerary_planning"]).measure(
+          route_case(True, ["itinerary_planning"])) == 1.0)
+# 期望 planning=False（闲聊），实际 planning=True（被误判为规划）→ 0；与 skills 内容无关
+check("路由指标：闲聊误判为规划得 0",
+      RouterCorrectnessMetric(False).measure(route_case(True, [])) == 0.0)
+check("路由指标：命中期望技能之一即通过",
+      RouterCorrectnessMetric(False, ["weather_query", "hotel_query"]).measure(
+          route_case(False, ["hotel_query", "train_query"])) == 1.0)
+check("路由指标：要求技能为空·空则通过",
+      RouterCorrectnessMetric(False, expect_empty_skills=True).measure(route_case(False, [])) == 1.0)
+check("路由指标：要求技能为空·有则拦截",
+      RouterCorrectnessMetric(False, expect_empty_skills=True).measure(
+          route_case(False, ["weather_query"])) == 0.0)
+try:                                        # ★ 矛盾入参必须显式报错，不静默吞掉其一
+    RouterCorrectnessMetric(False, ["train_query"], expect_empty_skills=True)
+    guard_ok = False                        # 没抛异常 = 守卫失效
+except ValueError:
+    guard_ok = True
+check("路由指标：矛盾入参必须报错", guard_ok)
+
+print("结构自检通过。真实评测请跑：")
+print("  uv run pytest evaluation/test_router.py -v")
+print("  uv run pytest evaluation/test_itinerary.py -v")
+print("  uv run pytest evaluation/test_itinerary_db.py -v")
+
+
+===== block 664 448301759484 lines 1-9 source 知行旅行助手代码-v2#1 =====
+# 解压之后执行下面的步骤
+uv venv --python 3.13
+
+# 激活（macOS / Linux）
+source .venv/bin/activate
+# 激活（Windows PowerShell）
+.venv\Scripts\Activate.ps1
+
+uv sync
+
+
+===== block 665 334ac814c38d lines 1-62 source 知行旅行助手代码-v2#9 =====
+[project]
+name = "knowgo-travel"
+version = "0.1.0"
+description = "旅行规划 Agent"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    # LangChain / LangGraph 全家桶
+    "langchain==1.2.0",
+    "langchain-community==0.4.1",
+    "langchain-core~=1.2.7",
+    "langgraph==1.0.5",
+    "langgraph-checkpoint==3.0.1",
+    "langgraph-checkpoint-postgres==3.0.2",
+    "langgraph-prebuilt==1.0.5",
+    "langsmith==0.4.59",
+    "langchain-openai~=1.1.7",
+    "langchain-text-splitters~=1.1.0",
+    # LLM 集成（阿里千问）
+    "dashscope==1.25.4",
+    # 数据库
+    "psycopg[binary,pool]==3.3.2",
+    "psycopg-pool~=3.3.0",
+    "redis==5.0.0",
+    "SQLAlchemy~=2.0.45",
+    "chromadb==0.5.23",
+    # Web 框架
+    "fastapi==0.124.4",
+    "uvicorn[standard]>=0.35.0",
+    "websockets>=15.0.1",
+    "python-multipart==0.0.20",
+    "aiofiles==24.1.0",
+    # RAG 相关
+    "langchain-chroma>=0.1.4",
+    "sentence-transformers==3.3.0",
+    "rank-bm25==0.2.2",
+    "jieba==0.42.1",
+    # MCP 协议
+    "langchain-mcp-adapters==0.2.1",
+    "fastmcp==2.13.1",
+    # 工具库
+    "pydantic==2.12.5",
+    "pydantic-settings==2.12.0",
+    "python-dotenv==1.2.1",
+    "tenacity==9.1.2",
+    "httpx==0.28.1",
+    "aiohttp==3.13.2",
+    "Jinja2~=3.1.6",
+    "bcrypt~=5.0.0",
+    "PyJWT~=2.10.1",
+    "typing_extensions~=4.15.0",
+    # 监控与日志
+    "loguru==0.7.2",
+    "prometheus-client==0.21.0",
+    # 测试
+    "pytest~=9.0.2",
+    "pytest-asyncio~=1.3.0",
+    "myapplication>=0.1.0",
+    "asyncpg>=0.31.0",
+    "email-validator>=2.3.0",
+    "deepeval>=4.2.7",
+]
+
+
+===== block 666 db9ba142a904 lines 1-203 source 知行旅行助手代码-v2#22 =====
+"""
+TravelState 状态定义
+使用 TypedDict + Annotated 实现类型安全和状态合并
+"""
+from typing import Annotated, Literal, Optional
+from typing_extensions import TypedDict, NotRequired
+from operator import add
+from langchain.agents import AgentState
+
+# ============== 枚举类型定义 ==============
+
+PlanningStep = Literal[
+    "requirement_collection",       # 需求收集
+    "destination_recommendation",   # 目的地推荐
+    "transport_planning",           # 交通规划
+    "accommodation_planning",       # 住宿规划
+    "food_planning",                # 餐饮规划
+    "itinerary_generation",         # 行程生成
+    "budget_summarization",         # 预算汇总
+    "report_generation"             # 报告生成
+]
+
+TravelStyle = Literal[
+    "relaxation",   # 休闲度假
+    "culture",      # 文化探索
+    "adventure",    # 户外冒险
+    "food"          # 美食之旅
+]
+
+BudgetLevel = Literal[
+    "economy",  # 经济型（< 3000元/人）
+    "comfort",  # 舒适型（3000-8000元/人）
+    "luxury"    # 豪华型（> 8000元/人）
+]
+
+TransportType = Literal[
+    "flight",   # 航班
+    "train",    # 高铁/火车
+    "driving",  # 自驾
+    "local"     # 本地游玩（出发地=目的地，零城际段）
+]
+
+AccommodationType = Literal[
+    "star_hotel",       # 星级酒店
+    "economy_hotel",    # 经济酒店
+    "hostel",           # 民宿
+    "youth_hostel"      # 青年旅社
+]
+
+FoodType = Literal[
+    "specialty",    # 特色美食
+    "chain",        # 连锁快餐
+    "local"         # 本地小吃
+]
+
+# ============== 用户需求结构 ==============
+
+class UserRequirement(TypedDict):
+    """用户旅行需求"""
+    departure_city: str             # 出发地点
+    destination: str                # 目的地
+    departure_date: str             # 出发日期（YYYY-MM-DD）
+    travel_days: int                # 出行天数
+    adult_count: int                # 成人数量
+    children_count: int             # 儿童数量
+    budget_min: Optional[float]     # 预算下限
+    budget_max: Optional[float]     # 预算上限
+    budget_level: BudgetLevel       # 预算等级
+    travel_styles: list[TravelStyle]# 旅行风格（多选）
+    special_needs: Optional[str]    # 特殊需求（文本）
+    # 表单预选项：表单已勾选时随需求一并记录，后续步骤免重复询问
+    transport_types: NotRequired[list[str]]        # 期望交通方式 flight/train/driving
+    food_preferences: NotRequired[list[str]]       # 餐饮偏好 specialty/chain/local
+    accommodation_types: NotRequired[list[str]]    # 住宿偏好 star_hotel/economy_hotel/hostel/youth_hostel
+
+# ============== 查询结果结构 ==============
+
+class DestinationInfo(TypedDict):
+    """目的地信息"""
+    name: str                       # 目的地名称
+    description: str                # 描述
+    weather_info: Optional[str]     # 天气信息
+    attractions: list[str]          # 景点列表
+    estimated_cost: Optional[float] # 预估花费
+
+class TransportInfo(TypedDict):
+    """交通信息"""
+    transport_type: TransportType
+    details: str                # 详细信息（航班号/车次等）
+    departure_time: str         # 出发时间
+    arrival_time: str           # 到达时间
+    duration: str               # 行程时间（HH:MM）
+    price: float                # 价格（人/天）
+
+class AccommodationInfo(TypedDict):
+    """住宿信息"""
+    name: str                    # 住宿名称
+    type: AccommodationType      # 住宿类型
+    location: str                # 位置
+    price_per_night: float       # 价格（人/天）
+    rating: Optional[float]      # 评分（可选）
+    amenities: list[str]         # 设施（如：WiFi、Parking、Swimming Pool等，可选）
+
+class FoodInfo(TypedDict):
+    """餐饮信息"""
+    type: FoodType               # 餐饮类型
+    recommendations: list[str]   # 推荐餐厅/美食
+    estimated_daily_cost: float  # 预估花费（人/天）
+
+class ItineraryDay(TypedDict):
+    """单日行程"""
+    day_number: int             # 天数（从1开始）
+    activities: list[str]       # 活动列表
+    meals: list[str]            # 餐饮列表
+    accommodation: str          # 住宿名称
+
+class BudgetBreakdown(TypedDict):
+    """预算明细"""
+    transport: float  # 交通（人/天）
+    accommodation: float  # 住宿（人/天）
+    food: float  # 餐饮（人/天）
+    attractions: float  # 景点（人/天）
+    attractions_source: NotRequired[str]  # 门票金额来源："real"（真实票价）/ "estimated"（估算）
+    misc: float  # 其他（人/天）
+    total: float  # 总预算（人/天）
+
+# ============== 自定义 Reducer ==============
+CLEAR = "__CLEAR__"
+
+def _keep_last_non_none(current, new):
+    """"非空优先"合并器（专用于 itinerary / budget 这类"产物字段"）
+
+    为什么需要：
+    LangGraph 默认每个 State 字段用 LastValue 通道，也就是"同一步只能写一次"。
+    但一个步骤内可能被多把工具同时更新——比如一个工具写空值（表示重置），
+    另一个工具写有效结果，两者并发就会抛：
+        InvalidUpdateError: At key 'budget': Can receive only one value per step
+
+    业务逻辑：空值不覆盖已有内容——既避免图直接崩溃，也不会丢已算出的产物。
+    """
+    return current if new is None else new
+
+# ============== 主状态定义 ==============
+
+class TravelState(AgentState):
+    """
+    旅行规划系统主状态
+
+    继承自 AgentState，自动获得：
+    - messages: 对话消息列表
+    - 其他 Agent 通用字段
+    """
+
+    # ========== 流程控制 ==========
+    current_step: NotRequired[PlanningStep]  # 当前步骤
+    # 确认模式真源：由 record_requirement_tool 写入（表单是否勾选"全程交给 AI 自动确认"）
+    # 供 middleware 渲染成语义变量注入各步骤 prompt
+    auto_confirm: NotRequired[bool]
+
+    # ========== 用户输入 ==========
+    user_requirement: NotRequired[UserRequirement]
+
+    # ========== 用户选择 ==========
+    selected_destination: NotRequired[str]
+    selected_transport: NotRequired[TransportType]
+    selected_accommodation_types: NotRequired[list[AccommodationType]]
+    selected_food_types: NotRequired[list[FoodType]]
+    # 多目的地逐段/逐城确认留痕
+    selected_transport_legs: NotRequired[list[str]]
+    selected_hotels: NotRequired[list[str]]
+    # 段级循环：段列表游标 + 已确认结果
+    leg_cursor: NotRequired[int]
+    leg_selections: NotRequired[dict[str, str]]
+    stay_cursor: NotRequired[int]
+
+    # ========== 查询结果 ==========
+    destination_options: NotRequired[list[DestinationInfo]]
+    transport_options: NotRequired[list[TransportInfo]]
+    accommodation_options: NotRequired[list[AccommodationInfo]]
+    food_options: NotRequired[list[FoodInfo]]
+
+    # ========== 最终结果 ==========
+    # itinerary / budget 挂 Annotated 合并器：避免并发写空值把已有产物覆盖掉
+    itinerary: NotRequired[Annotated[list[ItineraryDay], _keep_last_non_none]]
+    itinerary_body: NotRequired[list[dict]]   # 结构化逐日行程（Pydantic 校验通过）
+    budget: NotRequired[Annotated[BudgetBreakdown, _keep_last_non_none]]
+    report: NotRequired[str]                  # 旅行报告（Markdown）
+
+    # ========== 审批状态 ==========
+    approval_pending: NotRequired[bool]
+    approval_reason: NotRequired[str]
+
+    # ========== 元数据 ==========
+    user_id: NotRequired[str]
+    session_id: NotRequired[str]
+    created_at: NotRequired[float]
+    updated_at: NotRequired[float]
+    
+    # 与 leg_selections / selected_hotels 同一次写入：那两个存展示文本（给人看），
+    # 这两个存纯数字（给代码算）。预算侧因此不必再从展示文本里抠价——
+    # 抠自己拼的字符串是反模式：文案一改，抠价就静默失效
+    leg_prices: NotRequired[dict[str, float]]     # 段名（"北京→天津"）→ 人均票价（元）
+    stay_prices: NotRequired[dict[str, float]]    # 城市名 → 每晚房价（元）
+
+
+===== block 667 610199f580d2 lines 1-121 source 知行旅行助手代码-v2#24 =====
+import asyncio
+from typing import Optional
+from contextlib import asynccontextmanager
+from psycopg_pool import AsyncConnectionPool
+from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+from app.config import settings
+from app.utils.logger import app_logger
+
+# ============== CheckpointerManager 单例 ==============
+
+class CheckpointerManager:
+    """Checkpointer 管理器（单例模式）
+
+    职责：
+    - 管理 PostgreSQL 异步连接池
+    - 管理 AsyncPostgresSaver 实例
+    - 保证全局只有一份
+    """
+
+    _instance: Optional['CheckpointerManager'] = None
+    _lock = asyncio.Lock()
+
+    def __init__(self):
+        self.pool: Optional[AsyncConnectionPool] = None
+        self.checkpointer: Optional[AsyncPostgresSaver] = None
+
+    @classmethod
+    async def get_instance(cls) -> 'CheckpointerManager':
+        """获取单例实例（线程/协程安全）
+
+        使用"双重检查锁定"模式：
+        - 快速路径：无锁读，绝大多数请求命中已初始化的实例，零开销
+        - 慢速路径：只有第一次未初始化时才拿锁串行创建
+        """
+        # ━━━ 第一重检查（无锁，快速路径）━━━━━━━━━━━━━━━━
+        if cls._instance is None:
+            # ━━━ 获取锁（只有一个协程能进入）━━━━━━━━━━━
+            async with cls._lock:
+                # ━━━ 第二重检查（有锁，安全路径）━━━━━━━━━
+                if cls._instance is None:
+                    cls._instance = cls()
+                    await cls._instance.initialize()
+        return cls._instance
+
+    async def initialize(self):
+        """初始化连接池和 Checkpointer"""
+
+        # 防御性检查：重复初始化直接跳过
+        if self.checkpointer is not None:
+            app_logger.warning("⚠️ Checkpointer 已初始化，跳过")
+            return
+
+        try:
+            app_logger.info("初始化 PostgreSQL Checkpointer...")
+
+            # 创建异步连接池
+            self.pool = AsyncConnectionPool(
+                conninfo=settings.database_url,  # PostgreSQL 连接字符串
+                min_size=2,   # 最小空闲连接数
+                max_size=20,  # 最大连接数
+                # 如何确定这个值？
+                # 公式：max_size ≈ PostgreSQL 的 max_connections / 应用实例数
+                # 例如：PG max_connections=100, 部署 4 个 Pod → max_size=25
+                # 留一些余量给管理连接（如监控、迁移）
+                timeout=30,
+            )
+
+            # 打开连接池（真正建立底层连接）
+            await self.pool.open()
+
+            # 创建 Checkpointer
+            self.checkpointer = AsyncPostgresSaver(self.pool)
+            await self.checkpointer.setup()
+
+            app_logger.info("✅ Checkpointer 初始化完成")
+
+        except Exception as e:
+            app_logger.error(f"❌ Checkpointer 初始化失败: {e}")
+            raise
+
+    async def close(self):
+        """关闭连接池"""
+        if self.pool:
+            await self.pool.close()
+            app_logger.info("Checkpointer 连接池已关闭")
+
+    def get_checkpointer(self) -> AsyncPostgresSaver:
+        """获取 Checkpointer 实例"""
+        if self.checkpointer is None:
+            raise RuntimeError("Checkpointer 未初始化，请先调用 initialize()")
+        return self.checkpointer
+
+# ============== 便捷函数 ==============
+
+async def get_checkpointer() -> AsyncPostgresSaver:
+    """
+    获取全局 Checkpointer 实例
+
+    用法：
+        checkpointer = await get_checkpointer()
+        graph = builder.compile(checkpointer=checkpointer)
+    """
+    manager = await CheckpointerManager.get_instance()
+    return manager.get_checkpointer()
+
+# ============== FastAPI lifespan 集成 ==============
+
+@asynccontextmanager
+async def checkpointer_lifespan():
+    """
+    Checkpointer 生命周期管理器（供 FastAPI lifespan 嵌套使用）
+
+    用法（见 app/main.py）：
+        async with checkpointer_lifespan():
+            yield
+    """
+    manager = await CheckpointerManager.get_instance()
+    try:
+        yield manager.get_checkpointer()
+    finally:
+        await manager.close()

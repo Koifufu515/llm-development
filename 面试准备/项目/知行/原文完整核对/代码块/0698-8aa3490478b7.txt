@@ -1,0 +1,98 @@
+def _fallback_hotel_brands(hotel_preferences: list[str] | None) -> str:
+    """酒店报价不可用时的品牌兜底文案，延迟导入防止模块循环依赖"""
+    _COMMON_HOTELS: dict[str, list[str]] = {
+        "economy_hotel": ["如家", "汉庭", "7 天", "锦江之星", "格林豪泰", "莫泰"],
+        "star_hotel": ["希尔顿", "万豪", "洲际", "香格里拉", "凯悦", "雅高"],
+        "hostel": ["花间堂", "途家民宿", "小猪民宿", "美团民宿"],
+        "youth_hostel": ["国际青年旅舍（YHA）", "万里路青年旅舍", "如家青旅"],
+    }
+
+    types = [t for t in (hotel_preferences or []) if t in _COMMON_HOTELS] or ["economy_hotel"]
+    return "、".join(_COMMON_HOTELS[types[0]][:3])
+
+def _select_choices(req: ExpressRequirement, ctx: dict) -> dict:
+    """规则选定：逐段交通、逐城酒店、餐饮一次性选定，返回结果与用户摘要文本"""
+    cities = ctx.get("_cities") or _split_cities(req.destination)
+    legs = ctx.get("_legs") or _build_legs(req.departure_city, cities)
+    food = req.food_preferences or (["specialty", "local"] if "food" in req.travel_styles else ["local", "specialty"])
+
+    transports = []          # 成功获取的交通，用于预算计算
+    leg_results = []         # 全部路段记录，包含查询失败路段
+    for i, (src, dst) in enumerate(legs):
+        #   按用户勾选顺序挑交通（req.transport_types 即偏好序），不硬编码 train 优先：
+        #   逐个模式试，取首个有有效结果的；查询侧只对该模式建了 job，无候选自然跳过
+        picked = None
+        for mode in req.transport_types:
+            if mode == "train":
+                t = _pick_train(ctx.get(f"train_{i}", ""))
+                if t:
+                    picked = {"type": "train", **t}
+            elif mode == "flight":
+                f = _pick_flight(ctx.get(f"flight_{i}", ""), ctx.get(f"flightprice_{i}", ""))
+                if f:
+                    picked = {"type": "flight", **f}
+            if picked:
+                break
+        if picked:
+            picks = dict(picked)
+            picks["src"], picks["dst"] = src, dst
+            transports.append(picks)
+            leg_results.append(("ok", src, dst, picks))
+        else:
+            leg_results.append(("miss", src, dst, None))
+
+    hotels = []
+    hotel_results = []       # 全部城市酒店记录，包含兜底 fallback
+    for i, city in enumerate(cities):
+        h = _pick_hotel(ctx.get(f"hotel_{i}", ""))
+        if h:
+            buildings = dict(h)
+            buildings["city"] = city
+            hotels.append(buildings)
+            hotel_results.append(("ok", city, buildings))
+        else:
+            hotel_results.append(("fallback", city, None))
+
+    weathers = {}
+    for i, city in enumerate(cities):
+        w = _pick_weather(ctx.get(f"weather_{i}", ""), req.departure_date)
+        if w:
+            weathers[city] = w
+
+    sel = {
+        "transports": transports,
+        "hotels": hotels,
+        "food": food,
+        "weathers": weathers,
+        "cities": cities,
+        "total_legs": len(legs),
+        "leg_results": leg_results,
+        "hotel_results": hotel_results
+    }
+
+    lines = []
+    # 交通摘要，按路段序号输出，失败路段保留提示
+    for i, (kind, src, dst, pk) in enumerate(leg_results):
+        if kind == "ok" and pk["type"] == "train":
+            lines.append(f"🚄 交通{i+1}（{src}→{dst}）：{pk['no']} 次 {pk['dep']}出发（历时{pk['mins']//60}小时{pk['mins']%60:02d}分，二等座{pk['price']:.0f}元）")
+        elif kind == "ok":
+            price_txt = f"{pk['price']:.0f}元" if pk["price"] else "价格待定"
+            dep_txt = f"{pk['dep']}出发，" if pk.get("dep") else ""
+            lines.append(f"✈️ 交通{i+1}（{src}→{dst}）：{pk.get('flight_no','航班')} {dep_txt}{price_txt}")
+        else:
+            lines.append(f"🚄 交通{i+1}（{src}→{dst}）：未查询到实时班次（可到站现买或改期，费用按估算计入）")
+
+    # 酒店摘要，无真实报价使用品牌兜底文案
+    for kind, city, h in hotel_results:
+        if kind == "ok":
+            lines.append(f"🏨 {city}酒店：{h['name']}（{h['price']:.0f}元/晚，评分{h['score']}）")
+        else:
+            lines.append(f"🏨 {city}住宿：经济连锁（{_fallback_hotel_brands(req.accommodation_types)}等，到店择优选同档位）")
+
+    lines.append("🍽️ 餐饮偏好：" + "、".join({"specialty": "特色美食", "chain": "连锁快餐", "local": "本地小吃"}[f] for f in food))
+    for city, w in weathers.items():
+        lines.append(f"🌤️ {city}出发日天气：{w}")
+
+    sel["summary"] = "\n".join(lines) if lines else "未查询到实时数据，正在按常识安排…"
+    app_logger.info(f"[express] 规则选定完成: {sel['summary'][:100]}...")
+    return sel

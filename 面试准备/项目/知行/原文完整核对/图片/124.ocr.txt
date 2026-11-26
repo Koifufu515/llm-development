@@ -1,0 +1,12 @@
+PS E：\knowgo_travel_agent_web> npm run dev
+> zhixing-traveL@1.0.0 dev
+> next dev
+』 Next.js 16.3.0 （Turbopack）
+- Local：
+http://LocaLhost:3000
+- Network：
+http://169.254.79.3:3000
+- Environments：
+.env.Local
+• Ready in 1423ms
+v Running next.config.js took 76ms

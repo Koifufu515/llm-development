@@ -1,0 +1,1 @@
+../../../../../../wenshu-project/backend/scripts/reindex_active.py

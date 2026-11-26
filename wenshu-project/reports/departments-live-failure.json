@@ -1,0 +1,320 @@
+{
+  "scope": "真实K8s部门HTTP与Qwen成功，另一部门故障注入连接拒绝；不是两节点物理故障",
+  "queries": [
+    {
+      "departments": [
+        "dept_hqaq",
+        "dept_unavailable"
+      ],
+      "seconds": 12.805762458126992,
+      "session_id": "6399eecd00504d5ab07f0519fea84f66",
+      "answer": "【dept_hqaq】\n不可以。强降雨天气禁止在校园骑行 [来源1]；大风暴雨天气请勿骑行 [来源2]；Cycling is prohibited in strong rain [来源3]。\n\n【dept_unavailable】\n部门服务不可用，以下为相关原文：\n根据检索到的制度条款：\n\n以下部门服务超时，已使用共享检索降级回答：dept_unavailable",
+      "citations": [
+        {
+          "doc_id": "462a55cc9b734893b5ff93120bf42811",
+          "doc_title": "关于校园防汛应急响应措施的通知",
+          "dept_id": "dept_hqaq",
+          "chunk_index": 0,
+          "section_path": [],
+          "snippet": "关于校园防汛应急响应措施的通知 / Notice on Emergency Response Measures for Flood Control on Campus\n受短时强降雨及东苕溪上游来水影响,东苕溪流域水位回涨。近24小时,全余杭区面雨量59.2毫米,叠加前期持续强降雨,山区山洪地质灾害风险大。根据《杭州市余杭区防汛防台抗旱抗雪防冻应急预案》,区防指于14日15:30将瓶窑镇等5个镇街防"
+        },
+        {
+          "doc_id": "0ff610154d5a4c6480b776f93600fc81",
+          "doc_title": "暴雨天气致全体师生的温馨提醒",
+          "dept_id": "dept_hqaq",
+          "chunk_index": 0,
+          "section_path": [],
+          "snippet": "暴雨天气致全体师生的温馨提醒 /Reminder During Heavy Rainfall\n余杭区气象台已发布暴雨红色预警,预计本地将出现短时强降雨,易发生短时积水、山体滑坡、树木倒伏等次生灾害。为切实做好暴雨防范工作,保障全体师生生命财产安全,现将有关注意事项温馨提醒如下:\n密切关注预警,非必要不外出\n请及时关注气象发布的雨情、预警信息,合理安排出行,非必要不外出。确需外出时避开低洼积水、边坡"
+        },
+        {
+          "doc_id": "462a55cc9b734893b5ff93120bf42811",
+          "doc_title": "关于校园防汛应急响应措施的通知",
+          "dept_id": "dept_hqaq",
+          "chunk_index": 4,
+          "section_path": [],
+          "snippet": "Follow warning information; avoid going out unless necessary.​ Closely monitor rainfall updates and alerts issued by meteorological authorities, and plan your schedule accordingly. Do not go out unles"
+        },
+        {
+          "doc_id": "122863ac4bb746368524c9577c33b0e2",
+          "doc_title": "关于防御第9号超强台风“巴威”的安全提示(1)(1)",
+          "dept_id": "dept_hqaq",
+          "chunk_index": 2,
+          "section_path": [
+            "",
+            "1. 密切关注中央气象台及学校发布的台风动态、预警信息,"
+          ],
+          "snippet": "1. 密切关注中央气象台及学校发布的台风动态、预警信息,\n实时掌握天气变化,增强防灾避险意识,杜绝麻痹思想和侥幸心理。"
+        },
+        {
+          "doc_id": "122863ac4bb746368524c9577c33b0e2",
+          "doc_title": "关于防御第9号超强台风“巴威”的安全提示(1)(1)",
+          "dept_id": "dept_hqaq",
+          "chunk_index": 7,
+          "section_path": [
+            "",
+            "6. 风雨减弱后仍需保持警惕,出行避开积水路段、倒伏树木"
+          ],
+          "snippet": "6. 风雨减弱后仍需保持警惕,出行避开积水路段、倒伏树木\n和脱落电线,防范高空坠物和漏电风险,返校后及时检查宿舍设施,\n发现问题第一时间报修。"
+        }
+      ],
+      "dept_ids": [
+        "dept_hqaq",
+        "dept_unavailable"
+      ],
+      "confidence": 0.6,
+      "intent_type": "regulation_consult",
+      "verification": {
+        "passed": false,
+        "partial": true,
+        "failed_departments": [],
+        "degraded_departments": [
+          "dept_unavailable"
+        ]
+      },
+      "retrieved_count": 0,
+      "route": null,
+      "queue_wait_ms": 0.003,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "intent",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 265,
+              "output": 68,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 2268
+          },
+          {
+            "kind": "department.intent",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 297,
+              "output": 68,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi"
+          },
+          {
+            "kind": "department.rewrite",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 219,
+              "output": 46,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi"
+          },
+          {
+            "kind": "department.embedding",
+            "model": "text-embedding-v4",
+            "usage": {
+              "prompt_tokens": 12,
+              "total_tokens": 12
+            },
+            "runtime": null
+          },
+          {
+            "kind": "department.embedding",
+            "model": "text-embedding-v4",
+            "usage": {
+              "prompt_tokens": 15,
+              "total_tokens": 15
+            },
+            "runtime": null
+          },
+          {
+            "kind": "department.embedding",
+            "model": "text-embedding-v4",
+            "usage": {
+              "prompt_tokens": 13,
+              "total_tokens": 13
+            },
+            "runtime": null
+          },
+          {
+            "kind": "department.rerank",
+            "model": "qwen3-rerank",
+            "usage": {
+              "total_tokens": 2069
+            },
+            "runtime": null
+          },
+          {
+            "kind": "department.rerank",
+            "model": "qwen3-rerank",
+            "usage": {
+              "total_tokens": 2096
+            },
+            "runtime": null
+          },
+          {
+            "kind": "department.rerank",
+            "model": "qwen3-rerank",
+            "usage": {
+              "total_tokens": 2126
+            },
+            "runtime": null
+          },
+          {
+            "kind": "department.answer",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 1163,
+              "output": 38,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi"
+          },
+          {
+            "kind": "department.verify",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 1141,
+              "output": 18,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi"
+          },
+          {
+            "kind": "embedding",
+            "model": "text-embedding-v4",
+            "usage": {
+              "prompt_tokens": 9,
+              "total_tokens": 9
+            }
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null,
+        "estimated_cost": {
+          "currency": "CNY",
+          "lower_yuan": 0.006114,
+          "upper_yuan": 0.007542,
+          "complete": true,
+          "unknown_calls": [],
+          "price_date": "2026-11-09",
+          "region": "百炼北京",
+          "billing_cost_yuan": null,
+          "basis": "实际返回的usage×公开原价，区分缓存及未知思考模式；未计免费额度/活动/合同优惠，非实际账单",
+          "sources": {
+            "qwen-plus": "https://help.aliyun.com/zh/model-studio/qwen-plus",
+            "text-embedding-v4": "https://help.aliyun.com/zh/model-studio/text-embedding-v4",
+            "qwen3-rerank": "https://help.aliyun.com/zh/model-studio/model-pricing"
+          }
+        }
+      }
+    },
+    {
+      "departments": [
+        "dept_unavailable"
+      ],
+      "seconds": 3.798785707913339,
+      "session_id": "875c1f71a5cd4825b74573ba09204d90",
+      "answer": "部门服务暂不可用，以下使用共享制度检索回退回答：\n制度依据已失效或不足，建议咨询相关部门。",
+      "citations": [],
+      "dept_ids": [],
+      "confidence": 0.2,
+      "intent_type": "regulation_consult",
+      "verification": {
+        "passed": false,
+        "score": 0.0,
+        "issues": [
+          "无可验证的官方证据，不能确认事实结论"
+        ],
+        "degraded_to_quotes": true,
+        "partial": true,
+        "degraded_departments": [
+          "dept_unavailable"
+        ]
+      },
+      "retrieved_count": 0,
+      "route": null,
+      "queue_wait_ms": 0.002,
+      "model_usage": {
+        "calls": [
+          {
+            "kind": "intent",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 265,
+              "output": 68,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 2196
+          },
+          {
+            "kind": "rewrite",
+            "model": "qwen-plus",
+            "usage": {
+              "input": 177,
+              "output": 34,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "calls": 1,
+              "cost": null
+            },
+            "runtime": "pi",
+            "latency_ms": 1096
+          },
+          {
+            "kind": "embedding",
+            "model": "text-embedding-v4",
+            "usage": {
+              "prompt_tokens": 15,
+              "total_tokens": 15
+            }
+          },
+          {
+            "kind": "embedding",
+            "model": "text-embedding-v4",
+            "usage": {
+              "prompt_tokens": 14,
+              "total_tokens": 14
+            }
+          }
+        ],
+        "usage_complete": true,
+        "cost_yuan": null,
+        "estimated_cost": {
+          "currency": "CNY",
+          "lower_yuan": 0.0005721,
+          "upper_yuan": 0.0011841,
+          "complete": true,
+          "unknown_calls": [],
+          "price_date": "2026-11-09",
+          "region": "百炼北京",
+          "billing_cost_yuan": null,
+          "basis": "实际返回的usage×公开原价，区分缓存及未知思考模式；未计免费额度/活动/合同优惠，非实际账单",
+          "sources": {
+            "qwen-plus": "https://help.aliyun.com/zh/model-studio/qwen-plus",
+            "text-embedding-v4": "https://help.aliyun.com/zh/model-studio/text-embedding-v4",
+            "qwen3-rerank": "https://help.aliyun.com/zh/model-studio/model-pricing"
+          }
+        }
+      }
+    }
+  ],
+  "partial_failure_explicit": true
+}

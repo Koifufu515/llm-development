@@ -1,0 +1,22 @@
+第四章•多步骤 Agent设计
+多 Agent路由架构
+Router（意图判断）
+Req Agent
+Dest Agent
+Trans Agent
+Hotel Agent
+需求收集
+目的地推荐
+交通规划
+住宿预订
+收集出发地、日期
+根据需求推荐目的地
+查询高铁/ 航班班次
+搜索酒店/民宿
+预算、人数、偏好
+对比线路方案
+选定交通方案
+按预算筛选推荐
+• 一份专属 Prompt
+• 一组专属工具 •独立编译成 LangGraph图
+每个 Agent

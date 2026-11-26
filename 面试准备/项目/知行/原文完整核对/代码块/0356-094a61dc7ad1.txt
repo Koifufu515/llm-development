@@ -1,0 +1,11 @@
+"""城市服务：q 为空返回全量，非空按"城市名或省份"包含匹配；Redis 起没起结果都一样（纯逻辑，无需密钥）"""
+from app.services.city_service import list_cities
+
+everything = list_cities()
+print("全量 →", len(everything), "个，第一个", everything[0])
+fujian = list_cities("福建")
+print("q=福建 →", len(fujian), "个：", "、".join(c["name"] for c in fujian))
+print("q=杭州 →", list_cities("杭州"))
+print("q=南 →", len(list_cities("南")), "个（城市名或省份里带\"南\"都算）")
+print("q=火星 →", list_cities("火星"))
+print("q 两头带空格 →", list_cities("  杭州 "))

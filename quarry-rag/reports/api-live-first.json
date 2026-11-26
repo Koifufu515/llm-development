@@ -1,0 +1,50 @@
+{
+  "health": {
+    "status": 404,
+    "body": {
+      "message": "Route GET:/healthz not found",
+      "error": "Not Found",
+      "statusCode": 404
+    }
+  },
+  "no_key": {
+    "status": 404,
+    "body": {
+      "message": "Route POST:/v1/search not found",
+      "error": "Not Found",
+      "statusCode": 404
+    }
+  },
+  "collections": {
+    "status": 404,
+    "body": {
+      "message": "Route GET:/v1/collections not found",
+      "error": "Not Found",
+      "statusCode": 404
+    }
+  },
+  "forbidden": {
+    "status": 404,
+    "body": {
+      "message": "Route POST:/v1/search not found",
+      "error": "Not Found",
+      "statusCode": 404
+    }
+  },
+  "invalid": {
+    "status": 404,
+    "body": {
+      "message": "Route POST:/v1/search not found",
+      "error": "Not Found",
+      "statusCode": 404
+    }
+  },
+  "search": {
+    "status": 404,
+    "body": {
+      "message": "Route POST:/v1/search not found",
+      "error": "Not Found",
+      "statusCode": 404
+    }
+  }
+}

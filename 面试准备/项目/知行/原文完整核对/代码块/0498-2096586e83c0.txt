@@ -1,0 +1,93 @@
+def _plan_defect(plan: TravelItinerary, expected_days: int = 0) -> str:
+    """清单可用性守卫：返回缺陷说明（空串 = 可用）
+
+    背景：generate_plan 对同一会话是**覆盖更新**，且此前不校验内容。实测 DeepSeek 会把
+    需求确认语、甚至一句"如需调整…直接告诉我即可"当成行程提炼出来，于是一份已经正确的
+    清单被这种空壳覆盖（日志里同一个 plan 被连续覆盖成"（无有效行程内容）"），
+    质检随后打出 0/0/0。故落库前先判一次，不可用就不许覆盖。
+    """
+    days = plan.itinerary_list
+    if not days:
+        return "清单为空（0 天）"
+    spots = sum(len(item.scenic_spots_list) for day in days for item in day.itinerary)
+    if spots == 0:
+        return f"清单 {len(days)} 天但无任何景点条目"
+    if expected_days and len(days) != expected_days:
+        return f"天数不符（清单 {len(days)} 天，应为 {expected_days} 天）"
+    return ""
+
+async def generate_plan(
+        db: AsyncSession, conversation_id: uuid.UUID, markdown: str,
+        structure: list[dict] | None = None,
+) -> Mapped[str]:
+    """提炼结构化行程并落库，返回 plan_id（失败抛异常，由调用方推 error 帧）
+    不用 with_structured_output：其内部强制 tool_choice，DeepSeek
+    v4 思考模式不支持该参数，会返回400错误。
+    改为 bind_tools（tool_choice=auto）+ 解析 tool_calls，兼容思考模式。
+    `structure` 为状态机里已过 Pydantic 校验的 itinerary_body。
+    LLM提炼失败时，改用代码基于structure构造清单，保证清单一定生成；
+    提炼成功则优先使用模型输出，信息更丰富，包含景点描述、坐标等。
+    """
+    expected_days = len(structure) if structure else 0
+
+    plan: TravelItinerary | None = None
+    try:
+        bound = get_deepseek_llm().bind_tools([TravelItinerary])
+        res = await bound.ainvoke(_JSON_PROMPT + markdown)
+        if res.tool_calls:
+            plan = TravelItinerary.model_validate(res.tool_calls[0]["args"])
+        else:
+            app_logger.warning("DeepSeek 未返回结构化行程工具调用")
+    except Exception:
+        app_logger.warning("行程清单 LLM 提炼失败，转代码兜底", exc_info=True)
+
+    # ★ 提炼结果先过守卫：不可用就当没提炼出来，转代码兜底
+    if plan is not None:
+        defect = _plan_defect(plan, expected_days)
+        if defect:
+            app_logger.warning(f"⚠️ LLM 提炼的清单不可用（{defect}），转代码兜底：{plan.title}")
+            plan = None
+
+    if plan is None:
+        if not structure:
+            raise ValueError("行程清单提炼失败，且无可用的结构化行程可兜底")
+        plan = _plan_from_structure(structure, markdown)
+        app_logger.warning(f"行程清单已由代码兜底生成（{len(plan.itinerary_list)} 天，未经 LLM 提炼）")
+        # ★ 兜底清单同样要过守卫：structure 本身是空壳时绝不落库，更不覆盖已有清单
+        defect = _plan_defect(plan, expected_days)
+        if defect:
+            raise ValueError(f"行程清单不可用（{defect}），已放弃落库以保护上一版清单")
+
+    # POI/路线信息增强，补全景点坐标、封面图与每日路线数据
+    try:
+        await _enrich_spots(plan)   # 补全景点坐标与封面图（高德 POI + 静态地图兜底）
+        await _enrich_routes(plan)  # 补全每日路线（前端按天路线图依赖）
+    except Exception:
+        app_logger.warning("行程POI/路线增强失败（以提炼原始数据落库）", exc_info=True)
+
+    # 同一会话覆盖更新清单，每次重排行程只保留最新版本
+    row = (await db.execute(
+        select(ItineraryPlan)
+        .where(ItineraryPlan.conversation_id == conversation_id)
+        .order_by(ItineraryPlan.created_at.desc())
+        .limit(1)
+    )).scalar_one_or_none()
+
+    if row is not None:
+        row.plan_data = plan.model_dump()
+        row.status = 1
+        app_logger.info(f"行程清单已覆盖更新: {row.plan_id} ({plan.title})")
+    else:
+        row = ItineraryPlan(
+            plan_id=str(uuid.uuid4()),
+            conversation_id=conversation_id,
+            plan_data=plan.model_dump(),
+            status=1,
+        )
+        db.add(row)
+        app_logger.info(f"行程清单已生成: {row.plan_id} ({plan.title})")
+    await db.commit()
+
+    # 落库后异步在线质检，事后告警，不阻塞主流程
+    schedule_quality_check(plan.model_dump())
+    return row.plan_id

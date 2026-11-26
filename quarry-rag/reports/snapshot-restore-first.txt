@@ -1,0 +1,23 @@
+Failed to restore the pool connection floor; retrying
+Traceback (most recent call last):
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/asyncpg/pool.py", line 564, in _maintain_min_size
+    await holder.connect()
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/asyncpg/pool.py", line 172, in connect
+    con = await self._pool._get_new_connection()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/asyncpg/pool.py", line 655, in _get_new_connection
+    con = await self._connect(
+          ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/asyncpg/connection.py", line 2498, in connect
+    return await connect_utils._connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/asyncpg/connect_utils.py", line 1307, in _connect
+    raise last_error or exceptions.TargetServerAttributeNotMatched(
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/asyncpg/connect_utils.py", line 1173, in __connect_addr
+    await connected
+asyncpg.exceptions.CannotConnectNowError: the database system is shutting down
+Building prefix dict from the default dictionary ...
+Loading model from cache /var/folders/rk/qtxh2ds10vd6_cdg09pdzrbm0000gn/T/jieba.cache
+Loading model cost 0.245 seconds.
+Prefix dict has been built successfully.
+{"collection_id": "4ae03c66-494b-4bac-b05d-3ca76c702afe", "status": "building", "documents": 30, "chunks": 2210, "reembedded_children": 1232, "chunk_ids_preserved": true}

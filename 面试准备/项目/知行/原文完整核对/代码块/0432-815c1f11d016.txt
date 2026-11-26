@@ -1,0 +1,125 @@
+# ============== 通用回退工具 ==============
+
+@tool
+def go_back_to_step(
+        target_step: Literal[
+            "requirement_collection",
+            "destination_recommendation",
+            "transport_planning",
+            "accommodation_planning",
+            "food_planning",
+            "itinerary_generation",
+            "budget_summarization"
+        ],
+        reason: str,
+        clear_subsequent_data: bool = True,
+        runtime: ToolRuntime = None
+) -> Command:
+    """
+    回退到指定的历史步骤，允许用户重新进行规划。
+
+    使用场景示例：
+    - 用户说"我想重新选择目的地" -> target_step="destination_recommendation"
+    - 用户说"我想重新制定旅行计划" -> target_step="requirement_collection"
+    - 用户说"换个交通方式" -> target_step="transport_planning"
+    - 用户说"住宿要求改一下" -> target_step="accommodation_planning"
+    - 用户说"餐饮偏好不对" -> target_step="food_planning"
+    - 用户说"行程安排需要调整" -> target_step="itinerary_generation"
+    - 用户说"预算超了，重新算" -> target_step="budget_summarization"
+
+    参数说明：
+    - target_step: 要回退到的目标步骤
+        * "requirement_collection" - 重新收集旅行需求（出发日期、人数、预算等）
+        * "destination_recommendation" - 重新选择目的地
+        * "transport_planning" - 重新选择交通方式（航班/高铁/自驾）
+        * "accommodation_planning" - 重新选择住宿类型
+        * "food_planning" - 重新选择餐饮偏好
+        * "itinerary_generation" - 重新生成行程安排
+        * "budget_summarization" - 重新计算预算
+
+    - reason: 回退原因，用于记录和展示给用户
+        示例："用户希望更换目的地为三亚"
+        示例："预算超出用户预期，需要调整住宿标准"
+
+    - clear_subsequent_data: 是否清除目标步骤之后的所有数据（默认 True）
+        * True: 回退时清除后续步骤产生的选择和数据
+        * False: 保留后续数据（谨慎使用，可能导致数据不一致）
+
+    返回：
+        Command 对象，包含状态更新和步骤跳转指令
+
+    注意：
+    - 不能回退到 "order_generation"（订单生成是最终步骤）
+    - 回退会在消息历史中记录，方便追溯
+    """
+
+    app_logger.info(f"回退请求: target_step={target_step}, reason={reason}, clear_data={clear_subsequent_data}")
+
+    # 验证目标步骤
+    if target_step not in ALL_STEPS:
+        app_logger.warning(f"无效的目标步骤: {target_step}")
+        return Command(update={
+            "messages": [
+                ToolMessage(
+                    content=f"无效的目标步骤: {target_step}",
+                    tool_call_id=runtime.tool_call_id
+                )
+            ]
+        })
+
+    # 不允许回退到订单生成（最终步骤）
+    # ★ 终态明确拒绝，不靠默认参数偷偷放行
+    if target_step == "order_generation":
+        app_logger.warning("尝试回退到订单生成步骤，已拒绝")
+        return Command(update={
+            "messages": [
+                ToolMessage(
+                    content="订单生成是最终步骤，无法回退到此步骤。如需修改，请回退到更早的步骤。",
+                    tool_call_id=runtime.tool_call_id
+                )
+            ]
+        })
+
+    # 获取当前步骤（用于日志）
+    current_step = runtime.state.get("current_step", "unknown") if runtime.state else "unknown"
+    app_logger.info(f"执行回退: {current_step} -> {target_step}")
+
+    # 构建状态更新
+    state_update = {
+        "current_step": target_step
+    }
+
+    # 如果需要清除后续数据
+    cleared_fields = []
+    if clear_subsequent_data:
+        # ★ 级联清除：目标步及之后每一步登记的字段全部置 None
+        target_index = ALL_STEPS.index(target_step)
+        for step in ALL_STEPS[target_index:]:
+            for field in STEP_STATE_FIELDS.get(step, []):
+                state_update[field] = None
+                cleared_fields.append(field)
+
+        if cleared_fields:
+            app_logger.debug(f"清除的状态字段: {cleared_fields}")
+
+    # 获取步骤标签
+    step_label = STEP_LABELS.get(target_step, target_step)
+
+    # 构建响应消息
+    response_parts = [
+        f"已回退到【{step_label}】阶段",
+        f"原因: {reason}"
+    ]
+    if clear_subsequent_data and cleared_fields:
+        response_parts.append("已清除后续步骤的数据")
+
+    state_update["messages"] = [
+        ToolMessage(
+            content="\n".join(response_parts),
+            tool_call_id=runtime.tool_call_id
+        )
+    ]
+
+    app_logger.info(f"回退完成: {target_step}, 清除字段数: {len(cleared_fields)}")
+
+    return Command(update=state_update)

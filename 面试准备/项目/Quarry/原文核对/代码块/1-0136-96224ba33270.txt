@@ -1,0 +1,1 @@
+Generating ...\migrations\versions\0002_chunks_composite_pk.py ...  done

@@ -1,0 +1,14 @@
+"""_pick_best 演示：自动模式代选——有票优先 → 耗时最短 → 价格更低（纯函数，无需密钥）"""
+from app.capabilities.train_multi_segment.train_flow import _fmt_option, _pick_best
+from app.capabilities.train_multi_segment.train_skill_schema import TrainOption
+
+def opt(no: str, dep: str, arr: str, dur: str, price: float, status: str) -> TrainOption:
+    return TrainOption(trainNo=no, startTime=dep, endTime=arr, startStation="天津", endStation="上海虹桥", duration=dur,
+                       price=price, seatType="二等座", ticketStatus=status, option_id=f"{no}-{dep}-上海虹桥")
+
+options = [opt("G103", "07:48", "12:31", "04:43", 509, "无票"), opt("G101", "09:10", "14:02", "04:52", 509, "有票"),
+           opt("G105", "10:05", "14:57", "04:52", 480, "候补")]
+print("代选：", _fmt_option(_pick_best(options)))
+print("全都无票时退回全体里挑：", _fmt_option(_pick_best([opt("G1", "08:30", "09:05", "00:35", 54.5, "无票"),
+                                                     opt("C2001", "06:30", "07:03", "00:33", 54.5, "无票")])))
+print("没有候选：", _pick_best([]))

@@ -1,0 +1,3 @@
+SELECT '{"city":"西安","doc_type":"guide"}'::jsonb @> '{"city":"西安"}';     -- t（包含）
+SELECT '{"topic":["food","attraction"]}'::jsonb @> '{"topic":["food"]}';    -- t（数组也能判断子集）
+SELECT '{"city":"西安"}'::jsonb @> '{"city":"北京"}';                        -- f（不包含）

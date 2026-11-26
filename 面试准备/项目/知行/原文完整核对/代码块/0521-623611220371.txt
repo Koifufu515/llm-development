@@ -1,0 +1,12 @@
+"""_pick_weather 演示：取出发日当天的预报，取不到退第一条，解析失败返回空串（纯函数，无需密钥）"""
+import json
+
+from app.services.express_planning_service import _pick_weather
+
+raw = json.dumps({"casts": [
+    {"date": "2026-10-01", "dayweather": "晴", "daytemp": "27", "nighttemp": "18"},
+    {"date": "2026-10-02", "dayweather": "多云", "daytemp": "25", "nighttemp": "17"},
+]}, ensure_ascii=False)
+print(_pick_weather(raw, "2026-10-02"))         # 命中出发日
+print(_pick_weather(raw, "2026-12-31"))         # 不在预报范围 → 退第一条
+print(repr(_pick_weather("", "2026-10-01")))    # 解析失败 → 空串，不编造

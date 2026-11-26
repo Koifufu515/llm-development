@@ -1,0 +1,21 @@
+{
+  "city": "郑州",
+  "title": "郑州景点资料 · Zhengzhou",
+  "source_url": "https://en.wikivoyage.org/wiki/Zhengzhou",
+  "text": "资料城市：郑州。本文是历史开放景点资料，不提供实时开放时间或价格；出行前需要核实。\n\nErqi (February 7) Memorial Tower\nMuseum inside a rather garish double pagoda that looms over February 7 Square. Inside there are exhibits explaining the city's development.\n\nShang Dynasty Wall\nYou can see remants of the wall in the east side of town. Be warned: these mounds are not terribly impressive.\n\nRuyi Lake\nThe centrepiece of the Zhengzhou New Area, surrounded by an impressive ring of modern apartments, malls and office towers, including the Henan Arts Centre, and crowned by a JW Marriott designed like a Chinese lantern. The area is lit up in a charmingly tacky fashion at night.\n\nHenan Provincial Museum\nThis monolithic pyramid-shaped museum is worth a visit.  Learn about ancient civilizations in the area (most of which were not based in Zhengzhou, but nearby cities such as Kaifeng and Luoyang), and even see a dinosaur bone or two in the area.  The museum is one of the three key museums in China along with one in Beijing.  If you are into modern art, this is not the place for you.  It generally has acceptable squat toilets on the first floor.  There is an English audio tour you can rent, and there are cheapish lockers to store your stuff.  Come to see old pottery from the Song dynasty, old bells, bronzes, things like that, but anything more recent does not have English captions.  Across the street is a coffee house that makes ok tea and coffee for about ¥30 and has comfortable chairs.\n\nHenan Museum of Science and Technology\nFascinating insight into Chinese children's education. Play on crumbling science exhibits, gawk at the garish space tributes and meet local families.\n\nYellow River Scenic Area\nScenic area consisting of five scenic spots, Five Dragons Peak, Camel Mountain Range, Yueshan Temple, Stone Figures, and the Ancient City of Liubang and Xiangyu.\n\nZhengzhou Zoo\nMore depressing than it is impressive in any way. Some of their imported animals include turkeys and coyotes which might be interesting for a local but hardly for a foreigner. If you generally enjoy zoos, you may very well walk away sad at how the animals are cared for, or not in this case.\n\nRenmin Park\nHas a theme park inside with a quaint Ferris Wheel that is worth riding.\n\nCentury Park\nAnother park worth going to. It is quite a huge amusement park. Be aware most rides have a 90kg limit for anyone using them, sometimes staff can be strict and refuse to let you ride even after you have paid to get in.\n\nMuseum Area\nOne thing worth knowing about is that the museum area is also the area of the 2 branches of government - federal and communist - so the area is much nicer.  We are talking trees and some flowers along with a more neighborhood feel that might remind you of Shanghai.  Do not expect wild nightclubs, but it is a more pleasant place to be if you are looking for a walk.  Erqilou is fine, but a bit dirty, so see this other side of Zhengzhou if you get a chance.  Also, some nice places to eat are in this area.",
+  "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+  "license": "CC BY-SA 3.0",
+  "attribution": "Wikivoyage contributors; https://en.wikivoyage.org/wiki/Zhengzhou",
+  "sha256": "89ccb25bfd037dc55d55eff37bb8a0bc6436bc2648035fdbd1108d4e45dbf18d",
+  "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+  "poi_count": 10,
+  "source_dataset": "https://github.com/wikivoyage/wikivoyage.github.io",
+  "excluded_fields": [
+    "price",
+    "hours",
+    "phone",
+    "email",
+    "hotel",
+    "restaurant"
+  ]
+}

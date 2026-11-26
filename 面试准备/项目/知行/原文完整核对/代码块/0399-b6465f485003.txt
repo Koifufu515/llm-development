@@ -1,0 +1,110 @@
+# ============== 4️.住宿偏好选择工具 ==============
+
+@tool
+def select_accommodation_tool(
+        accommodation_types: list[str],  # 可多选
+        hotels: Optional[list[str]] = None,
+        runtime: ToolRuntime[None, TravelState] = None
+) -> Command:
+    """
+    确认用户选择的住宿偏好（可多选），并转换到餐饮规划步骤。
+
+    参数说明：
+    - accommodation_types: 住宿类型列表，可选值：
+      ["star_hotel", "economy_hotel", "hostel", "youth_hostel"]
+    - hotels: **多目的地必传**（单目的地可省略）：只放**当前正在确认的那一城**，如
+      ["杭州：杭州XX酒店 520元/晚"]。系统按城市游标逐城要求确认，传错城市会被拒绝并告知
+      当前应确认哪一城；所有城市都确认完才会推进到餐饮步骤
+    """
+
+    # [LEGACY] 埋点：旧住宿逐城/整步循环仍在被调用——观测是否还有真实使用者，
+    # 零命中后才可安全删除（只记日志，零副作用）
+    app_logger.info(f"[LEGACY] select_accommodation_tool 被调用：{accommodation_types} hotels={hotels}")
+
+    # 验证枚举值
+    valid_types = {"star_hotel", "economy_hotel", "hostel", "youth_hostel"}
+    if not all(t in valid_types for t in accommodation_types):
+        return Command(update={
+            "messages": [
+                ToolMessage(
+                    content=f"❌住宿类型无效，请从以下选择：{', '.join(valid_types)}",
+                    tool_call_id=runtime.tool_call_id
+                )
+            ]
+        })
+
+    type_labels = {
+        "star_hotel": "星级酒店",
+        "economy_hotel": "经济酒店",
+        "hostel": "特色民宿",
+        "youth_hostel": "青年旅社"
+    }
+
+    selected_labels = [type_labels[t] for t in accommodation_types]
+
+    # 多目的地住宿同样改为"逐城循环"——一次只确认一城，与交通段级循环对称。
+    # 单目的地 cities 为空 → 走下面的整步确认老路径，行为完全不变
+    cities = _multi_city_names(runtime.state)
+    hotel_texts = list(hotels or [])
+    stay_state: dict = {}
+    # ★ 数字账本：从酒店文本（"杭州：XX酒店 520元/晚"）抽真实房价写入 stay_prices，
+    #   否则预算工具读不到、只能按 300 元/晚估算（卡片路线已由 hotel_flow 写，这里补非卡片路线）
+    from app.services.express_planning_service import _number_before, _split_cities
+    stay_prices = dict(runtime.state.get("stay_prices") or {})
+    if cities:
+        recorded = list(runtime.state.get("selected_hotels") or [])
+        cursor = max(0, min(int(runtime.state.get("stay_cursor") or 0), len(cities) - 1))
+        # ★ 逐城循环与段级循环对称：游标换成 stay_cursor
+        pending = cities[cursor]
+        hit = next((g for g in (hotels or []) if pending in g), None)
+        if not hit:
+            app_logger.info(f"[guard] 逐城循环：待确认城市 {pending} 未出现在 hotels={hotels}")
+            return Command(update={"messages": [ToolMessage(
+                content=(f"❌ 当前待确认的是第 {cursor + 1}/{len(cities)} 个城市「{pending}」，"
+                         f"但本次 hotels 里没有该城市。请先查询并展示「{pending}」的酒店候选，"
+                         f"等用户挑选后再把该城写进 hotels 调用本工具（其余城市不要提前展示）"),
+                tool_call_id=runtime.tool_call_id)]})
+        if not any(pending in r for r in recorded):
+            recorded.append(hit)
+        _price = _number_before(hit, "元/晚")
+        if _price > 0:
+            stay_prices[pending] = float(_price)
+        if cursor + 1 < len(cities):
+            nxt = cities[cursor + 1]
+            app_logger.info(
+                f"[stays] 第 {cursor + 1}/{len(cities)} 城已确认 {pending}，待确认 {nxt}"
+            )
+            return Command(update={
+                "messages": [ToolMessage(
+                    content=(f"✅ 第 {cursor + 1}/{len(cities)} 城住宿已确认：{pending}｜{hit}\n"
+                             f"请立即查询并展示下一城「{nxt}」的酒店候选供用户挑选"
+                             f"（只展示这一城，禁止提前展示其它城市）"),
+                    tool_call_id=runtime.tool_call_id)],
+                "selected_hotels": recorded,
+                "stay_cursor": cursor + 1,
+                "stay_prices": stay_prices,
+            })
+        hotel_texts = recorded
+        stay_state = {"selected_hotels": recorded, "stay_cursor": cursor + 1, "stay_prices": stay_prices}
+    else:
+        # ★ 单城非卡片路线此前只记展示文本、不落数字账本 → 预算回退 300元/晚。
+        #   与多城分支同口径：键取单体城市名（_split_cities 的单元素），而非原始 destination 串
+        _single = next(iter(_split_cities(runtime.state.get("selected_destination") or "")), "")
+        _price = _number_before(hotel_texts[0], "元/晚") if hotel_texts else 0
+        if _single and _price > 0:
+            stay_prices[_single] = float(_price)
+            stay_state = {"stay_prices": stay_prices}
+
+    return Command(update={
+        "messages": [
+            ToolMessage(
+                content=f"住宿偏好已确认：{', '.join(selected_labels)}",
+                tool_call_id=runtime.tool_call_id
+            )
+        ],
+        "selected_accommodation_types": accommodation_types,
+        # 逐城确认结果留痕（单城为空列表），行程步骤按此安排住宿
+        "selected_hotels": hotel_texts,
+        "current_step": "food_planning",  # 跳转到步骤5
+        **stay_state,
+    })

@@ -1,0 +1,96 @@
+高铁卡片•一次并行查完、一张卡片选完、一次提交落库
+交通步原本是逐段串行：一次查一段、确认一段，三段行程要来回三轮。高铁卡片把它换成"代码并行查全部段一 前端卡片一次选完—一次提交"，状态
+机的段账本由代码直接写，模型只负责说话。本组图覆盖 capabilities/base/ 公共层和 train_multi_segment/ 高铁包的全部37个函数、9个数据
+模型。
+闭环四段 例：北京出发—天津、上海，5天，3段；编号对应后面各图
+① 判路线
+图 6
+② 并行查询
+图4
+③ 下发或代选
+图6
+④ 提交落库
+图5
+中间件•执行器
+train_agent_tool
+train_flow
+技能 API•train_flow
+• 表单勾了高铁、段数≥1
+• 同一批段先查签名缓存，命中就复用
+•手动：推一帧 skill_ui，前端在聊天流里
+•前端一次提交全部段的option_id
+multi_leg_train 为真
+• asyncio.gather 同时查3段，总耗时约等
+渲染卡片
+—〉
+•校验一步骤守卫一回查候选一写段账本、推进
+• 中间件摘掉 select_transport_tool 和
+于最慢一段
+• 自动：有票优先、综合分最低（历时＋票价
+到住宿步
+12306 查询工具
+• 解析成候选车次，存一份给提交侧校验
+- 10）代选，直接写状态推进
+• 回显已选车次，再用合成发言续跑住宿步
+• 执行器后处理⑥按确认模式分流；零段直接
+•全部段都空时不推卡片，如实告知
+推进到住宿
+谁调进来•写了什么 调用关系按AST统计
+外部调用方
+调的函数•场景
+写进状态机的6个字段
+middleware.awrap_model_call
+nulti_Leg_train•第⑨关判断要不要摘交通工具
+• leg_selections：每段的展示文本
+• leg_prices：每段票价，大于0才写
+multi_leg_train
+emit_train_skill_ui
+chat_stream_executor.execute_turn
+auto_select_train_legs build_Lead_text advance_zero_Leg
+• Leg_cursor：直接写成段数
+•后处理② ⑥
+• selected_transport：train，零段时为 local
+• selected_transport_legs ：给后续步骤看的段文本
+skills.submit_train_multi_segment
+apply_train_selection•前端提交
+• current_step:accommodation_planning
+flight_flow / driving_flow
+train_mode_requested • 勾了高铁就不走航班/自驾卡片
+写入方：自动代选、前端提交、零段直通，三者都经 get_agent_and_state 取到 agent 后一次
+aupdate_state.
+transport_Switch_service
+train_mode_requested•判断当前交通方式
+express_planning_service._pick_train
+_compact_to_rows •快速通道解析紧凑车次行
+其余三个卡片包
+get_agent_and_state leg_signature PayloadCache
+SignatureCache• 共用公共层
+四个文件 函数数不含类本身
+base/
+10个•图2
+train_skill_schema
+1个。图3
+train_agent_tool
+14个 图4图5
+train_flow
+12个•图6
+get_agent_and_state
+leg_signature
+TrainLeg
+TrainOption
+TrainSegment
+build_train_multi_segment_payload
+emit_train_skill_ui
+duration_to_minutes
+PayloadCache
+-共7个模型
+validate_train_submission
+auto_select_train_legs
+SignatureCache
+前后端字段—一对应的JSON 契约
+查询组装与提交校验
+apply_train_selection
+四类卡片共用的取状态、段签名和两种缓存
+和状态机交通步的接线
+模型退出了交通步的数据通路：查什么段、哪天查，由_Legs_with_dates 按状态算；查到什么，由asyncio.gather 并行拿回；用户选了哪趟，由option_id回查候选；最后由代码一次
+aupdate_state写账本、推进步骤。班次、票价、段账本，连卡片上方那句引导语，都由代码生成，不经过模型。

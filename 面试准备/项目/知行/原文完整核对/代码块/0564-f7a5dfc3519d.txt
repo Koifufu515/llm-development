@@ -1,0 +1,38 @@
+# 交通步骤权威班次清单——由代码直出，不由模型自由生成
+_TICKET_SEG_LIMIT = 10
+_TICKET_SEAT_ORDER = ("二等座", "硬座", "一等座", "硬卧", "软卧", "无座")
+# 高铁/动车车次前缀（G 高铁 / C 城际 / D 动车），用于剔除段内混入的普速
+_HS_PREFIX = ("G", "C", "D")
+
+def _row_seat_label(row: dict) -> str:
+    """取一行班次的票价文案：紧凑行直接用；原始行从席别字典里按常用度挑一个"""
+    if row.get("seat"):
+        return row["seat"]
+    seats = row.get("seats") or {}
+    for k in _TICKET_SEAT_ORDER:
+        if k in seats:
+            status, price = seats[k]
+            return f"{k} {status} {price:g}元"
+    return "票价未返回"
+
+def _rows_to_seg(rows: list, seg: dict | None = None) -> dict:
+    """ 把一趟查询的班次行归成 {车次: (发车, 车次, 到达, 历时, 票价文案)}
+
+    从 _ticket_table_from_tail 抽出的公共归并逻辑（同车次只留发车最早的一条），
+    供"本轮工具返回"与"直查通道的单次 12306 返回"共用，避免两处去重口径分叉；
+    seg 传入时按同一规则合并进去（多段/多轮查询共用一张表）
+    """
+    seg = {} if seg is None else seg
+    for r in rows:
+        prev = seg.get(r["code"])
+        # ★ 同车次只留发车最早的一条（直查与交通步共用这一处去重口径）
+        if prev and prev[0] <= r["dep"]:
+            continue
+        seg[r["code"]] = (r["dep"], r["code"], r["arr"], r["dur"], _row_seat_label(r))
+    return seg
+
+def _hs_only(seg: dict) -> dict:
+    """ 段内出现 G/C/D 即剔除混入的普速（K/T/Z/纯数字）；整段只有普速则原样保留"""
+    if any(v[1][:1] in _HS_PREFIX for v in seg.values()):
+        return {k: v for k, v in seg.items() if v[1][:1] in _HS_PREFIX}
+    return seg

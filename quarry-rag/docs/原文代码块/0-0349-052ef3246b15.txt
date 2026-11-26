@@ -1,0 +1,3 @@
+# macOS / Linux
+mkdir -p quarry/facts/sql official tests/unit
+touch quarry/facts/__init__.py

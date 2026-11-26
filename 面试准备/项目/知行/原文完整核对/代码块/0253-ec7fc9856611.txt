@@ -1,0 +1,7 @@
+   高德收到： {'origin': '116.407,39.904', 'destination': '117.190,39.125'}
+   → s1 ok=True 137.0km 01:42 过路费65 红绿灯12 沿京津塘高速行驶
+   高德收到： {'origin': '116.407,39.904', 'destination': '故障城'}
+   → s2 ok=False 0km — 过路费0 红绿灯0
+   高德收到： {'origin': '116.407,39.904', 'destination': '乱码城'}
+   → s3 ok=False 0km — 过路费0 红绿灯0
+   → s4 ok=False 0km — 过路费0 红绿灯0

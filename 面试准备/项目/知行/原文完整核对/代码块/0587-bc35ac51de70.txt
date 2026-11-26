@@ -1,0 +1,78 @@
+# ===== 同回合内长正文去重 =====
+# 去除模型重复粘贴的完整行程正文与预算表；短文本不参与去重，无重复直接返回原文
+_DEDUPE_MIN_LEN = 200
+
+def _dedupe_texts(rounds: list[str]) -> list[str]:
+    """轮次文本去重，支持两种重复场景：
+    1. 两段文本完全相同
+    2. 后一段为完整版，前一段是截断版本（后段包含前段）
+    长文本（≥200字）判定子串重复，保留时间靠后的完整版；短文本不参与去重。
+    """
+    kept: list[str] = []
+    kept_long: list[str] = []
+    for t in reversed(rounds):
+        drop = False
+        if len(t) >= _DEDUPE_MIN_LEN:
+            for p in kept_long:
+                if p in t or t in p:
+                    drop = True
+                    break
+        if not drop:
+            kept.append(t)
+            if len(t) >= _DEDUPE_MIN_LEN:
+                kept_long.append(t)
+    kept.reverse()
+    return kept
+
+# ===== 散文段落换措辞重述折叠 =====
+# 对普通散文段落做相似度去重；表格、列表、编号行不参与去重
+_DEDUPE_PARA_MIN = 25
+_DEDUPE_COMMON = 14
+
+def _norm_para(text: str) -> str:
+    return re.sub(r"\s+", "", text or "")
+
+def _is_prose_para(para: str) -> bool:
+    """判断是否为普通散文段落；列表、表格、标题行不参与折叠"""
+    p = para.strip()
+    return bool(p) and p[0] not in "-|*#·•0123456789"
+
+def _common_len(a: str, b: str) -> int:
+    from difflib import SequenceMatcher
+    m = SequenceMatcher(None, a, b).find_longest_match(0, len(a), 0, len(b))
+    return m.size
+
+# 预告等待话术正则，同一回合只保留一次预告
+_NOTICE_RE = re.compile(r"(请稍等|稍等片刻|请稍候|正在为您|马上为您|我将计算|我将为您)")
+
+def _fold_restatements(text: str, state: dict) -> str:
+    """移除重复重述散文段落与重复等待预告语。
+    state：跨段落共享状态，保存已见过的散文段落、预告标记。
+    表格/列表/编号行全部保留，不参与折叠。
+    """
+    seen: list[str] = state.setdefault("paras", [])
+    kept: list[str] = []
+    for para in re.split(r"\n\s*\n", text or ""):
+        key = _norm_para(para)
+        prose = bool(key) and _is_prose_para(para)
+        is_notice = prose and bool(_NOTICE_RE.search(para))
+
+        if len(key) >= _DEDUPE_PARA_MIN and prose:
+            if any(_common_len(key, s) >= _DEDUPE_COMMON for s in seen):
+                app_logger.info(f"去重：删除换措辞重述段（{len(key)} 字）")
+                continue
+            seen.append(key)
+        elif is_notice and state.get("notice"):
+            app_logger.info(f"去重：删除重复预告语（{len(key)} 字）")
+            continue
+        if is_notice:
+            state["notice"] = True
+        kept.append(para)
+    return "\n\n".join(kept)
+
+def _chunk_has_tool_call(chunk) -> bool:
+    """判断流式块是否携带工具调用增量，用于识别工具执行轮"""
+    if getattr(chunk, "tool_call_chunks", None):
+        return True
+    kwargs = getattr(chunk, "additional_kwargs", None) or {}
+    return bool(kwargs.get("tool_calls"))

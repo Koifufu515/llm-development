@@ -1,0 +1,4 @@
+psql (17.x (Debian 17.x-1.pgdg12+1))
+Type "help" for help.
+
+quarry=#

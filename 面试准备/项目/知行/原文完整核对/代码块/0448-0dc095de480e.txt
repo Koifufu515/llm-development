@@ -1,0 +1,19 @@
+"""装配演示：真正构建一次 Agent，数一数它挂了多少把工具（需 PG + MCP；与 main.py 的 lifespan 同一套初始化）"""
+import asyncio
+
+from app.agents.handoffs.travel_agent import create_travel_agent
+from app.core.checkpointer import checkpointer_lifespan
+from app.core.store import store_lifespan
+from app.tools.state_transition import ALL_ROLLBACK_TOOLS
+
+async def main():
+    async with checkpointer_lifespan(), store_lifespan():
+        agent = await create_travel_agent()
+        tools = agent.get_graph().nodes.get("tools")
+        names = sorted(getattr(tools, "data", None).tools_by_name) if tools is not None else []
+        print(f"Agent 共挂 {len(names)} 把工具；本章回退组 {len(ALL_ROLLBACK_TOOLS)} 把都在其中：",
+              all(t.name in names for t in ALL_ROLLBACK_TOOLS))
+        print([n for n in names if n.endswith("_tool") or n.startswith("go_back")])
+
+if __name__ == "__main__":
+    asyncio.run(main())

@@ -1,0 +1,3 @@
+# 用容器里的 redis-cli 直接 ping
+docker exec -it travel_redis redis-cli ping
+# 返回 PONG 即成功

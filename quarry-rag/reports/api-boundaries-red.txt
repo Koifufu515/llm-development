@@ -1,0 +1,32 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+______________________ test_document_status_requires_key _______________________
+
+    @pytest.mark.asyncio
+    async def test_document_status_requires_key():
+        async with app.router.lifespan_context(app):
+            async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),base_url='http://test')as client:
+                r=await client.get('/v1/documents/00000000-0000-0000-0000-000000000000')
+>       assert r.status_code==401
+E       assert 404 == 401
+E        +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/unit/test_api_boundaries.py:9: AssertionError
+----------------------------- Captured stdout call -----------------------------
+[32m13:51:38.481[0m | [1mINFO   [0m | [36mquarry.api.app[0m:[36mlifespan[0m:[36m31[0m | [1mquarry-rag 接口已启动，开关：{'embed_backend': 'api', 'embed_model': 'text-embedding-v4', 'embed_dim': 1024, 'rerank_backend': 'noop', 'rerank_model': None, 'rerank_candidates': 30, 'context_max_chars': 6000, 'neighbor_radius': 1, 'fact_model': 'qwen-flash', 'fact_ttl_days': 90, 'default_top_k': 8}[0m
+_________________ test_unknown_route_uses_same_error_contract __________________
+
+    @pytest.mark.asyncio
+    async def test_unknown_route_uses_same_error_contract():
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),base_url='http://test')as client:
+            r=await client.get('/not-a-route')
+        assert r.status_code==404
+>       assert r.json()['error']['code']=='not_found'
+               ^^^^^^^^^^^^^^^^^
+E       KeyError: 'error'
+
+tests/unit/test_api_boundaries.py:16: KeyError
+=========================== short test summary info ============================
+FAILED tests/unit/test_api_boundaries.py::test_document_status_requires_key
+FAILED tests/unit/test_api_boundaries.py::test_unknown_route_uses_same_error_contract
+2 failed in 0.46s

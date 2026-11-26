@@ -1,0 +1,5 @@
+"""ordered_play_cities 演示：出发地也在目的地里时，先在出发地玩（纯函数，无需密钥）"""
+from app.services.express_planning_service import ordered_play_cities
+
+for dep, dest in [("北京", "天津、上海"), ("北京", "上海、北京"), ("北京", "北京"), ("", "杭州、苏州")]:
+    print(f"{dep or '（空）'} 出发，目的地 {dest!r:10} → 游玩顺序 {ordered_play_cities(dep, dest)}")

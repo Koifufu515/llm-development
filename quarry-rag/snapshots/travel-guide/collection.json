@@ -1,0 +1,14 @@
+{
+  "chunk_policy": {
+    "atomic_kinds": [
+      "table",
+      "code"
+    ],
+    "hard_max": 800,
+    "max_child_size": 400,
+    "version": "v1"
+  },
+  "embed_dim": 1024,
+  "embed_model": "text-embedding-v4",
+  "slug": "travel-guide"
+}

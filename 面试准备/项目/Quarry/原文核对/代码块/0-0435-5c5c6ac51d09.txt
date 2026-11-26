@@ -1,0 +1,3 @@
+uv run python -m quarry.scripts.run_eval --label facts-off --no-facts --judge
+uv run python -m quarry.scripts.run_eval --label facts-on --judge
+uv run python -m quarry.scripts.compare_eval --base facts-off --new facts-on

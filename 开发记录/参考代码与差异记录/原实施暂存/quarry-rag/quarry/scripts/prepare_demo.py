@@ -1,0 +1,1 @@
+../../../../../../quarry-rag/quarry/scripts/prepare_demo.py

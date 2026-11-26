@@ -1,0 +1,3 @@
+{'role': 'assistant', 'content': '北京到天津、天津到上海两段高铁，候选班次如下：', 'code': None}
+{'role': 'skill_ui', 'content': {'skill_name': 'train_multi_segment', 'data': {'segments': []}}, 'code': None}
+{'role': 'done', 'content': 'finish', 'code': 200}

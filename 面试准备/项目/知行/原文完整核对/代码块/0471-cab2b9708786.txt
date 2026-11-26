@@ -1,0 +1,21 @@
+@router.post("")
+async def send_message(
+        req: MessageSendRequest,
+        user: User = Depends(get_current_user),
+        db: AsyncSession = Depends(get_db),
+):
+    """发消息：JWT 走标准 Authorization 头（fetch 实现，非原生 EventSource），返回 SSE 流"""
+    conv = await get_owned_conversation(db, req.conversation_id, user.id)
+    if not conv:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="会话不存在")
+
+    async def event_generator():
+        # ★ run_chat_turn 立即返回 EventStream（编排在后台跑），这里马上就能开始读
+        stream = await run_chat_turn(db, str(user.id), req.conversation_id, req.content)
+        async for event in stream:
+            # ★ 每 yield 一帧，StreamingResponse 就立刻写进响应体推给浏览器
+            yield _sse(event)
+
+    return StreamingResponse(
+        event_generator(), media_type="text/event-stream", headers=_SSE_HEADERS
+    )

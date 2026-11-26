@@ -1,0 +1,437 @@
+
+
+===== block 692 0d370a3fdea0 lines 1-32 source 知行旅行助手代码-v2#397 =====
+"""
+统一事件流契约
+
+Agent 核心只产出 AgentEvent，对传输协议（SSE）无感知；
+适配器负责把 AgentEvent 序列化为协议帧：
+- SSE 帧：data: {"role", "content", "code"?}
+
+role 取值 = 前端契约，任何一侧不得私自变更。
+"""
+from typing import Any, TypedDict
+
+class AgentEvent(TypedDict):
+    """统一事件结构"""
+    role: str
+    content: Any
+    code: int | None  # 仅 done/end 帧携带状态码，其余为 None
+
+# 事件类型常量（= 前端解析的 role 字段）
+ROLE_ASSISTANT = "assistant"        # 流式文本 chunk
+ROLE_ASSISTANT_RESET = "assistant_reset"  # 撤销本回合已推送文本（择优回退时使用）
+ROLE_SKILLS = "skills"              # 技能执行状态 {"skill_name","title","desc"}
+# 结构化 UI Skill 帧：{"skill_name","data"} —— 前端按 skill_name 查 UI_SKILL_REGISTRY
+# 把组件内嵌渲染在聊天流里（与上面的状态提示帧区分：这条携带完整 payload，是要交互的）
+ROLE_SKILL_UI = "skill_ui"
+ROLE_ITINERARY = "itinerary_plans"  # 行程清单状态 {"status","id","message"}
+ROLE_DONE = "done"                  # 本轮结束
+ROLE_ERROR = "error"                # 业务错误
+ROLE_END = "end"                    # 连接级终止（如鉴权失败 code=401）
+
+def make_event(role: str, content: Any = None, code: int | None = None) -> AgentEvent:
+    """构造统一事件"""
+    return {"role": role, "content": content, "code": code}
+
+
+===== block 693 fc28c89a7921 lines 1-31 source 知行旅行助手代码-v2#420 =====
+_ROUTER_PROMPT = (
+    "你是旅行助手的意图路由器。判断用户消息是否为行程规划请求，"
+    "并从技能目录中选出本轮预计用到的技能。\n"
+    f"技能目录：{'、'.join(SKILL_CATALOG)}\n"
+    "注意：闲聊、问候不算行程规划，技能列表留空；"
+    "但对正在收集需求/制定行程的对话中的回答（如确认、补充信息、"
+    "选择目的地等），必须视为行程规划的延续，is_itinerary_planning 应为 true。"
+)
+
+async def chat_route(content: str, history: list[str] | None = None) -> RouterResult:
+    """路由阶段：意图判断 + 技能预选
+
+    history：最近几轮对话文本（含用户/助手），供短回答（"确认"等）续上
+    需求收集流程。此前只看单条消息，导致需求收集被路由到无上下文的闲聊通道。
+    """
+    prompt = _ROUTER_PROMPT
+    if history:
+        # ★ 带上最近几条对话：短回答（"确认"）才能被判成规划的延续
+        prompt += "\n\n最近对话记录（供上下文参考）：\n" + "\n".join(history)
+    prompt += f"\n\n用户消息：{content}"
+
+    llm = ChatTongyi(
+        model=settings.qwen_model_name,
+        api_key=settings.dashscope_api_key,
+        temperature=0,
+    )
+    # ★ 一行顶四步：schema 进 prompt → 函数调用格式返回 → 自动校验成 RouterResult
+    structured = llm.with_structured_output(RouterResult)
+    result = await structured.ainvoke(prompt)
+    app_logger.info(f"路由结果: planning={result.is_itinerary_planning}, skills={[s.skill_name for s in result.skills]}")
+    return result
+
+
+===== block 694 8b4fa005f2c7 lines 1-22 source 知行旅行助手代码-v2#421 =====
+async def chat_route(content: str, history: list[str] | None = None) -> dict | BaseModel:
+    """路由阶段：意图判断 + 技能预选
+
+    history：最近几轮对话文本（含用户/助手），供短回答（"确认"等）续上
+    需求收集流程。此前只看单条消息，导致需求收集被路由到无上下文的闲聊通道。
+    """
+    prompt = _ROUTER_PROMPT
+    if history:
+        # ★ 带上最近几条对话：短回答（"确认"）才能被判成规划的延续
+        prompt += "\n\n最近对话记录（供上下文参考）：\n" + "\n".join(history)
+    prompt += f"\n\n用户消息：{content}"
+
+    llm = ChatTongyi(
+        model=settings.qwen_model_name,
+        api_key=settings.dashscope_api_key,
+        temperature=0,
+    )
+    # ★ 一行顶四步：schema 进 prompt → 函数调用格式返回 → 自动校验成 RouterResult
+    structured = llm.with_structured_output(RouterResult)
+    result = await structured.ainvoke(prompt)
+    app_logger.info(f"路由结果: planning={result.is_itinerary_planning}, skills={[s.skill_name for s in result.skills]}")
+    return result
+
+
+===== block 695 b44585384ffb lines 1-73 source 知行旅行助手代码-v2#446 =====
+# ============== 步骤 2：并行数据收集 ==============
+
+def _iata(city: str) -> str:
+    """城市名 → 机场三字码（searchFlightsByDepArr 的 depcity/arrcity 必需）；
+    查不到返回空串。码表统一取自 mcp_tools._CITY_AIRPORT（与票价用的城市码分开维护）"""
+    from app.tools.mcp_tools import _CITY_AIRPORT
+    name = (city or "").strip()
+    if not name:
+        return ""
+    for suffix in ("市", "地区", "自治州"):
+        if name.endswith(suffix) and len(name) > len(suffix):
+            name = name[: -len(suffix)]
+            break
+    return _CITY_AIRPORT.get(name, "")
+
+# ============== 多目的地路段构造 ==============
+
+_CITY_DELIMS = "，,、"
+
+def _split_cities(destination: str) -> list[str]:
+    """把 destination 按中/英逗号、顿号切分为城市列表（去空去重保序）"""
+    if not destination:
+        return []
+    flat = destination
+    for ch in _CITY_DELIMS:
+        flat = flat.replace(ch, " ")
+    out: list[str] = []
+    for city in flat.split():
+        if city not in out:
+            out.append(city)
+    return out
+
+def ordered_play_cities(departure: str, destination: str) -> list[str]:
+    """游玩/住宿节点城市序列（去重保序）：出发地仅当本身也在目的地串里才计入，且置于最前。
+    住宿站点 = 目的地城市序列。
+    示例：北京→上海 = [上海]；北京→天津/上海 = [天津,上海]；北京→北京 = [北京]；
+    目的地含出发地（北京→北京/天津）时：[北京,天津]
+    """
+    cities = _split_cities(destination)
+    dep = (departure or "").strip()
+    ordered = (([dep] if dep and dep in cities else []) + cities)
+    out: list[str] = []
+    for c in ordered:
+        if c and c not in out:
+            out.append(c)
+    return out
+
+def _plan_cities(req: ExpressRequirement) -> list[str]:
+    """规划用游玩城市序列（快速通道）——口径与住宿站点完全同源"""
+    return ordered_play_cities(req.departure_city, req.destination)
+
+def _build_legs(departure: str, cities: list[str]) -> list[tuple[str, str]]:
+    """构造交通路段序列：出发→首城、城际转场、末城→出发地返程。
+    剔除自身段：出发地与目的地相同，跳过"北京→北京"无效路段，保留本地游玩。
+    route = [出发地] + [目的地列表] + [出发地(返程)]；仅相邻城市不同才生成路段。
+    示例：北京→上海 = 2段；北京→天津→上海 =3段；北京→北京 =0段；出发地缺失不补返程。
+    """
+    if not cities:
+        return []
+    route = [departure] + cities + ([departure] if departure else [])
+    return [(a, b) for a, b in zip(route[:-1], route[1:]) if a != b]
+
+def _stay_nights(days: int, stations: int) -> list[int]:
+    """住宿晚数分配：出发地固定1晚，剩余天数在其后城市均分，前面城市多分配余数天数。
+    酒店段覆盖全部节点城市（含出发地）。天数不足时每站至少1晚，不自动删除城市。
+    """
+    if stations <= 0 or days <= 0:
+        return []
+    if stations == 1:
+        return [days]
+    rest = max(1, days - 1)
+    per, rem = divmod(rest, stations - 1)
+    return [1] + [per + (1 if i < rem else 0) for i in range(stations - 1)]
+
+
+===== block 696 987934c7664b lines 1-9 source 知行旅行助手代码-v2#453 =====
+2026-10-14 12:00:24 | INFO     | app.tools.mcp_tools:compact_ticket_text:175 - ✂️ 车票结果裁剪：原始 269 字/3 趟 → 压缩 181 字/3 趟
+紧凑行形态：
+实时班次（共 3 趟，按发车时间排序，仅列前 3 趟）：
+格式：车次|区间|出发→到达|历时|票价
+G1234|福州→深圳北|07:10→12:45|05:35|二等座 有票 380.5元
+D3111|福州→深圳北|08:02→15:30|07:28|二等座 有票 310元
+G1601|福州南→深圳北|09:15→14:20|05:05|二等座 无票 400元
+原始格式选中： {'no': 'G1234', 'dep': '07:10', 'arr': '12:45', 'mins': 335, 'price': 380.5, 'score': 373.05}
+紧凑格式选中： {'no': 'G1234', 'dep': '07:10', 'arr': '12:45', 'mins': 335, 'price': 380.5, 'score': 373.05}
+
+
+===== block 697 4ec8976d3943 lines 1-26 source 知行旅行助手代码-v2#454 =====
+def _pick_flight(text: str, price_text: str = "") -> dict | None:
+    """从航班查询结果选最优航班；解析失败返回 None，交由上层降级兜底
+    数据源为 searchFlightsByDepArr 航班动态接口，多数航线不带票价，分两步处理：
+    parse_flight_rows 解析得到航班基础信息；
+    parse_flight_prices 按航班号补充票价。
+    有价则取最低价；无票价则取最早起飞航班，价格置0，摘要标记价格待定，不再丢弃无价格航班。
+    """
+    from app.tools.mcp_tools import parse_flight_prices, parse_flight_rows
+
+    rows = [
+        {"flight_no": r["code"], "price": float(r.get("price") or 0),
+         "dep": r.get("dep") or "", "arr": r.get("arr") or ""}
+        for r in parse_flight_rows(text) if r.get("code")
+    ]
+    if not rows:
+        return None
+
+    by_flight, _lowest = parse_flight_prices(price_text) if price_text else ({}, 0.0)
+    for r in rows:
+        if not r["price"]:
+            r["price"] = float(by_flight.get(r["flight_no"].upper()) or 0)
+
+    priced = [r for r in rows if r["price"] > 0]
+    if priced:
+        return min(priced, key=lambda r: r["price"])
+    return min(rows, key=lambda r: r.get("dep") or "")
+
+
+===== block 698 8aa3490478b7 lines 1-98 source 知行旅行助手代码-v2#462 =====
+def _fallback_hotel_brands(hotel_preferences: list[str] | None) -> str:
+    """酒店报价不可用时的品牌兜底文案，延迟导入防止模块循环依赖"""
+    _COMMON_HOTELS: dict[str, list[str]] = {
+        "economy_hotel": ["如家", "汉庭", "7 天", "锦江之星", "格林豪泰", "莫泰"],
+        "star_hotel": ["希尔顿", "万豪", "洲际", "香格里拉", "凯悦", "雅高"],
+        "hostel": ["花间堂", "途家民宿", "小猪民宿", "美团民宿"],
+        "youth_hostel": ["国际青年旅舍（YHA）", "万里路青年旅舍", "如家青旅"],
+    }
+
+    types = [t for t in (hotel_preferences or []) if t in _COMMON_HOTELS] or ["economy_hotel"]
+    return "、".join(_COMMON_HOTELS[types[0]][:3])
+
+def _select_choices(req: ExpressRequirement, ctx: dict) -> dict:
+    """规则选定：逐段交通、逐城酒店、餐饮一次性选定，返回结果与用户摘要文本"""
+    cities = ctx.get("_cities") or _split_cities(req.destination)
+    legs = ctx.get("_legs") or _build_legs(req.departure_city, cities)
+    food = req.food_preferences or (["specialty", "local"] if "food" in req.travel_styles else ["local", "specialty"])
+
+    transports = []          # 成功获取的交通，用于预算计算
+    leg_results = []         # 全部路段记录，包含查询失败路段
+    for i, (src, dst) in enumerate(legs):
+        #   按用户勾选顺序挑交通（req.transport_types 即偏好序），不硬编码 train 优先：
+        #   逐个模式试，取首个有有效结果的；查询侧只对该模式建了 job，无候选自然跳过
+        picked = None
+        for mode in req.transport_types:
+            if mode == "train":
+                t = _pick_train(ctx.get(f"train_{i}", ""))
+                if t:
+                    picked = {"type": "train", **t}
+            elif mode == "flight":
+                f = _pick_flight(ctx.get(f"flight_{i}", ""), ctx.get(f"flightprice_{i}", ""))
+                if f:
+                    picked = {"type": "flight", **f}
+            if picked:
+                break
+        if picked:
+            picks = dict(picked)
+            picks["src"], picks["dst"] = src, dst
+            transports.append(picks)
+            leg_results.append(("ok", src, dst, picks))
+        else:
+            leg_results.append(("miss", src, dst, None))
+
+    hotels = []
+    hotel_results = []       # 全部城市酒店记录，包含兜底 fallback
+    for i, city in enumerate(cities):
+        h = _pick_hotel(ctx.get(f"hotel_{i}", ""))
+        if h:
+            buildings = dict(h)
+            buildings["city"] = city
+            hotels.append(buildings)
+            hotel_results.append(("ok", city, buildings))
+        else:
+            hotel_results.append(("fallback", city, None))
+
+    weathers = {}
+    for i, city in enumerate(cities):
+        w = _pick_weather(ctx.get(f"weather_{i}", ""), req.departure_date)
+        if w:
+            weathers[city] = w
+
+    sel = {
+        "transports": transports,
+        "hotels": hotels,
+        "food": food,
+        "weathers": weathers,
+        "cities": cities,
+        "total_legs": len(legs),
+        "leg_results": leg_results,
+        "hotel_results": hotel_results
+    }
+
+    lines = []
+    # 交通摘要，按路段序号输出，失败路段保留提示
+    for i, (kind, src, dst, pk) in enumerate(leg_results):
+        if kind == "ok" and pk["type"] == "train":
+            lines.append(f"🚄 交通{i+1}（{src}→{dst}）：{pk['no']} 次 {pk['dep']}出发（历时{pk['mins']//60}小时{pk['mins']%60:02d}分，二等座{pk['price']:.0f}元）")
+        elif kind == "ok":
+            price_txt = f"{pk['price']:.0f}元" if pk["price"] else "价格待定"
+            dep_txt = f"{pk['dep']}出发，" if pk.get("dep") else ""
+            lines.append(f"✈️ 交通{i+1}（{src}→{dst}）：{pk.get('flight_no','航班')} {dep_txt}{price_txt}")
+        else:
+            lines.append(f"🚄 交通{i+1}（{src}→{dst}）：未查询到实时班次（可到站现买或改期，费用按估算计入）")
+
+    # 酒店摘要，无真实报价使用品牌兜底文案
+    for kind, city, h in hotel_results:
+        if kind == "ok":
+            lines.append(f"🏨 {city}酒店：{h['name']}（{h['price']:.0f}元/晚，评分{h['score']}）")
+        else:
+            lines.append(f"🏨 {city}住宿：经济连锁（{_fallback_hotel_brands(req.accommodation_types)}等，到店择优选同档位）")
+
+    lines.append("🍽️ 餐饮偏好：" + "、".join({"specialty": "特色美食", "chain": "连锁快餐", "local": "本地小吃"}[f] for f in food))
+    for city, w in weathers.items():
+        lines.append(f"🌤️ {city}出发日天气：{w}")
+
+    sel["summary"] = "\n".join(lines) if lines else "未查询到实时数据，正在按常识安排…"
+    app_logger.info(f"[express] 规则选定完成: {sel['summary'][:100]}...")
+    return sel
+
+
+===== block 699 87a7b4386e1e lines 1-8 source 知行旅行助手代码-v2#464 =====
+🏨 杭州酒店：湖滨精选酒店（358元/晚，评分4.6）
+🍽️ 餐饮偏好：本地小吃
+🌤️ 杭州出发日天气：晴...
+🚄 交通1（福州→杭州）：G1650 次 08:12出发（历时4小时18分，二等座356元）
+🏨 杭州酒店：湖滨精选酒店（358元/晚，评分4.6）
+🍽️ 餐饮偏好：本地小吃
+🌤️ 杭州出发日天气：晴 27~18°C
+选定结果： G1650 | 湖滨精选酒店 | {'杭州': '晴 27~18°C'}
+
+
+===== block 700 3d7cd1bd1414 lines 1-68 source 知行旅行助手代码-v2#466 =====
+def _build_budget(req: ExpressRequirement, sel: dict) -> tuple[str, dict]:
+    """纯代码预算计算与明细拼接，口径与 summarize_budget_tool 保持一致，不经过LLM复述。
+    返回 (展示文本, 结构化明细)——后者与 state.BudgetBreakdown 同构，供同步进状态机 budget 字段"""
+    import math
+    people = req.adult_count + req.children_count
+    days, nights = req.travel_days, max(req.travel_days - 1, 1)
+    rooms = max(math.ceil(people / 2), 1)
+
+    cities = sel.get("cities") or _split_cities(req.destination)
+    total_legs = sel.get("total_legs") or len(_build_legs(req.departure_city, cities))
+
+    # 交通费用：真实票价求和，缺失路段按已获取路段均价估算
+    leg_prices = [tr["price"] for tr in sel["transports"] if tr["price"] > 0]
+    if leg_prices:
+        avg_leg = sum(leg_prices) / len(leg_prices)
+        transport_price = sum(leg_prices) + avg_leg * max(total_legs - len(leg_prices), 0)
+    else:
+        transport_price = 500 * max(total_legs, 1)
+    transport_cost = transport_price * people
+
+    # 住宿费用：取各城酒店均价，无数据时使用300元/晚估算
+    city_prices = [h["price"] for h in sel["hotels"]]
+    hotel_price = (sum(city_prices) / len(city_prices)) if city_prices else 300
+    accommodation_cost = hotel_price * nights * rooms
+
+    food_cost = 150 * days * people
+    attractions_cost = 200 * days * people
+    misc_cost = 100 * days * people
+
+    total = transport_cost + accommodation_cost + food_cost + attractions_cost + misc_cost
+    per_person = total / people if people else total
+
+    if req.budget_max > 0:
+        verdict = "人均未超预算" if per_person <= req.budget_max else "人均超预算（建议下调住宿档位或减天数）"
+    else:
+        verdict = "未提供预算上限，仅作参考"
+
+    missing_legs = max(total_legs - len(leg_prices), 0)
+    if not leg_prices:
+        transport_detail = f"（{total_legs} 段按常识估算）"
+    elif missing_legs:
+        transport_detail = f"（{len(leg_prices)}/{total_legs} 段实时票价，{missing_legs} 段按均价估算）"
+    else:
+        transport_detail = f"（{total_legs} 段 × 各段票价）"
+
+    hotel_detail = (f"各城均价 {hotel_price:.0f} 元"
+                    if city_prices else f"各城估算 {hotel_price:.0f} 元/晚（实时房价不可用）")
+
+    text = (
+        f"### 预算明细（{people} 人 / {nights} 晚 / {rooms} 间房 / {len(cities) or 1} 城）\n"
+        f"- **交通费用**：{transport_cost:.2f} 元（人均 {transport_price:.0f} 元，{transport_detail}）\n"
+        f"- **住宿费用**：{accommodation_cost:.2f} 元（{rooms} 间 × {nights} 晚 × {hotel_detail}）\n"
+        f"- **餐饮费用**：{food_cost:.2f} 元（150元/人/天）\n"
+        f"- **景点门票**：{attractions_cost:.2f} 元（真实票价优先，缺失按 200元/人/天 估算）\n"
+        f"- **其他杂费**：{misc_cost:.2f} 元\n"
+        f"**总计：{total:.2f} 元（{people} 人总价）｜人均：{per_person:.2f} 元**\n"
+        f"预算结论：{verdict}"
+    )
+    # ★ 结构化明细（字段与 state.BudgetBreakdown 同构），供 sync_express_state 写入状态机
+    breakdown = {
+        "transport": transport_cost,
+        "accommodation": accommodation_cost,
+        "food": food_cost,
+        "attractions": attractions_cost,
+        "misc": misc_cost,
+        "total": total,
+    }
+    return text, breakdown
+
+
+===== block 701 4e6a9b7e1715 lines 1-11 source 知行旅行助手代码-v2#467 =====
+"""_build_budget 演示：预算数字全由代码按固定口径算，可以逐项复算（纯函数，无需密钥）"""
+from app.services.express_planning_service import ExpressRequirement, _build_budget
+
+req = ExpressRequirement(departure_city="福州", destination="杭州", departure_date="2026-10-01",
+                         travel_days=3, adult_count=2, budget_max=3000, auto_confirm=True)
+sel = {"transports": [{"type": "train", "price": 356.0}],            # 选定器的产物（这里直接给）
+       "hotels": [{"city": "杭州", "name": "湖滨精选酒店", "price": 358.0}],
+       "cities": ["杭州"], "total_legs": 1}                          # ★ 城市数/路段总数（新预算按真实城市数算"城"）
+print(_build_budget(req, sel))
+# 复算：交通 356×2=712；住宿 358×2晚×1间=716；餐饮 150×3×2=900；门票 200×3×2=1200；杂费 100×3×2=600
+#      合计 4128，人均 2064 ≤ 3000 → 人均未超预算
+
+
+===== block 702 65329cc50c38 lines 1-26 source 知行旅行助手代码-v2#472 =====
+"""对话流式执行器
+
+【最小桩】只立两个入口的签名骨架，让编排总线（chat_contract_service）
+能按阅读顺序 import 通过、整条链先跑起来。真正的实现——闲聊直连 _stream_plain、
+直查通道、框架流式 _stream_agent、状态机执行总线 execute_turn 的六类后处理——
+环节 12–17 按片①–⑰ 一步步替换进来，两个入口的签名保持不变。
+"""
+from app.core.event_stream import EventStream
+from app.core.events import make_event, ROLE_ASSISTANT
+
+async def try_direct_ticket_query(content: str, stream=None) -> str | None:
+    """【最小桩】直查通道：命中"高铁/航班单点查询"才接管、否则返回 None。
+    桩先一律返回 None（不命中），让分流始终落到 execute_turn。环节 14 写完片⑦后删掉本桩。
+    """
+    return None
+
+async def execute_turn(
+        user_id: str, conversation_id: str, content: str, planning: bool, stream: EventStream
+) -> tuple[str, str | None, bool, list | None]:
+    """【最小桩】执行阶段入口，返回 (完整回复文本, 状态机步骤, 是否落库, 逐日结构)。
+    桩只把用户输入回显一条 assistant 帧、后三项返回 None/False/None；
+    环节 17 写完片⑰后删掉本桩。
+    """
+    reply = f"（执行器桩）已收到：{content}"
+    stream.push(make_event(ROLE_ASSISTANT, reply))
+    return reply, None, False, None

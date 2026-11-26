@@ -1,0 +1,4 @@
+JSON 文本      ： {'distance_km': 137.0, 'duration_text': '01:42', 'tolls': 65.0, 'traffic_lights': 12, 'summary': '向东出发，沿长安街行驶 2 公里；京津塘高速'}
+content blocks ： {'distance_km': 137.0, 'duration_text': '01:42', 'tolls': 65.0, 'traffic_lights': 12, 'summary': '向东出发，沿长安街行驶 2 公里；京津塘高速'}
+夹在说明文字里 ： {'distance_km': 137.0, 'duration_text': '01:42', 'tolls': 65.0, 'traffic_lights': 12, 'summary': '向东出发，沿长安街行驶 2 公里；京津塘高速'}
+什么都没有     ： {}

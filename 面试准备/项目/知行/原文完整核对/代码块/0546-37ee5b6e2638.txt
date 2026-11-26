@@ -1,0 +1,150 @@
+async def _produce(
+        db: AsyncSession, user_id: str, conversation_id: str, content: str, stream: EventStream,
+        force_planning: bool = False, persist_user: bool = True,
+        resume_stage: str | None = None,
+) -> None:
+    try:
+        stream = _SkillUiRecorder(stream)
+        # 会话标题：首条消息自动生成
+        conv = await get_owned_conversation(db, conversation_id, user_id)
+        if conv and conv.title == "新对话" and persist_user:
+            conv.title = content[:30]
+            await db.commit()
+
+        # 保存用户消息
+        if persist_user:
+            db.add(Message(conversation_id=conversation_id, role="user", content=content))
+            await db.commit()
+
+        # 读取最近4条消息作为上下文
+        hist_q = select(Message.role, Message.content).where(
+            Message.conversation_id == conversation_id
+        ).order_by(Message.created_at.desc()).limit(4)
+        hist_rows = (await db.execute(hist_q)).all()
+        history = [f"{r.role}: {r.content}" for r in reversed(hist_rows)]
+
+        _auto_quick_hit = _hit_auto_confirm(content)
+        if _auto_quick_hit:
+            stream.push(make_event(ROLE_ASSISTANT, "✈️ 正在为您规划行程，请稍候…\n"))
+
+        if force_planning:
+            router = RouterResult(
+                is_itinerary_planning=True,
+                inference_log="[卡片提交] 车次已选定，续跑住宿步",
+                skills=[],
+            )
+        else:
+            router = await chat_route(content, history=history)
+
+        # 直查票务确定性门禁，优先级高于意图路由
+        _direct_text = None if force_planning else await try_direct_ticket_query(content, stream, conversation_id)
+
+        # 推送规划提示文本
+        if _direct_text is None and router.is_itinerary_planning and not _auto_quick_hit:
+            _resume_text = _RESUME_PENDING_TEXT.get(resume_stage or "")
+            stream.push(make_event(ROLE_ASSISTANT, _resume_text or (
+                "\U0001F684 车次已确认，正在为您规划住宿…\n" if force_planning
+                else "\u2708\ufe0f 正在为您规划行程，请稍候…\n"
+            )))
+
+        for s in router.skills:
+            stream.push(make_event(ROLE_SKILLS, {
+                "skill_name": s.skill_name, "title": s.title, "desc": s.desc,
+            }))
+
+        # 快速通道分流
+        express_req = None
+        if _direct_text is None and router.is_itinerary_planning and not force_planning:
+            from app.services.express_planning_service import try_express_planning
+            express_req = await try_express_planning(user_id, content, stream)
+
+        # 执行分支：直查 / 快速通道 / 状态机
+        if _direct_text is not None:
+            full_text, state_step, committed, body = _direct_text, None, False, None
+        elif express_req is not None:
+            from app.services.express_planning_service import run_express_planning
+            # 快速通道同样产出结构化逐日行程，交给 generate_plan 作清单兜底
+            full_text, body = await run_express_planning(express_req, stream)
+            committed = False
+            if full_text is None:
+                app_logger.info("[express] 极速模式未接管，回落状态机")
+                full_text, state_step, committed, body = await execute_turn(
+                    user_id, conversation_id, content, router.is_itinerary_planning, stream
+                )
+            else:
+                state_step = "itinerary_generation"
+        else:
+            _warn = _manual_multi_city_day_warning(content)
+            if _warn:
+                stream.push(make_event(ROLE_ASSISTANT, _warn + "\n\n"))
+            full_text, state_step, committed, body = await execute_turn(
+                user_id, conversation_id, content, router.is_itinerary_planning, stream
+            )
+            if _warn:
+                full_text = f"{_warn}\n\n{full_text or ''}"
+
+        # 行程清单生成逻辑
+        plan_id = None
+        _auto_confirm_mode = _auto_quick_hit or express_req is not None
+        _ready_steps = _ITINERARY_READY_STEPS if _auto_confirm_mode else {
+            "budget_summarization", "report_generation"
+        }
+
+        _source = full_text if _looks_like_itinerary(full_text) else (
+            await _recent_itinerary_text(db, conversation_id) if committed else None
+        )
+        if not _source and body:
+            _source = full_text or ""
+
+        if (router.is_itinerary_planning
+                and state_step in _ready_steps
+                and (_source or body)):
+            stream.push(make_event(ROLE_ITINERARY, {
+                "status": "pending", "id": "", "message": "行程清单生成中...",
+            }))
+            try:
+                plan_id = await generate_plan(db, conversation_id, _source or "", structure=body)
+                stream.push(make_event(ROLE_ITINERARY, {
+                    "status": "success", "id": plan_id, "message": "行程清单已生成，点击查看！",
+                }))
+            except Exception:
+                app_logger.exception("行程清单生成失败")
+                stream.push(make_event(ROLE_ITINERARY, {
+                    "status": "error", "id": "", "message": "行程清单生成失败",
+                }))
+
+        # 快速通道短期记忆同步：**与清单是否生成成功解耦**
+        # 此前它写在 generate_plan 的 try 里，清单一失败就整段跳过，
+        # thread 里留着上一轮的旧目的地，下一轮天气/行程都按旧状态渲染
+        if express_req is not None:
+            try:
+                from app.services.express_planning_service import sync_express_state
+                await sync_express_state(
+                    conversation_id, express_req, full_text or "", plan_id
+                )
+            except Exception:
+                app_logger.exception("[express] 状态机短期记忆同步失败（不影响本轮回复）")
+        stream.push(make_event(ROLE_DONE, "finish", code=200))
+
+        # 消息落库，超长内容压缩
+        saved_text = full_text
+        if router.is_itinerary_planning and len(full_text) > COMPRESS_THRESHOLD:
+            saved_text = await compress_content(full_text)
+        extra: dict = {"original": full_text, "inference_steps": router.inference_log}
+        if stream.skill_ui:
+            extra["skill_ui"] = stream.skill_ui
+        if plan_id:
+            extra["itinerary_plans"] = {"status": "success", "id": plan_id, "message": "行程清单已生成，点击查看！"}
+        db.add(Message(
+            conversation_id=conversation_id,
+            role="assistant",
+            content=saved_text,
+            extra_info=extra,
+        ))
+        await db.commit()
+    except Exception as e:
+        app_logger.exception("对话服务异常")
+        stream.push(make_event(ROLE_ERROR, str(e)))
+        stream.push(make_event(ROLE_DONE, "finish", code=500))
+    finally:
+        stream.close()

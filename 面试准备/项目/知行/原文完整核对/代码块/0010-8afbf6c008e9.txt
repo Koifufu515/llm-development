@@ -1,0 +1,93 @@
+knowgo_travel/
+├── app/
+│   ├── main.py                          ← 第 01 章：FastAPI 入口（02、06、10、12 章改）
+│   ├── config.py                        ← 第 01 章：配置管理
+│   ├── run.py                           ← 第 10 章：跨平台启动脚本
+│   ├── agents/
+│   │   ├── handoffs/
+│   │   │   ├── step_prompts.py          ← 第 03 章：各步骤提示词
+│   │   │   ├── travel_agent.py          ← 第 03 章：状态机 Agent（04、05、06 章改，11 章终版）
+│   │   │   └── step_config.py           ← 第 04 章：步骤配置（05、06、07 章改）
+│   │   └── routers/
+│   │       ├── destination_router.py    ← 第 08 章：目的地推荐子图
+│   │       └── chat_router.py           ← 第 12 章：意图路由
+│   ├── api/
+│   │   ├── dependencies.py              ← 第 10 章：鉴权依赖 get_current_user
+│   │   └── v1/
+│   │       ├── users.py                 ← 第 10 章：注册 / 登录 / 当前用户
+│   │       ├── conversations.py         ← 第 10 章：会话增删改查
+│   │       ├── cities.py                ← 第 10 章：全国城市
+│   │       ├── messages.py              ← 第 12 章：发消息（SSE 流式）+ 历史消息
+│   │       ├── skills.py                ← 第 12 章：卡片提交
+│   │       └── itinerary_plans.py       ← 第 12 章：行程清单
+│   ├── capabilities/                    ← 第 09 章：多段并行卡片能力
+│   │   ├── train_multi_segment/         ← 多段高铁（契约 / 并行查询 / 接线层）
+│   │   ├── flight_multi_segment/        ← 多段航班
+│   │   ├── driving_multi_segment/       ← 多段自驾
+│   │   └── hotel_multi_segment/         ← 多城住宿（多一个解析核心）
+│   ├── core/
+│   │   ├── state.py                     ← 第 02 章：TravelState
+│   │   ├── checkpointer.py              ← 第 02 章：PostgreSQL Checkpointer
+│   │   ├── store.py                     ← 第 02 章：长期记忆 Store
+│   │   ├── memory_models.py             ← 第 02 章：长期记忆数据模型
+│   │   ├── middleware.py                ← 第 04 章：步骤配置中间件（05、09 章改）
+│   │   ├── events.py                    ← 第 09 章：事件契约 make_event
+│   │   ├── event_stream.py              ← 第 12 章：事件管道
+│   │   └── response.py                  ← 第 12 章：统一响应包裹与异常兜底
+│   ├── data/
+│   │   └── cities.py                    ← 第 10 章：全国城市清单
+│   ├── mcp_core/
+│   │   ├── client.py                    ← 第 06 章：MCP 客户端，接 9 个数据源
+│   │   └── servers/                     ← 第 06 章：自建的搜索、天气 MCP 服务
+│   ├── models/
+│   │   ├── base.py                      ← 第 10 章：ORM 基类与 get_db
+│   │   ├── user.py                      ← 第 10 章：users 表
+│   │   ├── conversation.py              ← 第 10 章：conversation 表
+│   │   ├── message.py                   ← 第 10 章：message 表
+│   │   └── itinerary_plan.py            ← 第 12 章：行程清单表
+│   ├── rag/                             ← 第 07 章：Advanced RAG（加载、切分、检索、重排、缓存等 8 个模块）
+│   ├── schemas/                         ← 第 10 章：请求 / 响应数据契约（user / conversation / message）
+│   ├── scripts/
+│   │   └── sync_cities.py               ← 第 10 章：把城市清单预热进 Redis
+│   ├── services/
+│   │   ├── express_planning_service.py  ← 第 09 章：路段助手（12 章整份重写为快速通道）
+│   │   ├── conversation_service.py      ← 第 10 章：会话所有权
+│   │   ├── city_service.py              ← 第 10 章：城市服务（Redis 优先 + 内置兜底）
+│   │   ├── chat_contract_service.py     ← 第 12 章：编排总线
+│   │   ├── chat_stream_executor.py      ← 第 12 章：执行器
+│   │   ├── chat_compress_service.py     ← 第 12 章：长文压缩
+│   │   ├── itinerary_plan_service.py    ← 第 12 章：行程清单生成（13 章改）
+│   │   └── quality_check_service.py     ← 第 12 章先放桩，13 章换成真身：在线质检
+│   ├── tools/
+│   │   ├── state_transition.py          ← 第 03 章：状态机工具（04、05、09 章改，11 章终版）
+│   │   ├── memory_tools.py              ← 第 05 章：回退与长期记忆工具
+│   │   ├── mcp_tools.py                 ← 第 06 章：MCP 工具筛选（09 章改）
+│   │   ├── router_query.py              ← 第 07 章：目的地信息查询（RAG + 天气并行）
+│   │   └── rag_tools.py                 ← 第 08 章：RAG 检索工具
+│   └── utils/
+│       ├── logger.py                    ← 第 01 章：全局日志器
+│       ├── llm_factory.py               ← 第 03 章：LLM 工厂
+│       └── security.py                  ← 第 10 章：密码哈希与 JWT
+├── evaluation/                          ← 第 13 章：离线评测（pytest）
+│   ├── conftest.py                      ← 项目根加入 sys.path，关闭遥测
+│   ├── qwen_judge.py                    ← 裁判（转发 quality_check_service）
+│   ├── itinerary_metric.py              ← 三维度标尺（转发 quality_check_service）
+│   ├── router_metric.py                 ← 路由确定性指标
+│   ├── router_cases.py                  ← 路由回归用例
+│   ├── test_router.py                   ← 路由评测入口
+│   ├── itinerary_cases.py               ← 行程正 / 反样本
+│   ├── test_itinerary.py                ← 行程质量评测入口
+│   ├── itinerary_db.py                  ← 从库里拉真实落库行程
+│   └── test_itinerary_db.py             ← 线上质检门禁
+├── data/                                ← 第 07 章：RAG 数据
+│   ├── documents/                       ← 知识库文档
+│   └── vectorstore/                     ← 向量库（运行时生成，不进 git）
+├── image/                               ← 第 10 章起：main.py 启动时自动创建的静态图片目录
+├── logs/                                ← 运行日志（logger.py 自动写入）
+├── scripts/                             ← 各章演示脚本（第 01 章的 test_llm.py 起，每章都会往里加）
+├── .env                                 ← 第 01 章：环境变量（不进 git）
+├── .gitignore                           ← uv init 生成，第 01 章追加几行
+├── .python-version                      ← uv init 生成
+├── README.md                            ← uv init 生成
+├── pyproject.toml                       ← 第 01 章 5.2 节：全部依赖
+└── uv.lock                              ← uv sync 生成

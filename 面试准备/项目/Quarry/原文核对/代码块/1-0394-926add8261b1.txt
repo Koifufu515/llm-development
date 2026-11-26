@@ -1,0 +1,1 @@
+uv run python -m quarry.scripts.try_pipeline "大雁塔门票多少钱"

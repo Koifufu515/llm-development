@@ -1,0 +1,33 @@
+async def synthesizer_node(state: DestinationRouterState) -> dict:
+    """综合器节点（扇入）：等所有并行分支跑完，把结果拼成一份报告"""
+    app_logger.info("综合 Agent 结果...")
+    results = state["agent_results"]           # reducer 已把各分支结果合并到这里
+    if not results:
+        return {"final_report": "未找到相关信息。"}
+    # 简单拼接就够：攻略段 + 天气段各自成块，顺序无所谓（也可换 LLM 做更智能的综合）
+    final_report = "\n\n".join(r["result"] for r in results)
+    app_logger.info("✅ 综合完成")
+    return {"final_report": final_report}
+
+def create_destination_router():
+    """组装并编译整张子图 —— 手工建图四步：建图 → 加节点 → 连边 → compile"""
+    workflow = StateGraph(DestinationRouterState)   # ① 以 State 为骨架建图
+
+    # ② 加节点：名字 → 处理函数（名字就是 Send / 边里用的"节点名"）
+    workflow.add_node("classifier", classifier_node)
+    workflow.add_node("explore", explore_agent_node)
+    workflow.add_node("weather", weather_agent_node)
+    workflow.add_node("synthesizer", synthesizer_node)
+
+    # ③ 连边
+    workflow.add_edge(START, "classifier")          # 入口 → 分类器
+    workflow.add_conditional_edges(                 # 分类器 → 条件边（route_to_agents 里用 Send 扇出）
+        "classifier", route_to_agents, ["explore", "weather"],  # 第三参：声明可能的目标节点
+    )
+    workflow.add_edge("explore", "synthesizer")     # 两个分支都汇到综合器（扇入）
+    workflow.add_edge("weather", "synthesizer")
+    workflow.add_edge("synthesizer", END)           # 综合器 → 出口
+
+    app = workflow.compile()                        # ④ 编译成可 ainvoke 的子图
+    app_logger.info("✅ 目的地 Router 创建完成")
+    return app

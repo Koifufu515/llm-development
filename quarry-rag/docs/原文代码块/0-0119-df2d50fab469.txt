@@ -1,0 +1,2 @@
+uv run python -c "print(hash('门票 120 元'))"
+uv run python -c "print(hash('门票 120 元'))"

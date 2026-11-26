@@ -1,0 +1,77 @@
+# 本批住宿段的签名缓存：同一会话、同一批住宿的后续轮次直接复用，避免被反复查 MCP
+_SIG_CACHE: SignatureCache[HotelMultiSegmentPayload] = SignatureCache("hotel")
+
+def _any_has_candidates(payload: HotelMultiSegmentPayload) -> bool:
+    """住宿的缓存口径：只要有一站有候选（门店或品牌）就缓存"""
+    # ★ 住宿口径：有一站有候选就行
+    return any(seg.hotel_list or seg.brand_list for seg in payload.segments)
+
+def _hotel_signature(segments: list[HotelSegmentInput]) -> str:
+    """住宿段没有 from_/to，签名改用"城市@入住日~离店日"拼接"""
+    return "|".join(f"{s.city}@{s.checkInDate}~{s.checkOutDate}" for s in segments)
+
+async def _payload_for(
+    conversation_id: str, segments: list[HotelSegmentInput]
+) -> HotelMultiSegmentPayload:
+    """同一会话同一批住宿只查一次；各站候选全为空时不写缓存，留给下次重试"""
+    sig = _hotel_signature(segments)
+    cached = _SIG_CACHE.get(conversation_id, sig)
+    if cached is not None:
+        return cached
+    payload = await build_hotel_multi_segment_payload(segments, cache_key=conversation_id)
+    _SIG_CACHE.store(conversation_id, sig, payload, is_complete=_any_has_candidates)
+    return payload
+
+async def emit_hotel_skill_ui(
+    stream: Any, conversation_id: str, state: dict
+) -> tuple[Optional[HotelMultiSegmentPayload], str]:
+    """手动确认模式：并行查全部站 → 推 skill_ui 帧
+
+    返回 (payload, status)，status 供调用方决定正文怎么写：
+      pushed    —— 已下发卡片（payload 非空）
+      empty     —— 各站都没查到任何候选，未下发卡片（调用方须如实告知，不能静默）
+      skipped   —— 缺城市/日期不合法（不接管，交回原逐城流程）
+    """
+    segments = _segments(state)
+    if not segments:
+        return None, "skipped"
+    payload = await _payload_for(conversation_id, segments)
+    if not any(seg.hotel_list or seg.brand_list for seg in payload.segments):
+        app_logger.warning("⚠️ 住宿步各站候选全为空，本次不下发选择卡片（避免空卡片）")
+        return None, "empty"
+    stream.push(make_event(ROLE_SKILL_UI, {
+        "skill_name": HOTEL_MULTI_SEGMENT_SKILL,
+        "data": payload.model_dump(by_alias=True),
+    }))
+    app_logger.info(
+        f"🏨 已下发多段住宿选择卡片：{len(payload.segments)} 站"
+        f"（模式 {[f'{s.segment_id}={s.mode}' for s in payload.segments]}）"
+    )
+    return payload, "pushed"
+
+def build_lead_text(payload: Optional[HotelMultiSegmentPayload]) -> str:
+    """卡片上方引导语（确定性文案）：**逐站写明城市与入住日期**，避免用户不知道每家酒店在哪"""
+    if not payload or not payload.segments:
+        return ""
+    lines = []
+    for index, seg in enumerate(payload.segments, 1):
+        note = "门店候选" if seg.mode == "hotel" else "品牌候选，该城市实时报价暂不可用"
+        lines.append(
+            f"- 第 {index} 站 {seg.city}：{seg.checkInDate} 入住 · {seg.checkOutDate} 离店（{note}）"
+        )
+    return (
+        f"已为您**并行查询**全部 {len(payload.segments)} 站的住宿候选：\n"
+        + "\n".join(lines)
+        + "\n请在下方卡片中**按城市逐站**选择（每站卡片顶部都标注了所在城市与入住日期），"
+          "全部选完后在预览页一次性提交。\n"
+    )
+
+def _next_step(state: dict) -> tuple[dict, str]:
+    """住宿确认完成后的落点：**直接进行程生成**（不再插入餐饮确认轮）
+
+    用户口径：餐饮偏好是表单必填项，住宿（最后一个需人工选择的项）确认后应直接出行程报告。
+    手动/自动模式一致；表单异常缺值时按"特色美食"兜底——不能因为一个空值把流程卡在餐饮轮，
+    那样用户会觉得"选完酒店就没反应了"（实测确实卡住过）。
+    """
+    prefs = [str(v) for v in ((state.get("user_requirement") or {}).get("food_preferences") or [])]
+    return {"selected_food_types": prefs or ["specialty"]}, "itinerary_generation"

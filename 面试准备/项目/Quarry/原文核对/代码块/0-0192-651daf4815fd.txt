@@ -1,0 +1,8 @@
+14:28:15.774 | INFO    | quarry.ingest.indexer:index_document:66 | corp-policy/travel-reimbursement.md: 子块 2 个，已存在 2 个，需要向量化 0 个
+==================================================
+文件数        31
+整份跳过      30
+新向量化子块  0
+复用子块      2
+清掉孤儿块    0
+清掉旧版本块  2

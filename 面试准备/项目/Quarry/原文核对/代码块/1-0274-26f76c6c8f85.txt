@@ -1,0 +1,3 @@
+class Retriever(Protocol):
+    async def search(self, collection_id, query, caller_labels,
+                     meta_filter=None, top_k=10) -> list[Hit]: ...

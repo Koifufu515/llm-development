@@ -1,0 +1,6 @@
+DEFAULT_POLICY = {
+    "max_child_size": 400,
+    "hard_max": 800,
+    "atomic_kinds": ["table", "code"],
+    "version": "v1",
+}

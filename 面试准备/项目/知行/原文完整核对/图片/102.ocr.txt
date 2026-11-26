@@ -1,0 +1,167 @@
+编排与并行收集•先补齐前提，再把N段× M 城一次发出去
+run_express_planning 是快速通道的总导演：补目的地、调天数、并行查数、规则代选、让模型出结构、代码算预算、渲染推送。整条通道只有两处
+会整体放弃、回落状态机，其余失败都只降级成一句"未查询到”。
+run_express_planning
+时序
+每一阶段调谁、推给前端什么、出错走哪条路
+阶段•调用
+推给前端的帧（role = assistant）
+异常出口
+_Produce
+先推预告（不在本函数内）
+正在为您规划行程，请稍候⋯
+①
+补目的地：
+req.aestinat1on 为至才调
+_picK_aestinat1on
+已为您选定目的地：X（理由）
+×选不出一返回三个 None
+② 宣告进入极速模式
+已识别自动确认需求，启用极速规划模式
+③
+多城天数兜底：
+_pLan_Cltles
+数城市，天数＜城市数X2就改大
+req.travel_days
+已为您调整到 N天
+（只在上调时推）
+并行收集：
+_co ccect_context
+（见下表）
+已锁定需求，正在并行查询交通、酒店与天气⋯
+单项失败只丢该项
+⑤
+规则选定：
+select_choices
+（冬4）
+摘要多行：每段交通/每城住宿/餐饮/天气
+⑥
+出逐日结构：
+qenerate itinerary
+（图5）
+正在生成逐日行程⋯
+× 无合规结构 一返回三个 None
+⑦
+算预算：
+_build_budget
+⑧
+渲染推送：借 chat_stream_executor._render_itinerary_body
+出正文（预算参数传空字典），
+_push_rendered 分片推
+正文：48字一片、间隔25ms
+预算明细表
+返回给 chat_contract_service._produce
+帧文案开头各带一个emoji，图中省略。第1步在第2步之前：先选好城市，才宣告进入极速模式。
+-collect_context
+一次发出多少请求 例：北京出发一天津、上海，5天，10-20出发，表单勾了高铁＋航班
+对象
+日期（代码算）
+入参要点
+段0
+北京一天津
+10-20
+train_0
+flight_0
+flightprice_0
+去程=出发日；航班时刻用机场码 PEK一TSN，票价用城市码 BJS-TSN
+段1
+10-21
+train_1
+flight_1 flightprice_1
+段2
+上海一北京
+10-24
+uraLn L
+flight_2
+flightprice_2
+返程段=末日
+城0
+天津
+入住10-20•1晚
+hoteL。
+weathem 。
+首站固定1晚；size=5；天气只传城市名，拿全部预报
+城1
+上海
+人仕 10-22．3晚
+hotel_1
+weather_1
+共13个协程•一次 asyncio.gather
+段日期借 core/middleware._leg_query_date，酒店窗口用
+_stay_nights 逐城累加，和状态机交通步、住宿卡片同一口径；_safe 吃掉单点异常，所以gather不会整体失败。
+函数卡 本组6个函数（含2个嵌套在_collect context 里的）
+run_express_planning
+L824
+_pick_destination Lasync
+L156
+-collect_Context Lasyns
+L272
+快速通道的总导演，按上面9个阶段把一次规划从头跑到尾。
+表单没写目的地时，让千问按出发地、出发月份对应的季节、
+把每段交通、每城酒店和天气的查询全部同时发出去，只等最
+何时调用
+风格和预算直接挑一个城市。
+慢的那一个。
+门卫 try_express_planning 放行之后
+谁来调用
+chat_contract_service._produce L253 （
+何时调用
+编排第1步发现目的地为空
+何时调用
+目的地、天数都定下来之后（编排第4步）
+测试脚本 scripts/1.py
+谁来调用
+本文件 run_express_planning
+谁来调用
+本文件 run_express_planning
+结果交给
+沿途帧推进 EventStream 经SSE 到前端；返回值给
+结果交给
+DestinationPick （city +reason）回编排层，写回
+结果交给
+ctx 字典（键如 train_0、hotel_工，外加
+_produce : days 交 generate_plan 兜底出清单，
+req.destination；city 为空或超过10个字算不合规，
+_cities、_legs）交给_select_choices
+sync 交 sync_express_state，全文落库；三个
+返回 None，整条通道放弃
+None 时 _produce 改调 execute_turn
+-safe
+嵌套
+L296
+_first
+嵌套
+L315
+_iata ［n
+L193
+单项查询的保险丝：工具没找到、调用报错都返回空串并记日
+按关键词在工具列表里找第一个匹配的工具，关键词和工具名
+城市名去掉「市/地区/ 自治州」后查机场三字码，北京一
+志，还把内容块列表拼成纯文本。
+两边都转小写。
+PEK，查不到给空串。
+何时调用
+组装每一个job 时（共5处）
+何时调用
+定位 get-tickets、searchFlightsByDepArr、
+何时调用 准备航班段查询时，每段两端各查一次
+谁来调用
+-collect_context 内部
+getFlightPriceByCities、 searchhotels / find-hotels、
+谁来调用
+结果交给
+协程放进jobs 字典，由 asyncio.gather 执行，文本结
+get_weather_forecast时
+本文件_collect_context
+果存进 ctx
+谁来调用
+结果交给
+-collect_context 内部
+作为时刻表接口的 depcity / arrcity；任一端为空，该段航
+班直接跳过并记日志；码表来自
+结果交给
+工具对象或 None 交给 _safe；None 时日志记「未定位
+mcp_tools._CITY_AIRPORT
+到工具」并跳过
+编排层只做确定性的事：先把目的地、天数这些前提补齐，再把"N段×M 城"的查询一次性并发出去，单项失败只丢那一项。整条通道只有两个出口会回落状态机——选不出目的地、拿不到合规的逐日结
+构；其余失败都降级成摘要里的一句"未查询到”，费用交给预算按估算补。

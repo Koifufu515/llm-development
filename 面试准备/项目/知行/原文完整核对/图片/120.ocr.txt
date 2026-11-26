@@ -1,0 +1,49 @@
+质检架构。一个真源，在线离线共用一套标尺
+质量标准写在一个地方—app/services/quality_check_service.py：裁判模型、三维度标尺、结构化清单转裁判正文。在线业务、离线评测各自的入
+口只是薄外壳，真正打分的逻辑始终是同一份。改标准只改一处，两边一起生效。
+FILE app/services/quality_check_service.py
+大 质量标准的唯一真源
+对外暴露3件东西：裁判、标尺、正文化器——任何模块要“给行程打分"都从这三样起步。
+QwenJudge
+build_itinerary_metrics
+plan_to_text
+裁判模型 Qwen •temperature = 0
+个三维度 GEval标尺
+结构化清单 - 裁判正文
+行程完整性
+需求匹配度
+真实性
+在线（业务内）
+离线（评测目录）
+在线质检
+ON
+runtime
+离线评测
+OFF
+evaluation
+跑在业务进程里•落库后异步启动
+跑在评测目录•CI 或本地 pytest
+run_quality_check fn
+evaluation/
+dir
+同步接口：给一份 plan，返回三维度得分和 WARNING/INFO 结论。
+与业务代码平级的独立目录，回归/基线跑分都在这里落地。
+共用
+schedule_quality_check fn
+qwen_judge.py / itinerary_metric.py fn
+异步调度：包在 asyncio.create_task 里，落库主流程立刻放行。
+薄转发—只做导入、不重造逻辑，一切走 quality_check_service。
+• 落库后 异步 跑、fail-safe（裁判自己挂了不影响主流程）
+testi
+*.py
+pytest
+• 事后告警：只吐 WARNING/ INFO ——不阻断、不重生成
+DeepEval 回归用例：把踩过的 bug沉淀成断言。
+1 Part1讲左边
+• 与业务共用同一份
+QwenJudge 与 build_itinerary_metrics
+一薄转发保证
+• 改代码前 pytest 跑一遍—历史坑不复活
+2 Part 2讲右边
+为什么必须共用：今天改prompt/换底座模型，“你会做什么“又被误判成规划、"末日只有返程“又被当成缺时段—开发期修好的坑，没有关卡拦着就会悄悄复活。共用一套标尺：在线捕捉线上 WARNING，离线用pytest
+拦回归，两边任一处发现坏味道都能立刻定位到同一份 quality_check_service.py 去修。

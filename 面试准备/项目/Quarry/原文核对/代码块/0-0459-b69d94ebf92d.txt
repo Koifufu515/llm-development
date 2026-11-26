@@ -1,0 +1,1 @@
+uv run python -c "from quarry.infra.settings import get_settings; s = get_settings(); print(s.api_request_timeout_s, s.api_max_top_k, s.api_log_queries)"

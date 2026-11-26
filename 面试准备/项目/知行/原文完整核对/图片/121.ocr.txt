@@ -1,0 +1,37 @@
+（knowgo_travel_backend） Ps E：\knowgo_travel_backend> wv run pytest evalvation/test_router.py -v
+platform win32-- Python 3.13.13,pytest-9.0.3,pluggy-1.6.0-- E：\knowgo_travel_backend\.venv\Scripts \python.exe
+cachedir：.pytest_cache
+rootdir: E：\knowgo_travel_backend
+configfile:pyproject.toml
+plugins:anyio-4.14.2,deepeval-4.2.6,langsmith-0.4.59,platformdirs-4.12.0,asyncio-1.3.0,repeat-0.9.4,nerunfailures-16.7,xdist-3.8.0
+asyncio:mode=Mode.STRICT, debug=False,asyncio_default_fixture_loop_scope=None,asyncio_defavlt_test_Loop_scope=function
+collected 13 items
+evaluation/test_router.py：：test_chat_routerI\u7eaf\u95ee \u5019］ PASSED
+［
+7%］
+evaluation/test_router.py：：test_chat_routerl\u65e5\u5e38\u95f2\u804a］PASSED
+［ 15%］
+evaluation/test_router.py：：test_chat_router［\u8be2\u95ee \u80fd\u529b］PASSED
+［ 23%］
+evaluation/test_router.py：：test_chat_router［\u660e\u786e\u89c4\u5212\u8bf7\u6c42J PASSED
+［ 30%］
+evaluation/test_router.py：：test_chat_router［\u5929\u6c14\u5355\u9879\u67e5\u8be2］ PASSED
+［ 38%］
+evaluation/test_router.py：：test_chat_router［\u9ad8\u94c1\u5355\u9879\u67e5\u8be2］ PASSED
+1 46%］
+evaluation/test_router.py：：test_chat_router［\u9152\u5e97\u5355\u9879\u67e5\u8be2］ PASSED
+1 53%］
+evaluation/test_router.py：：test_chat_routerl\u7b54\u76ee \u7684\u5730\uff08\u66fe \u8bef\u5224\u95f2\u804a\uff09］ PASSED
+1 61%1
+evaluation/test_router.py：：test_chat_router l\u7b54\u4eba \u6570］ PASSED
+1 69%］
+evaluation/test_router.py：：test_chat_router［\u7b54\u9884\u7b97］ PASSED
+［ 76%1
+evaluation/test_router.py：：test_chat_router［\u9009\u4ea4\u901a\u65b9\u5f0f］ PASSED
+［ 84%1
+evaluation/test_router.py：：test_chat_router［\u9009\u9910\u996e\u7c7b\u578b］ PASSED
+［ 92%］
+evaluation/test_router.py：：test_chat_router［\u8868\u5355\u5f0f\u5b8c\u6574\u9700\u6c42］ PASSED
+［100%］
+unning teardown with pytest sessionfinish...
+38888888888888888888888888888888888888838883888838888 13 passed in 43.25S

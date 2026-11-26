@@ -1,0 +1,10 @@
+{
+  "zip_sha256": "d1d69bd8ebf120d4e65592bf66d058ba8ede6a625d0b4f2ffbc1d789d59944bc",
+  "crc": "passed",
+  "secret_hit_files": [],
+  "known_identifier_hit_files": [],
+  "independent_extract": "/var/folders/rk/qtxh2ds10vd6_cdg09pdzrbm0000gn/T/wenshu-release-o612u0mk",
+  "tests_exit": 0,
+  "test_summary": "140 passed, 1 warning in 2.47s",
+  "env_files_included": false
+}

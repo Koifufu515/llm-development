@@ -1,0 +1,21 @@
+{
+  "city": "北京",
+  "title": "北京景点资料 · Beijing/Fengtai",
+  "source_url": "https://en.wikivoyage.org/wiki/Beijing/Fengtai",
+  "text": "资料城市：北京。本文是历史开放景点资料，不提供实时开放时间或价格；出行前需要核实。\n\nWanping Fortress\nA Ming-era defensive fortress next to the Lugou Bridge. Shell-holes made in the 1937 Japanese attack are still visible. Take subway line 14 to Dawayao. Then walk 500m south on the Jing-Shi Expressway side road (stay on the west side of the expressway). After 500m, a street turns off to the west, and it's a 200m walk to the fortress.\n\nLugou Bridge\nDating back to the late 1100s and spanning the Yongding River, the Lugou Bridge is both architecturally and historically important. Noted by Marco Polo in the 13th century as a \"very fine stone bridge\" it came to be known in the West as simply the '''Marco Polo Bridge'''. An incident between Japanese and Chinese forces here in 1937 marked the beginning of the Second Sino-Japanese War.\n\nWorld Park\nOpened in 1993, this park, as seen in Jia Zhangke's film ''The World'', contains large-scale replicas of famous buildings around the world (including Manhattan's destroyed World Trade Center towers). There are also song-and-dance shows and acrobatic displays. Next to Dabaotai subway stop, Fangshan Line)\n\nDabaotai Western Han Tombs Museum\nIf you've made it all the way out to the World Park, walk 500m south and you'll find a museum at the site of the Western Han tombs discovered in 1974.\n\nLianhuachi Park\nThe earliest mentions of the Lianhuachi (lit. ''Lotus Pool'') area are from the Northern Wei period (386-534). The modern park was established around the lotus pool in 1998, and has impressive flower displays. Just south-west of the West Railway Station (subway 7,9).",
+  "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+  "license": "CC BY-SA 3.0",
+  "attribution": "Wikivoyage contributors; https://en.wikivoyage.org/wiki/Beijing/Fengtai",
+  "sha256": "7ce95016f7eb6eaf706ec220eb85370d585b850861877dea9bd7da4219fc2d2f",
+  "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+  "poi_count": 5,
+  "source_dataset": "https://github.com/wikivoyage/wikivoyage.github.io",
+  "excluded_fields": [
+    "price",
+    "hours",
+    "phone",
+    "email",
+    "hotel",
+    "restaurant"
+  ]
+}

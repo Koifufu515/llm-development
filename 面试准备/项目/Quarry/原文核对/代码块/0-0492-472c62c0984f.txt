@@ -1,0 +1,1 @@
+curl.exe -s -X POST http://127.0.0.1:8100/v1/search -H "Authorization: Bearer $env:QUARRY_KEY" -H "Content-Type: application/json" -d "{\"collection\":\"travel-guide\",\"query\":\"兵马俑\",\"top_k\":0}"

@@ -1,0 +1,10 @@
+"""_strip_transport_lists 演示：删掉模型自编的车次/价格/时刻行，只留引导语（纯函数，无需密钥）"""
+from app.services.chat_stream_executor import _strip_transport_lists
+
+model_text = """已为您查询到重庆到石家庄的交通方案，请从以上选项中选择：
+#### ① 重庆 → 石家庄
+- G1704 08:12→16:35 二等座 792.5元
+- 出发-到达时刻：07:21 - 14:31
+- 航班 CA4105 经济舱 860 元
+选好后告诉我车次即可。"""
+print(_strip_transport_lists(model_text))

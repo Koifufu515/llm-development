@@ -1,0 +1,3 @@
+async with checkpointer_lifespan():
+    async with store_lifespan():
+        yield

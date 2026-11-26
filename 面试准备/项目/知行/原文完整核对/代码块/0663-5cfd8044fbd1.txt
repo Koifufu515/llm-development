@@ -1,0 +1,62 @@
+"""第 13 章冒烟：共用裁判、判据开关、清单转正文、确定性路由指标，结构自检一遍
+（不连库、不发真实模型请求；构造裁判客户端仍需 .env 里的 DashScope 密钥）
+"""
+import json
+import os
+
+os.environ.setdefault("DEEPEVAL_TELEMETRY_OPT_OUT", "YES")      # 关遥测，和 conftest.py 一致
+
+from deepeval.test_case import LLMTestCase
+
+from app.services.quality_check_service import QwenJudge, build_itinerary_metrics, plan_to_text
+from evaluation.itinerary_metric import build_itinerary_metrics as fwd_build
+from evaluation.router_metric import RouterCorrectnessMetric
+
+def check(name: str, ok: bool) -> None:
+    print(f"{'✅' if ok else '❌'} {name}")
+    assert ok, name
+
+def route_case(planning: bool, skills: list[str]) -> LLMTestCase:
+    """把"路由器输出"序列化成 actual_output，与 test_router.py 的写法一致"""
+    return LLMTestCase(input="-", actual_output=json.dumps(
+        {"is_itinerary_planning": planning, "skills": [{"skill_name": s} for s in skills]}))
+
+judge = QwenJudge()
+check(f"裁判可构造：{judge.get_model_name()}", judge.get_model_name().startswith("qwen-judge("))
+metrics = build_itinerary_metrics()
+check("三个维度：" + "、".join(m.name for m in metrics), len(metrics) == 3)
+check("每次 build 都是新实例", build_itinerary_metrics()[0] is not metrics[0])
+check("require_budget 只切完整性判据",
+      build_itinerary_metrics(require_budget=False)[0].criteria != metrics[0].criteria
+      and build_itinerary_metrics(require_budget=False)[1].criteria == metrics[1].criteria)
+check("evaluation/ 的标尺是薄转发", fwd_build is build_itinerary_metrics)
+text = plan_to_text({"title": "杭州3日游", "itinerary_list": [{"day": "Day 1", "itinerary": [
+    {"time": "上午", "scenic_spots_list": [{"toponym": "西湖", "toponym_desc": "白堤到断桥"}]}]}]})
+check("plan_to_text 摊出时段和景点", "上午：西湖" in text)
+
+# ===== 确定性路由指标：planning 精确匹配 + skills 三种语义 + 矛盾入参守卫 =====
+check("路由指标：规划请求判对得 1",
+      RouterCorrectnessMetric(True, ["itinerary_planning"]).measure(
+          route_case(True, ["itinerary_planning"])) == 1.0)
+# 期望 planning=False（闲聊），实际 planning=True（被误判为规划）→ 0；与 skills 内容无关
+check("路由指标：闲聊误判为规划得 0",
+      RouterCorrectnessMetric(False).measure(route_case(True, [])) == 0.0)
+check("路由指标：命中期望技能之一即通过",
+      RouterCorrectnessMetric(False, ["weather_query", "hotel_query"]).measure(
+          route_case(False, ["hotel_query", "train_query"])) == 1.0)
+check("路由指标：要求技能为空·空则通过",
+      RouterCorrectnessMetric(False, expect_empty_skills=True).measure(route_case(False, [])) == 1.0)
+check("路由指标：要求技能为空·有则拦截",
+      RouterCorrectnessMetric(False, expect_empty_skills=True).measure(
+          route_case(False, ["weather_query"])) == 0.0)
+try:                                        # ★ 矛盾入参必须显式报错，不静默吞掉其一
+    RouterCorrectnessMetric(False, ["train_query"], expect_empty_skills=True)
+    guard_ok = False                        # 没抛异常 = 守卫失效
+except ValueError:
+    guard_ok = True
+check("路由指标：矛盾入参必须报错", guard_ok)
+
+print("结构自检通过。真实评测请跑：")
+print("  uv run pytest evaluation/test_router.py -v")
+print("  uv run pytest evaluation/test_itinerary.py -v")
+print("  uv run pytest evaluation/test_itinerary_db.py -v")

@@ -1,0 +1,14 @@
+# ============ 重排（第五章） ============
+# noop = 不重排（默认，也是对照组）；api = 调用托管重排接口
+RERANK_BACKEND=noop
+RERANK_MODEL=qwen3-rerank
+# 百炼的重排接口地址，5.2.3 会先用命令行验证一遍
+RERANK_URL=https://dashscope.aliyuncs.com/compatible-api/v1/reranks
+# 留空就复用上面的 LLM_API_KEY
+RERANK_API_KEY=
+RERANK_CANDIDATES=30
+RERANK_TIMEOUT_S=3.0
+
+# ============ 上下文（第五章） ============
+CONTEXT_MAX_CHARS=6000
+NEIGHBOR_RADIUS=1

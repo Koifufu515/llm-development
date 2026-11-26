@@ -1,0 +1,101 @@
+{
+  "scope": "16条开发回归，包含修复参考用例，不是独立测试集准确率。",
+  "results": [
+    {
+      "message": "上海去北京三天，帮我安排一下",
+      "expected": "planning",
+      "actual": "planning",
+      "seconds": 0.0
+    },
+    {
+      "message": "想去附近玩两天",
+      "expected": "planning",
+      "actual": "planning",
+      "seconds": 0.0
+    },
+    {
+      "message": "两个人，每人3000",
+      "expected": "planning",
+      "actual": "planning",
+      "seconds": 1.1268
+    },
+    {
+      "message": "苏州",
+      "expected": "planning",
+      "actual": "planning",
+      "seconds": 0.0025
+    },
+    {
+      "message": "改成高铁出行",
+      "expected": "planning",
+      "actual": "planning",
+      "seconds": 0.0017
+    },
+    {
+      "message": "确认",
+      "expected": "planning",
+      "actual": "planning",
+      "seconds": 0.0015
+    },
+    {
+      "message": "我想重新规划",
+      "expected": "planning",
+      "actual": "planning",
+      "seconds": 0.0
+    },
+    {
+      "message": "南京多待一天",
+      "expected": "planning",
+      "actual": "planning",
+      "seconds": 0.6694
+    },
+    {
+      "message": "你好",
+      "expected": "plain",
+      "actual": "plain",
+      "seconds": 0.7234
+    },
+    {
+      "message": "介绍一下你自己",
+      "expected": "plain",
+      "actual": "plain",
+      "seconds": 0.8759
+    },
+    {
+      "message": "你能做什么",
+      "expected": "plain",
+      "actual": "plain",
+      "seconds": 0.712
+    },
+    {
+      "message": "谢谢",
+      "expected": "plain",
+      "actual": "plain",
+      "seconds": 0.6169
+    },
+    {
+      "message": "什么是LangGraph",
+      "expected": "plain",
+      "actual": "plain",
+      "seconds": 0.497
+    },
+    {
+      "message": "讲一个笑话",
+      "expected": "plain",
+      "actual": "plain",
+      "seconds": 0.6376
+    },
+    {
+      "message": "2加2等于几",
+      "expected": "plain",
+      "actual": "plain",
+      "seconds": 0.5486
+    },
+    {
+      "message": "再见",
+      "expected": "plain",
+      "actual": "plain",
+      "seconds": 0.5543
+    }
+  ]
+}

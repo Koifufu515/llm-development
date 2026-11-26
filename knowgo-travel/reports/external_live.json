@@ -1,0 +1,538 @@
+{
+  "hotel": {
+    "status": "ok",
+    "tool": "searchHotels",
+    "source": "hotel",
+    "queried_at": "2026-10-29T21:55:29.762798+08:00",
+    "city": "苏州",
+    "nights": 2,
+    "options": [
+      {
+        "option_id": "h0-1",
+        "name": "骏怡连锁酒店(昆山千灯镇景唐北路店)",
+        "nightly_price_yuan": null,
+        "stay_total_yuan": null,
+        "address": "千灯镇景唐北路333号",
+        "rating": 2.0,
+        "source": "AIGOHOTEL",
+        "currency": "CNY"
+      },
+      {
+        "option_id": "h0-2",
+        "name": "尚客优酒店(昆山淀山湖店)",
+        "nightly_price_yuan": null,
+        "stay_total_yuan": null,
+        "address": "淀山湖镇曙光路富贵广场2号楼",
+        "rating": 2.0,
+        "source": "AIGOHOTEL",
+        "currency": "CNY"
+      },
+      {
+        "option_id": "h0-3",
+        "name": "尚客优酒店(昆山金鹰国际店)",
+        "nightly_price_yuan": null,
+        "stay_total_yuan": null,
+        "address": "玉山镇朝阳西路58号",
+        "rating": 2.0,
+        "source": "AIGOHOTEL",
+        "currency": "CNY"
+      },
+      {
+        "option_id": "h0-4",
+        "name": "蔚徕酒店(苏州相城大道徐图港地铁站店)",
+        "nightly_price_yuan": null,
+        "stay_total_yuan": null,
+        "address": "元和街道春申湖中路235号",
+        "rating": 3.0,
+        "source": "AIGOHOTEL",
+        "currency": "CNY"
+      },
+      {
+        "option_id": "h0-5",
+        "name": "尚客优精选酒店(苏州新城吾悦广场店)",
+        "nightly_price_yuan": null,
+        "stay_total_yuan": null,
+        "address": "松陵镇开平路2188号新城吴悦广场B座",
+        "rating": 2.0,
+        "source": "AIGOHOTEL",
+        "currency": "CNY"
+      }
+    ],
+    "message": "已查询实时酒店，价格及可订状态以供应商为准"
+  },
+  "flight": {
+    "status": "ok",
+    "tool": "searchFlightsByDepArr",
+    "source": "flight",
+    "queried_at": "2026-10-29T21:58:28.240540+08:00",
+    "options": [
+      {
+        "option_id": "cb1ce1ec31d747894ff7",
+        "flight_code": "MU5099",
+        "from_airport": "SHA",
+        "to_airport": "PEK",
+        "departure_at": "2026-10-30 07:00:00",
+        "arrival_at": "2026-10-30 09:20:00",
+        "price_yuan": null,
+        "currency": "CNY",
+        "note": "仅时刻表，未获取可核对票价；不代表已预订"
+      },
+      {
+        "option_id": "a3cb9ac4a4ec2e2f2dc0",
+        "flight_code": "CA1564",
+        "from_airport": "SHA",
+        "to_airport": "PEK",
+        "departure_at": "2026-10-30 07:45:00",
+        "arrival_at": "2026-10-30 10:10:00",
+        "price_yuan": null,
+        "currency": "CNY",
+        "note": "仅时刻表，未获取可核对票价；不代表已预订"
+      },
+      {
+        "option_id": "311e3b5d5eb67240ed94",
+        "flight_code": "MU5101",
+        "from_airport": "SHA",
+        "to_airport": "PEK",
+        "departure_at": "2026-10-30 08:00:00",
+        "arrival_at": "2026-10-30 10:15:00",
+        "price_yuan": null,
+        "currency": "CNY",
+        "note": "仅时刻表，未获取可核对票价；不代表已预订"
+      },
+      {
+        "option_id": "161657b4ff1208680d40",
+        "flight_code": "HU7602",
+        "from_airport": "SHA",
+        "to_airport": "PEK",
+        "departure_at": "2026-10-30 08:30:00",
+        "arrival_at": "2026-10-30 10:55:00",
+        "price_yuan": null,
+        "currency": "CNY",
+        "note": "仅时刻表，未获取可核对票价；不代表已预订"
+      },
+      {
+        "option_id": "749d7341518dcf739359",
+        "flight_code": "CA1590",
+        "from_airport": "SHA",
+        "to_airport": "PEK",
+        "departure_at": "2026-10-30 08:55:00",
+        "arrival_at": "2026-10-30 11:10:00",
+        "price_yuan": null,
+        "currency": "CNY",
+        "note": "仅时刻表，未获取可核对票价；不代表已预订"
+      },
+      {
+        "option_id": "abe882460d5d1bbad09e",
+        "flight_code": "MU5103",
+        "from_airport": "SHA",
+        "to_airport": "PEK",
+        "departure_at": "2026-10-30 09:00:00",
+        "arrival_at": "2026-10-30 11:15:00",
+        "price_yuan": null,
+        "currency": "CNY",
+        "note": "仅时刻表，未获取可核对票价；不代表已预订"
+      },
+      {
+        "option_id": "693ead76c64e338c7121",
+        "flight_code": "MU5153",
+        "from_airport": "SHA",
+        "to_airport": "PEK",
+        "departure_at": "2026-10-30 09:30:00",
+        "arrival_at": "2026-10-30 12:00:00",
+        "price_yuan": null,
+        "currency": "CNY",
+        "note": "仅时刻表，未获取可核对票价；不代表已预订"
+      },
+      {
+        "option_id": "93fcb115c2919196ac10",
+        "flight_code": "MU5105",
+        "from_airport": "SHA",
+        "to_airport": "PEK",
+        "departure_at": "2026-10-30 10:00:00",
+        "arrival_at": "2026-10-30 12:15:00",
+        "price_yuan": null,
+        "currency": "CNY",
+        "note": "仅时刻表，未获取可核对票价；不代表已预订"
+      },
+      {
+        "option_id": "194345e3b49928e017e1",
+        "flight_code": "HU7604",
+        "from_airport": "SHA",
+        "to_airport": "PEK",
+        "departure_at": "2026-10-30 10:50:00",
+        "arrival_at": "2026-10-30 13:05:00",
+        "price_yuan": null,
+        "currency": "CNY",
+        "note": "仅时刻表，未获取可核对票价；不代表已预订"
+      },
+      {
+        "option_id": "f809bb086b1311087e81",
+        "flight_code": "MU5107",
+        "from_airport": "SHA",
+        "to_airport": "PEK",
+        "departure_at": "2026-10-30 11:00:00",
+        "arrival_at": "2026-10-30 13:15:00",
+        "price_yuan": null,
+        "currency": "CNY",
+        "note": "仅时刻表，未获取可核对票价；不代表已预订"
+      },
+      {
+        "option_id": "d2a848bb0c2a6571132c",
+        "flight_code": "CA1508",
+        "from_airport": "SHA",
+        "to_airport": "PEK",
+        "departure_at": "2026-10-30 11:05:00",
+        "arrival_at": "2026-10-30 13:15:00",
+        "price_yuan": null,
+        "currency": "CNY",
+        "note": "仅时刻表，未获取可核对票价；不代表已预订"
+      },
+      {
+        "option_id": "42f011fbf5b31e8e6268",
+        "flight_code": "HU7608",
+        "from_airport": "SHA",
+        "to_airport": "PEK",
+        "departure_at": "2026-10-30 11:55:00",
+        "arrival_at": "2026-10-30 14:15:00",
+        "price_yuan": null,
+        "currency": "CNY",
+        "note": "仅时刻表，未获取可核对票价；不代表已预订"
+      }
+    ]
+  },
+  "amap_weather": {
+    "status": "ok",
+    "data": {
+      "city": "苏州市",
+      "forecasts": [
+        {
+          "date": "2026-10-29",
+          "week": "4",
+          "dayweather": "阴",
+          "nightweather": "多云",
+          "daytemp": "21",
+          "nighttemp": "14",
+          "daywind": "西",
+          "nightwind": "西",
+          "daypower": "1-3",
+          "nightpower": "1-3",
+          "daytemp_float": "21.0",
+          "nighttemp_float": "14.0"
+        },
+        {
+          "date": "2026-10-30",
+          "week": "5",
+          "dayweather": "晴",
+          "nightweather": "多云",
+          "daytemp": "22",
+          "nighttemp": "12",
+          "daywind": "西",
+          "nightwind": "西",
+          "daypower": "1-3",
+          "nightpower": "1-3",
+          "daytemp_float": "22.0",
+          "nighttemp_float": "12.0"
+        },
+        {
+          "date": "2026-10-31",
+          "week": "6",
+          "dayweather": "晴",
+          "nightweather": "晴",
+          "daytemp": "24",
+          "nighttemp": "14",
+          "daywind": "东南",
+          "nightwind": "东南",
+          "daypower": "1-3",
+          "nightpower": "1-3",
+          "daytemp_float": "24.0",
+          "nighttemp_float": "14.0"
+        },
+        {
+          "date": "2026-11-01",
+          "week": "7",
+          "dayweather": "小雨",
+          "nightweather": "小雨",
+          "daytemp": "27",
+          "nighttemp": "14",
+          "daywind": "西南",
+          "nightwind": "西南",
+          "daypower": "1-3",
+          "nightpower": "1-3",
+          "daytemp_float": "27.0",
+          "nighttemp_float": "14.0"
+        }
+      ]
+    },
+    "tool": "maps_weather",
+    "source": "amap",
+    "queried_at": "2026-10-29T21:55:21.365582+08:00"
+  },
+  "tencent_driving": {
+    "status": "unavailable",
+    "message": "腾讯地图地理编码或路线请求失败，请检查Key权限与配额"
+  },
+  "amap_driving": {
+    "status": "ok",
+    "data": {
+      "origin": "121.473667,31.230525",
+      "destination": "120.585294,31.299758",
+      "paths": [
+        {
+          "path": "",
+          "distance": "100582",
+          "duration": "5172",
+          "steps": [
+            {
+              "instruction": "向西行驶45米左转",
+              "road": "",
+              "distance": "45",
+              "orientation": "西",
+              "duration": "18"
+            },
+            {
+              "instruction": "向西南行驶77米左转",
+              "road": "",
+              "distance": "77",
+              "orientation": "西南",
+              "duration": "18"
+            },
+            {
+              "instruction": "向东南行驶127米右转进入主路",
+              "road": "",
+              "distance": "127",
+              "orientation": "东南",
+              "duration": "29"
+            },
+            {
+              "instruction": "沿人民大道向西南行驶199米向右前方行驶",
+              "road": "人民大道",
+              "distance": "199",
+              "orientation": "西南",
+              "duration": "37"
+            },
+            {
+              "instruction": "沿黄陂北路途径威海路向西行驶196米向右前方行驶",
+              "road": "黄陂北路",
+              "distance": "196",
+              "orientation": "西",
+              "duration": "67"
+            },
+            {
+              "instruction": "沿威海路向西行驶203米右转",
+              "road": "威海路",
+              "distance": "203",
+              "orientation": "西",
+              "duration": "73"
+            },
+            {
+              "instruction": "沿成都北路向北行驶97米直行",
+              "road": "成都北路",
+              "distance": "97",
+              "orientation": "北",
+              "duration": "13"
+            },
+            {
+              "instruction": "沿南北高架路入口途径南北高架路向北行驶1.5千米向右前方行驶",
+              "road": "南北高架路入口",
+              "distance": "1538",
+              "orientation": "北",
+              "duration": "154"
+            },
+            {
+              "instruction": "沿天目中路立交桥向北行驶343米进入环岛",
+              "road": "天目中路立交桥",
+              "distance": "343",
+              "orientation": "北",
+              "duration": "70"
+            },
+            {
+              "instruction": "沿天目中路立交桥向西北行驶202米离开环岛",
+              "road": "天目中路立交桥",
+              "distance": "202",
+              "orientation": "西北",
+              "duration": "78"
+            },
+            {
+              "instruction": "沿天目中路立交桥向西行驶31米靠左",
+              "road": "天目中路立交桥",
+              "distance": "31",
+              "orientation": "西",
+              "duration": "1"
+            },
+            {
+              "instruction": "沿天目中路立交桥途径北横通道向西行驶922米靠左",
+              "road": "天目中路立交桥",
+              "distance": "922",
+              "orientation": "西",
+              "duration": "54"
+            },
+            {
+              "instruction": "沿北横通道向西行驶75米直行进入隧道",
+              "road": "北横通道",
+              "distance": "75",
+              "orientation": "西",
+              "duration": "2"
+            },
+            {
+              "instruction": "沿北横通道向西南行驶7.3千米靠左沿当前道路行驶",
+              "road": "北横通道",
+              "distance": "7287",
+              "orientation": "西南",
+              "duration": "432"
+            },
+            {
+              "instruction": "沿北横通道向西行驶1.0千米靠左",
+              "road": "北横通道",
+              "distance": "1020",
+              "orientation": "西",
+              "duration": "70"
+            },
+            {
+              "instruction": "沿中环立交桥途径北翟路地道向西行驶1.1千米直行进入隧道",
+              "road": "中环立交桥",
+              "distance": "1135",
+              "orientation": "西",
+              "duration": "163"
+            },
+            {
+              "instruction": "沿北翟路地道途径北翟高架路向西行驶6.1千米靠左",
+              "road": "北翟路地道",
+              "distance": "6071",
+              "orientation": "西",
+              "duration": "390"
+            },
+            {
+              "instruction": "沿北翟快速路出口途径S26沪常高速向西行驶5.7千米靠左沿主路行驶",
+              "road": "北翟快速路出口",
+              "distance": "5689",
+              "orientation": "西",
+              "duration": "280"
+            },
+            {
+              "instruction": "沿S26沪常高速向西北行驶326米减速行驶到达收费站",
+              "road": "S26沪常高速",
+              "distance": "326",
+              "orientation": "西北",
+              "duration": "37"
+            },
+            {
+              "instruction": "沿S26沪常高速向西北行驶162米靠左",
+              "road": "S26沪常高速",
+              "distance": "162",
+              "orientation": "西北",
+              "duration": "13"
+            },
+            {
+              "instruction": "沿S26沪常高速途径千灯主线桥、S58沪常高速、道褐浦中桥、陆泥浦中桥、K6加310中桥、K7加075中桥、K8加947中桥、南北干线大桥、杨大线大桥、K10加883中桥、K12加071中桥、张华港大桥、K13加483中桥、K14加183中桥、椿里砖厂大桥、南塘江大桥、界浦江大桥、K17加236大桥、K18加105中桥、甪直南高架桥、西港河大桥、K25加651中桥、K27加660大桥、K29加130中桥、车坊大桥、吴淞江大桥、西官浦大桥、K37加902中桥向西行驶56.5千米向右前方行驶进入匝道",
+              "road": "S26沪常高速",
+              "distance": "56515",
+              "orientation": "西",
+              "duration": "2029"
+            },
+            {
+              "instruction": "沿尹山枢纽向西行驶447米靠右",
+              "road": "尹山枢纽",
+              "distance": "447",
+              "orientation": "西",
+              "duration": "52"
+            },
+            {
+              "instruction": "沿尹山枢纽向西北行驶742米靠左",
+              "road": "尹山枢纽",
+              "distance": "742",
+              "orientation": "西北",
+              "duration": "39"
+            },
+            {
+              "instruction": "沿吴中互通途径吴中互通L匝道桥向西北行驶989米减速行驶到达收费站",
+              "road": "吴中互通",
+              "distance": "989",
+              "orientation": "西北",
+              "duration": "65"
+            },
+            {
+              "instruction": "沿吴中互通向西行驶251米靠左",
+              "road": "吴中互通",
+              "distance": "251",
+              "orientation": "西",
+              "duration": "26"
+            },
+            {
+              "instruction": "沿尹山湖立交向西行驶422米靠左",
+              "road": "尹山湖立交",
+              "distance": "422",
+              "orientation": "西",
+              "duration": "23"
+            },
+            {
+              "instruction": "沿尹山湖立交途径南湖路快速路、吴中大道快速路向西行驶5.2千米向右前方行驶进入匝道",
+              "road": "尹山湖立交",
+              "distance": "5210",
+              "orientation": "西",
+              "duration": "277"
+            },
+            {
+              "instruction": "沿蠡墅立交向西行驶194米靠右",
+              "road": "蠡墅立交",
+              "distance": "194",
+              "orientation": "西",
+              "duration": "42"
+            },
+            {
+              "instruction": "沿蠡墅立交途径友新快速路向北行驶4.9千米靠左沿主路行驶",
+              "road": "蠡墅立交",
+              "distance": "4937",
+              "orientation": "北",
+              "duration": "240"
+            },
+            {
+              "instruction": "沿友新快速路途径西环快速路向西北行驶1.6千米靠左沿主路行驶",
+              "road": "友新快速路",
+              "distance": "1590",
+              "orientation": "西北",
+              "duration": "75"
+            },
+            {
+              "instruction": "沿西环快速路向西北行驶1.9千米向右前方行驶进入匝道",
+              "road": "西环快速路",
+              "distance": "1939",
+              "orientation": "西北",
+              "duration": "112"
+            },
+            {
+              "instruction": "沿西环快速路出口向北行驶416米右转进入主路",
+              "road": "西环快速路出口",
+              "distance": "416",
+              "orientation": "北",
+              "duration": "52"
+            },
+            {
+              "instruction": "沿干将西路向东行驶819米右转",
+              "road": "干将西路",
+              "distance": "819",
+              "orientation": "东",
+              "duration": "73"
+            },
+            {
+              "instruction": "沿银泰路向南行驶276米右转",
+              "road": "银泰路",
+              "distance": "276",
+              "orientation": "南",
+              "duration": "43"
+            },
+            {
+              "instruction": "向西行驶90米到达目的地",
+              "road": "",
+              "distance": "90",
+              "orientation": "西",
+              "duration": "25"
+            }
+          ]
+        }
+      ]
+    },
+    "tool": "maps_direction_driving",
+    "source": "amap",
+    "queried_at": "2026-10-29T22:10:25.738110+08:00"
+  }
+}

@@ -1,0 +1,123 @@
+knowgo_travel_backend
+master v
+o 6_test_mcpv
+@
+2
+Q
+试用
+项目
+document_loader.py
+r text_splitter.py
+吧 vectorstore.py
+retriever.py
+r query_optimizer.py
+r reranker.py
+e cache.py
+pipeline.py
+router_query.py
+e step_config.py x
+~口 knowgo_travel_ backend E
+destination recommendation
+×一
+Aa
+w
+1/
+×
+•.venv library根目录
+async def get_step_configO -> dict: 2用法 新*
+wapp
+- 出行天数：｛｛ user_requirement.travel_days ｝｝ 天
+回
+109
+agents
+-预算：｛｛ user_requirement.budget_min ｝｝-｛｛ user_requirement.budget_max ｝｝ 元/人（｛｛ user_requirement.budget_level ｝｝级》
+-风格：｛｛ user_requirement.travel_styles H｝
+口 handoffs
+_init
+_pY
+112
+**•
+可用真实工具**：
+i step_config.py
+113
+search_travel_info"：搜索目的地攻略 /景点 /美食
+i step_prompts.p
+114
+get_weather_forecast"：查未来 4 天天气（判断季节合适性）
+>心 travel_agent.py
+_init_py
+116
+**任务**：
+117
+- 用户已指定目的地 调
+'get_weather_fonecast
+看当日天气+‘search_travel_info’查亮点 •简短点评 •询问确认
+口 api
+118
+-用户请你推荐，基于用户需求给 3-4 个候选《每个了行内》，结尾问选哪个
+e core
+119
+- 用户明确选定 •调‘select_destingzion_tool"
+• mcp_core
+120
+121
+**边界**：
+rag
+122
+-避免推荐用户去过的目的！
+景点（见 user_memory）
+SEICES
+123
+- 天气数据永远优先用
+真查询，禁止编造气温 / 降雨概率
+v Ctools
+124
+tools：［
+126
+select_destination_tool，
+>心 mcp_tools.py
+127
+go_back_to_requirement.|
+∞ 拖瘦至此上传
+>心 memory_tools.py
+query-destination.info，
+#《 本章新增：Advanced RAG 目的地知识查询
+>心 router_query.py
+129
+*search_tools，
+＃ 第 06 章的 Tavily 搜索仍保留（互补）
+>心 state_transition.py
+*weather_tools，
+131
+utils
+update_travel_style_tool，
+132
+add_travel_record_tooL，
+init
+check_current_progress，
+心 config.py
+134
+」.
+本章新增：Advanced RAG 目的地知识查询
+心 main.py
+'requires'：［'user_requirement"l.
+a data
+136
+>自logs
+137
+138
+> •o scripts
+139
+步骤 3：交通规划
+H.env
+i
+-gitignore
+141
+"transport_planning'：｛
+C.Dvthon-version
+'prompt：
+•••你是交通规划专家。
+• knowgo_travel_backend >app >agents >handoffs 〉心 step_config.py
+127:40
+回TRAE
+knowgo_travel_backend M Islands Dark • CRLF UTF-8 艮4个空格 wv （knowgo_travel_backend） ［Python 3.12.13］ 2

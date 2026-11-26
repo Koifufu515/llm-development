@@ -1,0 +1,83 @@
+"""交通步「对话内改选 + 航班结构性不可查降级」回归演示（纯逻辑，无需密钥 / 数据库 / 网络）
+复现故障会话：表单只勾选航班、目的地苏州（无机场码）→航班卡片每轮为空；用户回复改高铁，状态不变，兜底话术重复。
+脚本断言3个核心判定，任一不满足直接抛出 AssertionError：
+① detect_transport_switch：用户原话识别改选目标，支持前置/后置否定词
+② apply_transport_switch 落库后，卡片路由切换为新交通方式
+③ flight_unreachable_cities：区分结构性不可查与可查航班线路
+"""
+import asyncio
+
+from app.capabilities.flight_multi_segment.flight_flow import flight_card_mode, flight_unreachable_cities
+from app.capabilities.train_multi_segment.train_flow import multi_leg_train
+from app.services.transport_switch_service import (
+    apply_transport_switch,
+    current_transport_mode,
+    detect_transport_switch,
+)
+
+# 测试用例：(用户原话, 当前生效方式, 期望改选目标)；None代表不修改状态
+CASES = [
+    ("高铁吧", "flight", "train"),                   # 故障现场用例
+    ("我说我选择高铁", "flight", "train"),
+    ("要不高铁吧", "flight", "train"),                # "要不"不属于否定
+    ("不如坐动车", "flight", "train"),
+    ("不坐飞机了，改高铁", "flight", "train"),        # 前置否定，句尾为目标
+    ("飞机没有的话就自驾吧", "flight", "driving"),    # 后置否定
+    ("高铁太慢了，还是坐飞机吧", "train", "flight"),
+    ("改自驾", "train", "driving"),
+    ("航班", "flight", None),                        # 重申当前方式，不修改
+    ("确认", "flight", None),                        # 纯确认语句
+    ("G1234", "train", None),                        # 选择车次，不修改
+    ("我已按卡片选定全部车次：北京→苏州 G1", "train", None),   # 卡片自动合成消息，不触发改选
+]
+
+def state(transport: list, dest: str) -> dict:
+    return {"current_step": "transport_planning", "selected_destination": dest,
+            "user_requirement": {"departure_city": "北京", "departure_date": "2026-09-30",
+                                 "travel_days": 4, "transport_types": transport}}
+
+class FakeAgent:
+    """FakeAgent，仅记录状态写入操作，不访问数据库"""
+    def __init__(self) -> None:
+        self.updates: list[dict] = []
+
+    async def aupdate_state(self, config: dict, values: dict) -> None:
+        self.updates.append(values)
+
+def routes(st: dict) -> str:
+    return (f"当前方式 {current_transport_mode(st)!s:6} | 航班卡片 {flight_card_mode(st)!s:5} "
+            f"| 高铁卡片 {multi_leg_train(st)}")
+
+async def main() -> None:
+    print("① 改选意图识别")
+    for text, current, want in CASES:
+        got = detect_transport_switch(text, current)
+        print(f"  {'✅' if got == want else '❌'} 「{text}」（当前 {current}）→ {got}")
+        assert got == want, f"{text!r}: 期望 {want}，实际 {got}"
+
+    print("\n② 重放故障会话：北京出发、表单只勾航班、目的地苏州")
+    st = state(["flight"], "苏州")
+    print(f"  改选前：{routes(st)}")
+    agent = FakeAgent()
+    label = await apply_transport_switch(agent, {"configurable": {"thread_id": "demo"}}, st, "高铁吧")
+    after = {**st, **agent.updates[-1]}
+    print(f"  用户回「高铁吧」→ 回执「{label}」，落库 transport_types="
+          f"{after['user_requirement']['transport_types']}")
+    print(f"  改选后：{routes(after)}")
+    assert label == "高铁" and multi_leg_train(after) and not flight_card_mode(after)
+    # 清空交通步旧字段，防止残留字段干扰路由判断
+    assert after["selected_transport"] is None and after["leg_selections"] is None
+    # 非交通步骤不触发改选逻辑
+    other = {**st, "current_step": "destination_recommendation"}
+    assert await apply_transport_switch(agent, {}, other, "坐高铁去") is None
+    assert len(agent.updates) == 1, "非交通步不应写入状态"
+
+    print("\n③ 航班结构性不可查判定（用于降级高铁/提示重试）")
+    for dest, want in (("苏州", ["苏州"]), ("上海", []), ("上海、苏州", [])):
+        got = flight_unreachable_cities(state(["flight"], dest))
+        print(f"  {'✅' if got == want else '❌'} 北京出发 → {dest}：结构性不可查城市 {got}")
+        assert got == want, f"{dest}: 期望 {want}，实际 {got}"
+
+    print("\n全部断言通过 ✅")
+
+asyncio.run(main())

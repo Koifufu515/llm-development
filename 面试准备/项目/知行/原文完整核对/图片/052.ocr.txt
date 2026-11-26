@@ -1,0 +1,25 @@
+Windows 事件循环选型的两难
+SelectorEventLoop vs ProactorEventLoop —两个都要，怎么办？
+两种事件循环，各有一项致命缺陷！
+SelectorEventLoop
+ProactorEventLoop
+psycopg 兼容
+X
+psycopg 崩溃
+数据库异步驱动正常工作
+Psycopg cannot use
+V 选它！
+the'ProactorEventLoop'
+VS
+X
+起不了 stdio
+支持 stdio
+NotImplementedError
+子进程通信正常
+（windows 上 Selector
+V 好用
+不支持子进程）
+两个都要，怎么办？
+psycopg需要 Selector•stdio 需要 Proactor•同一进程只能选一个
+核心矛盾：SelectorEventLoop 兼容 psycopg但在 Windows上不支持子进程（起不了 stdio）；ProactorEventLoop 支持
+stdio 但会让psycopg崩溃——同一进程只能设一个事件循环，两个需求互斥。

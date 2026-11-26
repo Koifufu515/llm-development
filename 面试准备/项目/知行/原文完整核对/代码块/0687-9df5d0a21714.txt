@@ -1,0 +1,3 @@
+传错城   → 不写任何字段 | ❌ 当前待确认的是第 1/Chapter_Two/2_ 个城市「天津」，但本次 hot …
+第 1 城  → {'selected_hotels': ['天津 如家酒店 199元/晚'], 'stay_cursor': 1}
+最后一城 → {'selected_accommodation_types': ['economy_hotel'], 'selected_hotels': ['天津 如家酒店 199元/晚', '上海 汉庭酒店 259元/晚'], 'current_step': 'food_planning', 'stay_cursor': 2}

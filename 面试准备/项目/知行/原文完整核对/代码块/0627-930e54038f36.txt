@@ -1,0 +1,86 @@
+"""第 12 章端到端冒烟：注册 → 闲聊 / 直查 / 快速通道规划三条 SSE → 读历史 → 读清单 → 异常路径 （需服务已启动，PG / Redis / MCP / 各密钥齐全；规划那一轮较慢，约 1 分钟） """
+import asyncio
+import json
+import uuid
+from datetime import date, timedelta
+from unittest.mock import patch
+
+import httpx
+
+from app.models.base import async_session_maker
+from app.services.chat_contract_service import run_chat_turn
+
+BASE = "http://localhost:8000/api/v1"
+FORM = f"""我想去杭州旅行 - 出发地：福州 - 出发日期：{(date.today() + timedelta(days=5)).isoformat()} - 旅行天数：3 天 - 出行人数：2 成人 0 儿童 - 人均预算：3000 元 - 交通方式：高铁 - 住宿偏好：经济型 - 餐饮偏好：本地小吃 - 全程交给 AI 自动确认，无需逐步询问"""
+
+def read_sse(c: httpx.Client, headers: dict, conv_id: str, content: str) -> list[dict]:
+    """客户端读帧：前端 fetch 读流那段代码的 Python 版（测试驱动，不是后端逻辑）"""
+    frames, buf = [], ""
+    with c.stream("POST", "/messages", headers=headers,
+                  json={"conversation_id": conv_id, "content": content}) as r:
+        for chunk in r.iter_text():
+            buf += chunk
+            while "\n\n" in buf:
+                frame, buf = buf.split("\n\n", 1)
+                if frame.startswith("data: "):
+                    frames.append(json.loads(frame[6:]))
+    return frames
+
+async def error_path(user_id: str, conv_id: str) -> list[dict]:
+    """场景 5：进程内 patch 路由让它抛错，验证 finally 里的 close"""
+    async with async_session_maker() as db:
+        with patch("app.services.chat_contract_service.chat_route",
+                   side_effect=RuntimeError("路由服务不可用")):
+            stream = await run_chat_turn(db, user_id, conv_id, "随便一条消息")
+            return [ev async for ev in stream]
+
+async def main():  # ✅ 改成 async def
+    sfx = uuid.uuid4().hex[:6]
+    with httpx.Client(base_url=BASE, timeout=300) as c:
+        body = c.post("/users/register", json={"username": f"smoke_{sfx}", "email": f"smoke_{sfx}@example.com",
+                                               "password": "secret123"}).json()
+        assert body["code"] == 200 and "data" in body, body
+
+        # 包裹契约 {code,msg,data} 生效
+        token, user_id = body["data"]["access_token"], body["data"]["user"]["id"]
+        H = {"Authorization": f"Bearer {token}"}
+        conv_ids = [c.post("/conversations", headers=H, json={}).json()["data"]["id"] for _ in range(4)]
+
+        # 场景 1：闲聊 → 不进状态机、不出清单
+        roles = [f["role"] for f in read_sse(c, H, conv_ids[0], "你好呀")]
+        assert "assistant" in roles and "itinerary_plans" not in roles
+        assert roles.count("done") == 1 and roles[-1] == "done", roles
+        print("✅ 场景 1 闲聊：帧序", roles[:3], "…", roles[-1])
+
+        # 场景 2：直查 → 代码渲染的真实班次表，不出清单
+        frames = read_sse(c, H, conv_ids[1], "查一下明天福州到深圳的高铁票")
+        texts = "".join(str(f["content"]) for f in frames if f["role"] == "assistant")
+        assert "itinerary_plans" not in [f["role"] for f in frames] and ("12306" in texts or "班次" in texts)
+        print("✅ 场景 2 直查：", texts.strip().splitlines()[0][:40], "…")
+
+        # 场景 3：自动确认表单 → 快速通道 → 清单帧 pending → success → done
+        frames = read_sse(c, H, conv_ids[2], FORM)
+        plans = [f["content"] for f in frames if f["role"] == "itinerary_plans"]
+        assert frames[-1]["role"] == "done" and plans and plans[0]["status"] == "pending", plans
+        plan_id = plans[-1]["id"] if plans[-1]["status"] == "success" else None
+        print("✅ 场景 3 规划：清单帧", [p["status"] for p in plans], "plan_id =", plan_id)
+
+        # 场景 4：读历史 + 读清单 → 双存 pattern 与清单读回
+        msgs = c.get("/messages", headers=H, params={"conversation_id": conv_ids[2]}).json()["data"]["messages"]
+        last = [m for m in msgs if m["role"] == "assistant"][-1]
+        assert {"original", "inference_steps"} <= set(last["extra_info"]), last["extra_info"].keys()
+        print(f"✅ 场景 4 历史：content {len(last['content'])} 字 / original {len(last['extra_info']['original'])} 字")
+        if plan_id:
+            plan = c.get(f"/itinerary-plans/{plan_id}", headers=H).json()["data"]
+            print("✅ 场景 4 清单：", plan["title"], "|", len(plan["itinerary_list"]), "天")
+
+    # 场景5：这里注意！async函数内部不要再 asyncio.run()，改用 await
+    frames = await error_path(user_id, conv_ids[3])
+    assert frames[-1]["role"] == "done" and frames[-1]["code"] == 500, frames
+    print("✅ 场景 5 异常：", [f["role"] for f in frames], "→ finally 里的 close 生效")
+    print("\n🎉 第 12 章端到端冒烟全部通过")
+
+if __name__ == "__main__":
+    import selectors
+    # 外层只启动一次事件循环，main现在是async协程
+    asyncio.run(main(), loop_factory=lambda: asyncio.SelectorEventLoop(selectors.SelectSelector()))

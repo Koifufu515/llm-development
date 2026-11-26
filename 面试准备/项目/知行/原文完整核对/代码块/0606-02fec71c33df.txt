@@ -1,0 +1,136 @@
+# ===== 行程正文归代码渲染（模型只提交结构化数据） =====
+# 结构化数据经过Pydantic校验，正文与预算表由本函数确定性拼接。
+_BODY_READY_MARK = "天行程结构"
+_SLOT_RENDER = (("morning", "上午"), ("noon", "中午"), ("afternoon", "下午"), ("evening", "晚上"))
+_INVITE_TAIL = "\n\n如需调整（天数/预算/目的地等），直接告诉我即可。"
+
+def _render_confirmed_block(transport_legs: list | None, hotels: list | None) -> str:
+    """已确认的交通与住宿摘要块（数据来自状态机已落库的
+    selected_transport_legs / selected_hotels）。两者都空则整块不出——
+    本地零段游玩、或品牌兜底缺失时不硬凑。
+    """
+    # 过滤交通信息，去掉空字符串
+    legs = [str(x).strip() for x in (transport_legs or []) if str(x).strip()]
+    # 过滤住宿信息，去掉空字符串
+    stays = [str(x).strip() for x in (hotels or []) if str(x).strip()]
+    # 交通和住宿全都没有，直接返回空串，不输出这一块
+    if not legs and not stays:
+        return ""
+    # 开始拼markdown内容
+    out = ["### 已确认的交通与住宿\n"]
+    # 有交通信息就追加交通板块
+    if legs:
+        out.append("\n- **交通**\n")
+        out.extend(f"  - {t}\n" for t in legs)
+    # 有住宿信息就追加住宿板块
+    if stays:
+        out.append("\n- **住宿**\n")
+        out.extend(f"  - {h}\n" for h in stays)
+    return "".join(out)
+
+def _render_itinerary_body(
+    days: list, budget: dict, req: dict,
+    transport_legs: list | None = None, hotels: list | None = None,
+) -> str:
+    """结构化逐日行程 → Markdown 正文 + 预算明细（全部为代码生成，数字不来自模型）。
+    transport_legs / hotels：状态机已确认并落库的交通段与住宿
+    （selected_transport_legs / selected_hotels）。
+    """
+    # 没有行程天数数据，直接返回空
+    if not days:
+        return ""
+    # 先拿到已经确认的交通住宿摘要文本
+    confirmed = _render_confirmed_block(transport_legs, hotels)
+    # 如果有确认信息，就带上，否则直接从详细行程开始
+    lines = [confirmed + "\n", "### 详细行程\n"] if confirmed else ["### 详细行程\n"]
+
+    # 循环每一天的行程数据
+    for d in days:
+        city = str(d.get("city") or "").strip()
+        # 拼Day标题，带上城市名（有就加，没有就只写Day数字）
+        lines.append(f"\n#### Day {d.get('day')}{' ' + city if city else ''}\n")
+        # 遍历上午/中午/下午/晚上四个时段
+        for key, label in _SLOT_RENDER:
+            # 取出当前时段的活动列表，过滤空内容
+            items = [str(x).strip() for x in (d.get(key) or []) if str(x).strip()]
+            lines.append(f"\n- **{label}**\n")
+            lines.extend(f"  - {it}\n" for it in items)
+        # 取出当天小贴士
+        tips = [str(x).strip() for x in (d.get("tips") or []) if str(x).strip()]
+        # 有小贴士才追加这一块
+        if tips:
+            lines.append("\n- **小贴士**：\n")
+            lines.extend(f"  - {t}\n" for t in tips)
+
+    # 拿到预算字典，为空就用空字典兜底
+    b = budget or {}
+    # 如果存在总预算，才渲染预算明细板块
+    if b.get("total"):
+        # 成人+儿童人数，兜底至少1个人，防止除以0
+        people = int(req.get("adult_count") or 0) + int(req.get("children_count") or 0) or 1
+        total = float(b.get("total") or 0)
+        per = total / people
+        # 和自动确认模式的预算函数口径保持一致，避免两处算出来结果不一样
+        day_count = int(req.get("travel_days") or 0) or len(days) or 1
+        nights = max(day_count - 1, 1)
+        # 房间数，向上取整，不用导入math库
+        rooms = max((people + 1) // 2, 1)
+        # 统计一共多少个不同的城市
+        city_count = len({str(d.get("city")).strip() for d in days
+                          if str(d.get("city") or "").strip()}) or 1
+        # 取出各项费用
+        transport_cost = float(b.get("transport") or 0)
+        accommodation_cost = float(b.get("accommodation") or 0)
+        food_cost = float(b.get("food") or 0)
+        attractions_cost = float(b.get("attractions") or 0)
+        misc_cost = float(b.get("misc") or 0)
+        total_legs = len(transport_legs or [])
+        # 交通部分的备注文案
+        transport_detail = (f"（{total_legs} 段 × 各段票价）" if total_legs
+                            else "（本地游玩，无城际交通段）")
+        # 计算单间每晚均价，除数为0就置0
+        hotel_price = (accommodation_cost / (nights * rooms)) if nights * rooms else 0.0
+        # 住宿备注文案，有没有真实酒店数据文案不一样
+        hotel_detail = (f"各城均价 {hotel_price:.0f} 元" if hotels
+                        else f"各城估算 {hotel_price:.0f} 元/晚（实时房价不可用）")
+        # 获取用户设置的预算上限
+        bmax = req.get("budget_max")
+        if isinstance(bmax, (int, float)) and bmax > 0:
+            # 判断有没有超预算，生成结论文字
+            verdict = "人均未超预算" if per <= bmax else "人均超预算（建议下调住宿档位或减天数）"
+        else:
+            verdict = "未提供预算上限，仅作参考"
+        # 判断门票是真实数据还是估算，对应不同备注，防止文字和金额矛盾
+        ticket_note = (f"（实时票价合计 {attractions_cost / people:.0f} 元/人）"
+                       if b.get("attractions_source") == "real" else "（按 200元/人/天 估算）")
+        # 拼接完整预算markdown块
+        lines.append(
+            f"\n### 预算明细（{people} 人 / {nights} 晚 / {rooms} 间房 / {city_count} 城）\n"
+            f"- **交通费用**：{transport_cost:.2f} 元"
+            f"（人均 {transport_cost / people:.0f} 元，{transport_detail}）\n"
+            f"- **住宿费用**：{accommodation_cost:.2f} 元"
+            f"（{rooms} 间 × {nights} 晚 × {hotel_detail}）\n"
+            f"- **餐饮费用**：{food_cost:.2f} 元（150元/人/天）\n"
+            f"- **景点门票**：{attractions_cost:.2f} 元{ticket_note}\n"
+            f"- **其他杂费**：{misc_cost:.2f} 元\n"
+            f"**总计：{total:.2f} 元（{people} 人总价）｜人均：{per:.2f} 元**\n"
+            f"预算结论：{verdict}\n"
+        )
+    else:
+        # 没有预算数据，打警告日志，不输出预算，不编造数字
+        app_logger.warning("⚠️ 行程渲染时缺少预算数据，本轮不输出预算明细（避免编造数字）")
+    # 把所有行拼在一起，去掉首尾空白返回
+    return "".join(lines).strip()
+
+# 代码渲染正文分段推送，模拟流式观感
+_RENDER_CHUNK = 48
+_RENDER_DELAY = 0.025
+
+async def _push_rendered(stream: EventStream, text: str) -> None:
+    """把代码渲染的长正文按小段渐进推送（文本短于一段时零额外延迟）"""
+    # 按固定长度切分文本，一块一块推送给前端
+    for i in range(0, len(text), _RENDER_CHUNK):
+        stream.push(make_event(ROLE_ASSISTANT, text[i:i + _RENDER_CHUNK]))
+        # 还没到最后一段，才加一点延迟，模拟打字效果
+        if i + _RENDER_CHUNK < len(text):
+            await asyncio.sleep(_RENDER_DELAY)

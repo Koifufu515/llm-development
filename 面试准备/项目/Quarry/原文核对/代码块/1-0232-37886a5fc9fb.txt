@@ -1,0 +1,5 @@
+SELECT indexname,
+       pg_size_pretty(pg_relation_size(indexname::regclass)) AS size
+FROM pg_indexes
+WHERE tablename = 'chunks'
+ORDER BY pg_relation_size(indexname::regclass) DESC;

@@ -1,0 +1,2 @@
+SELECT count(*) FROM chunks
+WHERE level = 1 AND tokens @@ plainto_tsquery('simple', '兵马俑 的 门票 多少 钱');

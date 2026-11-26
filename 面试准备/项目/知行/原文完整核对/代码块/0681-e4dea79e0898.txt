@@ -1,0 +1,11 @@
+"""_is_confirm_reply 演示：整句去掉首尾空白与结尾标点后，正好等于一个确认词才算确认（纯函数，无需密钥）"""
+from app.core.middleware import _is_confirm_reply
+
+for text in ["确认", "好的。", "OK！", " 满意 ", "满意，但第二天换一下",
+             "G1630吧", "好的，但换个酒店", "确认一下行程", ""]:
+    print(f"{text!r:26} → {_is_confirm_reply(text)}") #_is_confirm_reply 演示：整句去掉首尾空白与结尾标点后，正好等于一个确认词才算确认（纯函数，无需密钥）"""
+from app.core.middleware import _is_confirm_reply
+
+for text in ["确认", "好的。", "OK！", " 满意 ", "满意，但第二天换一下",
+             "G1630吧", "好的，但换个酒店", "确认一下行程", ""]:
+    print(f"{text!r:26} → {_is_confirm_reply(text)}")

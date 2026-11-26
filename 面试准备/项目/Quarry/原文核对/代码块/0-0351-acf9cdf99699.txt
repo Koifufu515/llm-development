@@ -1,0 +1,2 @@
+            "fact_model": self.fact_model or None,
+            "fact_ttl_days": self.fact_ttl_days,

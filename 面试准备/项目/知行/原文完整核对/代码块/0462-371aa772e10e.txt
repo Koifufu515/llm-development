@@ -1,0 +1,15 @@
+# 全局异常处理中间件：兜底 500，避免裸堆栈直接抛给前端
+async def global_http_middleware(request: Request, call_next: Any):
+    try:
+        return await call_next(request)
+    except Exception as err:
+        app_logger.exception("全局异常")  # ★ 完整堆栈进日志，是排查线上问题的唯一依据
+        return response([], 500, str(err))  # ★ 只把一句摘要返回前端，不暴露文件路径/内部函数
+
+# 全局参数校验器：RequestValidationError → 422 + 中文提示
+async def validation_exception_handler(request: Request, exc: Any):
+    first_error = exc.errors()[0]
+    msg = first_error["msg"]
+    if msg in ["Field required"]:
+        msg = "缺少必传参数"
+    return response(code=422, msg=msg, data=[])

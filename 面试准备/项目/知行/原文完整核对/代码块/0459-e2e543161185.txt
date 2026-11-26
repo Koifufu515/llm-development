@@ -1,0 +1,25 @@
+"""忘了 close 会怎样：同样推一帧，不 close 的那个流，消费者永远等下去（纯逻辑，无需密钥）"""
+import asyncio
+
+from app.core.event_stream import EventStream
+from app.core.events import make_event, ROLE_ASSISTANT
+
+async def drain(stream: EventStream) -> list:
+    """测试驱动：消费者，一直读到 StopAsyncIteration 为止"""
+    return [event async for event in stream]
+
+async def main():
+    ok = EventStream()
+    ok.push(make_event(ROLE_ASSISTANT, "推一帧"))
+    ok.close()                                           # ✅ 记得 close
+    print("有 close →", await asyncio.wait_for(drain(ok), timeout=2))
+
+    bad = EventStream()
+    bad.push(make_event(ROLE_ASSISTANT, "推一帧"))       # ❌ 忘了 close
+    try:
+        await asyncio.wait_for(drain(bad), timeout=2)
+    except asyncio.TimeoutError:
+        print("没 close → 等了 2 秒还没结束：消费者卡在 await queue.get()，前端就是一直转圈圈")
+
+if __name__ == "__main__":
+    asyncio.run(main())

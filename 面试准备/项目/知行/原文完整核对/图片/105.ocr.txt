@@ -1,0 +1,125 @@
+共享口径工具 •住在快速通道文件里的”段与天"算法
+这5个函数决定“要去哪几座城、分几段交通、每座城待几天”。它们写在 express_planning_service 里，却被状态机、中间件、住宿卡片、执行器和
+编排层借用了 14处——交通日期和住宿日期能对得上，靠的就是大家用同一套算法。
+FILE app/services/express_planning_service.py • L212-269
+大段与天的唯一口径
+_split_cities lfn
+L212
+ordered_play_cities ［fn
+L226
+_plan_cities Lfn
+L242
+把目的地字符串按中英文逗号、顿号切成城市列表，去重并
+算出要住、要玩的城市：出发地只有本身也写进目的地时才
+上一个函数的快速通道版薄壳，直接吃
+保持原顺序。
+算一站，并挪到最前。
+ExpressRequirement。
+例："上海、北京，上海"—［上海，北京］
+北京—天津、上海=［天津，上海］；北京—北京、天津=
+req（北京，”天津、上海"）一>［天津，上海］
+［北京，天津］
+何时调用 任何地方要把目的地字符串变成城市列表时
+何时调用 快速通道里要用城市序列时
+谁来调用 本文件 ordered_play_cities _select_choices
+何时调用 排住宿站、分配天数、算段日期时
+谁来调用 本文件5处：_collect_context_day_cities
+_build_budget ；跨模块了处跨模块
+谁来调用 本文件 _plan_cities ；跨模块3处跨模块）
+_generate_itinerary（2处）
+结果交给 城市列表回给调用方
+结果交给 节点城市序列，再喂给 _stay_nights 分天数
+run_express_planning
+结果交给 城市序列；5个里唯一没被外部借用的
+_build_legs 而
+L247
+_stay_nights Lfn
+L259
+一个例子走一遍
+拼交通段：出发地一各城一回出发地，相邻两站同城的段
+把总天数分给各站：第一站固定1天，其余均分，余数先给
+北京出发 天津、上海•5天•10-20出发
+直接丢掉。
+靠前的站。
+城市
+［天津，上海］
+北京，［天津，上海］ 北京—天津/ 天津—上海/上海—北京；北
+（5天，2站） ［1,41；（6,3）- ［1,3,21；（4,1） ［41
+交通段
+北京-天津•天津-上海• 上海-北京
+京，［北京］->0段
+天数
+［1,4］
+算逐日城市、段日期、住宿窗口时
+段日期
+10-20•10-21•10-24
+何时调用
+要知道"一共几段、每段从哪到哪"时
+本文件_collect_context（酒店逐城窗口）、
+逐日城市
+天津•上海×4
+谁来调用
+本文件_collect_context _select_choices
+_day_cities；跨模块3处蹭模块
+住宿窗口
+天津 10-20-21 上海 10-21-24
+_build_budget；跨模块1处跨模块
+结果交给 每站天数列表，合计等于总天数
+结果交给
+（from，to）列表；经 _expected_Legs 扩散到整
+个交通步
+T00LS/
+cOre/
+capabilities/hotel_multi_segment/
+services/
+services/
+state_transition.py
+middleware.py
+hotel_flow.py
+chat_stream_executor.py
+chat_contract_service.py
+6处
+3处
+2处
+2处
+1处
+-expected_Legs
+_leg_query_date
+-stay_Cities
+_zero_leg_guard
+_manual_multi_city_day_warning
+_split_cities +_build_legs•状
+ordered_play_Cities +
+ordered_play_cities•住宿站点
+_split_cities•判断是不是本地游玩
+_SPLit_cities•手动模式多城天数不
+态机的段列表
+_stay_nights•每段的乘车日期
+足时告警
+_stay_windows
+execute_turn
+_multi_city_names
+awrap_model_call
+_stay_nights•每站入住/离店日，未
+_split_cities •后处理⑤ 取天气城市
+_split_cities•判是否多城
+_split_cities•零段直通时摘掉交通
+站截到第 N天
+查询工具
+generate_itinerary_tool
+_split_cities • 天数下限=城市数×
+_day_city_map
+ordered_play_cities +
+_stay_nights •补每天城市
+二级扩散 两个“中转站”把口径继续带到更多地方
+state_transition._expected_legs 状态机的段口径
+middleware._leg_query_date 段日期
+select_transport_tool 段游标 中间件 leg_progress
+中间件 set_turn_context 当前段
+中间件车票入参回填的日期
+高铁/ 航班卡片_legs_with_dates
+高铁/航班卡片_Legs_with_dates
+执行器_zero_leg_guard/_leg_context
+本文件_collect_context 的段日期
+改这里等于同时改五个模块：这5个函数决定了“去几座城、分几段、每城待几天”，状态机的段游标、中间件的段日期、住宿卡片的入住窗口、快速通道的并行查询都从这里展开，所以交通日期和住
+宿日期能对得上。它们写在快速通道文件里，靠函数内懒加载被借走。

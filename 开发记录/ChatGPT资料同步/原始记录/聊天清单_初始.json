@@ -1,0 +1,50 @@
+{
+  "source": "codex-app-tools.list_threads",
+  "projectId": "g-p-6a845a1f511481918ee46e4192ccd693",
+  "projectLabel": "实习",
+  "snapshotDate": "2026-10-23",
+  "threads": [
+    {
+      "id": "6ad5e692-81ac-83ec-86f8-218b792fce2e",
+      "kind": "chatgpt",
+      "status": "idle",
+      "updatedAt": 1792759728.753,
+      "projectId": "g-p-6a845a1f511481918ee46e4192ccd693",
+      "title": "大模型开发",
+      "summary": null,
+      "isUnread": false
+    },
+    {
+      "id": "6acafbcf-ceb8-83ec-b62c-3da1b492c842",
+      "kind": "chatgpt",
+      "status": "idle",
+      "updatedAt": 1792739972.228,
+      "projectId": "g-p-6a845a1f511481918ee46e4192ccd693",
+      "title": "面经整理",
+      "summary": null,
+      "isUnread": false
+    },
+    {
+      "id": "6abcbb1e-96c0-83ec-9976-ddf5f94abaae",
+      "kind": "chatgpt",
+      "status": "idle",
+      "updatedAt": 1792661884.313,
+      "projectId": "g-p-6a845a1f511481918ee46e4192ccd693",
+      "title": "哈啰实习",
+      "summary": null,
+      "isUnread": false
+    },
+    {
+      "id": "6aae8f48-8a10-83ec-851f-fc0ea3852626",
+      "kind": "chatgpt",
+      "status": "idle",
+      "updatedAt": 1792396708.817,
+      "projectId": "g-p-6a845a1f511481918ee46e4192ccd693",
+      "title": "模拟面试",
+      "summary": null,
+      "isUnread": false
+    }
+  ],
+  "archivedProjectThreads": [],
+  "archivedScanReachedEnd": true
+}

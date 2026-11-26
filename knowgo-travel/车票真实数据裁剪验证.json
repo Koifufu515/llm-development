@@ -1,0 +1,351 @@
+{
+  "status": "ok",
+  "query": {
+    "date": "2026-10-27",
+    "fromStation": "上海",
+    "toStation": "苏州"
+  },
+  "source": "12306 via Joooook/12306-mcp",
+  "source_url": "https://kyfw.12306.cn/",
+  "options": [
+    {
+      "option_id": "aecf1878439c53fb8620",
+      "train_code": "G7032",
+      "from_station": "上海",
+      "to_station": "苏州",
+      "departure_date": "2026-10-27",
+      "departure_time": "05:45",
+      "arrival_date": "2026-10-27",
+      "arrival_time": "06:10",
+      "duration": "00:25",
+      "seats": [
+        {
+          "name": "二等座",
+          "availability": "有",
+          "price_yuan": 30
+        },
+        {
+          "name": "一等座",
+          "availability": "有",
+          "price_yuan": 48
+        },
+        {
+          "name": "无座",
+          "availability": "有",
+          "price_yuan": 30
+        }
+      ]
+    },
+    {
+      "option_id": "8878cc253ca0bbe4a493",
+      "train_code": "D2206",
+      "from_station": "上海虹桥",
+      "to_station": "张家港",
+      "departure_date": "2026-10-27",
+      "departure_time": "06:01",
+      "arrival_date": "2026-10-27",
+      "arrival_time": "06:53",
+      "duration": "00:52",
+      "seats": [
+        {
+          "name": "二等座",
+          "availability": "有",
+          "price_yuan": 40
+        },
+        {
+          "name": "一等座",
+          "availability": "有",
+          "price_yuan": 64
+        },
+        {
+          "name": "无座",
+          "availability": "有",
+          "price_yuan": 40
+        }
+      ]
+    },
+    {
+      "option_id": "b047f255d2ad6de0244f",
+      "train_code": "G3124",
+      "from_station": "上海",
+      "to_station": "苏州",
+      "departure_date": "2026-10-27",
+      "departure_time": "06:06",
+      "arrival_date": "2026-10-27",
+      "arrival_time": "06:38",
+      "duration": "00:32",
+      "seats": [
+        {
+          "name": "二等座",
+          "availability": "有",
+          "price_yuan": 39
+        },
+        {
+          "name": "一等座",
+          "availability": "有",
+          "price_yuan": 63
+        },
+        {
+          "name": "无座",
+          "availability": "有",
+          "price_yuan": 39
+        }
+      ]
+    },
+    {
+      "option_id": "a144ff59362ec3e1b7b1",
+      "train_code": "G1970",
+      "from_station": "上海虹桥",
+      "to_station": "苏州北",
+      "departure_date": "2026-10-27",
+      "departure_time": "06:09",
+      "arrival_date": "2026-10-27",
+      "arrival_time": "06:32",
+      "duration": "00:23",
+      "seats": [
+        {
+          "name": "二等座",
+          "availability": "有",
+          "price_yuan": 38
+        },
+        {
+          "name": "一等座",
+          "availability": "有",
+          "price_yuan": 65
+        },
+        {
+          "name": "商务座",
+          "availability": "7",
+          "price_yuan": 126
+        }
+      ]
+    },
+    {
+      "option_id": "308269e38fa4a523e79e",
+      "train_code": "D352",
+      "from_station": "上海虹桥",
+      "to_station": "苏州",
+      "departure_date": "2026-10-27",
+      "departure_time": "06:12",
+      "arrival_date": "2026-10-27",
+      "arrival_time": "06:46",
+      "duration": "00:34",
+      "seats": [
+        {
+          "name": "二等座",
+          "availability": "有",
+          "price_yuan": 31
+        },
+        {
+          "name": "一等座",
+          "availability": "有",
+          "price_yuan": 51
+        },
+        {
+          "name": "无座",
+          "availability": "有",
+          "price_yuan": 31
+        }
+      ]
+    },
+    {
+      "option_id": "668fe4cb7b87d71f1f0b",
+      "train_code": "G1802",
+      "from_station": "上海虹桥",
+      "to_station": "苏州北",
+      "departure_date": "2026-10-27",
+      "departure_time": "06:13",
+      "arrival_date": "2026-10-27",
+      "arrival_time": "06:36",
+      "duration": "00:23",
+      "seats": [
+        {
+          "name": "二等座",
+          "availability": "有",
+          "price_yuan": 40
+        },
+        {
+          "name": "一等座",
+          "availability": "有",
+          "price_yuan": 68
+        },
+        {
+          "name": "商务座",
+          "availability": "11",
+          "price_yuan": 134
+        }
+      ]
+    },
+    {
+      "option_id": "64dbfc17aefb8a1567cc",
+      "train_code": "G7080",
+      "from_station": "上海",
+      "to_station": "苏州",
+      "departure_date": "2026-10-27",
+      "departure_time": "06:19",
+      "arrival_date": "2026-10-27",
+      "arrival_time": "06:52",
+      "duration": "00:33",
+      "seats": [
+        {
+          "name": "二等座",
+          "availability": "有",
+          "price_yuan": 35
+        },
+        {
+          "name": "一等座",
+          "availability": "18",
+          "price_yuan": 56
+        },
+        {
+          "name": "商务座",
+          "availability": "6",
+          "price_yuan": 122
+        }
+      ]
+    },
+    {
+      "option_id": "14576640aae3834407bf",
+      "train_code": "G3091",
+      "from_station": "上海虹桥",
+      "to_station": "苏州南",
+      "departure_date": "2026-10-27",
+      "departure_time": "06:20",
+      "arrival_date": "2026-10-27",
+      "arrival_time": "06:53",
+      "duration": "00:33",
+      "seats": [
+        {
+          "name": "二等座",
+          "availability": "有",
+          "price_yuan": 26
+        },
+        {
+          "name": "一等座",
+          "availability": "3",
+          "price_yuan": 42
+        },
+        {
+          "name": "商务座",
+          "availability": "无",
+          "price_yuan": 92
+        }
+      ]
+    },
+    {
+      "option_id": "2fbab07030866076d223",
+      "train_code": "D2928",
+      "from_station": "上海松江",
+      "to_station": "苏州园区",
+      "departure_date": "2026-10-27",
+      "departure_time": "06:23",
+      "arrival_date": "2026-10-27",
+      "arrival_time": "07:23",
+      "duration": "01:00",
+      "seats": [
+        {
+          "name": "二等座",
+          "availability": "有",
+          "price_yuan": 38
+        },
+        {
+          "name": "一等座",
+          "availability": "有",
+          "price_yuan": 62
+        },
+        {
+          "name": "无座",
+          "availability": "有",
+          "price_yuan": 38
+        }
+      ]
+    },
+    {
+      "option_id": "f3bab71250be8588cc6e",
+      "train_code": "C3792",
+      "from_station": "上海南",
+      "to_station": "太仓",
+      "departure_date": "2026-10-27",
+      "departure_time": "06:23",
+      "arrival_date": "2026-10-27",
+      "arrival_time": "07:27",
+      "duration": "01:04",
+      "seats": [
+        {
+          "name": "二等座",
+          "availability": "有",
+          "price_yuan": 27
+        },
+        {
+          "name": "一等座",
+          "availability": "有",
+          "price_yuan": 43
+        },
+        {
+          "name": "无座",
+          "availability": "有",
+          "price_yuan": 27
+        }
+      ]
+    },
+    {
+      "option_id": "ee068391736ec995473c",
+      "train_code": "D2928",
+      "from_station": "上海松江",
+      "to_station": "苏州",
+      "departure_date": "2026-10-27",
+      "departure_time": "06:23",
+      "arrival_date": "2026-10-27",
+      "arrival_time": "07:42",
+      "duration": "01:19",
+      "seats": [
+        {
+          "name": "二等座",
+          "availability": "有",
+          "price_yuan": 41
+        },
+        {
+          "name": "一等座",
+          "availability": "有",
+          "price_yuan": 68
+        },
+        {
+          "name": "无座",
+          "availability": "有",
+          "price_yuan": 41
+        }
+      ]
+    },
+    {
+      "option_id": "0ca1e6bd7cb952642542",
+      "train_code": "C3792",
+      "from_station": "上海南",
+      "to_station": "常熟",
+      "departure_date": "2026-10-27",
+      "departure_time": "06:23",
+      "arrival_date": "2026-10-27",
+      "arrival_time": "07:48",
+      "duration": "01:25",
+      "seats": [
+        {
+          "name": "二等座",
+          "availability": "有",
+          "price_yuan": 42
+        },
+        {
+          "name": "一等座",
+          "availability": "有",
+          "price_yuan": 67
+        },
+        {
+          "name": "无座",
+          "availability": "有",
+          "price_yuan": 42
+        }
+      ]
+    }
+  ],
+  "original_count": 563,
+  "shown_count": 12,
+  "original_characters": 351616
+}

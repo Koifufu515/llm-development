@@ -1,0 +1,61 @@
+@tool
+async def query_hotel_multi_segment_tool(
+    segments: list[dict],
+    max_options_per_segment: int = 5,
+) -> str:
+    """并行查询多段住宿候选，返回可直接下发前端的 hotel_multi_segment skill payload。
+
+    适用于「多目的地闭环行程」需要一次性给出每站住宿候选的场景（如 石家庄→上海→石家庄）。
+    段与段之间**并发查询**，总耗时≈最慢一段；段数由 segments 长度决定，不是串行逐段查。
+    **每段独立判定模式**：能查到真实门店该段为 mode="hotel"，查不到则降级 mode="brand"，
+    同一份 payload 里两种模式可以混合（例如 h1 门店 + h2 品牌）。
+    本工具只查询与组装，不做推荐排序、不锁房、不下单。
+
+    Args:
+        segments: 住宿段列表，按行程顺序排列。每项含 city（城市）、checkInDate（入住
+            YYYY-MM-DD）、checkOutDate（离店 YYYY-MM-DD）、guestCount（人数，可选）、
+            priceLevel（档位，可选）。
+        max_options_per_segment: 每段向 MCP 请求的门店候选上限，默认 5。
+
+    Returns:
+        JSON 文本 {"skill_name":"hotel_multi_segment","segments":[...]}。
+        **请原样下发给前端 UI Skill**：不要改写字段名、不要增删 segments、不要自己再校验日期；
+        某段 mode="brand" 时如实告知用户"该城市实时酒店报价暂不可用，仅可选择品牌"。
+    """
+    payload = await build_hotel_multi_segment_payload(segments, max_options_per_segment)
+    return payload.model_dump_json()
+
+@tool
+async def submit_hotel_multi_segment_tool(segments: list[dict]) -> str:
+    """接收前端一次性回传的全部住宿段选择，只做基础合法性校验。
+
+    Args:
+        segments: 前端 onSubmit 抛回的数组，每项为
+            {"segment_id": "h1", "mode": "hotel", "hotel_id": "h1-1", "brand_id": ""}
+            或 {"segment_id": "h2", "mode": "brand", "hotel_id": "", "brand_id": "b2-2"}。
+            mode 必须与该段下发 payload 的 mode 一致；id 必须是该段候选里的 id。
+
+    Returns:
+        JSON 文本 {"ok": bool, "code": str, "msg": str, "accepted": [...], "texts": [...]}。
+        ok 为 false 时把 msg 原样告知用户，并请其在界面上改选后重新提交。
+    """
+    try:
+        payload = HotelMultiSegmentSubmitPayload.model_validate({"segments": segments})
+    except Exception as exc:                      # 结构不合法也走确定性回执，不抛错
+        return HotelMultiSegmentSubmitResult(
+            ok=False, code="INVALID_PAYLOAD", msg=f"提交数据结构不合法：{exc}"
+        ).model_dump_json()
+    result = validate_hotel_multi_submission(payload)
+    app_logger.info(f"🏨 hotel_multi_segment 提交校验：{result.code} / {result.msg}")
+    return result.model_dump_json()
+
+__all__ = [
+    "HOTEL_MULTI_SEGMENT_SKILL",
+    "build_hotel_multi_segment_payload",
+    "get_cached_payload",
+    "hotel_rank",
+    "pick_best_hotel",
+    "validate_hotel_multi_submission",
+    "query_hotel_multi_segment_tool",
+    "submit_hotel_multi_segment_tool",
+]

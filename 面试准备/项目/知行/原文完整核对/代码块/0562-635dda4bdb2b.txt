@@ -1,0 +1,8 @@
+async def _stream_plain(content: str, stream: EventStream) -> str:
+    """闲聊路径：直连 LLM 流式，不走规划 Agent"""
+    chunks: list[str] = []
+    async for chunk in get_llm().astream([HumanMessage(content=content)]):
+        if chunk.content:
+            chunks.append(chunk.content)
+            stream.push(make_event(ROLE_ASSISTANT, chunk.content))
+    return "".join(chunks)

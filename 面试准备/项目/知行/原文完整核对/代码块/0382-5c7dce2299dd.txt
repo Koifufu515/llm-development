@@ -1,0 +1,3 @@
+1.（可选）枚举校验：参数不在合法集合里就返错误 ToolMessage、不写状态、不推进
+2. 写业务字段：selected_destination / selected_food_types
+3. 推进 current_step：到下一步

@@ -1,0 +1,2 @@
+uv run python -m quarry.scripts.render_report --base baseline --new full
+Invoke-Item eval/report-*.html

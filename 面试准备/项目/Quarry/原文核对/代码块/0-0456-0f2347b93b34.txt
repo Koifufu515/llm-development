@@ -1,0 +1,4 @@
+    # ---------- 对外接口（第八章） ----------
+    api_request_timeout_s: float = Field(default=5.0, gt=0)
+    api_max_top_k: int = Field(default=20, ge=1, le=50)
+    api_log_queries: bool = True

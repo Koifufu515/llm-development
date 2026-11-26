@@ -1,0 +1,81 @@
+# ============== 5️.住宿+餐饮一站式确认工具 ==============
+
+@tool
+def select_accommodation_food_tool(
+        accommodation_types: list[str],  # 可多选
+        food_types: list[str],  # 可多选
+        runtime: ToolRuntime[None, TravelState] = None
+) -> Command:
+    """
+    一站式确认住宿与餐饮偏好，直接推进到行程生成步骤（AI 自动确认场景专用）。
+
+    为什么需要：住宿轮与餐饮轮同轮分别调用两个 select 工具时，两个 Command 并行
+    写 current_step 会触发 LangGraph InvalidUpdateError（单值通道并发写入冲突），
+    因此合并为一次原子调用，只写一次 current_step。
+
+    参数说明：
+    - accommodation_types: 住宿类型列表，可选值：
+      ["star_hotel", "economy_hotel", "hostel", "youth_hostel"]
+    - food_types: 餐饮类型列表，可选值：["specialty", "chain", "local"]
+    """
+    # 埋点：旧"住宿+餐饮一站式"推进器仍在被调用（仅自动确认模式使用）——
+    # 观测是否还有真实使用者，零命中后才可安全删除（只记日志，零副作用）
+    app_logger.info(f"[LEGACY] select_accommodation_food_tool 被调用：{accommodation_types} / {food_types}")
+
+    if not runtime.state.get("auto_confirm"):
+        app_logger.info("[guard] 手动模式越权调用 select_accommodation_food_tool，已拒绝")
+        return Command(update={"messages": [ToolMessage(
+            content=("❌ 当前为手动确认模式，禁止用一站式工具跳过用户确认。"
+                     "请按住宿→餐饮依次调用 select_accommodation_tool / select_food_tool，"
+                     "且每次调用前先展示候选并等用户回复确认。"),
+            tool_call_id=runtime.tool_call_id)]})
+
+    # 校验住宿枚举
+    valid_accom = {"star_hotel", "economy_hotel", "hostel", "youth_hostel"}
+    if not all(t in valid_accom for t in accommodation_types):
+        return Command(update={"messages": [ToolMessage(
+            content=f"住宿类型无效，请从以下选择：{', '.join(valid_accom)}",
+            tool_call_id=runtime.tool_call_id)]})
+
+    # 校验餐饮枚举
+    valid_food = {"specialty", "chain", "local"}
+    if not all(t in valid_food for t in food_types):
+        return Command(update={"messages": [ToolMessage(
+            content=f"餐饮类型无效，请从以下选择：{', '.join(valid_food)}",
+            tool_call_id=runtime.tool_call_id)]})
+
+    # 标签映射（与单独工具保持一致）
+    accom_labels = {
+        "star_hotel": "星级酒店", "economy_hotel": "经济酒店",
+        "hostel": "特色民宿", "youth_hostel": "青年旅社"
+    }
+    food_labels = {
+        "specialty": "🍽️ 特色美食", "chain": "🍔 连锁快餐", "local": "🥘 本地小吃"
+    }
+
+    # 单次 Command 原子写入：两个状态 + 一次 current_step 推进
+    return Command(update={
+        "messages": [ToolMessage(
+            content=(f"住宿偏好已确认：{', '.join(accom_labels[t] for t in accommodation_types)}；"
+                     f"餐饮偏好已确认：{', '.join(food_labels[t] for t in food_types)}"),
+            tool_call_id=runtime.tool_call_id)],
+        "selected_accommodation_types": accommodation_types,
+        "selected_food_types": food_types,
+        "current_step": "itinerary_generation"  # 直达步骤6（跳过餐饮轮）
+    })
+# ============== 6️.行程生成工具 ==============
+
+def _multi_city_day_floor_error(state) -> str | None:
+    """多目的地天数硬约束（代码层，非提示词）：天数 < 目的地数×2 时返回拒绝文案，否则 None。
+
+    单一实现、两处入口共用（generate_itinerary_tool 与 submit_itinerary_body_tool），
+    避免同一条下限公式各写一份后漂移；口径与快速通道同源（每个目的地 2 天）
+    """
+    _req = state.get("user_requirement") or {}
+    from app.services.express_planning_service import _split_cities
+    cities = _split_cities(_req.get("destination") or "")
+    need = len(cities) * 2
+    if len(cities) > 1 and int(_req.get("travel_days") or 0) < need:
+        return (f"❌ 您选择了 {len(cities)} 个目的地，至少需要 {need} 天（目的地数 × 2），"
+                f"当前需求无法生成完整报告。请将旅行天数调整为 {need} 天及以上，或减少目的地。")
+    return None

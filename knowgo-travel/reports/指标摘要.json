@@ -1,0 +1,22 @@
+{
+  "provider": "qwen",
+  "model": "qwen-plus",
+  "python": "3.13.17",
+  "platform": "macOS-26.5.1-arm64-arm-64bit-Mach-O",
+  "uv_lock_sha256": "2228925b1ddfdd5bb68931ab94a3c95c73626822bdab5c308d762a4323085096",
+  "rail_serial_seconds": 4.173857290763408,
+  "rail_parallel_seconds": 1.4220702922903001,
+  "rail_reduction_percent": 65.92911081465844,
+  "planning_reference_seconds": 45.60632066614926,
+  "planning_fast_seconds": 28.54609700012952,
+  "planning_reduction_percent": 37.407586090764134,
+  "raw_input_tokens": 133770,
+  "compact_input_tokens": 2386,
+  "payload_token_reduction_percent": 98.2163414816476,
+  "route_passed": 31,
+  "route_total": 32,
+  "route_p95_seconds": 1.6195687921717763,
+  "rag_cases": 23,
+  "rag_recall_at_5": 1.0,
+  "rag_mrr_at_5": 0.8913043478260869
+}

@@ -1,0 +1,67 @@
+class WeatherCast(BaseModel):
+    """单日预报（字段与高德 casts 对齐；缺字段给默认空串，不报错、渲染时留空）"""
+    date: str = ""
+    dayweather: str = ""
+    nightweather: str = ""
+    daytemp: str = ""
+    nighttemp: str = ""
+    daywind: str = ""
+    daypower: str = ""
+
+class WeatherForecast(BaseModel):
+    """天气预报整体结构（第 12 章流式渲染天气会 import 复用它）"""
+    city: str = ""
+    reporttime: str = ""
+    casts: list[WeatherCast] = Field(default_factory=list)
+
+def _normalize_weather_payload(raw) -> dict:
+    """★ 归一化漏斗：把 MCP 三种返回形态统一成 dict（第 12 章也会 import 复用）
+
+    历史 bug：MCP adapter 返回的常是"内容块列表" [{'type':'text','text':'{json}'}]，
+    旧代码只按 str/dict 解析 → list 分支没接住 → 恒判"天气为空" → 每次都降级。
+    接口本来是好的，纯粹解析口径错，所以先在这里把形态抹平。
+    """
+    if isinstance(raw, list):                   # 形态一：内容块列表 → 把每块的 text 拼起来
+        texts = [str(b.get("text") or "") if isinstance(b, dict) else str(getattr(b, "text", "") or "")
+                 for b in raw]
+        raw = "\n".join(t for t in texts if t).strip()
+    if isinstance(raw, str):                     # 形态二：JSON 字符串 → 抠出 {...} 再 loads
+        text = raw.strip()
+        if not text.startswith("{"):             # 兼容"说明文字 + JSON"混合文本
+            start, end = text.find("{"), text.rfind("}")
+            text = text[start:end + 1] if 0 <= start < end else text
+        raw = json.loads(text)
+    return raw if isinstance(raw, dict) else {}  # 形态三：本来就是 dict → 直接用
+
+async def weather_agent_node(state: dict) -> dict:
+    """天气 Agent 节点：调真实高德天气；查不到就如实说，绝不编造"""
+    destination = state["destination"]
+    app_logger.info(f"🌤️ 天气 Agent 执行: {destination}")
+
+    report = f"## {destination} 天气信息\n\n"
+    try:
+        from app.tools.mcp_tools import get_weather_tools   # 延迟导入，与工具装载解耦
+        tools = await get_weather_tools()
+        tool = next((t for t in tools if t.name == "get_weather_forecast"), None)
+        if tool is None:
+            raise RuntimeError("天气工具未加载")
+
+        # 不传 date：该参数只支持未来 4 天内，超出会返回空预报
+        payload = _normalize_weather_payload(await tool.ainvoke({"city": destination}))
+        if payload.get("error"):
+            raise RuntimeError(str(payload["error"]))
+
+        forecast = WeatherForecast.model_validate(payload)   # Pydantic 校验 + 填默认
+        if not forecast.casts:
+            raise RuntimeError("天气返回为空")
+
+        lines = [f"📅 {c.date}：白天{c.dayweather} {c.nighttemp}~{c.daytemp}°C，"
+                 f"{c.daywind}风 {c.daypower} 级" for c in forecast.casts]
+        report += "\n".join(lines)
+        report += f"\n\n*数据来源：高德天气（发布于 {forecast.reporttime}）*"
+    except Exception as e:
+        # ★ 铁律：查不到宁可说"未获取到"，也绝不编造天气（编造会被写进行程正文误导用户）
+        app_logger.warning(f"天气查询失败（降级不编造）: {destination} | {type(e).__name__}: {e}")
+        report += "暂未获取到实时天气，请以当地实际天气为准。"
+
+    return {"agent_results": [{"agent_name": "weather", "result": report}]}

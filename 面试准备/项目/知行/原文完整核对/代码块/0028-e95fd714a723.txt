@@ -1,0 +1,3 @@
+profile = await self.get_user_profile(user_id)   # 等 20ms
+history = await self.get_travel_history(user_id) # 再等 20ms
+# 总耗时 40ms

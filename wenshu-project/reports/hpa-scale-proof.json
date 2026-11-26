@@ -1,0 +1,346 @@
+{
+  "scope": "真实HTTP/Harness/Mongo/Sentinel/Prometheus/HPA，合成模型3秒延迟，非Qwen吞吐",
+  "samples": [
+    {
+      "phase": "load-baseline-1pod-v3",
+      "seconds": 0.1,
+      "replicas": 1,
+      "ready": 1
+    },
+    {
+      "phase": "load-baseline-1pod-v3",
+      "seconds": 10.3,
+      "replicas": 1,
+      "ready": 1
+    },
+    {
+      "phase": "load-baseline-1pod-v3",
+      "seconds": 20.5,
+      "replicas": 1,
+      "ready": 1
+    },
+    {
+      "phase": "load-baseline-1pod-v3",
+      "seconds": 30.7,
+      "replicas": 1,
+      "ready": 1
+    },
+    {
+      "phase": "load-baseline-1pod-v3",
+      "seconds": 40.9,
+      "replicas": 1,
+      "ready": 1
+    },
+    {
+      "phase": "load-baseline-1pod-v3",
+      "seconds": 51.0,
+      "replicas": 1,
+      "ready": 1
+    },
+    {
+      "phase": "load-baseline-1pod-v3",
+      "seconds": 61.2,
+      "replicas": 1,
+      "ready": 1
+    },
+    {
+      "phase": "load-baseline-1pod-v3",
+      "seconds": 71.4,
+      "replicas": 1,
+      "ready": 1
+    },
+    {
+      "phase": "load-baseline-1pod-v3",
+      "seconds": 81.6,
+      "replicas": 1,
+      "ready": 1
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 0.1,
+      "replicas": 1,
+      "ready": 1
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 10.3,
+      "replicas": 1,
+      "ready": 1
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 20.5,
+      "replicas": 1,
+      "ready": 1
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 30.7,
+      "replicas": 1,
+      "ready": 1
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 41.0,
+      "replicas": 1,
+      "ready": 1
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 51.2,
+      "replicas": 4,
+      "ready": 1
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 61.4,
+      "replicas": 4,
+      "ready": 4
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 71.6,
+      "replicas": 4,
+      "ready": 4
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 81.8,
+      "replicas": 7,
+      "ready": 4
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 92.0,
+      "replicas": 7,
+      "ready": 7
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 102.2,
+      "replicas": 7,
+      "ready": 7
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 112.5,
+      "replicas": 10,
+      "ready": 7
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 122.7,
+      "replicas": 10,
+      "ready": 10
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 133.0,
+      "replicas": 10,
+      "ready": 10
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 143.2,
+      "replicas": 13,
+      "ready": 10
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 153.5,
+      "replicas": 13,
+      "ready": 13
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 163.9,
+      "replicas": 13,
+      "ready": 13
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 174.3,
+      "replicas": 16,
+      "ready": 13
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 184.7,
+      "replicas": 16,
+      "ready": 13
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 195.0,
+      "replicas": 16,
+      "ready": 13
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 205.3,
+      "replicas": 19,
+      "ready": 15
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 215.7,
+      "replicas": 19,
+      "ready": 16
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 226.0,
+      "replicas": 19,
+      "ready": 16
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 236.7,
+      "replicas": 19,
+      "ready": 16
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 247.1,
+      "replicas": 19,
+      "ready": 16
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 257.5,
+      "replicas": 19,
+      "ready": 17
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 267.8,
+      "replicas": 19,
+      "ready": 19
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 281.9,
+      "replicas": 19,
+      "ready": 19
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 292.4,
+      "replicas": 19,
+      "ready": 19
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 305.2,
+      "replicas": 19,
+      "ready": 19
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 315.6,
+      "replicas": 20,
+      "ready": 19
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 326.1,
+      "replicas": 20,
+      "ready": 19
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 352.1,
+      "replicas": 20,
+      "ready": 19
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 438.2,
+      "replicas": 20,
+      "ready": 19
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 448.4,
+      "replicas": 20,
+      "ready": 9
+    },
+    {
+      "phase": "load-scale-to-20-v3",
+      "seconds": 458.8,
+      "replicas": 20,
+      "ready": 19
+    }
+  ],
+  "answer_cache": "disabled",
+  "model_delay_seconds": 3,
+  "paused_nonload_components": [
+    "repro-wenshu-backend",
+    "repro-wenshu-loop-engine",
+    "pi-agent",
+    "wenshu-web",
+    "dept-agent-zfxy",
+    "dept-agent-hqaq",
+    "grafana",
+    "loki",
+    "tempo",
+    "otel-collector"
+  ],
+  "baseline": {
+    "tag": "load-baseline-1pod-v3",
+    "model": "synthetic fixture 3s answer delay, zero external model calls",
+    "concurrency": 180,
+    "seconds": 77.1043810780011,
+    "requests": 844,
+    "successful": 844,
+    "throughput_rps": 10.946200309242926,
+    "statuses": {
+      "200": 844
+    },
+    "errors": {},
+    "p50_seconds": 16.86876427900097,
+    "p95_seconds": 18.57357629999933,
+    "cache_mode": "disabled",
+    "observed_cache_hits": 0,
+    "minimum_model_calls_per_answer": 4,
+    "steady_last_window": {
+      "seconds": 60,
+      "successful": 664,
+      "throughput_rps": 11.066666666666666,
+      "p95_seconds": 18.661704218000523
+    }
+  },
+  "control_poll_retries": 6,
+  "autoscale": {
+    "tag": "load-scale-to-20-v3",
+    "model": "synthetic fixture 3s answer delay, zero external model calls",
+    "concurrency": 180,
+    "seconds": 430.28956212200137,
+    "requests": 5729,
+    "successful": 5552,
+    "throughput_rps": 12.90293906415007,
+    "statuses": {
+      "200": 5552,
+      "500": 94
+    },
+    "errors": {
+      "http_error": 94,
+      "ReadTimeout": 83
+    },
+    "p50_seconds": 8.413995003998934,
+    "p95_seconds": 27.77919876299893,
+    "cache_mode": "disabled",
+    "observed_cache_hits": 0,
+    "minimum_model_calls_per_answer": 3,
+    "steady_last_window": {
+      "seconds": 60,
+      "successful": 430,
+      "throughput_rps": 7.166666666666667,
+      "p95_seconds": 37.265465851000044
+    }
+  },
+  "maximum_ready_pods": 19,
+  "external_model_calls": 0,
+  "reached_20_ready": false,
+  "conclusion": "HPA确已请求20副本，负载期间最多19 Ready；本机16GB/专用VM6GB3CPU下出现500和超时，未验证20 Ready稳定容量。保留全部失败，不将此实验作为性能提升指标。"
+}

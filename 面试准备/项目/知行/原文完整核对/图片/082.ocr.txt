@@ -1,0 +1,216 @@
+四类卡片差异对照•同一套骨架，四种口径
+高铁、航班、自驾、住宿四个包都是"数据契约+查询校验＋状态机接线"三层，共用 base/ 的取状态和两种缓存，闭环也一样：并行查询-下发卡片或
+自动代选—一次提交—写账本、推进步骤。差别集中在：什么时候接管、查什么、一项候选靠什么认、自动模式怎么选、提交后写什么、推进到哪一
+四类共用的骨架 以下七步四类完全一致，差异都在每一步的“口径”"里
+算段或站
+签名缓仔
+同一批段只真查一次
+下发或代选
+— 提父校驱
+写账本推进
+步聚守卫，重复提交按幂等成巧
+逐项差异 灰字表示与左侧相同
+train_multi_segment
+flight_multi_segment
+driving_multi_segment
+hotel.muilti segment
+交通规划
+住宿规划
+勾了高铁，且至少1段
+勾了航班、没勾高铁，且至少1段
+只勾了自驾（高铁、航班都没勾），且至少1段
+有佳宿城市，且出发日、天数合法；与交通方式无
+出发地=目的地时零段直通，代码直接推到住宿步
+每一段都有一谍缺机场忍时（如城亩没右民用机
+场），执行器把交通方式改成高铁，交给高铁分支
+退回原交通流程
+退回逐城确认的 select_accommodation._tool
+父通段，起一止+乘牛日
+住宿站：城市+入住日、离店日
+状态机段列表+段日期（三类交通共用同一口径）
+游玩城市序列＋天数分配：首站1晚，其余均分
+末站离店封顶到第N
+数据源
+12306车票工具，按必填参数认工具
+航班时刻表＋票价工具，每段两路并发
+尚偎笃车路线
+algohotel 酒店搜索
+出发城市、到达城市、日期直传
+查，直接空段
+城市坐标；没收录坐标就用城市名
+按档位筛星级
+嵌套入参：检索词、城市、入住日、晚数、人数，
+取多10起，孩友牛时间才子
+取多10班，孩起6时汁子
+一 茶默以束峪路线，个可边
+最多 10家门店；一家都解析不出 一改给品牌候选
+option_id =车次-友车-到込站
+option_id=航址号-起 -到达机
+尢器选择：段号航是身份，提父只市
+segment_id
+门 hotel_id/品牌 brand_id， hl-1
+同一车次号会有不同终到站的两趟
+航班号同样不唯一
+每段只有一条路线
+单站解析出的id都从1开始，多站拼在一起会串
+号，所以加站号前缀
+SL、SZ•
+Sl、SZ：
+Sl、SZ
+hl、h2•
+签名
+起一止@日期，按段拼找
+城市@入住~离店（住宿站没有起止］
+萌屮仝伙器
+每段都有候选才级存，防止空段被缓存后重试永远 有一段查到航班就缓存
+有一段查到路线就级存
+有一站有门店或品牌就级存
+代运规具
+排除无票一综合分最低（历时分钟+票价一10）
+价格最低；没价的排最后，全没价取最早起飞
+不用选：路线查到卧确1
+别除低寸25元的大具价一评分 ≥4.5里取敢低1
+-否则评分最高；品牌站取第一个品版
+任一段没有候选
+仟一段没有候选
+任一段查不到路线
+任一站选不出（门店全是失真价）
+TRAIN_NOT_FOUNDMISSING.OPTZON_2D
+FLZGHT_NOT_FOUND MISSING._OPTION_I0
+只有通用的5个：无候选、空提交、段不存在、漏
+MISSING BRAND LD HUIEL_NOI_FOUN
+MODE_MISMATCH MISSING_HOTEL_I
+BKAND_NOT_FOUND
+沒有候送的服不身，清睡时合位 实时站次習不可
+同左
+查不到路线的段不算，同样占位
+每站都必须选：查不到门店也有品牌候选兜底
+步骤守卫
+必须停在交通步；已在后续步骤按幂等成功
+同左
+必须停在住宿步；已在后续步骡按幂等成功
+段账本 Leg_selections Leg_prices
+selected_transport.Legs，交
+同左，交通万卫 fLighi
+同可左，交迪万工 driving
+价格账本
+票价大于0才写
+杏到曹价才写：时刻表堂不带｛
+要或清空，防止以高 、能G細港过來新辣部日 门店超究价；品商的受有 价、不汁入
+车次 发车-到达 席别票价元
+不与票价
+航班号 起7-到达 出发机场-到达机场 票价元，无价 自驾 距离km 耗时
+价…；品牌站写品牌名
+城市（人住 至 离店）：酒店名，每晚价元/晚，总
+推进到
+住宿规划
+住宿规划
+住宿规划
+行程生成，跳过餐饮确认轮
+同一职责，在四个包里叫什么前三类交通的函数名几乎一一对应；住宿因内没有“段”，名字和拆分都不同
+是否接管
+multi_leg_train
+fliaht card mode
+driving card modl
+hotel card mode
+是否勾选
+train mode requested
+fLight mode requested
+driving mode requested
+鼻段/站
+Legs_with dates
+-legs with dates
+_legs with dates
+stay windows-_segments
+Leg signature
+Leg signature
+Leg signature
+hotel signature
+缕仔具径
+all_have_options
+any_has_options
+_any_ok
+any_has_candidates
+查询总入口
+build_train_multi_segment_pay Load
+build flight multi segment payLoad
+build driving multi segment pay load
+build_hotel_multi_segment_pay1o30
+早段笪询
+_query_one_teg
+_query_one Leg + _query_ Leg_prices
+_query_one_teg
+_query_one_ segment
+生成身份
+option_id_of
+option_id_of
+reid
+目动挑迹
+-pick_best +train_score
+-pick best
+pick best_hotel + hotel_rank
+下发卡片
+emit train skill ui
+emit_flightskilLui
+emit_driving_skill_ui
+emit hotel skill ui
+自动代选
+auto select train Legs
+auto seLect tlights
+auto select driving
+auto select hotels
+提交校验
+validate train submissior
+validate fliqht submission
+validate driving submission
+validate hotel multi submissior
+提交浴库
+apply_train_selection
+apply tlight select10r
+apply driving selection
+apply hotel select1or
+账本文本
+_fmt_option
+-fnt_option
+_fnt_route
+-selection_text +_selection_price
+提交接口
+./train multi segment/submit
+./tLight multi segment/submit
+../driving multi segment/submi’
+./hotel multi segment/submit
+四个提交接口都任 api/v1/skills.py ，流程相同：校验洛库一卡片锁定 一回显已选一合成发言续跑。三类交通续跑到住循步，住续到洛库返旦的下一步（行程生成）
+交通三类互斥，住宿独立 交通步一次只走一条卡片路线
+交通步的判断顺序
+住宿步自成一路
+出发地=目的地、没有城际段一零段直通，代码直接推到住宿步
+不有得及得住伯城中、山仅口和大效定百口広
+高铁
+勾了高铁一走高铁卡片；同时勾了航班、自驾也以高铁为准
+每站
+有门店给门店，没有就给品牌，同一张卡片里可以混合
+勾了肌址、没公局跃一走航班卡片；每一段都有一端缺机场妈的以走局铁
+之后
+且接进们程生成，餐饮偏好取表单信
+高铁、航班都没勾一走自驾卡片
+住宿站的日期和交通段的日期出自同一套天数分配，入住、离店日与乘车日不会互相矛盾。
+中间件第⑨关和执行器后处理⑥用的是同一组判断函数，摘工具和推卡片不会对不上。
+各自独有的设计
+高铁的细节见图1-6
+航班：时刻和票价分两路查
+• 每段同时调时刻表和票价两个工具，票价失败不拖垮时刻表
+自驾：只读确认
+• 每段一条高德默认策略路线：距离、耗时、过路货、红绿灯数
+• 每站独立判定模式，提交时校验模式与下发一致
+住宿：门店/品牌双模式
+。票价三级取值：时刻表自带价—按航班号查价一都没有记0，显
+。卡片只用来核对，提交只带段号
+• 结构性查不到（城市没有民用机场）与临时失败分开处理
+• 引导语由代码写明"几班取到实时票价”，不让模型猜价
+• 没有票价，提交时把价格账本显式清罕
+。 专用解析器 hoteL_parser：在返回里找最像酒店列表的数组，
+• 自动模式不需要挑选，全部段查到即推讲
+。 门店择优规则与快速通道一致，统一写在 hotel_ran
+。品牌兜底按档位给常见连锁，不编造门店和价格
+骨架共用，口径各定：四类卡片都靠base/的两种缓存和"并行查询—一次提交一写账本”闭环，差别只在口径——高铁缓存要求 每段都有候选，航班票价 两路并发，自驾 只读确认，住宿按 站而不是按
+段，开且是父后自接进人何样生以。新增一尖下片的，照看必张表的七个维度逐坝疋口任即口。

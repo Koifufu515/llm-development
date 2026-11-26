@@ -1,0 +1,11 @@
+"""require_budget 开关：同一条"完整性"判据按源料切成两版，另外两个维度不受影响（只构造 GEval、不调用模型，需 .env 里的 DashScope 密钥）"""
+from app.services.quality_check_service import _BUDGET_CLAUSE, _BUDGET_CLAUSE_NA, build_itinerary_metrics
+
+offline = build_itinerary_metrics(require_budget=True)     # 离线评测：源料是含预算表的 Markdown 正文
+online = build_itinerary_metrics(require_budget=False)     # 在线质检：源料是没有预算字段的结构化清单
+
+print("三个维度 →", [m.name for m in offline])
+print("require_budget=True  完整性判据含预算条款？", _BUDGET_CLAUSE in offline[0].criteria)
+print("require_budget=False 完整性判据含\"本条不适用\"？", _BUDGET_CLAUSE_NA in online[0].criteria)
+print("另外两个维度的判据一模一样？", offline[1].criteria == online[1].criteria and offline[2].criteria == online[2].criteria)
+print("每次 build 都是新实例？", build_itinerary_metrics()[0] is not build_itinerary_metrics()[0])

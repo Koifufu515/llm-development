@@ -1,0 +1,6 @@
+"""_zero_leg_guard 演示：出发地与目的地同城 = 零段，交通步直接跳过（纯函数，无需密钥）"""
+from app.services.chat_stream_executor import _zero_leg_guard
+
+for dep, dest in [("北京", "北京"), ("北京", "天津、上海"), ("", "杭州")]:
+    vals = {"user_requirement": {"departure_city": dep}, "selected_destination": dest}
+    print(f"{dep or '（空）'} → {dest:6s} 零段？{_zero_leg_guard(vals)}")

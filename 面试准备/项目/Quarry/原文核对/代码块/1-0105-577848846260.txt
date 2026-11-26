@@ -1,0 +1,4 @@
+BEGIN;
+UPDATE documents SET acl_labels = '{org:hr}' WHERE id = $1;
+UPDATE chunks    SET acl_labels = '{org:hr}' WHERE document_id = $1;
+COMMIT;

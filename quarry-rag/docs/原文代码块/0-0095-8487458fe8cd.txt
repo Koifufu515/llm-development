@@ -1,0 +1,2 @@
+embedding halfvec(1024)                                  -- chunks 表
+CONSTRAINT collections_dim_ck CHECK (embed_dim = 1024)   -- collections 表

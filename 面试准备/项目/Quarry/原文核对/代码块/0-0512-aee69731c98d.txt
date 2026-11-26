@@ -1,0 +1,1 @@
+DELETE FROM query_logs WHERE created_at < now() - interval '30 days';

@@ -1,0 +1,35 @@
+六步执行顺序•渲染 Prompt 之前，先加载用户记忆
+本章在第3步「前置校验」和第4步「Jinja2渲染」之间插入 3.5：从 state 拿到
+user_id，调 UserMemoryService 加载用户记忆，
+格式化成 memory_prompt，供第4步作为模板变量使用。
+执行顺序
+读
+current_step
+②
+查 step_config
+加载用户记忆
+3.5
+第3步之后•第4步之前
+③
+前置校验
+①
+②
+③
+3.5
+加载用户记忆
+大本章新增
+一
+从 state 拿
+user_id
+调 UserMemoryService
+格式化成 memory_prompt
+④
+Jinja2 渲染 Prompt
+把 memory 塞进模板变量
+-交给第4步：Jinja2渲染时，把 memory 塞进模板变量。
+⑤
+request.override（...）
+⑥
+handler（...）
+为什么排在3.5：记忆要作力模板变量参与第4步的渲染，所以必须在渲染之前准备好。
+这一步只负责取出记忆、格式化成 memory_prompt；后面的 request.override（...） handler（...）照常执行。

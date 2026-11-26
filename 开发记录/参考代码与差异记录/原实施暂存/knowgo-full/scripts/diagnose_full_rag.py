@@ -1,0 +1,1 @@
+../../../../../knowgo-travel/scripts/diagnose_full_rag.py

@@ -1,0 +1,5 @@
+PS E:Nknowgo_travel_agent_web> npm install
+added 120 packages in 49s
+27 packages are Looking for funding
+run‘npm fund’
+for details

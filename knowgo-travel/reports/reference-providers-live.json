@@ -1,0 +1,83 @@
+{
+  "mcp_services": {
+    "search": "ready",
+    "weather": "ready",
+    "rail": "ready"
+  },
+  "tools": {
+    "search": [
+      "search_travel_info"
+    ],
+    "weather": [
+      "get_weather_forecast",
+      "get_city_location"
+    ],
+    "rail": [
+      "get-current-date",
+      "get-stations-code-in-city",
+      "get-station-code-of-citys",
+      "get-station-code-by-names",
+      "get-station-by-telecode",
+      "get-tickets",
+      "get-interline-tickets",
+      "get-train-route-stations"
+    ]
+  },
+  "search": {
+    "status": "ok",
+    "provider": "Tavily",
+    "results": [
+      {
+        "id": "320b913194178afef27180d8",
+        "city": "苏州",
+        "title": "留言簿 - 留言列表 - 苏州博物馆",
+        "text": "管理员回复：您好！苏州博物馆目前实行分时全预约制度，未预约的观众无法入馆参观。敬请谅解。\n\n标题：孩子第一次来\n\n我们从上海特意过来的、为了孩子能参观苏州历史、可是十月一以满、是否能破历一次、只是为了孩子（姓名：刘玉君发布时间：2019-10-01）\n\n管理员回复：您好！目前苏州博物馆实行分时全预约制度，未预约的观众无法入馆参观。若您的孩子身高未超过1.2米，可以免预约入馆参观（可由一名监护人陪同入内，该监护人也不用预约）。\n\n标题：放票机制\n\n我在官网刷了1小时的票，发现博物馆的票比春节的车票还难求。这一个小时下来各种时段的票都有可能刷出来（还是没有预约到合适的时间），感觉很随机，不能统一时",
+        "source_url": "https://www.szmuseum.com/Other/Leaveword?page=26&wheres=",
+        "license": "外部搜索摘要，仅供引用溯源",
+        "retrieved_at": "2026-10-30T15:29:27.805298+00:00",
+        "freshness": "联网搜索当次摘要；摘要可能过时或互相矛盾，出行前应核对景区官方公告。",
+        "source_type": "web_search",
+        "provider": "Tavily"
+      },
+      {
+        "id": "c795d47318de91c6ad42bc39",
+        "city": "苏州",
+        "title": "资讯 - 开放信息 - 苏州博物馆",
+        "text": "第二章 入场参观\n\n第五条 预约参观\n\n本馆实行实名制分时段预约参观制度，观众预约前请至博物馆官方网站进行实名注册，并完善您的相关信息，方可享受本馆提供的预约服务。\n\n第六条 预约个人入馆通道（10人及以下）\n\n个人可提前七天（包含预约当天）登录苏州博物馆官方网站、苏博官方微信公众号、\"苏州博物馆全预约\"微信小程序、君到苏州微信公众号进行参观预约。若未提前预约且参观当日如果仍有余票，观众可在当日进行预约。为充分预留时间进行信息核查，保障观众顺利入馆，苏州博物馆当日预约截止时间设定为停止入馆时间前20分钟（16:00停止入馆，15:40即停止预约）。每张有效身份证件每天限定预约一次，单个账号最多",
+        "source_url": "https://www.szmuseum.com/News/Index/OpenGuide",
+        "license": "外部搜索摘要，仅供引用溯源",
+        "retrieved_at": "2026-10-30T15:29:27.805319+00:00",
+        "freshness": "联网搜索当次摘要；摘要可能过时或互相矛盾，出行前应核对景区官方公告。",
+        "source_type": "web_search",
+        "provider": "Tavily"
+      }
+    ],
+    "notice": "联网搜索摘要，不等同官方网站核验；不从标题推断网站为官方。"
+  },
+  "weather": {
+    "status": "ok",
+    "source": "高德天气",
+    "requested_date": "2026-10-30",
+    "city": "苏州市",
+    "adcode": "320500",
+    "province": "江苏",
+    "reporttime": "2026-10-30 23:04:36",
+    "casts": [
+      {
+        "date": "2026-10-30",
+        "week": "5",
+        "dayweather": "晴",
+        "nightweather": "阴",
+        "daytemp": "21",
+        "nighttemp": "12",
+        "daywind": "西",
+        "nightwind": "西",
+        "daypower": "1-3",
+        "nightpower": "1-3",
+        "daytemp_float": "21.0",
+        "nighttemp_float": "12.0"
+      }
+    ]
+  },
+  "rendered_weather": "**苏州天气**（来源：高德天气）\n- 2026-10-30：白天晴，12～21°C，西风1-3级"
+}

@@ -1,0 +1,3024 @@
+{
+  "natural_requirement": [
+    {
+      "input": "想从上海去苏州玩2天。",
+      "events": [
+        {
+          "role": "assistant",
+          "content": "请问您计划哪天出发？例如“这周六”“下周一”或具体日期，我帮您确认行程安排。",
+          "code": null
+        },
+        {
+          "role": "done",
+          "content": "finish",
+          "code": 200
+        }
+      ],
+      "state": {
+        "user_id": "cbf30656-5852-4195-a0ed-0a833401c37f",
+        "current_step": "requirement_collection",
+        "requirement": {
+          "departure_city": "上海",
+          "destinations": [
+            "苏州"
+          ],
+          "travel_days": 2
+        },
+        "revision": 1,
+        "confirmed_revision": null,
+        "destination_info": null,
+        "selected_transport": [],
+        "selected_hotels": [],
+        "food_preferences": [],
+        "itinerary_body": "__KNOWGO_CLEAR__",
+        "budget": "__KNOWGO_CLEAR__",
+        "plan_id": null,
+        "active_card": null
+      }
+    },
+    {
+      "input": "10月31日出发，1个成年人。",
+      "events": [
+        {
+          "role": "assistant",
+          "content": "请问您本次苏州2日游的预算是多少？例如人均500元、总预算1500元等，方便我为您匹配合适的交通、住宿和餐饮选项。",
+          "code": null
+        },
+        {
+          "role": "done",
+          "content": "finish",
+          "code": 200
+        }
+      ],
+      "state": {
+        "user_id": "cbf30656-5852-4195-a0ed-0a833401c37f",
+        "current_step": "requirement_collection",
+        "requirement": {
+          "departure_city": "上海",
+          "destinations": [
+            "苏州"
+          ],
+          "travel_days": 2,
+          "departure_date": "2026-10-31",
+          "adult_count": 1
+        },
+        "revision": 2,
+        "confirmed_revision": null,
+        "destination_info": null,
+        "selected_transport": [],
+        "selected_hotels": [],
+        "food_preferences": [],
+        "itinerary_body": null,
+        "budget": null,
+        "plan_id": null,
+        "active_card": null
+      }
+    },
+    {
+      "input": "预算每人3000，坐高铁。",
+      "events": [
+        {
+          "role": "assistant",
+          "content": "✅ 已为您记录本次苏州2日游的初步需求摘要如下：\n\n- 出发城市：上海  \n- 目的地：苏州  \n- 出发日期：2026年10月31日（周六）  \n- 行程天数：2天  \n- 人数：1位成人（无儿童）  \n- 预算上限：¥3000（总预算，含交通、住宿、餐饮、门票等）  \n- 交通方式：高铁（火车）  \n- 住宿偏好：经济型酒店（已默认）  \n- 餐饮偏好：本地风味 + 特色美食（已默认）  \n\n🔍 下一步将为您查询苏州的旅行亮点（经典景点、秋日特色、美食推荐、天气提示等），供您确认是否符合预期。  \n是否现在查看苏州目的地详情？（输入“是”或直接说“开始”即可）",
+          "code": null
+        },
+        {
+          "role": "done",
+          "content": "finish",
+          "code": 200
+        }
+      ],
+      "state": {
+        "user_id": "cbf30656-5852-4195-a0ed-0a833401c37f",
+        "current_step": "destination_recommendation",
+        "requirement": {
+          "departure_city": "上海",
+          "destinations": [
+            "苏州"
+          ],
+          "departure_date": "2026-10-31",
+          "travel_days": 2,
+          "adult_count": 1,
+          "children_count": 0,
+          "budget_max": 3000.0,
+          "transport_types": [
+            "train"
+          ],
+          "accommodation_types": [
+            "economy_hotel"
+          ],
+          "food_preferences": [
+            "local",
+            "specialty"
+          ],
+          "travel_styles": [],
+          "special_needs": "",
+          "auto_confirm": false,
+          "city_days": null
+        },
+        "revision": 3,
+        "confirmed_revision": null,
+        "destination_info": null,
+        "selected_transport": [],
+        "selected_hotels": [],
+        "food_preferences": [],
+        "itinerary_body": null,
+        "budget": null,
+        "plan_id": null,
+        "active_card": null
+      }
+    },
+    {
+      "input": "确认",
+      "events": [
+        {
+          "role": "skills",
+          "content": {
+            "skill_name": "train_multi_segment",
+            "title": "查询各段交通",
+            "desc": "含去程、转场与返程，并行查询"
+          },
+          "code": null
+        },
+        {
+          "role": "skill_ui",
+          "content": {
+            "id": "3f76a19a-c54b-44b0-b525-fa617fe25772",
+            "revision": 3,
+            "data": {
+              "skill_name": "train_multi_segment",
+              "mode": "train",
+              "priority": [
+                "train"
+              ],
+              "segments": [
+                {
+                  "segment_id": "s1",
+                  "from": "上海",
+                  "to": "苏州",
+                  "date": "2026-10-31",
+                  "return_leg": false,
+                  "mode": "train",
+                  "status": "ok",
+                  "query": {
+                    "date": "2026-10-31",
+                    "fromStation": "上海",
+                    "toStation": "苏州"
+                  },
+                  "source": "12306 via Joooook/12306-mcp",
+                  "source_url": "https://kyfw.12306.cn/",
+                  "options": [
+                    {
+                      "option_id": "5cdd0fe27ca0e9ac45b6c5c1",
+                      "train_code": "G3390",
+                      "from_station": "上海虹桥",
+                      "to_station": "苏州",
+                      "departure_date": "2026-10-31",
+                      "departure_time": "07:04",
+                      "arrival_date": "2026-10-31",
+                      "arrival_time": "07:37",
+                      "duration": "00:33",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 41
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "有",
+                          "price_yuan": 67
+                        },
+                        {
+                          "name": "商务座",
+                          "availability": "10",
+                          "price_yuan": 146
+                        }
+                      ],
+                      "name": "G3390 二等座",
+                      "price_yuan": 41,
+                      "availability": "有",
+                      "seat_type": "二等座",
+                      "segment_id": "s1",
+                      "from": "上海",
+                      "to": "苏州",
+                      "date": "2026-10-31",
+                      "return_leg": false,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.640098+00:00"
+                    },
+                    {
+                      "option_id": "aa5be7b8c3654490cda369d9",
+                      "train_code": "G3390",
+                      "from_station": "上海虹桥",
+                      "to_station": "苏州",
+                      "departure_date": "2026-10-31",
+                      "departure_time": "07:04",
+                      "arrival_date": "2026-10-31",
+                      "arrival_time": "07:37",
+                      "duration": "00:33",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 41
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "有",
+                          "price_yuan": 67
+                        },
+                        {
+                          "name": "商务座",
+                          "availability": "10",
+                          "price_yuan": 146
+                        }
+                      ],
+                      "name": "G3390 一等座",
+                      "price_yuan": 67,
+                      "availability": "有",
+                      "seat_type": "一等座",
+                      "segment_id": "s1",
+                      "from": "上海",
+                      "to": "苏州",
+                      "date": "2026-10-31",
+                      "return_leg": false,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.640098+00:00"
+                    },
+                    {
+                      "option_id": "62bc78776e32c9260aaa74be",
+                      "train_code": "G3390",
+                      "from_station": "上海虹桥",
+                      "to_station": "苏州",
+                      "departure_date": "2026-10-31",
+                      "departure_time": "07:04",
+                      "arrival_date": "2026-10-31",
+                      "arrival_time": "07:37",
+                      "duration": "00:33",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 41
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "有",
+                          "price_yuan": 67
+                        },
+                        {
+                          "name": "商务座",
+                          "availability": "10",
+                          "price_yuan": 146
+                        }
+                      ],
+                      "name": "G3390 商务座",
+                      "price_yuan": 146,
+                      "availability": "10",
+                      "seat_type": "商务座",
+                      "segment_id": "s1",
+                      "from": "上海",
+                      "to": "苏州",
+                      "date": "2026-10-31",
+                      "return_leg": false,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.640098+00:00"
+                    },
+                    {
+                      "option_id": "98f5fc240f4e9d85e02a5439",
+                      "train_code": "G986",
+                      "from_station": "上海",
+                      "to_station": "苏州北",
+                      "departure_date": "2026-10-31",
+                      "departure_time": "07:05",
+                      "arrival_date": "2026-10-31",
+                      "arrival_time": "07:34",
+                      "duration": "00:29",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 47
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "有",
+                          "price_yuan": 78
+                        },
+                        {
+                          "name": "商务座",
+                          "availability": "12",
+                          "price_yuan": 165
+                        }
+                      ],
+                      "name": "G986 二等座",
+                      "price_yuan": 47,
+                      "availability": "有",
+                      "seat_type": "二等座",
+                      "segment_id": "s1",
+                      "from": "上海",
+                      "to": "苏州",
+                      "date": "2026-10-31",
+                      "return_leg": false,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.640098+00:00"
+                    },
+                    {
+                      "option_id": "78b6bf0977ec33a459e980e9",
+                      "train_code": "G986",
+                      "from_station": "上海",
+                      "to_station": "苏州北",
+                      "departure_date": "2026-10-31",
+                      "departure_time": "07:05",
+                      "arrival_date": "2026-10-31",
+                      "arrival_time": "07:34",
+                      "duration": "00:29",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 47
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "有",
+                          "price_yuan": 78
+                        },
+                        {
+                          "name": "商务座",
+                          "availability": "12",
+                          "price_yuan": 165
+                        }
+                      ],
+                      "name": "G986 一等座",
+                      "price_yuan": 78,
+                      "availability": "有",
+                      "seat_type": "一等座",
+                      "segment_id": "s1",
+                      "from": "上海",
+                      "to": "苏州",
+                      "date": "2026-10-31",
+                      "return_leg": false,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.640098+00:00"
+                    },
+                    {
+                      "option_id": "72b8f793722b0657f7210798",
+                      "train_code": "G986",
+                      "from_station": "上海",
+                      "to_station": "苏州北",
+                      "departure_date": "2026-10-31",
+                      "departure_time": "07:05",
+                      "arrival_date": "2026-10-31",
+                      "arrival_time": "07:34",
+                      "duration": "00:29",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 47
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "有",
+                          "price_yuan": 78
+                        },
+                        {
+                          "name": "商务座",
+                          "availability": "12",
+                          "price_yuan": 165
+                        }
+                      ],
+                      "name": "G986 商务座",
+                      "price_yuan": 165,
+                      "availability": "12",
+                      "seat_type": "商务座",
+                      "segment_id": "s1",
+                      "from": "上海",
+                      "to": "苏州",
+                      "date": "2026-10-31",
+                      "return_leg": false,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.640098+00:00"
+                    },
+                    {
+                      "option_id": "cec5d44a410f9fe9b8a4bd67",
+                      "train_code": "D2216",
+                      "from_station": "上海南",
+                      "to_station": "太仓",
+                      "departure_date": "2026-10-31",
+                      "departure_time": "07:05",
+                      "arrival_date": "2026-10-31",
+                      "arrival_time": "08:06",
+                      "duration": "01:01",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 37
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "有",
+                          "price_yuan": 59
+                        },
+                        {
+                          "name": "无座",
+                          "availability": "有",
+                          "price_yuan": 37
+                        }
+                      ],
+                      "name": "D2216 二等座",
+                      "price_yuan": 37,
+                      "availability": "有",
+                      "seat_type": "二等座",
+                      "segment_id": "s1",
+                      "from": "上海",
+                      "to": "苏州",
+                      "date": "2026-10-31",
+                      "return_leg": false,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.640098+00:00"
+                    },
+                    {
+                      "option_id": "0cd4270f422a23efcf026d9f",
+                      "train_code": "D2216",
+                      "from_station": "上海南",
+                      "to_station": "太仓",
+                      "departure_date": "2026-10-31",
+                      "departure_time": "07:05",
+                      "arrival_date": "2026-10-31",
+                      "arrival_time": "08:06",
+                      "duration": "01:01",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 37
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "有",
+                          "price_yuan": 59
+                        },
+                        {
+                          "name": "无座",
+                          "availability": "有",
+                          "price_yuan": 37
+                        }
+                      ],
+                      "name": "D2216 一等座",
+                      "price_yuan": 59,
+                      "availability": "有",
+                      "seat_type": "一等座",
+                      "segment_id": "s1",
+                      "from": "上海",
+                      "to": "苏州",
+                      "date": "2026-10-31",
+                      "return_leg": false,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.640098+00:00"
+                    },
+                    {
+                      "option_id": "a36ac6e573db4dc148cf4871",
+                      "train_code": "D2216",
+                      "from_station": "上海南",
+                      "to_station": "太仓",
+                      "departure_date": "2026-10-31",
+                      "departure_time": "07:05",
+                      "arrival_date": "2026-10-31",
+                      "arrival_time": "08:06",
+                      "duration": "01:01",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 37
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "有",
+                          "price_yuan": 59
+                        },
+                        {
+                          "name": "无座",
+                          "availability": "有",
+                          "price_yuan": 37
+                        }
+                      ],
+                      "name": "D2216 无座",
+                      "price_yuan": 37,
+                      "availability": "有",
+                      "seat_type": "无座",
+                      "segment_id": "s1",
+                      "from": "上海",
+                      "to": "苏州",
+                      "date": "2026-10-31",
+                      "return_leg": false,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.640098+00:00"
+                    },
+                    {
+                      "option_id": "60033f651577360b360a492f",
+                      "train_code": "D2216",
+                      "from_station": "上海南",
+                      "to_station": "常熟",
+                      "departure_date": "2026-10-31",
+                      "departure_time": "07:05",
+                      "arrival_date": "2026-10-31",
+                      "arrival_time": "08:24",
+                      "duration": "01:19",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 51
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "12",
+                          "price_yuan": 80
+                        },
+                        {
+                          "name": "无座",
+                          "availability": "有",
+                          "price_yuan": 51
+                        }
+                      ],
+                      "name": "D2216 二等座",
+                      "price_yuan": 51,
+                      "availability": "有",
+                      "seat_type": "二等座",
+                      "segment_id": "s1",
+                      "from": "上海",
+                      "to": "苏州",
+                      "date": "2026-10-31",
+                      "return_leg": false,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.640098+00:00"
+                    },
+                    {
+                      "option_id": "eaa409df4fa8ee563b14ddb8",
+                      "train_code": "D2216",
+                      "from_station": "上海南",
+                      "to_station": "常熟",
+                      "departure_date": "2026-10-31",
+                      "departure_time": "07:05",
+                      "arrival_date": "2026-10-31",
+                      "arrival_time": "08:24",
+                      "duration": "01:19",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 51
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "12",
+                          "price_yuan": 80
+                        },
+                        {
+                          "name": "无座",
+                          "availability": "有",
+                          "price_yuan": 51
+                        }
+                      ],
+                      "name": "D2216 一等座",
+                      "price_yuan": 80,
+                      "availability": "12",
+                      "seat_type": "一等座",
+                      "segment_id": "s1",
+                      "from": "上海",
+                      "to": "苏州",
+                      "date": "2026-10-31",
+                      "return_leg": false,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.640098+00:00"
+                    },
+                    {
+                      "option_id": "731ad4b4b066551fb7ab5fc5",
+                      "train_code": "D2216",
+                      "from_station": "上海南",
+                      "to_station": "常熟",
+                      "departure_date": "2026-10-31",
+                      "departure_time": "07:05",
+                      "arrival_date": "2026-10-31",
+                      "arrival_time": "08:24",
+                      "duration": "01:19",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 51
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "12",
+                          "price_yuan": 80
+                        },
+                        {
+                          "name": "无座",
+                          "availability": "有",
+                          "price_yuan": 51
+                        }
+                      ],
+                      "name": "D2216 无座",
+                      "price_yuan": 51,
+                      "availability": "有",
+                      "seat_type": "无座",
+                      "segment_id": "s1",
+                      "from": "上海",
+                      "to": "苏州",
+                      "date": "2026-10-31",
+                      "return_leg": false,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.640098+00:00"
+                    },
+                    {
+                      "option_id": "88c4224350e202801fb2d08f",
+                      "train_code": "D2212",
+                      "from_station": "金山北",
+                      "to_station": "苏州",
+                      "departure_date": "2026-10-31",
+                      "departure_time": "07:09",
+                      "arrival_date": "2026-10-31",
+                      "arrival_time": "08:20",
+                      "duration": "01:11",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "无",
+                          "price_yuan": 47
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "16",
+                          "price_yuan": 76
+                        },
+                        {
+                          "name": "无座",
+                          "availability": "有",
+                          "price_yuan": 47
+                        }
+                      ],
+                      "name": "D2212 二等座",
+                      "price_yuan": 47,
+                      "availability": "无",
+                      "seat_type": "二等座",
+                      "segment_id": "s1",
+                      "from": "上海",
+                      "to": "苏州",
+                      "date": "2026-10-31",
+                      "return_leg": false,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.640098+00:00"
+                    },
+                    {
+                      "option_id": "e4b1654c030d72a304b22ec6",
+                      "train_code": "D2212",
+                      "from_station": "金山北",
+                      "to_station": "苏州",
+                      "departure_date": "2026-10-31",
+                      "departure_time": "07:09",
+                      "arrival_date": "2026-10-31",
+                      "arrival_time": "08:20",
+                      "duration": "01:11",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "无",
+                          "price_yuan": 47
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "16",
+                          "price_yuan": 76
+                        },
+                        {
+                          "name": "无座",
+                          "availability": "有",
+                          "price_yuan": 47
+                        }
+                      ],
+                      "name": "D2212 一等座",
+                      "price_yuan": 76,
+                      "availability": "16",
+                      "seat_type": "一等座",
+                      "segment_id": "s1",
+                      "from": "上海",
+                      "to": "苏州",
+                      "date": "2026-10-31",
+                      "return_leg": false,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.640098+00:00"
+                    },
+                    {
+                      "option_id": "4ff2c7af3b68242eaaa0aa91",
+                      "train_code": "D2212",
+                      "from_station": "金山北",
+                      "to_station": "苏州",
+                      "departure_date": "2026-10-31",
+                      "departure_time": "07:09",
+                      "arrival_date": "2026-10-31",
+                      "arrival_time": "08:20",
+                      "duration": "01:11",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "无",
+                          "price_yuan": 47
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "16",
+                          "price_yuan": 76
+                        },
+                        {
+                          "name": "无座",
+                          "availability": "有",
+                          "price_yuan": 47
+                        }
+                      ],
+                      "name": "D2212 无座",
+                      "price_yuan": 47,
+                      "availability": "有",
+                      "seat_type": "无座",
+                      "segment_id": "s1",
+                      "from": "上海",
+                      "to": "苏州",
+                      "date": "2026-10-31",
+                      "return_leg": false,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.640098+00:00"
+                    },
+                    {
+                      "option_id": "c7e0b9f75a42ea8d5bdb370c",
+                      "train_code": "D2212",
+                      "from_station": "金山北",
+                      "to_station": "苏州新区",
+                      "departure_date": "2026-10-31",
+                      "departure_time": "07:09",
+                      "arrival_date": "2026-10-31",
+                      "arrival_time": "08:29",
+                      "duration": "01:20",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "无",
+                          "price_yuan": 52
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "16",
+                          "price_yuan": 82
+                        },
+                        {
+                          "name": "无座",
+                          "availability": "有",
+                          "price_yuan": 52
+                        }
+                      ],
+                      "name": "D2212 二等座",
+                      "price_yuan": 52,
+                      "availability": "无",
+                      "seat_type": "二等座",
+                      "segment_id": "s1",
+                      "from": "上海",
+                      "to": "苏州",
+                      "date": "2026-10-31",
+                      "return_leg": false,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.640098+00:00"
+                    },
+                    {
+                      "option_id": "57b2cc2505d6a8779f55a881",
+                      "train_code": "D2212",
+                      "from_station": "金山北",
+                      "to_station": "苏州新区",
+                      "departure_date": "2026-10-31",
+                      "departure_time": "07:09",
+                      "arrival_date": "2026-10-31",
+                      "arrival_time": "08:29",
+                      "duration": "01:20",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "无",
+                          "price_yuan": 52
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "16",
+                          "price_yuan": 82
+                        },
+                        {
+                          "name": "无座",
+                          "availability": "有",
+                          "price_yuan": 52
+                        }
+                      ],
+                      "name": "D2212 一等座",
+                      "price_yuan": 82,
+                      "availability": "16",
+                      "seat_type": "一等座",
+                      "segment_id": "s1",
+                      "from": "上海",
+                      "to": "苏州",
+                      "date": "2026-10-31",
+                      "return_leg": false,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.640098+00:00"
+                    },
+                    {
+                      "option_id": "fbc1ba0249e884560bbe2c15",
+                      "train_code": "D2212",
+                      "from_station": "金山北",
+                      "to_station": "苏州新区",
+                      "departure_date": "2026-10-31",
+                      "departure_time": "07:09",
+                      "arrival_date": "2026-10-31",
+                      "arrival_time": "08:29",
+                      "duration": "01:20",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "无",
+                          "price_yuan": 52
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "16",
+                          "price_yuan": 82
+                        },
+                        {
+                          "name": "无座",
+                          "availability": "有",
+                          "price_yuan": 52
+                        }
+                      ],
+                      "name": "D2212 无座",
+                      "price_yuan": 52,
+                      "availability": "有",
+                      "seat_type": "无座",
+                      "segment_id": "s1",
+                      "from": "上海",
+                      "to": "苏州",
+                      "date": "2026-10-31",
+                      "return_leg": false,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.640098+00:00"
+                    },
+                    {
+                      "option_id": "7070503593953bdea6e7bc79",
+                      "train_code": "G1415",
+                      "from_station": "上海南",
+                      "to_station": "盛泽",
+                      "departure_date": "2026-10-31",
+                      "departure_time": "07:10",
+                      "arrival_date": "2026-10-31",
+                      "arrival_time": "07:49",
+                      "duration": "00:39",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 43
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "10",
+                          "price_yuan": 68
+                        },
+                        {
+                          "name": "商务座",
+                          "availability": "3",
+                          "price_yuan": 150
+                        }
+                      ],
+                      "name": "G1415 二等座",
+                      "price_yuan": 43,
+                      "availability": "有",
+                      "seat_type": "二等座",
+                      "segment_id": "s1",
+                      "from": "上海",
+                      "to": "苏州",
+                      "date": "2026-10-31",
+                      "return_leg": false,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.640098+00:00"
+                    },
+                    {
+                      "option_id": "40da1e1ae65cdb5d93c39881",
+                      "train_code": "G1415",
+                      "from_station": "上海南",
+                      "to_station": "盛泽",
+                      "departure_date": "2026-10-31",
+                      "departure_time": "07:10",
+                      "arrival_date": "2026-10-31",
+                      "arrival_time": "07:49",
+                      "duration": "00:39",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 43
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "10",
+                          "price_yuan": 68
+                        },
+                        {
+                          "name": "商务座",
+                          "availability": "3",
+                          "price_yuan": 150
+                        }
+                      ],
+                      "name": "G1415 一等座",
+                      "price_yuan": 68,
+                      "availability": "10",
+                      "seat_type": "一等座",
+                      "segment_id": "s1",
+                      "from": "上海",
+                      "to": "苏州",
+                      "date": "2026-10-31",
+                      "return_leg": false,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.640098+00:00"
+                    },
+                    {
+                      "option_id": "c1fef94c0ee073f6c8b4e332",
+                      "train_code": "G1415",
+                      "from_station": "上海南",
+                      "to_station": "盛泽",
+                      "departure_date": "2026-10-31",
+                      "departure_time": "07:10",
+                      "arrival_date": "2026-10-31",
+                      "arrival_time": "07:49",
+                      "duration": "00:39",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 43
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "10",
+                          "price_yuan": 68
+                        },
+                        {
+                          "name": "商务座",
+                          "availability": "3",
+                          "price_yuan": 150
+                        }
+                      ],
+                      "name": "G1415 商务座",
+                      "price_yuan": 150,
+                      "availability": "3",
+                      "seat_type": "商务座",
+                      "segment_id": "s1",
+                      "from": "上海",
+                      "to": "苏州",
+                      "date": "2026-10-31",
+                      "return_leg": false,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.640098+00:00"
+                    },
+                    {
+                      "option_id": "a2f8c19f00e0993959798c32",
+                      "train_code": "G8262",
+                      "from_station": "上海",
+                      "to_station": "苏州",
+                      "departure_date": "2026-10-31",
+                      "departure_time": "07:10",
+                      "arrival_date": "2026-10-31",
+                      "arrival_time": "07:49",
+                      "duration": "00:39",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 39
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "10",
+                          "price_yuan": 63
+                        },
+                        {
+                          "name": "特等座",
+                          "availability": "6",
+                          "price_yuan": 71
+                        }
+                      ],
+                      "name": "G8262 二等座",
+                      "price_yuan": 39,
+                      "availability": "有",
+                      "seat_type": "二等座",
+                      "segment_id": "s1",
+                      "from": "上海",
+                      "to": "苏州",
+                      "date": "2026-10-31",
+                      "return_leg": false,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.640098+00:00"
+                    },
+                    {
+                      "option_id": "3504743a2c27a961c4a6be36",
+                      "train_code": "G8262",
+                      "from_station": "上海",
+                      "to_station": "苏州",
+                      "departure_date": "2026-10-31",
+                      "departure_time": "07:10",
+                      "arrival_date": "2026-10-31",
+                      "arrival_time": "07:49",
+                      "duration": "00:39",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 39
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "10",
+                          "price_yuan": 63
+                        },
+                        {
+                          "name": "特等座",
+                          "availability": "6",
+                          "price_yuan": 71
+                        }
+                      ],
+                      "name": "G8262 一等座",
+                      "price_yuan": 63,
+                      "availability": "10",
+                      "seat_type": "一等座",
+                      "segment_id": "s1",
+                      "from": "上海",
+                      "to": "苏州",
+                      "date": "2026-10-31",
+                      "return_leg": false,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.640098+00:00"
+                    },
+                    {
+                      "option_id": "cdedc1f19c9e059f3d4cea26",
+                      "train_code": "G8262",
+                      "from_station": "上海",
+                      "to_station": "苏州",
+                      "departure_date": "2026-10-31",
+                      "departure_time": "07:10",
+                      "arrival_date": "2026-10-31",
+                      "arrival_time": "07:49",
+                      "duration": "00:39",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 39
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "10",
+                          "price_yuan": 63
+                        },
+                        {
+                          "name": "特等座",
+                          "availability": "6",
+                          "price_yuan": 71
+                        }
+                      ],
+                      "name": "G8262 特等座",
+                      "price_yuan": 71,
+                      "availability": "6",
+                      "seat_type": "特等座",
+                      "segment_id": "s1",
+                      "from": "上海",
+                      "to": "苏州",
+                      "date": "2026-10-31",
+                      "return_leg": false,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.640098+00:00"
+                    },
+                    {
+                      "option_id": "63d9858e9128c5f1a6fa11ae",
+                      "train_code": "G3144",
+                      "from_station": "上海虹桥",
+                      "to_station": "常熟",
+                      "departure_date": "2026-10-31",
+                      "departure_time": "07:14",
+                      "arrival_date": "2026-10-31",
+                      "arrival_time": "07:59",
+                      "duration": "00:45",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 45
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "15",
+                          "price_yuan": 72
+                        },
+                        {
+                          "name": "商务座",
+                          "availability": "9",
+                          "price_yuan": 141
+                        }
+                      ],
+                      "name": "G3144 二等座",
+                      "price_yuan": 45,
+                      "availability": "有",
+                      "seat_type": "二等座",
+                      "segment_id": "s1",
+                      "from": "上海",
+                      "to": "苏州",
+                      "date": "2026-10-31",
+                      "return_leg": false,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.640098+00:00"
+                    },
+                    {
+                      "option_id": "c502e7ceedfd7789649aad0a",
+                      "train_code": "G3144",
+                      "from_station": "上海虹桥",
+                      "to_station": "常熟",
+                      "departure_date": "2026-10-31",
+                      "departure_time": "07:14",
+                      "arrival_date": "2026-10-31",
+                      "arrival_time": "07:59",
+                      "duration": "00:45",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 45
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "15",
+                          "price_yuan": 72
+                        },
+                        {
+                          "name": "商务座",
+                          "availability": "9",
+                          "price_yuan": 141
+                        }
+                      ],
+                      "name": "G3144 一等座",
+                      "price_yuan": 72,
+                      "availability": "15",
+                      "seat_type": "一等座",
+                      "segment_id": "s1",
+                      "from": "上海",
+                      "to": "苏州",
+                      "date": "2026-10-31",
+                      "return_leg": false,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.640098+00:00"
+                    },
+                    {
+                      "option_id": "daef26c48da8fbb43535dd18",
+                      "train_code": "G3144",
+                      "from_station": "上海虹桥",
+                      "to_station": "常熟",
+                      "departure_date": "2026-10-31",
+                      "departure_time": "07:14",
+                      "arrival_date": "2026-10-31",
+                      "arrival_time": "07:59",
+                      "duration": "00:45",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 45
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "15",
+                          "price_yuan": 72
+                        },
+                        {
+                          "name": "商务座",
+                          "availability": "9",
+                          "price_yuan": 141
+                        }
+                      ],
+                      "name": "G3144 商务座",
+                      "price_yuan": 141,
+                      "availability": "9",
+                      "seat_type": "商务座",
+                      "segment_id": "s1",
+                      "from": "上海",
+                      "to": "苏州",
+                      "date": "2026-10-31",
+                      "return_leg": false,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.640098+00:00"
+                    },
+                    {
+                      "option_id": "2896c93389d6a7f67eed114b",
+                      "train_code": "G3144",
+                      "from_station": "上海虹桥",
+                      "to_station": "张家港",
+                      "departure_date": "2026-10-31",
+                      "departure_time": "07:14",
+                      "arrival_date": "2026-10-31",
+                      "arrival_time": "08:11",
+                      "duration": "00:57",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 52
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "14",
+                          "price_yuan": 83
+                        },
+                        {
+                          "name": "商务座",
+                          "availability": "7",
+                          "price_yuan": 162
+                        }
+                      ],
+                      "name": "G3144 二等座",
+                      "price_yuan": 52,
+                      "availability": "有",
+                      "seat_type": "二等座",
+                      "segment_id": "s1",
+                      "from": "上海",
+                      "to": "苏州",
+                      "date": "2026-10-31",
+                      "return_leg": false,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.640098+00:00"
+                    },
+                    {
+                      "option_id": "7c8fd51ba457ca304e60c6db",
+                      "train_code": "G3144",
+                      "from_station": "上海虹桥",
+                      "to_station": "张家港",
+                      "departure_date": "2026-10-31",
+                      "departure_time": "07:14",
+                      "arrival_date": "2026-10-31",
+                      "arrival_time": "08:11",
+                      "duration": "00:57",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 52
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "14",
+                          "price_yuan": 83
+                        },
+                        {
+                          "name": "商务座",
+                          "availability": "7",
+                          "price_yuan": 162
+                        }
+                      ],
+                      "name": "G3144 一等座",
+                      "price_yuan": 83,
+                      "availability": "14",
+                      "seat_type": "一等座",
+                      "segment_id": "s1",
+                      "from": "上海",
+                      "to": "苏州",
+                      "date": "2026-10-31",
+                      "return_leg": false,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.640098+00:00"
+                    },
+                    {
+                      "option_id": "bd98264f9ff0e55edbb4d61a",
+                      "train_code": "G3144",
+                      "from_station": "上海虹桥",
+                      "to_station": "张家港",
+                      "departure_date": "2026-10-31",
+                      "departure_time": "07:14",
+                      "arrival_date": "2026-10-31",
+                      "arrival_time": "08:11",
+                      "duration": "00:57",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 52
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "14",
+                          "price_yuan": 83
+                        },
+                        {
+                          "name": "商务座",
+                          "availability": "7",
+                          "price_yuan": 162
+                        }
+                      ],
+                      "name": "G3144 商务座",
+                      "price_yuan": 162,
+                      "availability": "7",
+                      "seat_type": "商务座",
+                      "segment_id": "s1",
+                      "from": "上海",
+                      "to": "苏州",
+                      "date": "2026-10-31",
+                      "return_leg": false,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.640098+00:00"
+                    }
+                  ],
+                  "original_count": 579,
+                  "shown_count": 579,
+                  "original_characters": 362239
+                },
+                {
+                  "segment_id": "s2",
+                  "from": "苏州",
+                  "to": "上海",
+                  "date": "2026-11-01",
+                  "return_leg": true,
+                  "mode": "train",
+                  "status": "ok",
+                  "query": {
+                    "date": "2026-11-01",
+                    "fromStation": "苏州",
+                    "toStation": "上海"
+                  },
+                  "source": "12306 via Joooook/12306-mcp",
+                  "source_url": "https://kyfw.12306.cn/",
+                  "options": [
+                    {
+                      "option_id": "1592314eda63da592e8eafaf",
+                      "train_code": "D3005",
+                      "from_station": "苏州",
+                      "to_station": "上海虹桥",
+                      "departure_date": "2026-11-01",
+                      "departure_time": "17:00",
+                      "arrival_date": "2026-11-01",
+                      "arrival_time": "17:28",
+                      "duration": "00:28",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "无",
+                          "price_yuan": 33
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "有",
+                          "price_yuan": 54
+                        },
+                        {
+                          "name": "无座",
+                          "availability": "有",
+                          "price_yuan": 33
+                        }
+                      ],
+                      "name": "D3005 二等座",
+                      "price_yuan": 33,
+                      "availability": "无",
+                      "seat_type": "二等座",
+                      "segment_id": "s2",
+                      "from": "苏州",
+                      "to": "上海",
+                      "date": "2026-11-01",
+                      "return_leg": true,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.935503+00:00"
+                    },
+                    {
+                      "option_id": "6eea341a55ec54edfd29799f",
+                      "train_code": "D3005",
+                      "from_station": "苏州",
+                      "to_station": "上海虹桥",
+                      "departure_date": "2026-11-01",
+                      "departure_time": "17:00",
+                      "arrival_date": "2026-11-01",
+                      "arrival_time": "17:28",
+                      "duration": "00:28",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "无",
+                          "price_yuan": 33
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "有",
+                          "price_yuan": 54
+                        },
+                        {
+                          "name": "无座",
+                          "availability": "有",
+                          "price_yuan": 33
+                        }
+                      ],
+                      "name": "D3005 一等座",
+                      "price_yuan": 54,
+                      "availability": "有",
+                      "seat_type": "一等座",
+                      "segment_id": "s2",
+                      "from": "苏州",
+                      "to": "上海",
+                      "date": "2026-11-01",
+                      "return_leg": true,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.935503+00:00"
+                    },
+                    {
+                      "option_id": "e908239bf3d01b36d9528ead",
+                      "train_code": "D3005",
+                      "from_station": "苏州",
+                      "to_station": "上海虹桥",
+                      "departure_date": "2026-11-01",
+                      "departure_time": "17:00",
+                      "arrival_date": "2026-11-01",
+                      "arrival_time": "17:28",
+                      "duration": "00:28",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "无",
+                          "price_yuan": 33
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "有",
+                          "price_yuan": 54
+                        },
+                        {
+                          "name": "无座",
+                          "availability": "有",
+                          "price_yuan": 33
+                        }
+                      ],
+                      "name": "D3005 无座",
+                      "price_yuan": 33,
+                      "availability": "有",
+                      "seat_type": "无座",
+                      "segment_id": "s2",
+                      "from": "苏州",
+                      "to": "上海",
+                      "date": "2026-11-01",
+                      "return_leg": true,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.935503+00:00"
+                    },
+                    {
+                      "option_id": "af38811ab65f204871c78e6d",
+                      "train_code": "G3251",
+                      "from_station": "苏州北",
+                      "to_station": "上海虹桥",
+                      "departure_date": "2026-11-01",
+                      "departure_time": "17:03",
+                      "arrival_date": "2026-11-01",
+                      "arrival_time": "17:27",
+                      "duration": "00:24",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 40
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "8",
+                          "price_yuan": 63
+                        },
+                        {
+                          "name": "商务座",
+                          "availability": "1",
+                          "price_yuan": 126
+                        }
+                      ],
+                      "name": "G3251 二等座",
+                      "price_yuan": 40,
+                      "availability": "有",
+                      "seat_type": "二等座",
+                      "segment_id": "s2",
+                      "from": "苏州",
+                      "to": "上海",
+                      "date": "2026-11-01",
+                      "return_leg": true,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.935503+00:00"
+                    },
+                    {
+                      "option_id": "1e479d26eefdf6a745710e2f",
+                      "train_code": "G3251",
+                      "from_station": "苏州北",
+                      "to_station": "上海虹桥",
+                      "departure_date": "2026-11-01",
+                      "departure_time": "17:03",
+                      "arrival_date": "2026-11-01",
+                      "arrival_time": "17:27",
+                      "duration": "00:24",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 40
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "8",
+                          "price_yuan": 63
+                        },
+                        {
+                          "name": "商务座",
+                          "availability": "1",
+                          "price_yuan": 126
+                        }
+                      ],
+                      "name": "G3251 一等座",
+                      "price_yuan": 63,
+                      "availability": "8",
+                      "seat_type": "一等座",
+                      "segment_id": "s2",
+                      "from": "苏州",
+                      "to": "上海",
+                      "date": "2026-11-01",
+                      "return_leg": true,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.935503+00:00"
+                    },
+                    {
+                      "option_id": "646dd5af36804358fb9af0ee",
+                      "train_code": "G3251",
+                      "from_station": "苏州北",
+                      "to_station": "上海虹桥",
+                      "departure_date": "2026-11-01",
+                      "departure_time": "17:03",
+                      "arrival_date": "2026-11-01",
+                      "arrival_time": "17:27",
+                      "duration": "00:24",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 40
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "8",
+                          "price_yuan": 63
+                        },
+                        {
+                          "name": "商务座",
+                          "availability": "1",
+                          "price_yuan": 126
+                        }
+                      ],
+                      "name": "G3251 商务座",
+                      "price_yuan": 126,
+                      "availability": "1",
+                      "seat_type": "商务座",
+                      "segment_id": "s2",
+                      "from": "苏州",
+                      "to": "上海",
+                      "date": "2026-11-01",
+                      "return_leg": true,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.935503+00:00"
+                    },
+                    {
+                      "option_id": "35ddb3ebc95983cf55ba9966",
+                      "train_code": "G7523",
+                      "from_station": "常熟",
+                      "to_station": "上海虹桥",
+                      "departure_date": "2026-11-01",
+                      "departure_time": "17:06",
+                      "arrival_date": "2026-11-01",
+                      "arrival_time": "17:54",
+                      "duration": "00:48",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 46
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "有",
+                          "price_yuan": 73
+                        },
+                        {
+                          "name": "商务座",
+                          "availability": "10",
+                          "price_yuan": 138
+                        }
+                      ],
+                      "name": "G7523 二等座",
+                      "price_yuan": 46,
+                      "availability": "有",
+                      "seat_type": "二等座",
+                      "segment_id": "s2",
+                      "from": "苏州",
+                      "to": "上海",
+                      "date": "2026-11-01",
+                      "return_leg": true,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.935503+00:00"
+                    },
+                    {
+                      "option_id": "46a07285c247b1808893d472",
+                      "train_code": "G7523",
+                      "from_station": "常熟",
+                      "to_station": "上海虹桥",
+                      "departure_date": "2026-11-01",
+                      "departure_time": "17:06",
+                      "arrival_date": "2026-11-01",
+                      "arrival_time": "17:54",
+                      "duration": "00:48",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 46
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "有",
+                          "price_yuan": 73
+                        },
+                        {
+                          "name": "商务座",
+                          "availability": "10",
+                          "price_yuan": 138
+                        }
+                      ],
+                      "name": "G7523 一等座",
+                      "price_yuan": 73,
+                      "availability": "有",
+                      "seat_type": "一等座",
+                      "segment_id": "s2",
+                      "from": "苏州",
+                      "to": "上海",
+                      "date": "2026-11-01",
+                      "return_leg": true,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.935503+00:00"
+                    },
+                    {
+                      "option_id": "697c8b8ab65851e7b614e7e9",
+                      "train_code": "G7523",
+                      "from_station": "常熟",
+                      "to_station": "上海虹桥",
+                      "departure_date": "2026-11-01",
+                      "departure_time": "17:06",
+                      "arrival_date": "2026-11-01",
+                      "arrival_time": "17:54",
+                      "duration": "00:48",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 46
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "有",
+                          "price_yuan": 73
+                        },
+                        {
+                          "name": "商务座",
+                          "availability": "10",
+                          "price_yuan": 138
+                        }
+                      ],
+                      "name": "G7523 商务座",
+                      "price_yuan": 138,
+                      "availability": "10",
+                      "seat_type": "商务座",
+                      "segment_id": "s2",
+                      "from": "苏州",
+                      "to": "上海",
+                      "date": "2026-11-01",
+                      "return_leg": true,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.935503+00:00"
+                    },
+                    {
+                      "option_id": "5e15e745f775c8fff83521d1",
+                      "train_code": "G7767",
+                      "from_station": "苏州",
+                      "to_station": "上海",
+                      "departure_date": "2026-11-01",
+                      "departure_time": "17:08",
+                      "arrival_date": "2026-11-01",
+                      "arrival_time": "17:50",
+                      "duration": "00:42",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 46
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "无",
+                          "price_yuan": 74
+                        },
+                        {
+                          "name": "无座",
+                          "availability": "有",
+                          "price_yuan": 46
+                        }
+                      ],
+                      "name": "G7767 二等座",
+                      "price_yuan": 46,
+                      "availability": "有",
+                      "seat_type": "二等座",
+                      "segment_id": "s2",
+                      "from": "苏州",
+                      "to": "上海",
+                      "date": "2026-11-01",
+                      "return_leg": true,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.935503+00:00"
+                    },
+                    {
+                      "option_id": "6d9d447174f6bc5ded62ce45",
+                      "train_code": "G7767",
+                      "from_station": "苏州",
+                      "to_station": "上海",
+                      "departure_date": "2026-11-01",
+                      "departure_time": "17:08",
+                      "arrival_date": "2026-11-01",
+                      "arrival_time": "17:50",
+                      "duration": "00:42",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 46
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "无",
+                          "price_yuan": 74
+                        },
+                        {
+                          "name": "无座",
+                          "availability": "有",
+                          "price_yuan": 46
+                        }
+                      ],
+                      "name": "G7767 一等座",
+                      "price_yuan": 74,
+                      "availability": "无",
+                      "seat_type": "一等座",
+                      "segment_id": "s2",
+                      "from": "苏州",
+                      "to": "上海",
+                      "date": "2026-11-01",
+                      "return_leg": true,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.935503+00:00"
+                    },
+                    {
+                      "option_id": "5c4d1da468f0479b66bac34d",
+                      "train_code": "G7767",
+                      "from_station": "苏州",
+                      "to_station": "上海",
+                      "departure_date": "2026-11-01",
+                      "departure_time": "17:08",
+                      "arrival_date": "2026-11-01",
+                      "arrival_time": "17:50",
+                      "duration": "00:42",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 46
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "无",
+                          "price_yuan": 74
+                        },
+                        {
+                          "name": "无座",
+                          "availability": "有",
+                          "price_yuan": 46
+                        }
+                      ],
+                      "name": "G7767 无座",
+                      "price_yuan": 46,
+                      "availability": "有",
+                      "seat_type": "无座",
+                      "segment_id": "s2",
+                      "from": "苏州",
+                      "to": "上海",
+                      "date": "2026-11-01",
+                      "return_leg": true,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.935503+00:00"
+                    },
+                    {
+                      "option_id": "d1a957cf4083859547d0e4d9",
+                      "train_code": "C465",
+                      "from_station": "太仓",
+                      "to_station": "上海",
+                      "departure_date": "2026-11-01",
+                      "departure_time": "17:12",
+                      "arrival_date": "2026-11-01",
+                      "arrival_time": "17:47",
+                      "duration": "00:35",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 19
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "9",
+                          "price_yuan": 31
+                        },
+                        {
+                          "name": "无座",
+                          "availability": "无",
+                          "price_yuan": 19
+                        }
+                      ],
+                      "name": "C465 二等座",
+                      "price_yuan": 19,
+                      "availability": "有",
+                      "seat_type": "二等座",
+                      "segment_id": "s2",
+                      "from": "苏州",
+                      "to": "上海",
+                      "date": "2026-11-01",
+                      "return_leg": true,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.935503+00:00"
+                    },
+                    {
+                      "option_id": "40eb532cbda6a568e1a1c7cb",
+                      "train_code": "C465",
+                      "from_station": "太仓",
+                      "to_station": "上海",
+                      "departure_date": "2026-11-01",
+                      "departure_time": "17:12",
+                      "arrival_date": "2026-11-01",
+                      "arrival_time": "17:47",
+                      "duration": "00:35",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 19
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "9",
+                          "price_yuan": 31
+                        },
+                        {
+                          "name": "无座",
+                          "availability": "无",
+                          "price_yuan": 19
+                        }
+                      ],
+                      "name": "C465 一等座",
+                      "price_yuan": 31,
+                      "availability": "9",
+                      "seat_type": "一等座",
+                      "segment_id": "s2",
+                      "from": "苏州",
+                      "to": "上海",
+                      "date": "2026-11-01",
+                      "return_leg": true,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.935503+00:00"
+                    },
+                    {
+                      "option_id": "53f58f1288f0da70ff42296e",
+                      "train_code": "C465",
+                      "from_station": "太仓",
+                      "to_station": "上海",
+                      "departure_date": "2026-11-01",
+                      "departure_time": "17:12",
+                      "arrival_date": "2026-11-01",
+                      "arrival_time": "17:47",
+                      "duration": "00:35",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 19
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "9",
+                          "price_yuan": 31
+                        },
+                        {
+                          "name": "无座",
+                          "availability": "无",
+                          "price_yuan": 19
+                        }
+                      ],
+                      "name": "C465 无座",
+                      "price_yuan": 19,
+                      "availability": "无",
+                      "seat_type": "无座",
+                      "segment_id": "s2",
+                      "from": "苏州",
+                      "to": "上海",
+                      "date": "2026-11-01",
+                      "return_leg": true,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.935503+00:00"
+                    },
+                    {
+                      "option_id": "e9c6225094f19f85e887fa3d",
+                      "train_code": "G7019",
+                      "from_station": "苏州",
+                      "to_station": "上海",
+                      "departure_date": "2026-11-01",
+                      "departure_time": "17:14",
+                      "arrival_date": "2026-11-01",
+                      "arrival_time": "17:40",
+                      "duration": "00:26",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 46
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "20",
+                          "price_yuan": 74
+                        },
+                        {
+                          "name": "无座",
+                          "availability": "无",
+                          "price_yuan": 46
+                        }
+                      ],
+                      "name": "G7019 二等座",
+                      "price_yuan": 46,
+                      "availability": "有",
+                      "seat_type": "二等座",
+                      "segment_id": "s2",
+                      "from": "苏州",
+                      "to": "上海",
+                      "date": "2026-11-01",
+                      "return_leg": true,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.935503+00:00"
+                    },
+                    {
+                      "option_id": "8a5f8cedca3dda20e3615b8e",
+                      "train_code": "G7019",
+                      "from_station": "苏州",
+                      "to_station": "上海",
+                      "departure_date": "2026-11-01",
+                      "departure_time": "17:14",
+                      "arrival_date": "2026-11-01",
+                      "arrival_time": "17:40",
+                      "duration": "00:26",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 46
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "20",
+                          "price_yuan": 74
+                        },
+                        {
+                          "name": "无座",
+                          "availability": "无",
+                          "price_yuan": 46
+                        }
+                      ],
+                      "name": "G7019 一等座",
+                      "price_yuan": 74,
+                      "availability": "20",
+                      "seat_type": "一等座",
+                      "segment_id": "s2",
+                      "from": "苏州",
+                      "to": "上海",
+                      "date": "2026-11-01",
+                      "return_leg": true,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.935503+00:00"
+                    },
+                    {
+                      "option_id": "5d68999cd4fe0c9e999a1164",
+                      "train_code": "G7019",
+                      "from_station": "苏州",
+                      "to_station": "上海",
+                      "departure_date": "2026-11-01",
+                      "departure_time": "17:14",
+                      "arrival_date": "2026-11-01",
+                      "arrival_time": "17:40",
+                      "duration": "00:26",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 46
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "20",
+                          "price_yuan": 74
+                        },
+                        {
+                          "name": "无座",
+                          "availability": "无",
+                          "price_yuan": 46
+                        }
+                      ],
+                      "name": "G7019 无座",
+                      "price_yuan": 46,
+                      "availability": "无",
+                      "seat_type": "无座",
+                      "segment_id": "s2",
+                      "from": "苏州",
+                      "to": "上海",
+                      "date": "2026-11-01",
+                      "return_leg": true,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.935503+00:00"
+                    },
+                    {
+                      "option_id": "d9be743435de0596a4ccc2fa",
+                      "train_code": "G735",
+                      "from_station": "苏州北",
+                      "to_station": "上海虹桥",
+                      "departure_date": "2026-11-01",
+                      "departure_time": "17:15",
+                      "arrival_date": "2026-11-01",
+                      "arrival_time": "17:38",
+                      "duration": "00:23",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 40
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "有",
+                          "price_yuan": 68
+                        },
+                        {
+                          "name": "商务座",
+                          "availability": "无",
+                          "price_yuan": 134
+                        }
+                      ],
+                      "name": "G735 二等座",
+                      "price_yuan": 40,
+                      "availability": "有",
+                      "seat_type": "二等座",
+                      "segment_id": "s2",
+                      "from": "苏州",
+                      "to": "上海",
+                      "date": "2026-11-01",
+                      "return_leg": true,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.935503+00:00"
+                    },
+                    {
+                      "option_id": "97279edfbfca220abf9addbb",
+                      "train_code": "G735",
+                      "from_station": "苏州北",
+                      "to_station": "上海虹桥",
+                      "departure_date": "2026-11-01",
+                      "departure_time": "17:15",
+                      "arrival_date": "2026-11-01",
+                      "arrival_time": "17:38",
+                      "duration": "00:23",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 40
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "有",
+                          "price_yuan": 68
+                        },
+                        {
+                          "name": "商务座",
+                          "availability": "无",
+                          "price_yuan": 134
+                        }
+                      ],
+                      "name": "G735 一等座",
+                      "price_yuan": 68,
+                      "availability": "有",
+                      "seat_type": "一等座",
+                      "segment_id": "s2",
+                      "from": "苏州",
+                      "to": "上海",
+                      "date": "2026-11-01",
+                      "return_leg": true,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.935503+00:00"
+                    },
+                    {
+                      "option_id": "2e8af82e165d3b909cd5a4f4",
+                      "train_code": "G735",
+                      "from_station": "苏州北",
+                      "to_station": "上海虹桥",
+                      "departure_date": "2026-11-01",
+                      "departure_time": "17:15",
+                      "arrival_date": "2026-11-01",
+                      "arrival_time": "17:38",
+                      "duration": "00:23",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 40
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "有",
+                          "price_yuan": 68
+                        },
+                        {
+                          "name": "商务座",
+                          "availability": "无",
+                          "price_yuan": 134
+                        }
+                      ],
+                      "name": "G735 商务座",
+                      "price_yuan": 134,
+                      "availability": "无",
+                      "seat_type": "商务座",
+                      "segment_id": "s2",
+                      "from": "苏州",
+                      "to": "上海",
+                      "date": "2026-11-01",
+                      "return_leg": true,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.935503+00:00"
+                    },
+                    {
+                      "option_id": "9cd9710e66da6e931d724c85",
+                      "train_code": "G3244",
+                      "from_station": "苏州南",
+                      "to_station": "上海南",
+                      "departure_date": "2026-11-01",
+                      "departure_time": "17:16",
+                      "arrival_date": "2026-11-01",
+                      "arrival_time": "17:42",
+                      "duration": "00:26",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 39
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "无",
+                          "price_yuan": 63
+                        },
+                        {
+                          "name": "商务座",
+                          "availability": "10",
+                          "price_yuan": 138
+                        }
+                      ],
+                      "name": "G3244 二等座",
+                      "price_yuan": 39,
+                      "availability": "有",
+                      "seat_type": "二等座",
+                      "segment_id": "s2",
+                      "from": "苏州",
+                      "to": "上海",
+                      "date": "2026-11-01",
+                      "return_leg": true,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.935503+00:00"
+                    },
+                    {
+                      "option_id": "3de71621881422a6bdf940c4",
+                      "train_code": "G3244",
+                      "from_station": "苏州南",
+                      "to_station": "上海南",
+                      "departure_date": "2026-11-01",
+                      "departure_time": "17:16",
+                      "arrival_date": "2026-11-01",
+                      "arrival_time": "17:42",
+                      "duration": "00:26",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 39
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "无",
+                          "price_yuan": 63
+                        },
+                        {
+                          "name": "商务座",
+                          "availability": "10",
+                          "price_yuan": 138
+                        }
+                      ],
+                      "name": "G3244 一等座",
+                      "price_yuan": 63,
+                      "availability": "无",
+                      "seat_type": "一等座",
+                      "segment_id": "s2",
+                      "from": "苏州",
+                      "to": "上海",
+                      "date": "2026-11-01",
+                      "return_leg": true,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.935503+00:00"
+                    },
+                    {
+                      "option_id": "dbc87a56b86d6567aefb8390",
+                      "train_code": "G3244",
+                      "from_station": "苏州南",
+                      "to_station": "上海南",
+                      "departure_date": "2026-11-01",
+                      "departure_time": "17:16",
+                      "arrival_date": "2026-11-01",
+                      "arrival_time": "17:42",
+                      "duration": "00:26",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 39
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "无",
+                          "price_yuan": 63
+                        },
+                        {
+                          "name": "商务座",
+                          "availability": "10",
+                          "price_yuan": 138
+                        }
+                      ],
+                      "name": "G3244 商务座",
+                      "price_yuan": 138,
+                      "availability": "10",
+                      "seat_type": "商务座",
+                      "segment_id": "s2",
+                      "from": "苏州",
+                      "to": "上海",
+                      "date": "2026-11-01",
+                      "return_leg": true,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.935503+00:00"
+                    },
+                    {
+                      "option_id": "45fb5b1480ee467945e3cbaa",
+                      "train_code": "C3775",
+                      "from_station": "常熟",
+                      "to_station": "上海虹桥",
+                      "departure_date": "2026-11-01",
+                      "departure_time": "17:18",
+                      "arrival_date": "2026-11-01",
+                      "arrival_time": "18:11",
+                      "duration": "00:53",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 46
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "4",
+                          "price_yuan": 73
+                        },
+                        {
+                          "name": "无座",
+                          "availability": "无",
+                          "price_yuan": 46
+                        }
+                      ],
+                      "name": "C3775 二等座",
+                      "price_yuan": 46,
+                      "availability": "有",
+                      "seat_type": "二等座",
+                      "segment_id": "s2",
+                      "from": "苏州",
+                      "to": "上海",
+                      "date": "2026-11-01",
+                      "return_leg": true,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.935503+00:00"
+                    },
+                    {
+                      "option_id": "f6e103270966b5eecbf4fdf3",
+                      "train_code": "C3775",
+                      "from_station": "常熟",
+                      "to_station": "上海虹桥",
+                      "departure_date": "2026-11-01",
+                      "departure_time": "17:18",
+                      "arrival_date": "2026-11-01",
+                      "arrival_time": "18:11",
+                      "duration": "00:53",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 46
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "4",
+                          "price_yuan": 73
+                        },
+                        {
+                          "name": "无座",
+                          "availability": "无",
+                          "price_yuan": 46
+                        }
+                      ],
+                      "name": "C3775 一等座",
+                      "price_yuan": 73,
+                      "availability": "4",
+                      "seat_type": "一等座",
+                      "segment_id": "s2",
+                      "from": "苏州",
+                      "to": "上海",
+                      "date": "2026-11-01",
+                      "return_leg": true,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.935503+00:00"
+                    },
+                    {
+                      "option_id": "4a2e3d37b52f709d0d776c96",
+                      "train_code": "C3775",
+                      "from_station": "常熟",
+                      "to_station": "上海虹桥",
+                      "departure_date": "2026-11-01",
+                      "departure_time": "17:18",
+                      "arrival_date": "2026-11-01",
+                      "arrival_time": "18:11",
+                      "duration": "00:53",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "有",
+                          "price_yuan": 46
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "4",
+                          "price_yuan": 73
+                        },
+                        {
+                          "name": "无座",
+                          "availability": "无",
+                          "price_yuan": 46
+                        }
+                      ],
+                      "name": "C3775 无座",
+                      "price_yuan": 46,
+                      "availability": "无",
+                      "seat_type": "无座",
+                      "segment_id": "s2",
+                      "from": "苏州",
+                      "to": "上海",
+                      "date": "2026-11-01",
+                      "return_leg": true,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.935503+00:00"
+                    },
+                    {
+                      "option_id": "e0361190723c71e3dc6418be",
+                      "train_code": "G8291",
+                      "from_station": "张家港",
+                      "to_station": "上海",
+                      "departure_date": "2026-11-01",
+                      "departure_time": "17:18",
+                      "arrival_date": "2026-11-01",
+                      "arrival_time": "18:25",
+                      "duration": "01:07",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "10",
+                          "price_yuan": 52
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "1",
+                          "price_yuan": 84
+                        },
+                        {
+                          "name": "无座",
+                          "availability": "无",
+                          "price_yuan": 52
+                        }
+                      ],
+                      "name": "G8291 二等座",
+                      "price_yuan": 52,
+                      "availability": "10",
+                      "seat_type": "二等座",
+                      "segment_id": "s2",
+                      "from": "苏州",
+                      "to": "上海",
+                      "date": "2026-11-01",
+                      "return_leg": true,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.935503+00:00"
+                    },
+                    {
+                      "option_id": "ef5b6dc2fea5668e5a87ffaf",
+                      "train_code": "G8291",
+                      "from_station": "张家港",
+                      "to_station": "上海",
+                      "departure_date": "2026-11-01",
+                      "departure_time": "17:18",
+                      "arrival_date": "2026-11-01",
+                      "arrival_time": "18:25",
+                      "duration": "01:07",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "10",
+                          "price_yuan": 52
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "1",
+                          "price_yuan": 84
+                        },
+                        {
+                          "name": "无座",
+                          "availability": "无",
+                          "price_yuan": 52
+                        }
+                      ],
+                      "name": "G8291 一等座",
+                      "price_yuan": 84,
+                      "availability": "1",
+                      "seat_type": "一等座",
+                      "segment_id": "s2",
+                      "from": "苏州",
+                      "to": "上海",
+                      "date": "2026-11-01",
+                      "return_leg": true,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.935503+00:00"
+                    },
+                    {
+                      "option_id": "311b4a9ca0e34a84494db0a5",
+                      "train_code": "G8291",
+                      "from_station": "张家港",
+                      "to_station": "上海",
+                      "departure_date": "2026-11-01",
+                      "departure_time": "17:18",
+                      "arrival_date": "2026-11-01",
+                      "arrival_time": "18:25",
+                      "duration": "01:07",
+                      "seats": [
+                        {
+                          "name": "二等座",
+                          "availability": "10",
+                          "price_yuan": 52
+                        },
+                        {
+                          "name": "一等座",
+                          "availability": "1",
+                          "price_yuan": 84
+                        },
+                        {
+                          "name": "无座",
+                          "availability": "无",
+                          "price_yuan": 52
+                        }
+                      ],
+                      "name": "G8291 无座",
+                      "price_yuan": 52,
+                      "availability": "无",
+                      "seat_type": "无座",
+                      "segment_id": "s2",
+                      "from": "苏州",
+                      "to": "上海",
+                      "date": "2026-11-01",
+                      "return_leg": true,
+                      "mode": "train",
+                      "source": "12306 via Joooook/12306-mcp",
+                      "queried_at": "2026-10-30T14:00:59.935503+00:00"
+                    }
+                  ],
+                  "original_count": 628,
+                  "shown_count": 600,
+                  "original_characters": 394922
+                }
+              ]
+            },
+            "skill_name": "train_multi_segment",
+            "expires_at": "2026-10-30T14:10:59.944821+00:00"
+          },
+          "code": null
+        },
+        {
+          "role": "assistant",
+          "content": "已查询各段交通，请在卡片中逐段选择后提交。无候选路段会明确标记。",
+          "code": null
+        },
+        {
+          "role": "done",
+          "content": "finish",
+          "code": 200
+        }
+      ],
+      "state": {
+        "user_id": "cbf30656-5852-4195-a0ed-0a833401c37f",
+        "current_step": "transport_planning",
+        "requirement": {
+          "departure_city": "上海",
+          "destinations": [
+            "苏州"
+          ],
+          "departure_date": "2026-10-31",
+          "travel_days": 2,
+          "adult_count": 1,
+          "children_count": 0,
+          "budget_max": 3000.0,
+          "transport_types": [
+            "train"
+          ],
+          "accommodation_types": [
+            "economy_hotel"
+          ],
+          "food_preferences": [
+            "local",
+            "specialty"
+          ],
+          "travel_styles": [],
+          "special_needs": "",
+          "auto_confirm": false,
+          "city_days": null
+        },
+        "revision": 3,
+        "confirmed_revision": 3,
+        "destination_info": null,
+        "selected_transport": [],
+        "selected_hotels": [],
+        "food_preferences": [],
+        "itinerary_body": null,
+        "budget": null,
+        "plan_id": null,
+        "active_card": {
+          "id": "3f76a19a-c54b-44b0-b525-fa617fe25772",
+          "skill_name": "train_multi_segment"
+        }
+      }
+    }
+  ],
+  "active_card_get": 200,
+  "final_flight": {
+    "conversation_id": "0d71038f-88cf-46b3-9e66-bb824919f7af",
+    "events": [
+      {
+        "role": "skills",
+        "content": {
+          "skill_name": "express",
+          "title": "并行收集旅行资料",
+          "desc": "各段交通、各站住宿与各城天气同时查询"
+        },
+        "code": null
+      },
+      {
+        "role": "skills",
+        "content": {
+          "skill_name": "itinerary_generation",
+          "title": "生成与校验逐日行程",
+          "desc": "按已选交通、住宿和攻略来源生成"
+        },
+        "code": null
+      },
+      {
+        "role": "itinerary_plans",
+        "content": {
+          "status": "pending",
+          "message": "正在保存行程清单并核对地图地点"
+        },
+        "code": null
+      },
+      {
+        "role": "itinerary_plans",
+        "content": {
+          "status": "success",
+          "id": "9e4cc051-05a1-4863-a922-4dbfa60c1445",
+          "message": "行程清单已生成"
+        },
+        "code": null
+      },
+      {
+        "role": "assistant",
+        "content": "交通：上海→北京 KN5978\n交通：北京→上海 HO1254\n住宿：北京 布丁酒店(北京西站店)\n\n# 北京2日行程\n\n## Day 1 · 北京\n\n**上午**\n- 08:30–10:55 **飞抵北京大兴国际机场**：乘坐KN5978航班从上海浦东机场出发，08:30起飞，10:55抵达北京大兴国际机场。\n\n**中午**\n- 11:30–13:00 **前往布丁酒店(北京西站店)**：从大兴机场乘地铁或机场大巴至北京西站附近，办理入住前可寄存行李。\n\n**下午**\n- 14:00–16:30 **游览天坛公园**：参观明清两代皇帝祭天祈谷的皇家坛庙，重点游览祈年殿、圜丘坛和回音壁。〔资料3〕\n\n**晚上**\n- 17:30–19:00 **前门大街晚餐**：在前门大街品尝北京烤鸭、爆肚等本地特色小吃，感受老北京商业街氛围。〔资料3〕\n\n小贴士：KN5978航班抵达后需预留交通及入住时间；布丁酒店未提供明确入住时间，请现场确认；天坛冬季开放时间为6:00–22:00（旺季为6:00–21:00），但核心景点入院截止时间可能提前，请以当日公告为准。\n\n## Day 2 · 北京\n\n**上午**\n- 08:30–11:30 **故宫博物院参观**：预约进入世界文化遗产故宫，游览中轴线三大殿、乾清宫、坤宁宫及东西六宫区域。〔资料4〕\n\n**中午**\n- 12:00–13:30 **景山公园俯瞰紫禁城**：登顶景山万春亭，全景俯瞰故宫建筑群与北京中轴线，冬季视野通透、游客较少。\n\n**下午**\n- 14:00–16:00 **南锣鼓巷胡同漫步**：穿行北京保存最完整的传统胡同街区，体验四合院风貌与文创小店融合的市井生活。〔资料1〕\n\n**晚上**\n- 18:30–20:30 **返程前往大兴机场**：乘坐HO1254航班返沪，需于20:30前抵达大兴机场办理值机及安检。\n\n小贴士：故宫须提前7日20:00起预约，每日放票；冬季闭馆时间为15:30（停止入院），请务必按预约时段准时入场；景山公园开放时间6:00–21:00，冬季日落早，建议15:30前入园；南锣鼓巷无门票，但部分小院需单独购票，详情待现场核实。\n\n## 预算明细\n| 项目 | 数量 | 单价 | 金额 | 依据 |\n|---|---:|---:|---:|---|\n| 上海→北京 | 1人 | 390.00 | 390.00 | 查询参考价 |\n| 北京→上海 | 1人 | 677.00 | 677.00 | 查询参考价 |\n| 北京住宿 | 1间夜 | 191.00 | 191.00 | 查询参考价 |\n| 餐饮 | 2人天 | 150.00 | 300.00 | 估算 |\n| 门票 | 2人天 | 200.00 | 400.00 | 估算 |\n| 市内交通及杂费 | 2人天 | 100.00 | 200.00 | 估算 |\n\n合计 **2158.00元**，人均 **2158.00元**。\n报价为查询时参考价，估算单独列示；本系统不执行购票、订房或支付。\n\n## 资料来源（历史攻略与联网摘要，出行前核实）\n1. 北京景点资料 · Beijing https://en.wikivoyage.org/wiki/Beijing\n2. 北京景点资料 · Beijing/Haidian https://en.wikivoyage.org/wiki/Beijing/Haidian\n3. 北京景点资料 · Beijing/Chongwen https://en.wikivoyage.org/wiki/Beijing/Chongwen\n4. 北京 https://bj.bendibao.com/news/jingdianbao/\n5. 2026北京景点怎么预约,北京景点预约入口与免票人群范围对照清单 https://www.163.com/dy/article/LAARIQ760556MG6S.html",
+        "code": null
+      },
+      {
+        "role": "done",
+        "content": "finish",
+        "code": 200
+      }
+    ],
+    "state": {
+      "user_id": "cbf30656-5852-4195-a0ed-0a833401c37f",
+      "current_step": "budget_summarization",
+      "requirement": {
+        "departure_city": "上海",
+        "destinations": [
+          "北京"
+        ],
+        "departure_date": "2026-10-31",
+        "travel_days": 2,
+        "adult_count": 1,
+        "children_count": 0,
+        "budget_max": 6000.0,
+        "transport_types": [
+          "flight"
+        ],
+        "accommodation_types": [
+          "economy_hotel"
+        ],
+        "food_preferences": [
+          "local",
+          "specialty"
+        ],
+        "travel_styles": [],
+        "special_needs": "",
+        "auto_confirm": true,
+        "city_days": null
+      },
+      "revision": 1,
+      "confirmed_revision": 1,
+      "destination_info": null,
+      "selected_transport": [
+        {
+          "option_id": "5c06dba160a90062c01a496b",
+          "flight_code": "KN5978",
+          "from_airport": "PVG",
+          "to_airport": "PKX",
+          "departure_at": "2026-10-31 08:30:00",
+          "arrival_at": "2026-10-31 10:55:00",
+          "price_yuan": 390.0,
+          "currency": "CNY",
+          "note": "仅时刻表，未获取可核对票价；不代表已预订",
+          "departure_time": "08:30",
+          "arrival_time": "10:55",
+          "departure_date": "2026-10-31",
+          "arrival_date": "2026-10-31",
+          "name": "KN5978",
+          "availability": "未提供余座",
+          "segment_id": "s1",
+          "from": "上海",
+          "to": "北京",
+          "date": "2026-10-31",
+          "return_leg": false,
+          "mode": "flight",
+          "source": "Variflight",
+          "queried_at": "2026-10-30T14:01:02.032375+00:00"
+        },
+        {
+          "option_id": "d1647fd680df95d2a63a3f24",
+          "flight_code": "HO1254",
+          "from_airport": "PKX",
+          "to_airport": "PVG",
+          "departure_at": "2026-11-01 21:20:00",
+          "arrival_at": "2026-11-01 23:30:00",
+          "price_yuan": 677.0,
+          "currency": "CNY",
+          "note": "仅时刻表，未获取可核对票价；不代表已预订",
+          "departure_time": "21:20",
+          "arrival_time": "23:30",
+          "departure_date": "2026-11-01",
+          "arrival_date": "2026-11-01",
+          "name": "HO1254",
+          "availability": "未提供余座",
+          "segment_id": "s2",
+          "from": "北京",
+          "to": "上海",
+          "date": "2026-11-01",
+          "return_leg": true,
+          "mode": "flight",
+          "source": "Variflight",
+          "queried_at": "2026-10-30T14:01:02.350788+00:00"
+        }
+      ],
+      "selected_hotels": [
+        {
+          "option_id": "aa53022a39bd59e0b2393487",
+          "name": "布丁酒店(北京西站店)",
+          "nightly_price_yuan": 191.0,
+          "stay_total_yuan": 191.0,
+          "address": "太平桥西路华源一里8号北门",
+          "rating": 2.0,
+          "distance_meters": 6665.0,
+          "source": "AIGOHOTEL",
+          "currency": "CNY",
+          "segment_id": "h1",
+          "city": "北京",
+          "checkin": "2026-10-31",
+          "checkout": "2026-11-01",
+          "nights": 1,
+          "days": 2,
+          "mode": "hotel",
+          "queried_at": "2026-10-30T22:01:11.492202+08:00"
+        }
+      ],
+      "food_preferences": [
+        "local",
+        "specialty"
+      ],
+      "itinerary_body": {
+        "title": "北京2日行程",
+        "days": [
+          {
+            "day": 1,
+            "city": "北京",
+            "morning": [
+              {
+                "name": "飞抵北京大兴国际机场",
+                "kind": "transport",
+                "description": "乘坐KN5978航班从上海浦东机场出发，08:30起飞，10:55抵达北京大兴国际机场。",
+                "start_time": "08:30",
+                "end_time": "10:55",
+                "source_ids": []
+              }
+            ],
+            "noon": [
+              {
+                "name": "前往布丁酒店(北京西站店)",
+                "kind": "transport",
+                "description": "从大兴机场乘地铁或机场大巴至北京西站附近，办理入住前可寄存行李。",
+                "start_time": "11:30",
+                "end_time": "13:00",
+                "source_ids": []
+              }
+            ],
+            "afternoon": [
+              {
+                "name": "游览天坛公园",
+                "kind": "attraction",
+                "description": "参观明清两代皇帝祭天祈谷的皇家坛庙，重点游览祈年殿、圜丘坛和回音壁。",
+                "start_time": "14:00",
+                "end_time": "16:30",
+                "source_ids": [
+                  "58bb780b58c2aa381d00f14f"
+                ]
+              }
+            ],
+            "evening": [
+              {
+                "name": "前门大街晚餐",
+                "kind": "meal",
+                "description": "在前门大街品尝北京烤鸭、爆肚等本地特色小吃，感受老北京商业街氛围。",
+                "start_time": "17:30",
+                "end_time": "19:00",
+                "source_ids": [
+                  "58bb780b58c2aa381d00f14f"
+                ]
+              }
+            ],
+            "tips": [
+              "KN5978航班抵达后需预留交通及入住时间；布丁酒店未提供明确入住时间，请现场确认；天坛冬季开放时间为6:00–22:00（旺季为6:00–21:00），但核心景点入院截止时间可能提前，请以当日公告为准。"
+            ]
+          },
+          {
+            "day": 2,
+            "city": "北京",
+            "morning": [
+              {
+                "name": "故宫博物院参观",
+                "kind": "attraction",
+                "description": "预约进入世界文化遗产故宫，游览中轴线三大殿、乾清宫、坤宁宫及东西六宫区域。",
+                "start_time": "08:30",
+                "end_time": "11:30",
+                "source_ids": [
+                  "f26d19b9dcff2cfe1f7316d2"
+                ]
+              }
+            ],
+            "noon": [
+              {
+                "name": "景山公园俯瞰紫禁城",
+                "kind": "attraction",
+                "description": "登顶景山万春亭，全景俯瞰故宫建筑群与北京中轴线，冬季视野通透、游客较少。",
+                "start_time": "12:00",
+                "end_time": "13:30",
+                "source_ids": []
+              }
+            ],
+            "afternoon": [
+              {
+                "name": "南锣鼓巷胡同漫步",
+                "kind": "attraction",
+                "description": "穿行北京保存最完整的传统胡同街区，体验四合院风貌与文创小店融合的市井生活。",
+                "start_time": "14:00",
+                "end_time": "16:00",
+                "source_ids": [
+                  "0492d449ab62aa70f1f4b448"
+                ]
+              }
+            ],
+            "evening": [
+              {
+                "name": "返程前往大兴机场",
+                "kind": "transport",
+                "description": "乘坐HO1254航班返沪，需于20:30前抵达大兴机场办理值机及安检。",
+                "start_time": "18:30",
+                "end_time": "20:30",
+                "source_ids": []
+              }
+            ],
+            "tips": [
+              "故宫须提前7日20:00起预约，每日放票；冬季闭馆时间为15:30（停止入院），请务必按预约时段准时入场；景山公园开放时间6:00–21:00，冬季日落早，建议15:30前入园；南锣鼓巷无门票，但部分小院需单独购票，详情待现场核实。"
+            ]
+          }
+        ]
+      },
+      "budget": {
+        "currency": "CNY",
+        "items": [
+          {
+            "category": "transport",
+            "label": "上海→北京",
+            "segment_id": "s1",
+            "unit": "人",
+            "quantity": 1,
+            "unit_price": 390.0,
+            "amount": 390.0,
+            "basis": "quote",
+            "source": "Variflight",
+            "queried_at": "2026-10-30T14:01:02.032375+00:00",
+            "note": "尚未预订；儿童暂按成人参考价，优惠以购票时为准"
+          },
+          {
+            "category": "transport",
+            "label": "北京→上海",
+            "segment_id": "s2",
+            "unit": "人",
+            "quantity": 1,
+            "unit_price": 677.0,
+            "amount": 677.0,
+            "basis": "quote",
+            "source": "Variflight",
+            "queried_at": "2026-10-30T14:01:02.350788+00:00",
+            "note": "尚未预订；儿童暂按成人参考价，优惠以购票时为准"
+          },
+          {
+            "category": "accommodation",
+            "label": "北京住宿",
+            "segment_id": "h1",
+            "unit": "间夜",
+            "quantity": 1,
+            "unit_price": 191.0,
+            "amount": 191.0,
+            "basis": "quote",
+            "source": "AIGOHOTEL",
+            "queried_at": "2026-10-30T22:01:11.492202+08:00",
+            "note": "1晚×1间；品牌参考不表示可订门店"
+          },
+          {
+            "category": "food",
+            "label": "餐饮",
+            "unit": "人天",
+            "quantity": 2,
+            "unit_price": 150,
+            "amount": 300.0,
+            "basis": "estimate",
+            "source": "规划估算"
+          },
+          {
+            "category": "attractions",
+            "label": "门票",
+            "unit": "人天",
+            "quantity": 2,
+            "unit_price": 200,
+            "amount": 400.0,
+            "basis": "estimate",
+            "source": "规划估算"
+          },
+          {
+            "category": "misc",
+            "label": "市内交通及杂费",
+            "unit": "人天",
+            "quantity": 2,
+            "unit_price": 100,
+            "amount": 200.0,
+            "basis": "estimate",
+            "source": "规划估算"
+          }
+        ],
+        "total": 2158.0,
+        "per_person": 2158.0,
+        "people": 1,
+        "rooms": 1,
+        "nights": 1,
+        "budget_max": 6000.0,
+        "over_budget": false,
+        "quote_total": 1258.0,
+        "estimate_total": 900.0,
+        "notice": "报价为查询时参考价，估算单独列示；本系统不执行购票、订房或支付。"
+      },
+      "plan_id": "9e4cc051-05a1-4863-a922-4dbfa60c1445",
+      "active_card": null
+    }
+  },
+  "live_web_direct": [
+    {
+      "role": "assistant",
+      "content": "端午旅游最佳去处:苏州拙政园,门票70元+实名预约全攻略+FAQ：淡季票价全价70元(6月) 开放时间旺季7:30-17:30(16:30停止入园) 拙政园端午游览关键信息汇总(数据来源:苏州市文广旅局、拙政园官方)\n来源：https://k.sina.com.cn/article_7880069198_1d5b0504e06801yq1w.html\n\n拙政园开放预约指南(开放时间+预约入口+预约流程)：1.开放时间: 2026年6月19日至10月7日,开放时间调整为6:45-17:30。 每年3月1日-10月31日: 07:30开始检票入园,17:00停止检票入园,17:30开始清园;其中法定节假日期间延迟半小时闭园,18:00闭园。 每年11月1日-次年2月底: 07:30开始检票入园,16:30停止检票入园,17:00开始清园;其中法定节假日期间延迟半小时闭园,17:30闭园。 游客游览需提前网上预约购票,请携带本人身份证等有效证件验证入园。已开通支付宝功能的购票游客也可选择人脸识别审核入园。 购票入口:苏州园林官微 预约购票流程: 1、选择想要前往游园的日期 2、选择购买的票型 3、选定购买的数量 4、选定入园的时间段(务必确认好时间,游览当日预约时段后退票记爽约一次,一周内累计爽约2次,从第2次爽约的次日起,30日内将无法预约门票。) 5、所有票型都选择完成后,点击【立即预定】,在支付页面填写出行人的姓名、身份证号等信息后即可支付\n来源：https://m.suzhou.bendibao.com/mip/ly73408.shtm\n\n11月苏杭全域游玩怎么安排?本地旅行社应季盘点,景点预约与住宿美食全汇总：1. 姑苏区园林:预约优先于路线 拙政园大门票70元/人(景区公示价),旺季需提前1至3天在官方渠道预约。狮子林、留园体量小些,上午9点前入园体验更从容。苏州博物馆免费但需预约,周一闭馆。 拙政园加苏州博物馆:半天,步行5分钟可达,适合首日。\n来源：https://www.163.com/dy/article/LA8ASSJ30556MVLJ.html\n\n联网搜索摘要，不等同官方网站核验；不从标题推断网站为官方。",
+      "code": null
+    },
+    {
+      "role": "done",
+      "content": "finish",
+      "code": 200
+    }
+  ]
+}

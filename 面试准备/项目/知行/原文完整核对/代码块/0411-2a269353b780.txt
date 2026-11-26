@@ -1,0 +1,33 @@
+"""ItineraryBody 演示：五种不合格的逐日结构，各自被 schema 拦下，报错是中文 + 精确定位（纯逻辑，无需密钥）"""
+from pydantic import ValidationError
+
+from app.tools.state_transition import ItineraryBody
+
+def day(n, evening="晚上在酒店附近觅食后休息，人均约 60 元，注意末班车时间"):
+    """造一个合法的单日：每个时段 1 条、每条 ≥15 字、带 1 条 tips"""
+    return {"day": n, "city": "杭州",
+            "morning": [f"第{n}天上午游览西湖断桥与苏堤，建议停留 2 小时，免费开放"],
+            "noon": [f"第{n}天中午在楼外楼用餐，招牌西湖醋鱼，人均约 120 元"],
+            "afternoon": [f"第{n}天下午去灵隐寺，飞来峰石刻值得细看，门票 45 元"],
+            "evening": [evening],
+            "tips": [f"第{n}天的景点建议提前在官方小程序预约，避开周末高峰"]}
+
+back = "晚上乘 G1710 返回天津，建议提前 1 小时到站取票安检"
+short = [day(1, back)]
+short[0]["morning"] = ["逛西湖"]
+empty = [day(1, back)]
+empty[0]["noon"] = []
+cases = {
+    "3 天完整": ([day(1), day(2), day(3, back)], 3),
+    "缺第 2 天": ([day(1), day(3, back)], 3),
+    "末日无返程": ([day(1), day(2), day(3)], 3),
+    "条目太短": (short, 1),
+    "中午是空的": (empty, 1),
+    "天序号重复": ([day(1, back), day(1, back)], 1),
+}
+for name, (days, need) in cases.items():
+    try:
+        ItineraryBody.model_validate({"days": days}, context={"travel_days": need})
+        print(f"{name:6s} → ✅ 通过")
+    except ValidationError as e:
+        print(f"{name:6s} → ❌ {e.errors()[0]['msg'][:62]}")

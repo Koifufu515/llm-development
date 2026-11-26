@@ -1,0 +1,5 @@
+# ❌ Windows 上得到 travel-guide\西安.md，Linux 上得到 travel-guide/西安.md
+source_uri = str(path.relative_to("corpus"))
+
+# ✅ 两边都是 travel-guide/西安.md
+source_uri = path.relative_to("corpus").as_posix()

@@ -1,0 +1,4 @@
+RouterResult 字段 → description（写给 LLM 的判定指令）：
+  is_itinerary_planning  用户是否在请求生成/修改行程规划
+  inference_log          意图判断的推导过程，中文，供前端展示
+  skills                 本轮预计用到的技能，闲聊时为空列表

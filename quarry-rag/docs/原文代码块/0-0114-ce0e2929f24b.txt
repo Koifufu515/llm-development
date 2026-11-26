@@ -1,0 +1,25 @@
+-- ① 向量索引，只建在子块上
+CREATE INDEX chunks_embed_hnsw ON chunks
+  USING hnsw (embedding halfvec_cosine_ops)
+  WITH (m = 16, ef_construction = 64)
+  WHERE level = 1;
+
+-- ② 全文索引，同样只建在子块上
+CREATE INDEX chunks_tokens_gin ON chunks
+  USING gin (tokens) WHERE level = 1;
+
+-- ③ 权限标签：acl_labels && $1 靠它加速
+CREATE INDEX chunks_acl_gin ON chunks USING gin (acl_labels);
+
+-- ④ 元数据：用 jsonb_path_ops 而不是默认的 jsonb_ops
+CREATE INDEX chunks_meta_gin ON chunks USING gin (meta jsonb_path_ops);
+
+-- ⑤ 按集合 / 版本 / 层级圈定范围
+CREATE INDEX chunks_scope ON chunks (collection_id, doc_version, level);
+
+-- ⑥ 给定一个父块，找它的所有子块
+CREATE INDEX chunks_parent ON chunks (parent_id) WHERE level = 1;
+
+-- ⑦ 邻块补全：找相邻的父块
+CREATE INDEX chunks_neighbors ON chunks (document_id, heading_path, ord)
+  WHERE level = 0;

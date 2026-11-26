@@ -1,0 +1,668 @@
+{
+  "scope": "单节点K3s内三Mongo/三Redis+Sentinel组件故障切换，非物理节点容灾",
+  "initial_mongo_primary": "mongodb-0.mongodb-headless:27017",
+  "initial_redis_master": [
+    "redis-0.redis-headless",
+    6379
+  ],
+  "samples": [
+    {
+      "seconds": 0.0,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 10.5,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 11.5,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 12.51,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 13.52,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 14.52,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 15.52,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 16.54,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 17.55,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 18.56,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 19.56,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 20.56,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 21.57,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 22.58,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 23.58,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 24.58,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 25.58,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 26.6,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 27.6,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 28.61,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 29.62,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 30.63,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 31.63,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 32.64,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 33.66,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 34.66,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 35.68,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 36.68,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 37.69,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 38.69,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 39.69,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 40.7,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 41.7,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 42.71,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 43.72,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 44.72,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 45.73,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 46.73,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 47.74,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 48.74,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 49.75,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 50.76,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 51.76,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 52.76,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 53.77,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 54.77,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 55.77,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 56.78,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 57.79,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 58.8,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 59.81,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 60.81,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 61.82,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 62.82,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 63.83,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 64.83,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 65.84,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 66.85,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 67.85,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 68.85,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 69.86,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 70.86,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 71.86,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 72.87,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    },
+    {
+      "seconds": 73.88,
+      "mongo_value": "preserved",
+      "mongo_primary": "mongodb-2.mongodb-headless:27017",
+      "redis_value": "preserved",
+      "redis_master": [
+        "redis-0.redis-headless",
+        6379
+      ]
+    }
+  ],
+  "mongo_leader_changed": true,
+  "redis_leader_changed": false,
+  "final_values_preserved": true,
+  "fault_injection": {
+    "mongo": "replSetStepDown(force=true,20s)",
+    "redis": "SIGSTOP primary15s then SIGCONT",
+    "redis_pod": "redis-0"
+  }
+}

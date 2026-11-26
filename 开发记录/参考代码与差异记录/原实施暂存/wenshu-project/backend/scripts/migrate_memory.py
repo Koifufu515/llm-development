@@ -1,0 +1,1 @@
+../../../../../../wenshu-project/backend/scripts/migrate_memory.py

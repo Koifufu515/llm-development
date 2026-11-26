@@ -1,0 +1,4 @@
+target_index = ALL_STEPS.index(target_step)
+for step in ALL_STEPS[target_index:]:                   # 从目标步到最后一步
+    for field in STEP_STATE_FIELDS.get(step, []):
+        state_update[field] = None                      # 每个字段置 None

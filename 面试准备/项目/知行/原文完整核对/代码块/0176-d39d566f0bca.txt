@@ -1,0 +1,11 @@
+"""leg_signature 演示：一批段拼成一个签名字符串；段对象只要有 from_ / to / travel_date 三个属性就行（纯函数，无需密钥）"""
+from types import SimpleNamespace
+
+from app.capabilities.base.common import leg_signature
+
+legs = [SimpleNamespace(from_="北京", to="天津", travel_date="2026-10-01"),     # 用 SimpleNamespace 冒充段对象：鸭子类型
+        SimpleNamespace(from_="天津", to="上海", travel_date="2026-10-02")]
+print(leg_signature(legs))
+later = [SimpleNamespace(from_="北京", to="天津", travel_date="2026-10-03")]
+print("同一段换一天，签名不同：", leg_signature(legs[:1]) != leg_signature(later))
+print("没有段：", repr(leg_signature([])))

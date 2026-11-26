@@ -1,0 +1,68 @@
+def _build_budget(req: ExpressRequirement, sel: dict) -> tuple[str, dict]:
+    """纯代码预算计算与明细拼接，口径与 summarize_budget_tool 保持一致，不经过LLM复述。
+    返回 (展示文本, 结构化明细)——后者与 state.BudgetBreakdown 同构，供同步进状态机 budget 字段"""
+    import math
+    people = req.adult_count + req.children_count
+    days, nights = req.travel_days, max(req.travel_days - 1, 1)
+    rooms = max(math.ceil(people / 2), 1)
+
+    cities = sel.get("cities") or _split_cities(req.destination)
+    total_legs = sel.get("total_legs") or len(_build_legs(req.departure_city, cities))
+
+    # 交通费用：真实票价求和，缺失路段按已获取路段均价估算
+    leg_prices = [tr["price"] for tr in sel["transports"] if tr["price"] > 0]
+    if leg_prices:
+        avg_leg = sum(leg_prices) / len(leg_prices)
+        transport_price = sum(leg_prices) + avg_leg * max(total_legs - len(leg_prices), 0)
+    else:
+        transport_price = 500 * max(total_legs, 1)
+    transport_cost = transport_price * people
+
+    # 住宿费用：取各城酒店均价，无数据时使用300元/晚估算
+    city_prices = [h["price"] for h in sel["hotels"]]
+    hotel_price = (sum(city_prices) / len(city_prices)) if city_prices else 300
+    accommodation_cost = hotel_price * nights * rooms
+
+    food_cost = 150 * days * people
+    attractions_cost = 200 * days * people
+    misc_cost = 100 * days * people
+
+    total = transport_cost + accommodation_cost + food_cost + attractions_cost + misc_cost
+    per_person = total / people if people else total
+
+    if req.budget_max > 0:
+        verdict = "人均未超预算" if per_person <= req.budget_max else "人均超预算（建议下调住宿档位或减天数）"
+    else:
+        verdict = "未提供预算上限，仅作参考"
+
+    missing_legs = max(total_legs - len(leg_prices), 0)
+    if not leg_prices:
+        transport_detail = f"（{total_legs} 段按常识估算）"
+    elif missing_legs:
+        transport_detail = f"（{len(leg_prices)}/{total_legs} 段实时票价，{missing_legs} 段按均价估算）"
+    else:
+        transport_detail = f"（{total_legs} 段 × 各段票价）"
+
+    hotel_detail = (f"各城均价 {hotel_price:.0f} 元"
+                    if city_prices else f"各城估算 {hotel_price:.0f} 元/晚（实时房价不可用）")
+
+    text = (
+        f"### 预算明细（{people} 人 / {nights} 晚 / {rooms} 间房 / {len(cities) or 1} 城）\n"
+        f"- **交通费用**：{transport_cost:.2f} 元（人均 {transport_price:.0f} 元，{transport_detail}）\n"
+        f"- **住宿费用**：{accommodation_cost:.2f} 元（{rooms} 间 × {nights} 晚 × {hotel_detail}）\n"
+        f"- **餐饮费用**：{food_cost:.2f} 元（150元/人/天）\n"
+        f"- **景点门票**：{attractions_cost:.2f} 元（按 200元/人/天 估算）\n"
+        f"- **其他杂费**：{misc_cost:.2f} 元\n"
+        f"**总计：{total:.2f} 元（{people} 人总价）｜人均：{per_person:.2f} 元**\n"
+        f"预算结论：{verdict}"
+    )
+    # ★ 结构化明细（字段与 state.BudgetBreakdown 同构），供 sync_express_state 写入状态机
+    breakdown = {
+        "transport": transport_cost,
+        "accommodation": accommodation_cost,
+        "food": food_cost,
+        "attractions": attractions_cost,
+        "misc": misc_cost,
+        "total": total,
+    }
+    return text, breakdown

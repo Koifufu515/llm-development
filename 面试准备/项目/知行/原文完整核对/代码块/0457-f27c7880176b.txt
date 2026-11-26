@@ -1,0 +1,27 @@
+"""EventStream 生产者-消费者演示：生产者边算边 push，消费者 async for 边收边打印（纯逻辑，无需密钥）"""
+import asyncio
+import time
+
+from app.core.event_stream import EventStream
+from app.core.events import make_event, ROLE_ASSISTANT, ROLE_DONE
+
+T0 = time.perf_counter()
+
+async def producer(stream: EventStream):
+    """测试驱动：模拟后台编排每隔 0.5s 产出一段内容"""
+    for word in ["已识别出发地：福州", "正在查询高铁…", "Day 1 西湖"]:
+        await asyncio.sleep(0.5)
+        print(f"[{time.perf_counter() - T0:.1f}s] 生产者 push：{word}")
+        stream.push(make_event(ROLE_ASSISTANT, word))   # 同步 push：放进队列就走
+    stream.push(make_event(ROLE_DONE, "finish", code=200))
+    stream.close()                                      # 宣告结束 → 消费者的 async for 随之退出
+
+async def main():
+    stream = EventStream()
+    asyncio.create_task(producer(stream))               # 生产者丢到后台跑
+    async for event in stream:                          # 消费者：来一帧收一帧
+        print(f"[{time.perf_counter() - T0:.1f}s] 消费者收到：{event}")
+    print(f"[{time.perf_counter() - T0:.1f}s] async for 正常结束（收到了 close 哨兵）")
+
+if __name__ == "__main__":
+    asyncio.run(main())

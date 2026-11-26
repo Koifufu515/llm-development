@@ -1,0 +1,143 @@
+{
+  "scope": "真实HTTP、Harness、Mongo、Sentinel、Prometheus/HPA；合成模型固定1.5秒延时，外部模型调用=0，不代表Qwen吞吐",
+  "samples": [
+    {
+      "phase": "load-baseline-1pod",
+      "seconds": 0.1,
+      "replicas": 1,
+      "ready": 1
+    },
+    {
+      "phase": "load-baseline-1pod",
+      "seconds": 10.1,
+      "replicas": 1,
+      "ready": 1
+    },
+    {
+      "phase": "load-baseline-1pod",
+      "seconds": 20.2,
+      "replicas": 1,
+      "ready": 1
+    },
+    {
+      "phase": "load-baseline-1pod",
+      "seconds": 30.3,
+      "replicas": 1,
+      "ready": 1
+    },
+    {
+      "phase": "load-baseline-1pod",
+      "seconds": 40.4,
+      "replicas": 1,
+      "ready": 1
+    },
+    {
+      "phase": "load-scale-to-20",
+      "seconds": 0.1,
+      "replicas": 1,
+      "ready": 1
+    },
+    {
+      "phase": "load-scale-to-20",
+      "seconds": 10.2,
+      "replicas": 1,
+      "ready": 1
+    },
+    {
+      "phase": "load-scale-to-20",
+      "seconds": 20.2,
+      "replicas": 1,
+      "ready": 1
+    },
+    {
+      "phase": "load-scale-to-20",
+      "seconds": 30.3,
+      "replicas": 1,
+      "ready": 1
+    },
+    {
+      "phase": "load-scale-to-20",
+      "seconds": 40.4,
+      "replicas": 1,
+      "ready": 1
+    },
+    {
+      "phase": "load-scale-to-20",
+      "seconds": 50.5,
+      "replicas": 4,
+      "ready": 1
+    },
+    {
+      "phase": "load-scale-to-20",
+      "seconds": 60.6,
+      "replicas": 4,
+      "ready": 4
+    },
+    {
+      "phase": "load-scale-to-20",
+      "seconds": 70.7,
+      "replicas": 4,
+      "ready": 4
+    },
+    {
+      "phase": "load-scale-to-20",
+      "seconds": 80.8,
+      "replicas": 7,
+      "ready": 4
+    },
+    {
+      "phase": "load-scale-to-20",
+      "seconds": 90.9,
+      "replicas": 7,
+      "ready": 7
+    },
+    {
+      "phase": "load-scale-to-20",
+      "seconds": 101.0,
+      "replicas": 7,
+      "ready": 7
+    },
+    {
+      "phase": "load-scale-to-20",
+      "seconds": 111.1,
+      "replicas": 10,
+      "ready": 7
+    },
+    {
+      "phase": "load-scale-to-20",
+      "seconds": 121.2,
+      "replicas": 10,
+      "ready": 9
+    },
+    {
+      "phase": "load-scale-to-20",
+      "seconds": 131.3,
+      "replicas": 10,
+      "ready": 10
+    },
+    {
+      "phase": "load-scale-to-20",
+      "seconds": 141.6,
+      "replicas": 13,
+      "ready": 10
+    }
+  ],
+  "baseline": {
+    "tag": "load-baseline-1pod",
+    "model": "synthetic fixture 1.5s answer delay, zero external model calls",
+    "concurrency": 180,
+    "seconds": 31.16598243199951,
+    "requests": 2089,
+    "successful": 1807,
+    "throughput_rps": 57.97988251911072,
+    "statuses": {
+      "500": 282,
+      "200": 1807
+    },
+    "errors": {
+      "http_error": 282
+    },
+    "p50_seconds": 2.5173909599998296,
+    "p95_seconds": 5.828492127999198
+  }
+}

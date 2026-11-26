@@ -1,0 +1,34 @@
+# ============== 全局单例 ==============
+
+_pipeline: AdvancedRAGPipeline | None = None
+
+def get_rag_pipeline() -> AdvancedRAGPipeline:
+    """获取全局 RAG Pipeline 单例（懒加载）"""
+    global _pipeline
+    if _pipeline is None:
+        from app.rag.document_loader import DocumentManager
+        from app.rag.vectorstore import VectorStoreManager
+
+        app_logger.info("首次调用 RAG Pipeline，正在初始化...")
+
+        # 加载文档
+        doc_manager = DocumentManager()
+        documents = doc_manager.load_destination_documents()
+
+        # 切分（拿到内存里的父子映射）
+        splitter = AdvancedParentDocumentSplitter()
+        _, child_docs = splitter.split_documents(documents)
+
+        # 加载已有向量库（不重新 embedding）
+        vs_manager = VectorStoreManager()
+        vectorstore = vs_manager.load_vectorstore()
+
+        _pipeline = AdvancedRAGPipeline(
+            vectorstore=vectorstore,
+            all_documents=child_docs,
+            parent_splitter=splitter,
+        )
+
+        app_logger.info("✅ RAG Pipeline 单例已就绪")
+
+    return _pipeline

@@ -1,0 +1,14 @@
+"""summarize_budget_tool 演示：用户说"多玩 1 天、预算加到 4000"——参数覆盖本次计算，并写回需求真源（纯逻辑，无需密钥）"""
+from langchain.tools import ToolRuntime
+
+from app.tools.state_transition import summarize_budget_tool
+
+state = {"messages": [], "current_step": "budget_summarization", "selected_destination": "杭州",
+         "user_requirement": {"departure_city": "北京", "travel_days": 3, "adult_count": 2, "children_count": 0, "budget_max": 3000}}
+rt = ToolRuntime(state=state, context=None, config={}, stream_writer=None, tool_call_id="call_1", store=None)
+up = summarize_budget_tool.func(transport_price_per_person=560, hotel_price_per_night=358,
+                                attraction_tickets=[{"name": "灵隐寺", "price": 45}],
+                                travel_days=4, budget_max=4000, runtime=rt).update
+print("写进 state 的键：", [k for k in up if k != "messages"], "| current_step 不在其中 → 流程终点")
+print("预算：", {k: v for k, v in up["budget"].items() if not isinstance(v, (list, dict))})
+print("写回真源：travel_days =", up["user_requirement"]["travel_days"], "| budget_max =", up["user_requirement"]["budget_max"])

@@ -1,0 +1,21 @@
+{
+  "city": "上海",
+  "title": "上海景点资料 · Shanghai/Fengxian",
+  "source_url": "https://en.wikivoyage.org/wiki/Shanghai/Fengxian",
+  "text": "资料城市：上海。本文是历史开放景点资料，不提供实时开放时间或价格；出行前需要核实。\n\nThree Women Temple\nNamed for the three daughters of the King of Wu during the Zhou Dynasty (1024-256 BCE) who hanged themselves rather than be caught by the King of Yue's soldiers.",
+  "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+  "license": "CC BY-SA 3.0",
+  "attribution": "Wikivoyage contributors; https://en.wikivoyage.org/wiki/Shanghai/Fengxian",
+  "sha256": "6649e1f60706372942247a6ba7a17d9c3d6c430771584bd97a914ae04a2aa9c3",
+  "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+  "poi_count": 1,
+  "source_dataset": "https://github.com/wikivoyage/wikivoyage.github.io",
+  "excluded_fields": [
+    "price",
+    "hours",
+    "phone",
+    "email",
+    "hotel",
+    "restaurant"
+  ]
+}

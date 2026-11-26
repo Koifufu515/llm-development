@@ -1,0 +1,148 @@
+场景 6
+AI 帮忙确认（无目的地）
+。
+北京 杭州 北京
+杭州为 AI 选城示例
+2
+1
+1
+目的地留空时先用一次LLM 选定1座城，之后与场景5完全相同；选城失败则回落状态机，从目的地推荐步继续
+次高铁查询
+次酒店查询
+次天气查询
+• 本场景经过的节点
+本场景不经过（虚化）fn调用对应业务函数/ 提交节点
+2
+3
+4
+用户发起行程请求
+判断行程交通类型
+判断是否 AI帮忙确认
+行程节点预处理
+统计有效交通段、停留城市段
+出发地
+北京
+V高铁 航班 自驾
+AI 帮忙确认。有目的地
+北京杭州 AI选 北京
+目的地
+未填写
+本场景勾选高铁。优先级 高铁＞航班＞自驾，
+读取用户给定的目的地列表，直接建段
+2
+1
+1 北京 杭州
+V 保留
+两个都勾只走高铁，另一种一次都不查
+有效交通段
+停留城市
+AI 帮忙确认• 无目的地
+本场景
+交通方式
+高铁
+AI 一次调用选定1座城市，再建段
+2 杭州 北京
+V保留，返程段
+停留城市：杭州（AI选）。选城成功后口径与
+AI 帮忙确认
+已勾选
+AI 只选 1座城（结构化返回 city+
+场景1单城往返完全一致：2段高铁＋1站酒店
+用户手动选择
+reason），
+逐步确认：目的地一交通卡片 ->住宿卡片
+city 为空或超10字直接判不合规并回落
+run_chat_turn（）
+train_mode_requested（）
+try_express_planning（）
+extract_requirement（）
+-Plan_cities（）
+_build_legs（）
+_proauce
+fliaht card model）
+_pick_destination（）
+-pick_destination（）
+_build_legs（）
+Staynignts（）
+快速通道是否接管？
+V快速通道接管
+并行数据收集 •asyncio.gather 2段交通+1城酒店+1城天气，一次发出
+expresspLanning
+V接管
+并行查询
+并行查询
+fn 调用对应业务函数
+fn调用对应业务函数
+选城成功 继续快速通道
+按段真查交通
+按城查酒店＋天气
+规则选定（纯代码）
+推送选定摘要
+X 不接管
+选城失败 一 回落状态机
+1 北京 杭州
+2 杭州 北京
+1 杭州
+高铁：有票里按「历时分钟＋价格/10」综合最低
+交通/酒店/ 餐饮/天气逐条摘要直接进对话流
+酒店：评分≥4.5 中最低价，否则评分最高
+不弹卡片、不等提交，无回执帧、无续跑消息
+只查表单勾选的交通方式，逐段独立发请求
+每城1次酒店+1次天气，共1+1次
+这一步0次LLM，查不到的段标注按估算计入
+回落后从目的地推荐步继续，
+段日期与状态机同源：去程=出发日、
+stayNights 按逐城窗口：单城住 天数-1晚
+由 auto_select_*代选，仍不弹卡片
+城际=下一城首日、返程=末日
+0晚的城不查酒店，天气照查
+单项失败独立降级，不阻塞整条通道
+_collect_context（）
+-collect_context（）
+_select_choices（）
+sel［"summary"］
+try_express_planning（）
+_leg_query_date（）
+_pLan_Citles （）
+产出
+_pick_train（）
+_pick_hotel（）
+stream.ousn
+_pick_destination（）
+规则选定完成，进入唯一一次 LLM 长输出
+run exnress nLannina.
+V进入生成环节
+单次 LLM 生成＋代码渲染 全流程唯—一次长输出
+express_planning
+END
+直接生成完整行程报告
+唯一一次 LLM
+fn 调用对应业务函数
+fn 调用对应业务函数
+北京 杭州一北京
+提交结构化逐日行程
+预算模板拼接（纯代码）
+代码渲染正文并推流
+清单落库后把上下文一次性写回状态机
+（auto_confirm=True，
+模型只按 schema 提交数据：不写正文、不写预算表、不写开场白
+交通/住宿/餐饮/门票/杂费逐项算
+按模型提交的结构确定性渲染 Markdown 正文，
+current_step=budget_summarization），
+过 ItineraryBody 校验；拿不到合规结构一返回 None 回落状态机
+缺实时票价的段按均价估算并在表里标注
+随后推送预算明细表，一个回合只出一次
+用户后续说「改5天」可直接在状态机续接
+给了预算上限才下「是否超预算」结论
+逐日行程
+预算明细表
+行程清单
+_generate_itinerary（）
+_render_itinerary_body（）
+ItineraryBody
+_build_budget（）
+_push_rendered（）
+generate_plan（）
+sync_express_state（）
+一句话记住
+没填目的地时先用1次LLM选1座城，之后与场景1口径完全相同：2段高铁＋1站酒店

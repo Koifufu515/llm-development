@@ -1,0 +1,66 @@
+{
+  "events": [
+    {
+      "seconds": 1.7321,
+      "role": "assistant",
+      "content": "已",
+      "code": null
+    },
+    {
+      "seconds": 1.7602,
+      "role": "assistant",
+      "content": "为您",
+      "code": null
+    },
+    {
+      "seconds": 1.8046,
+      "role": "assistant",
+      "content": "长期",
+      "code": null
+    },
+    {
+      "seconds": 1.8349,
+      "role": "assistant",
+      "content": "记住：",
+      "code": null
+    },
+    {
+      "seconds": 1.9245,
+      "role": "assistant",
+      "content": "海鲜过敏。\n\n接下来，我们",
+      "code": null
+    },
+    {
+      "seconds": 2.039,
+      "role": "assistant",
+      "content": "开始规划您的旅行。请问",
+      "code": null
+    },
+    {
+      "seconds": 2.1729,
+      "role": "assistant",
+      "content": "您计划从哪个",
+      "code": null
+    },
+    {
+      "seconds": 2.2852,
+      "role": "assistant",
+      "content": "城市出发？",
+      "code": null
+    },
+    {
+      "seconds": 2.3525,
+      "role": "done",
+      "content": "finish",
+      "code": 200
+    }
+  ],
+  "memory": {
+    "dietary_restrictions": [
+      "seafood allergy"
+    ]
+  },
+  "assistant_chunks": 8,
+  "history_matches_display": true,
+  "seconds": 2.383
+}

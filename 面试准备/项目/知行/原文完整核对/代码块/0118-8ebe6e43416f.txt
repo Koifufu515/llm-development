@@ -1,0 +1,9 @@
+"""演示 _normalize_weather_payload：三种 MCP 返回形态，出来都是同一种 dict（纯函数，可直接跑）"""
+from app.agents.routers.destination_router import _normalize_weather_payload
+
+blocks   = [{"type": "text", "text": '{"city":"杭州","casts":[{"date":"2026-10-01"}]}'}]  # 内容块列表
+json_str = '{"city":"杭州","casts":[]}'                                                    # JSON 字符串
+raw_dict = {"city": "杭州", "casts": []}                                                   # dict
+
+for name, raw in [("内容块列表", blocks), ("JSON字符串", json_str), ("dict", raw_dict)]:
+    print(f"{name:8s} → {_normalize_weather_payload(raw)}")

@@ -1,0 +1,111 @@
+express_planning_service•一条快速通道，加一套全系统共用的段与天口径
+表单勾了「全程交给 AI 自动确认」时，这个文件绕开七步状态机：两层分流-＞并行查数 一＞规则代选—一次模型出结构一>代码算预算。全文件28个函
+数（含2个嵌套）加2个数据模型，每个函数都有调用方；其中4个口径函数被状态机侧5个模块借用了 14处。
+谁调进来一文件内部一 结果去哪 调用关系按AST统计（只认真实调用，注释里提到的不算）
+FILE app/services/express_planning_service.py
+大两重身份
+主流程调用方•3处
+事件流一SSE 一前端
+chat_Contract_service._produce
+身份一• 快速通道主流程（23个函数，按执行顺序）
+沿途推进度帧、规则摘要、正文分片、预算
+L245
+try_express_planning
+表，全部是 role=assistant，经
+L253
+run_express_planning
+1 分流判定
+3个•图2
+2
+编排与井行收集
+6个。图3
+EventStream 由 messages.py 写成SSE
+L308
+Sync_express_state
+_hit_auto_confirm
+run_express_planning
+帧。
+业务代码里三个入口都只有这一个调用方（另有
+extract_requirement
+_pick_destination _collect_context
+测试脚本 scripts/1.py 直接调编排），全部是
+try_express_planning
+_safe
+_first
+_iata
+函数内懒加载import。
+返回值-_produce
+门卫返回 ExpressRequirement ；编排返回
+3 规则选定
+10个•图4
+④ 生成 •预算 •同步4个•图5
+（全文，days,sync）：days 交
+generate_plan 兜底出清单，sync 留给状
+-select_choices _pick_train
+-generate_itinerary _day_cities
+态同步，全文落 Message 表。
+_pick_flight _pick_hotel
+_build_budget sync_express_state
+—〉
+_pick_weather
+借用口径函数•5个模块14处
+_fallback_hotel_brands _dur_to_mins
+LangGraph checkpoint
+state_transition
+6处
+-seat_available _to_float
+sync_express_state 一次写14个键，含交
+core/middleware
+3处
+_number_before
+通/住宿账本、逐日结构和结构化预算，
+current_step 直接落在
+hotel_flow
+2处
+budget_summarization。
+chat_stream_executor
+2处
+身份二• 共享口径工具（5个函数，被状态机侧借用）
+chat_contract_service
+1处
+借的是_Split_cities
+城市/交通段/天数分配
+5个。图6
+回落状态机 execute_turn
+ordered_play_cities _build_legs
+_split_cities ］ ordered_play_cities［_plan_cities ］_build_legs_stay_nights
+_stay_nights，详见图6。
+门卫返回 None，或编排返回
+其中 _plan_cities 只在本文件内用，其余4个都被外部模块借走。
+（None,None，None）时，_produce 改走
+七步状态机。
+数据契约
+ExpressRequirement 表单抽出来的12个字段 DestinationPick 自动选城的 city + reason
+依赖方向 跨模块import 全部写在函数体内（懒加载），所以下面三组双向依赖不会触发循环导入
+本文件借用
+core/middleware 段日期
+tools/state_transition ItineraryBody、归一
+chat_stream_executor 品牌表、正文渲染、分片推送
+tools/mcp_tools 码表、取工具、解析
+8个模块
+train_agent_tool 紧凑行解析
+travel_agent 建 agent
+itinerary_plan_service 读清单
+models.base 数据库会话
+反向借用本文件
+5个模块
+core/middleware
+tools/state_transition
+chat_stream_executor
+chat_contract_service
+hotel flow
+深色=两个方向都出现，互相import
+阅读顺序 图2-5按快速通道的执行顺序，图6单独讲共享口径
+图2分流判定
+图3编排与并行收集
+图4规则选定
+一」
+图5生成 •预算•同步
+图6共享口径工具
+读这个文件要分两条线：一条是快速通道主流程，入口 try_express_planning - run_express_planning - sync_express_state 都只被_produce 调用，任何一步拿不到结果就回落状态机；另
+一条是4个口径函数，状态机的段游标、中间件的段日期、住宿卡片的入住窗口都从这里算出来。28个函数全部有调用方，没有死代码。

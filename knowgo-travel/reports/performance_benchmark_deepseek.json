@@ -1,0 +1,315 @@
+{
+  "rail": {
+    "description": "同日三段高铁、各3轮、每调用为短stdio会话、无缓存；失败计入attempted，成功耗时另算中位数",
+    "legs": [
+      {
+        "leg_id": "0",
+        "fromStation": "上海",
+        "toStation": "苏州",
+        "date": "2026-10-30"
+      },
+      {
+        "leg_id": "1",
+        "fromStation": "苏州",
+        "toStation": "杭州",
+        "date": "2026-10-30"
+      },
+      {
+        "leg_id": "2",
+        "fromStation": "杭州",
+        "toStation": "南京",
+        "date": "2026-10-30"
+      }
+    ],
+    "serial": {
+      "attempted": 3,
+      "succeeded": 3,
+      "median_seconds": 4.173857290763408,
+      "rows": [
+        {
+          "seconds": 4.264516375027597,
+          "ok": true,
+          "statuses": {
+            "0": "ok",
+            "1": "ok",
+            "2": "ok"
+          }
+        },
+        {
+          "seconds": 4.173857290763408,
+          "ok": true,
+          "statuses": {
+            "0": "ok",
+            "1": "ok",
+            "2": "ok"
+          }
+        },
+        {
+          "seconds": 4.0826385407708585,
+          "ok": true,
+          "statuses": {
+            "0": "ok",
+            "1": "ok",
+            "2": "ok"
+          }
+        }
+      ]
+    },
+    "parallel": {
+      "attempted": 3,
+      "succeeded": 3,
+      "median_seconds": 1.4220702922903001,
+      "rows": [
+        {
+          "seconds": 1.4834920829162002,
+          "ok": true,
+          "statuses": {
+            "0": "ok",
+            "1": "ok",
+            "2": "ok"
+          }
+        },
+        {
+          "seconds": 1.4220702922903001,
+          "ok": true,
+          "statuses": {
+            "0": "ok",
+            "1": "ok",
+            "2": "ok"
+          }
+        },
+        {
+          "seconds": 1.2740263328887522,
+          "ok": true,
+          "statuses": {
+            "0": "ok",
+            "1": "ok",
+            "2": "ok"
+          }
+        }
+      ]
+    }
+  },
+  "planning": {
+    "description": "单城苏州3天、各3轮；参考通道串行采集+逐日生成；快速通道并行采集+集中生成；非旧线上系统对照。各轮新会话，知识库查询缓存可能命中，记录阶段耗时。",
+    "sequential": {
+      "attempted": 3,
+      "succeeded": 3,
+      "median_seconds": 16.916072624735534,
+      "rows": [
+        {
+          "seconds": 16.916072624735534,
+          "ok": true,
+          "metrics": {
+            "request_id": "100475e2-df4f-487f-9c2e-65370a24079e",
+            "status": "ok",
+            "elapsed_seconds": 16.8955,
+            "llm_calls": 3,
+            "llm_errors": 0,
+            "usage_reported_calls": 3,
+            "input_tokens": 9198,
+            "output_tokens": 1702,
+            "usage_complete": true
+          },
+          "stages": {
+            "collection_seconds": 3.5701,
+            "retrieval_seconds": 0.207,
+            "generation_seconds": 12.9357
+          },
+          "plan_id": "1d42349d-e656-440a-bacb-6784c9ac25f5",
+          "days": 3
+        },
+        {
+          "seconds": 14.908570500090718,
+          "ok": true,
+          "metrics": {
+            "request_id": "2aade4fc-1f51-4a77-ada9-8d1429bae529",
+            "status": "ok",
+            "elapsed_seconds": 14.8808,
+            "llm_calls": 3,
+            "llm_errors": 0,
+            "usage_reported_calls": 3,
+            "input_tokens": 9198,
+            "output_tokens": 1349,
+            "usage_complete": true
+          },
+          "stages": {
+            "collection_seconds": 3.9537,
+            "retrieval_seconds": 0.0003,
+            "generation_seconds": 10.8903
+          },
+          "plan_id": "1788c4e3-0f12-411f-9e2f-8bb8f6e2ef24",
+          "days": 3
+        },
+        {
+          "seconds": 18.29793187463656,
+          "ok": true,
+          "metrics": {
+            "request_id": "438c5811-278a-4c1d-b17c-ee246f395107",
+            "status": "ok",
+            "elapsed_seconds": 18.2798,
+            "llm_calls": 3,
+            "llm_errors": 0,
+            "usage_reported_calls": 3,
+            "input_tokens": 9198,
+            "output_tokens": 1551,
+            "usage_complete": true
+          },
+          "stages": {
+            "collection_seconds": 4.7849,
+            "retrieval_seconds": 0.0003,
+            "generation_seconds": 13.4694
+          },
+          "plan_id": "cd69ef95-b7cb-44cb-bd3f-e791248ee19c",
+          "days": 3
+        }
+      ]
+    },
+    "fast": {
+      "attempted": 3,
+      "succeeded": 3,
+      "median_seconds": 8.531991541851312,
+      "rows": [
+        {
+          "seconds": 8.531991541851312,
+          "ok": true,
+          "metrics": {
+            "request_id": "219ddaed-e13f-4ded-b7d9-47264a4a7765",
+            "status": "ok",
+            "elapsed_seconds": 8.5104,
+            "llm_calls": 1,
+            "llm_errors": 0,
+            "usage_reported_calls": 1,
+            "input_tokens": 3072,
+            "output_tokens": 677,
+            "usage_complete": true
+          },
+          "stages": {
+            "collection_seconds": 2.7942,
+            "retrieval_seconds": 0.0001,
+            "generation_seconds": 5.6844
+          },
+          "plan_id": "02d2057e-7a90-4ed1-91af-61c767227d28",
+          "days": 3
+        },
+        {
+          "seconds": 8.49129679100588,
+          "ok": true,
+          "metrics": {
+            "request_id": "a2f6a838-d0da-41fd-9095-75aa2db95719",
+            "status": "ok",
+            "elapsed_seconds": 8.4707,
+            "llm_calls": 1,
+            "llm_errors": 0,
+            "usage_reported_calls": 1,
+            "input_tokens": 3072,
+            "output_tokens": 670,
+            "usage_complete": true
+          },
+          "stages": {
+            "collection_seconds": 3.0283,
+            "retrieval_seconds": 0.0003,
+            "generation_seconds": 5.4048
+          },
+          "plan_id": "32713c68-4d1a-420e-ac71-7e9fffb0d08c",
+          "days": 3
+        },
+        {
+          "seconds": 9.781657374929637,
+          "ok": true,
+          "metrics": {
+            "request_id": "32cc61dc-6601-4dcf-994e-7cca9c37eec5",
+            "status": "ok",
+            "elapsed_seconds": 9.7663,
+            "llm_calls": 1,
+            "llm_errors": 0,
+            "usage_reported_calls": 1,
+            "input_tokens": 3072,
+            "output_tokens": 752,
+            "usage_complete": true
+          },
+          "stages": {
+            "collection_seconds": 4.2655,
+            "retrieval_seconds": 0.0003,
+            "generation_seconds": 5.4742
+          },
+          "plan_id": "0a7ebab9-eb72-4ed5-a49d-83819fa98c63",
+          "days": 3
+        }
+      ]
+    }
+  },
+  "tokens": {
+    "description": "留存上海苏州真实车票JSON；两组提示词相同，API返回input_tokens；裁剪损失其余候选，不代表信息无损。",
+    "raw": {
+      "characters": 351616,
+      "rows": [
+        {
+          "ok": true,
+          "seconds": 2.600675290916115,
+          "metrics": {
+            "request_id": "c89fde4b-182c-4269-b16e-a30b446f6cc3",
+            "status": "ok",
+            "elapsed_seconds": 2.6007,
+            "llm_calls": 1,
+            "llm_errors": 0,
+            "usage_reported_calls": 1,
+            "input_tokens": 122925,
+            "output_tokens": 1,
+            "usage_complete": true
+          }
+        },
+        {
+          "ok": true,
+          "seconds": 1.1225692913867533,
+          "metrics": {
+            "request_id": "039dfb30-e36c-4988-a8a4-4343c809ac76",
+            "status": "ok",
+            "elapsed_seconds": 1.1226,
+            "llm_calls": 1,
+            "llm_errors": 0,
+            "usage_reported_calls": 1,
+            "input_tokens": 122925,
+            "output_tokens": 1,
+            "usage_complete": true
+          }
+        }
+      ]
+    },
+    "compact": {
+      "characters": 5290,
+      "rows": [
+        {
+          "ok": true,
+          "seconds": 0.516467500012368,
+          "metrics": {
+            "request_id": "974ec31a-06a6-4a46-9bbf-3d601e60fe92",
+            "status": "ok",
+            "elapsed_seconds": 0.5165,
+            "llm_calls": 1,
+            "llm_errors": 0,
+            "usage_reported_calls": 1,
+            "input_tokens": 2139,
+            "output_tokens": 1,
+            "usage_complete": true
+          }
+        },
+        {
+          "ok": true,
+          "seconds": 0.7587245828472078,
+          "metrics": {
+            "request_id": "6397e14a-b210-4dae-8e8a-390d2896e39a",
+            "status": "ok",
+            "elapsed_seconds": 0.7587,
+            "llm_calls": 1,
+            "llm_errors": 0,
+            "usage_reported_calls": 1,
+            "input_tokens": 2139,
+            "output_tokens": 1,
+            "usage_complete": true
+          }
+        }
+      ]
+    }
+  }
+}

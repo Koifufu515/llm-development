@@ -1,0 +1,6 @@
+query,kind,gold_chunks,note
+兵马俑门票多少钱,answerable,3f9a1c2e8b7d6a5c4e3f2a1b0c9d8e7f,西安 > 游览 > 秦始皇陵兵马俑
+大雁塔几点开门,answerable,a07b55d1c2e3f4a5b6c7d8e9f0a1b2c3,西安 > 游览 > 大雁塔
+西安地铁怎么买票,answerable,b18c66e2d3f4a5b6c7d8e9f0a1b2c3d4,西安 > 交通 > 市内交通
+量子色动力学的渐近自由是什么,unanswerable,,与语料无关
+公司年会在哪里办,unanswerable,,企业内部问题，travel-guide 里没有

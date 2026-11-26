@@ -1,0 +1,21 @@
+{
+  "city": "上海",
+  "title": "上海景点资料 · Shanghai/Yangpu",
+  "source_url": "https://en.wikivoyage.org/wiki/Shanghai/Yangpu",
+  "text": "资料城市：上海。本文是历史开放景点资料，不提供实时开放时间或价格；出行前需要核实。\n\nFudan University\nThere are two campuses in Yangpu District, the older, main campus, located just west of Wujiaochang, and the newer Jiangwan campus, located in New Jiangwan Town (Chinese: 新江湾城). The main campus of Fudan University is a 10 to 15 minute walk west of Wujiaochang along Handan Road (Chinese: 邯郸路). Alternatively, you can take one of numerous buses west along Handan Road (such as buses 59, 749, or 942) to the front gates of Fudan University. In the main campus, visit sights such as the statue of Mao Zedong (Chinese: 主席像), just inside the front gate; the newly constructed Guanghua building (Chinese: 光华楼), an imposing structure on campus; or even the basketball courts, where you will often see students playing.\n\nTongji University\nThe main campus is in Yangpu District. The university is served by the Tongji University station (Chinese: 同济大学站) of Metro Line 10, which brings you to the southeast gate of the university, facing Siping Road (Chinese: 四平路).\n\nShanghai University of Finance and Economics\nNorth of Fudan University's main campus. You can reach it by taking buses 406 or 819 from Wujiaochang.\n\nShanghai Institute of Physical Education\nThe main attractions of note at this university are the '''[http://www.wushumuseum.com/en/ Chinese Martial Arts Museum]''' (Chinese: 中国武术博物馆) and the old government building of the city of Shanghai (Chinese: 旧上海特别市政府), constructed in 1933, now an administration building for the university. Yangpu was the site of the new government of Shanghai under the Republic of China's rule, and many government buildings were constructed in this area. To reach the campus, take bus 90 from Wujiaochang. At the Hengren Road Qingyuan Ring Road (Chinese: 恒仁路清源环路) stop, get off. The west gate of the campus is to your east, and directly inside to your left will be the old government building. Further ahead will be the Wushu Museum.\n\nGongqing Forest Park\nA large forest park that provides an escape from the urban confines of the city. Great for picnics and relaxation. Features thrill coasters, miniature train ride, pleasure boats, mini-golf, bumper cars.",
+  "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+  "license": "CC BY-SA 3.0",
+  "attribution": "Wikivoyage contributors; https://en.wikivoyage.org/wiki/Shanghai/Yangpu",
+  "sha256": "2d4e4745161b340fe3b0c2ef7965624c056b163bc744d738e8d8d76b1d1a7cc5",
+  "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+  "poi_count": 5,
+  "source_dataset": "https://github.com/wikivoyage/wikivoyage.github.io",
+  "excluded_fields": [
+    "price",
+    "hours",
+    "phone",
+    "email",
+    "hotel",
+    "restaurant"
+  ]
+}

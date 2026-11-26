@@ -1,0 +1,1 @@
+    "chunks_pkey" PRIMARY KEY, btree (collection_id, chunk_id)

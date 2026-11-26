@@ -1,0 +1,28 @@
+# 住宿轮外部酒店服务不可用，代码层确定性兜底逻辑
+# 触发条件：①工具返回降级标记；②酒店查询工具加载失败。兜底仅输出品牌档位，不编造门店与价格
+_DEGRADE_MARK = "【外部服务暂时不可用】"
+_ACCOMMODATION_STEP = "accommodation_planning"
+
+# 交通规划步骤采用整块缓冲，回合结束一次性推送，避免大量班次逐字流式造成卡顿
+_TRANSPORT_STEP = "transport_planning"
+
+# 行程生成步骤改为代码确定性推进，减少一轮用户确认交互
+_ITINERARY_STEP = "itinerary_generation"
+
+# 需要整块缓冲的步骤：一次性推送结果，防止流式重置造成前端内容闪变
+_BUFFER_ALL_STEPS = {
+    _TRANSPORT_STEP,
+    "destination_recommendation",
+    _ITINERARY_STEP,
+    "requirement_collection",
+}
+# 住宿、餐饮确认轮也加入缓冲集合，防止前端内容闪变
+_BUFFER_ALL_STEPS |= {_ACCOMMODATION_STEP, "food_planning"}
+
+def _covers_all_days(text: str, days: int) -> bool:
+    """校验正文是否完整覆盖第1~days天，复用落库守卫的天数解析器，统一口径"""
+    if days <= 0 or not text:
+        return False
+    from app.tools.state_transition import _day_numbers  # 局部导入，防止循环引用
+    have = _day_numbers(text)
+    return all(d in have for d in range(1, days + 1))

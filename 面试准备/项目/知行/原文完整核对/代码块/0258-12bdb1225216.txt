@@ -1,0 +1,13 @@
+"""driving_card_mode 与 _fmt_route 演示：交通优先级 高铁 > 航班 > 自驾；自驾落库文本是"自驾 距离 耗时"（纯逻辑，无需密钥）"""
+from app.capabilities.driving_multi_segment.driving_flow import _fmt_route, driving_card_mode
+from app.capabilities.driving_multi_segment.driving_skill_schema import DrivingSegment
+
+def state(transport: list, dest: str) -> dict:
+    return {"user_requirement": {"departure_city": "北京", "departure_date": "2026-10-01", "travel_days": 4,
+                                 "transport_types": transport}, "selected_destination": dest}
+
+for name, st in {"只勾自驾      ": state(["自驾"], "天津"), "自驾 + 航班   ": state(["自驾", "航班"], "天津"),
+                 "自驾但本地游  ": state(["自驾"], "北京")}.items():
+    print(f"{name} → 自驾卡片 {driving_card_mode(st)}")
+print(_fmt_route(DrivingSegment(segment_id="s1", from_="北京", to="天津", ok=True, distance_km=137.0, duration_text="01:42")))
+print(_fmt_route(DrivingSegment(segment_id="s2", from_="天津", to="上海", ok=False)))

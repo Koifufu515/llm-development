@@ -1,0 +1,11 @@
+"""build_lead_text（住宿）演示：引导语逐站写明城市和入住日期，品牌模式的站会注明原因（纯逻辑，无需密钥）"""
+from app.capabilities.hotel_multi_segment.hotel_flow import build_lead_text
+from app.capabilities.hotel_multi_segment.hotel_skill_schema import HotelMultiSegmentItem, HotelMultiSegmentPayload
+
+payload = HotelMultiSegmentPayload(segments=[
+    HotelMultiSegmentItem(segment_id="h1", city="杭州", checkInDate="2026-10-01", checkOutDate="2026-10-02", guestCount=2,
+                          priceLevel="经济型", mode="hotel"),
+    HotelMultiSegmentItem(segment_id="h2", city="苏州", checkInDate="2026-10-02", checkOutDate="2026-10-05", guestCount=2,
+                          priceLevel="经济型", mode="brand"),
+])
+print(build_lead_text(payload))

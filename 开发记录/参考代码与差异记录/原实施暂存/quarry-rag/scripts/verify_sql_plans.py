@@ -1,0 +1,1 @@
+../../../../../quarry-rag/scripts/verify_sql_plans.py

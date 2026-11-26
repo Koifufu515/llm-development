@@ -1,0 +1,335 @@
+[
+  {
+    "id": "frozen-01",
+    "split": "frozen",
+    "query": "电子信息专业安排在哪一天开题？",
+    "dept_id": "dept_zfxy",
+    "relevant_files": [
+      "研究生开题报告通知-中法未来.docx"
+    ],
+    "evidence_anchor": "电子信息专业开题日期为7月20日",
+    "expected_terms": [
+      "7月20日"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "frozen-02",
+    "split": "frozen",
+    "query": "机械专业的开题日期是哪一天？",
+    "dept_id": "dept_zfxy",
+    "relevant_files": [
+      "研究生开题报告通知-中法未来.docx"
+    ],
+    "evidence_anchor": "机械专业开题日期为7月21日",
+    "expected_terms": [
+      "7月21日"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "frozen-03",
+    "split": "frozen",
+    "query": "每位学生开题答辩至少应持续多久？",
+    "dept_id": "dept_zfxy",
+    "relevant_files": [
+      "研究生开题报告通知-中法未来.docx"
+    ],
+    "evidence_anchor": "每名学生答辩时间不少于20分钟",
+    "expected_terms": [
+      "20分钟"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "frozen-04",
+    "split": "frozen",
+    "query": "电子信息和机械专业分别要带多少份纸质开题报告？",
+    "dept_id": "dept_zfxy",
+    "relevant_files": [
+      "研究生开题报告通知-中法未来.docx"
+    ],
+    "evidence_anchor": "电子信息一式5份",
+    "expected_terms": [
+      "5份",
+      "6份"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "frozen-05",
+    "split": "frozen",
+    "query": "开题考核表没有导师意见，能直接参加开题吗？",
+    "dept_id": "dept_zfxy",
+    "relevant_files": [
+      "研究生开题报告通知-中法未来.docx"
+    ],
+    "evidence_anchor": "未填写指导教师意见",
+    "expected_terms": [
+      "不能开题"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "frozen-06",
+    "split": "frozen",
+    "query": "开题答辩当天要求几点之前签到？",
+    "dept_id": "dept_zfxy",
+    "relevant_files": [
+      "研究生开题报告通知-中法未来.docx"
+    ],
+    "evidence_anchor": "12点50前",
+    "expected_terms": [
+      "12点50"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "frozen-07",
+    "split": "frozen",
+    "query": "开题后多久内还能修改题目及内容？",
+    "dept_id": "dept_zfxy",
+    "relevant_files": [
+      "研究生开题报告通知-中法未来.docx"
+    ],
+    "evidence_anchor": "开题后10日内",
+    "expected_terms": [
+      "10日"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "frozen-08",
+    "split": "frozen",
+    "query": "首次开题没通过，重新开题要隔多久？",
+    "dept_id": "dept_zfxy",
+    "relevant_files": [
+      "研究生开题报告通知-中法未来.docx"
+    ],
+    "evidence_anchor": "重新开题在1个月之后",
+    "expected_terms": [
+      "1个月"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "frozen-09",
+    "split": "frozen",
+    "query": "专业型硕士的专业实践至少需要多少个月？",
+    "dept_id": "dept_zfxy",
+    "relevant_files": [
+      "研究生开题报告通知-中法未来.docx"
+    ],
+    "evidence_anchor": "不少于12个月",
+    "expected_terms": [
+      "12个月"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "frozen-10",
+    "split": "frozen",
+    "query": "专业实践的月结需要多长时间交一次？",
+    "dept_id": "dept_zfxy",
+    "relevant_files": [
+      "研究生开题报告通知-中法未来.docx"
+    ],
+    "evidence_anchor": "每4周",
+    "expected_terms": [
+      "4周"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "frozen-11",
+    "split": "frozen",
+    "query": "参加专业实践中期和终期考核分别要交够几次月结？",
+    "dept_id": "dept_zfxy",
+    "relevant_files": [
+      "研究生开题报告通知-中法未来.docx"
+    ],
+    "evidence_anchor": "6次月结",
+    "expected_terms": [
+      "6次",
+      "12次"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "frozen-12",
+    "split": "frozen",
+    "query": "赴境外学习的学生在系统里应选择哪一个实践基地？",
+    "dept_id": "dept_zfxy",
+    "relevant_files": [
+      "研究生开题报告通知-中法未来.docx"
+    ],
+    "evidence_anchor": "北航杭州国际创新研究院研究生实践基地",
+    "expected_terms": [
+      "北航杭州国际创新研究院研究生实践基地"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "frozen-13",
+    "split": "frozen",
+    "query": "行李寄存期间可以临时取出物品吗？",
+    "dept_id": "dept_zfxy",
+    "relevant_files": [
+      "中法宿舍行李寄存承诺书.docx"
+    ],
+    "evidence_anchor": "寄存期间行李无法取出",
+    "expected_terms": [
+      "无法取出"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "frozen-14",
+    "split": "frozen",
+    "query": "寄存行李损坏或遗失由谁承担？",
+    "dept_id": "dept_zfxy",
+    "relevant_files": [
+      "中法宿舍行李寄存承诺书.docx"
+    ],
+    "evidence_anchor": "均由本人自行承担",
+    "expected_terms": [
+      "本人",
+      "承担"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "frozen-15",
+    "split": "frozen",
+    "query": "行李具体寄存在学生公寓的哪个楼层区域？",
+    "dept_id": "dept_zfxy",
+    "relevant_files": [
+      "中法宿舍行李寄存承诺书.docx"
+    ],
+    "evidence_anchor": "学生公寓D14架空层B",
+    "expected_terms": [
+      "D14",
+      "架空层"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "frozen-16",
+    "split": "frozen",
+    "query": "防汛响应期间实验室何时开始关闭？",
+    "dept_id": "dept_hqaq",
+    "relevant_files": [
+      "关于校园防汛应急响应措施的通知.docx"
+    ],
+    "evidence_anchor": "8月15日0:00",
+    "expected_terms": [
+      "8月15日",
+      "0:00"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "frozen-17",
+    "split": "frozen",
+    "query": "防汛期间食堂和超市还正常营业吗？",
+    "dept_id": "dept_hqaq",
+    "relevant_files": [
+      "关于校园防汛应急响应措施的通知.docx"
+    ],
+    "evidence_anchor": "食堂、超市均正常运营",
+    "expected_terms": [
+      "正常运营"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "frozen-18",
+    "split": "frozen",
+    "query": "看到电线低垂或折断时应该怎么做？",
+    "dept_id": "dept_hqaq",
+    "relevant_files": [
+      "关于校园防汛应急响应措施的通知.docx"
+    ],
+    "evidence_anchor": "立即远离,切勿触碰",
+    "expected_terms": [
+      "远离",
+      "切勿触碰"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "frozen-19",
+    "split": "frozen",
+    "query": "在建项目从什么时候暂停施工？",
+    "dept_id": "dept_hqaq",
+    "relevant_files": [
+      "关于校园防汛应急响应措施的通知.docx"
+    ],
+    "evidence_anchor": "8月15日00:00",
+    "expected_terms": [
+      "8月15日",
+      "00:00"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "frozen-20",
+    "split": "frozen",
+    "query": "台风影响时正在校外实习，还能照常户外作业和通勤吗？",
+    "dept_id": "dept_hqaq",
+    "relevant_files": [
+      "关于防御第9号超强台风“巴威”的安全提示(1)(1).pdf"
+    ],
+    "evidence_anchor": "暂停户外作业和通勤出行",
+    "expected_terms": [
+      "暂停",
+      "户外作业",
+      "通勤"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "frozen-21",
+    "split": "frozen",
+    "query": "台风过境后是否应马上赶路返校？",
+    "dept_id": "dept_hqaq",
+    "relevant_files": [
+      "关于防御第9号超强台风“巴威”的安全提示(1)(1).pdf"
+    ],
+    "evidence_anchor": "待天气和路况稳定",
+    "expected_terms": [
+      "天气和路况稳定"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "frozen-22",
+    "split": "frozen",
+    "query": "学校2027年博士招生最低分数线是多少？",
+    "dept_id": "dept_zfxy",
+    "relevant_files": [],
+    "evidence_anchor": null,
+    "expected_terms": [],
+    "answerable": false
+  },
+  {
+    "id": "frozen-23",
+    "split": "frozen",
+    "query": "我申请退还学费能获得多少金额？",
+    "dept_id": "dept_zfxy",
+    "relevant_files": [],
+    "evidence_anchor": null,
+    "expected_terms": [],
+    "answerable": false
+  },
+  {
+    "id": "frozen-24",
+    "split": "frozen",
+    "query": "学校是否承诺替寄存行李统一购买保险？",
+    "dept_id": "dept_zfxy",
+    "relevant_files": [],
+    "evidence_anchor": null,
+    "expected_terms": [],
+    "answerable": false
+  }
+]

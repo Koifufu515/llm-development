@@ -1,0 +1,2 @@
+cursor = max(0, min(int(runtime.state.get("leg_cursor") or 0), len(expected) - 1))
+pending = expected[cursor]        # 当前待确认段

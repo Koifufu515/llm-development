@@ -1,0 +1,66 @@
+Agent 七步流程• 状态机全景
+7步主流程串联•环节 1-7工具落点•底层环节 8-9回退系统兜底
+requirement_collection 需求收集
+record_requirement_tool
+（ 环节 1）
+表单权威值覆盖（天数 /目的地）
+• auto_confirm
+真源写入
+"destination_recommendation"
+②
+destination_recommendation 目的地推荐
+select_destination_tool
+（一环节 2
+- current_step =
+"transport_planning"|
+③
+transport_planning 交通规划
+select_transport_tool
+（一环节 3
+•段级循环：
+Leg cursor
+_expected_legs
+•车次号回填
+• Current step -
+''accommodation_planning"|
+accommodation_planning 住宿规划（含合并餐饮）
+select_accommodation_tool
+（一环节 4
+select_accomodation_food_tool
+（一环节 5）
+•逐城循环：stay_cursor +_multi_City_names
+• 自动模式一站式合并＋工具层守卫拦手动模式
+• Current step -
+［"food_planning"） /"itinerary_generation"
+⑤
+food_planning 餐饮规划
+select_food_tool
+- 环节 2（合讲）
+- current_step = ［"itinerary_generation"
+⑥
+itinerary_generation 行程正文生成
+submit_itinerary_body_tool + ItineraryBody
+一环节 6
+Pydantic schema 硬约束
+•校验失败代码归一
+• 同轮就地补算
+- current_step =［"budget_summarization"
+⑦
+budget_summarization 预算汇总（终点）
+summarize_budget_tool
+一环节 7
+• 参数可覆盖＋写回真源
+• 真实值优先/估算兜底
+- current_step 停留（流程终点、订单环节已移除）
+G
+回退系统
+环节8-
+go_back_to_step
+7 个快捷回退
+级联脏数据清除守卫
+从任意步安全"倒退"到更早的步
+按步一键跳回，配套原子操作
+回退时自动清后续状态，防脏数据污染
+• 紫•需求/餐饮 •橙•目的地/行程正文 •绿• 交通/预算
+靛 住宿（含餐饮合并）
+• 玫•回退系统

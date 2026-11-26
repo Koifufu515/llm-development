@@ -1,0 +1,1 @@
+../../../../../../wenshu-project/backend/scripts/seed_data.py

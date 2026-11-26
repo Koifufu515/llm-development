@@ -1,0 +1,2 @@
+参数名认得出： {'depCityCode': 'BJS', 'arrCityCode': 'SHA', 'depDate': '2026-10-01'}
+必填认不出  ： None

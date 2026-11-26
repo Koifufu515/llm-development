@@ -1,0 +1,528 @@
+
+
+===== block 55 0c197f3b1934 lines 1-96 source 知行旅行助手-v2#55 =====
+╔══════════════════════════════════════════════════════════╗
+║       第 04 章 · Middleware 驱动 8 步流程冒烟             ║
+╚══════════════════════════════════════════════════════════╝
+
+开始对话，每一轮打印 current_step 变化...
+
+────────────────────────────────────────────────────────────
+[第 1 轮]
+  用户: 我想在 10 月 1 日从北京出发，去武汉玩 4 天，两个人，预算大约每人 5000 元，喜欢文化探索和美食。
+  Agent: 我已经了解了您的需求：北京出发 → 武汉，10 月 1 日出发，4 天，两位成人...
+         请问是否需要我为您正式记录这些需求？
+  📌 步骤保持: requirement_collection
+
+────────────────────────────────────────────────────────────
+[第 2 轮]
+  用户: 确认，就按这个来。
+    🔧 record_requirement_tool(['departure_city', 'departure_date', ...])
+  🛠️ ✅ 需求已记录！...
+  📌 步骤推进: requirement_collection → destination_recommendation
+
+────────────────────────────────────────────────────────────
+[第 3 轮]
+  用户: 确认，选武汉。
+    🔧 select_destination_tool(['destination'])
+  🛠️ ✅ 目的地已确认：武汉
+  📌 步骤推进: destination_recommendation → transport_planning
+
+────────────────────────────────────────────────────────────
+[第 4 轮]
+  用户: 选高铁吧。
+    🔧 select_transport_tool(['transport_type'])
+  🛠️ ✅ 交通方式已确认：train
+  📌 步骤推进: transport_planning → accommodation_planning
+
+────────────────────────────────────────────────────────────
+[第 5 轮]
+  用户: 选经济酒店。
+    🔧 select_accommodation_tool(['accommodation_types'])
+  🛠️ ✅ 住宿偏好已确认：economy_hotel
+  📌 步骤推进: accommodation_planning → food_planning
+
+────────────────────────────────────────────────────────────
+[第 6 轮]
+  用户: 特色美食和本地小吃都要。
+    🔧 select_food_tool(['food_types'])
+  🛠️ ✅ 餐饮偏好已确认: specialty, local
+  📌 步骤推进: food_planning → itinerary_generation
+
+────────────────────────────────────────────────────────────
+[第 7 轮]
+  用户: 帮我把每天安排排出来。
+    🔧 generate_itinerary_tool(['activities_by_day'])
+  🛠️ ✅ 已生成 4 天行程，共 12 项活动
+  📌 步骤推进: itinerary_generation → budget_summarization
+
+────────────────────────────────────────────────────────────
+[第 8 轮]
+  用户: 汇总下预算吧。
+    🔧 summarize_budget_tool(['transport_cost', 'accommodation_cost', ...])
+  🛠️ ✅ 预算已汇总（人均全程）：
+        交通 550 + 住宿 900 + 餐饮 600 + 景点 200 + 其他 100
+        合计 2350 元/人
+  📌 步骤推进: budget_summarization → report_generation
+
+────────────────────────────────────────────────────────────
+[第 9 轮]
+  用户: 给我一份完整的旅行报告。
+  Agent: # 北京 → 武汉 4 天旅行报告
+
+         ## 概览
+         这是一次以文化探索和美食为主的...
+
+         ## 逐日行程
+         | 天数 | 主要活动 |
+         | ---- | -------- |
+         | Day 1 | 抵达武汉、汉口江滩、户部巷小吃 |
+         | Day 2 | 黄鹤楼、湖北省博物馆 |
+         ...
+
+  📌 步骤保持: report_generation
+
+============================================================
+ 最终 State 概览
+============================================================
+  current_step: report_generation
+  user_requirement: {'departure_city': '北京', ...}
+  selected_destination: 武汉
+  selected_transport: train
+  selected_accommodation_types: ['economy_hotel']
+  selected_food_types: ['specialty', 'local']
+  itinerary: [{'day_number': 1, ...}, {'day_number': 2, ...}, ...]
+  budget: {'transport': 550.0, 'accommodation': 900.0, ...}
+
+🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉
+  第 04 章冒烟完成！
+🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉
+
+
+===== block 56 fd863c445ffd lines 1-11 source 知行旅行助手-v2#56 =====
+State 里的存量：
+    user_requirement:   {days: 4, ...}           ← 过时了
+    selected_destination: "武汉"                  ← 过时了
+    selected_transport: "train"                   ← 过时了（杭州要重选）
+    selected_accommodation_types: ["economy"]     ← 过时了
+    selected_food_types: ["specialty"]            ← 可能还想要
+    itinerary: [{"day 1": ["黄鹤楼"], ...}]        ← 过时了
+    current_step: "itinerary_generation"          ← 还得推回去
+
+不清空就重新规划：模型看到已经有 destination="武汉" 和 itinerary=[武汉景点]，
+会把杭州行程和武汉景点混着往下写——用户拿到的行程是**混乱的错版**。
+
+
+===== block 57 cf4a67df7a5b lines 1-10 source 知行旅行助手-v2#57 =====
+STEP_STATE_FIELDS = {
+    "requirement_collection":     ["user_requirement"],
+    "destination_recommendation": ["selected_destination", "destination_options"],
+    "transport_planning":         ["selected_transport", "transport_options"],
+    "accommodation_planning":     ["selected_accommodation_types", "accommodation_options"],
+    "food_planning":              ["selected_food_types", "food_options"],
+    "itinerary_generation":       ["itinerary", "itinerary_body"],
+    "budget_summarization":       ["budget"],
+    "report_generation":          ["report"],
+}
+
+
+===== block 58 d37cb49df709 lines 1-7 source 知行旅行助手-v2#58 =====
+# ALL_STEPS 是按顺序排列的 8 个步骤名
+target_index = ALL_STEPS.index("destination_recommendation")  # 2
+
+# 把 target_step 及之后所有步骤的字段全 None 掉
+for step in ALL_STEPS[target_index:]:
+    for field in STEP_STATE_FIELDS[step]:
+        state_update[field] = None
+
+
+===== block 59 8ba941148745 lines 1-132 source 知行旅行助手-v2#59 =====
+# ============================================================
+# 以下代码追加在第 03-04 章的状态转换工具之后
+# ============================================================
+
+from typing import Literal
+
+# ============== 回退契约：步骤顺序 + 步骤中文名 + 每步产物字段 ==============
+
+ALL_STEPS = [
+    "requirement_collection",        # 步骤 1：需求收集
+    "destination_recommendation",    # 步骤 2：目的地推荐
+    "transport_planning",            # 步骤 3：交通规划
+    "accommodation_planning",        # 步骤 4：住宿规划
+    "food_planning",                 # 步骤 5：餐饮规划
+    "itinerary_generation",          # 步骤 6：行程生成
+    "budget_summarization",          # 步骤 7：预算汇总
+    "report_generation",             # 步骤 8：报告生成
+]
+
+STEP_LABELS = {
+    "requirement_collection":     "需求收集",
+    "destination_recommendation": "目的地推荐",
+    "transport_planning":         "交通规划",
+    "accommodation_planning":     "住宿规划",
+    "food_planning":              "餐饮规划",
+    "itinerary_generation":       "行程生成",
+    "budget_summarization":       "预算汇总",
+    "report_generation":          "报告生成",
+}
+
+# 每个步骤会往 State 里写哪些字段
+# 回退时用这份表做级联清空
+STEP_STATE_FIELDS = {
+    "requirement_collection":     ["user_requirement"],
+    "destination_recommendation": ["selected_destination", "destination_options"],
+    "transport_planning":         ["selected_transport", "transport_options"],
+    "accommodation_planning":     ["selected_accommodation_types", "accommodation_options"],
+    "food_planning":              ["selected_food_types", "food_options"],
+    "itinerary_generation":       ["itinerary", "itinerary_body"],
+    "budget_summarization":       ["budget"],
+    "report_generation":          ["report"],
+}
+
+# ============== 通用回退工具 ==============
+
+@tool
+def go_back_to_step(
+        target_step: Literal[
+            "requirement_collection",
+            "destination_recommendation",
+            "transport_planning",
+            "accommodation_planning",
+            "food_planning",
+            "itinerary_generation",
+            "budget_summarization",
+        ],
+        reason: str,
+        clear_subsequent_data: bool = True,
+        runtime: ToolRuntime[None, TravelState] = None
+) -> Command:
+    """
+    回退到指定的历史步骤，允许用户重新进行规划。
+
+    使用场景：
+    - 用户说"我想重新选择目的地" → target_step="destination_recommendation"
+    - 用户说"我想重新规划" → target_step="requirement_collection"
+    - 用户说"换个交通方式" → target_step="transport_planning"
+    - 用户说"住宿要求改一下" → target_step="accommodation_planning"
+    - 用户说"餐饮偏好不对" → target_step="food_planning"
+    - 用户说"行程安排要调" → target_step="itinerary_generation"
+    - 用户说"预算超了" → target_step="budget_summarization"
+
+    参数：
+    - target_step: 要回退到的目标步骤
+    - reason: 回退原因，用于记录和展示给用户
+        示例："用户希望更换目的地为三亚"
+        示例："预算超出用户预期，需要调整住宿标准"
+    - clear_subsequent_data: 是否清除目标步骤之后的所有数据（默认 True）
+        * True: 回退时清除后续步骤产生的选择和数据 → 强烈推荐
+        * False: 保留后续数据（谨慎使用，可能导致数据不一致）
+
+    调用时机：
+    - 用户明确表达了"换/改/重新..." 的意图
+    - 严禁在用户没有变更意图时自作主张调用（那会莫名清空用户已确认的选择）
+    """
+    # ---------- 校验 1：目标步骤合法性 ----------
+    if target_step not in ALL_STEPS:
+        return Command(update={"messages": [ToolMessage(
+            content=f"❌ 无效的目标步骤: {target_step}",
+            tool_call_id=runtime.tool_call_id
+        )]})
+
+    # ---------- 记录日志 ----------
+    current_step = runtime.state.get("current_step", "unknown")
+    app_logger.info(
+        f"[回退] {current_step} → {target_step}, 原因: {reason}, "
+        f"clear_data={clear_subsequent_data}"
+    )
+
+    # ---------- 构建 State 更新 ----------
+    state_update: dict = {"current_step": target_step}
+
+    # ---------- 级联清空 ----------
+    cleared_fields: list[str] = []
+    if clear_subsequent_data:
+        target_index = ALL_STEPS.index(target_step)
+        # 从 target_step 开始，把它自己以及后面所有步骤的产物字段都清掉
+        for step in ALL_STEPS[target_index:]:
+            for field in STEP_STATE_FIELDS.get(step, []):
+                state_update[field] = None
+                cleared_fields.append(field)
+
+        if cleared_fields:
+            app_logger.debug(f"[回退] 清空字段: {cleared_fields}")
+
+    # ---------- 组装反馈消息 ----------
+    step_label = STEP_LABELS.get(target_step, target_step)
+    response_parts = [
+        f"✅ 已回退到【{step_label}】阶段",
+        f"原因: {reason}",
+    ]
+    if clear_subsequent_data and cleared_fields:
+        response_parts.append(f"已清除后续 {len(cleared_fields)} 个字段的数据")
+
+    state_update["messages"] = [
+        ToolMessage(
+            content="\n".join(response_parts),
+            tool_call_id=runtime.tool_call_id
+        )
+    ]
+
+    return Command(update=state_update)
+
+
+===== block 60 f691124847e8 lines 1-21 source 知行旅行助手-v2#60 =====
+所有步骤：
+  [1] 需求收集       user_requirement
+  [2] 目的地推荐     selected_destination, destination_options
+  [3] 交通规划       selected_transport, transport_options     ← target_step
+  [4] 住宿规划       selected_accommodation_types, accommodation_options
+  [5] 餐饮规划       selected_food_types, food_options
+  [6] 行程生成       itinerary, itinerary_body
+  [7] 预算汇总       budget
+  [8] 报告生成       report
+
+调用 go_back_to_step(target_step="transport_planning") 后：
+  [1] 保留         user_requirement                           ← 上游产物不动
+  [2] 保留         selected_destination                       ← 上游产物不动
+  [3] 清空 ✅      selected_transport, transport_options       ← target 本身
+  [4] 清空 ✅      selected_accommodation_types, ...           ← 下游全清
+  [5] 清空 ✅      selected_food_types, ...
+  [6] 清空 ✅      itinerary, itinerary_body
+  [7] 清空 ✅      budget
+  [8] 清空 ✅      report
+
+current_step 设为 "transport_planning"
+
+
+===== block 61 fd6cca41a844 lines 1-157 source 知行旅行助手-v2#61 =====
+# ============== 快捷回退工具 ==============
+
+@tool
+def go_back_to_requirement(
+        reason: str = "用户希望重新规划",
+        runtime: ToolRuntime[None, TravelState] = None
+) -> Command:
+    """
+    快捷回退：返回到需求收集步骤，重新开始规划。
+
+    使用场景：
+    - 用户说"我想重新规划"
+    - 用户说"出发日期要改"
+    - 用户说"预算变了"
+    - 用户说"人数不对"
+    - 用户说"从头开始"
+
+    效果：
+    - 清除所有已收集的数据
+    - 返回到最初的需求收集阶段
+    """
+    app_logger.info(f"[快捷回退→需求] {reason}")
+    return go_back_to_step.invoke({
+        "target_step": "requirement_collection",
+        "reason": reason,
+        "clear_subsequent_data": True,
+        "runtime": runtime,
+    })
+
+@tool
+def go_back_to_destination(
+        reason: str = "用户希望更换目的地",
+        runtime: ToolRuntime[None, TravelState] = None
+) -> Command:
+    """
+    快捷回退：返回到目的地推荐步骤。
+
+    使用场景：
+    - 用户说"换个目的地"
+    - 用户说"这个地方不想去了"
+    - 用户说"有没有其他推荐"
+    - 用户说"目的地选错了"
+
+    效果：
+    - 保留用户需求
+    - 清除目的地及后续所有数据
+    """
+    app_logger.info(f"[快捷回退→目的地] {reason}")
+    return go_back_to_step.invoke({
+        "target_step": "destination_recommendation",
+        "reason": reason,
+        "clear_subsequent_data": True,
+        "runtime": runtime,
+    })
+
+@tool
+def go_back_to_transport(
+        reason: str = "用户希望更换交通方式",
+        runtime: ToolRuntime[None, TravelState] = None
+) -> Command:
+    """
+    快捷回退：返回到交通规划步骤。
+
+    使用场景：
+    - 用户说"不坐飞机了"
+    - 用户说"改成高铁"
+    - 用户说"还是自驾吧"
+    """
+    app_logger.info(f"[快捷回退→交通] {reason}")
+    return go_back_to_step.invoke({
+        "target_step": "transport_planning",
+        "reason": reason,
+        "clear_subsequent_data": True,
+        "runtime": runtime,
+    })
+
+@tool
+def go_back_to_accommodation(
+        reason: str = "用户希望调整住宿",
+        runtime: ToolRuntime[None, TravelState] = None
+) -> Command:
+    """
+    快捷回退：返回到住宿规划步骤。
+
+    使用场景：
+    - 用户说"住宿要求改一下"
+    - 用户说"想住民宿"
+    - 用户说"酒店太贵了"
+    """
+    app_logger.info(f"[快捷回退→住宿] {reason}")
+    return go_back_to_step.invoke({
+        "target_step": "accommodation_planning",
+        "reason": reason,
+        "clear_subsequent_data": True,
+        "runtime": runtime,
+    })
+
+@tool
+def go_back_to_food(
+        reason: str = "用户希望调整餐饮偏好",
+        runtime: ToolRuntime[None, TravelState] = None
+) -> Command:
+    """
+    快捷回退：返回到餐饮规划步骤。
+
+    使用场景：
+    - 用户说"餐饮偏好改一下"
+    - 用户说"想多吃特色美食"
+    """
+    app_logger.info(f"[快捷回退→餐饮] {reason}")
+    return go_back_to_step.invoke({
+        "target_step": "food_planning",
+        "reason": reason,
+        "clear_subsequent_data": True,
+        "runtime": runtime,
+    })
+
+@tool
+def go_back_to_itinerary(
+        reason: str = "用户希望调整行程",
+        runtime: ToolRuntime[None, TravelState] = None
+) -> Command:
+    """
+    快捷回退：返回到行程生成步骤。
+
+    使用场景：
+    - 用户说"行程安排不合理"
+    - 用户说"想加点景点"
+    - 用户说"太累了，减少活动"
+    """
+    app_logger.info(f"[快捷回退→行程] {reason}")
+    return go_back_to_step.invoke({
+        "target_step": "itinerary_generation",
+        "reason": reason,
+        "clear_subsequent_data": True,
+        "runtime": runtime,
+    })
+
+@tool
+def go_back_to_budget(
+        reason: str = "用户希望重新计算预算",
+        runtime: ToolRuntime[None, TravelState] = None
+) -> Command:
+    """
+    快捷回退：返回到预算汇总步骤。
+
+    使用场景：
+    - 用户说"预算超了"
+    - 用户说"重新算一下费用"
+    """
+    app_logger.info(f"[快捷回退→预算] {reason}")
+    return go_back_to_step.invoke({
+        "target_step": "budget_summarization",
+        "reason": reason,
+        "clear_subsequent_data": True,
+        "runtime": runtime,
+    })
+
+
+===== block 62 04ee85e1a377 lines 1-70 source 知行旅行助手-v2#62 =====
+# ============== 查询进度工具 ==============
+
+@tool
+def check_current_progress(
+        runtime: ToolRuntime[None, TravelState] = None
+) -> str:
+    """
+    查询当前规划进度，展示已完成 / 当前 / 待完成的步骤。
+
+    使用场景：
+    - 用户问"现在到哪一步了"
+    - 用户问"还有几步"
+    - 用户问"进度如何"
+    - 需要向用户汇报当前状态
+    """
+    state = runtime.state
+    current_step = state.get("current_step", "requirement_collection")
+
+    try:
+        current_index = ALL_STEPS.index(current_step)
+    except ValueError:
+        current_index = 0
+
+    lines = ["📊 当前规划进度：", ""]
+
+    for i, step in enumerate(ALL_STEPS):
+        label = STEP_LABELS.get(step, step)
+        step_num = i + 1
+        if i < current_index:
+            lines.append(f"  ✅ [{step_num}] {label}")
+        elif i == current_index:
+            lines.append(f"  🔄 [{step_num}] {label}  ← 当前")
+        else:
+            lines.append(f"  ⭕ [{step_num}] {label}")
+
+    # 追加已收集的关键信息
+    lines.append("")
+    lines.append("已收集信息：")
+    if state.get("user_requirement"):
+        req = state["user_requirement"]
+        lines.append(
+            f"  - 需求: {req.get('departure_date', '?')} "
+            f"出发 {req.get('travel_days', '?')} 天 "
+            f"| {req.get('adult_count', 0)} 成人 + {req.get('children_count', 0)} 儿童"
+        )
+    if state.get("selected_destination"):
+        lines.append(f"  - 目的地: {state['selected_destination']}")
+    if state.get("selected_transport"):
+        trans_map = {"flight": "航班", "train": "高铁", "driving": "自驾"}
+        lines.append(f"  - 交通: {trans_map.get(state['selected_transport'], state['selected_transport'])}")
+    if state.get("selected_accommodation_types"):
+        lines.append(f"  - 住宿: {', '.join(state['selected_accommodation_types'])}")
+    if state.get("selected_food_types"):
+        lines.append(f"  - 餐饮: {', '.join(state['selected_food_types'])}")
+
+    return "\n".join(lines)
+
+# ============== 导出所有回退相关工具 ==============
+
+ALL_ROLLBACK_TOOLS = [
+    go_back_to_step,            # 通用回退
+    go_back_to_requirement,     # 快捷：回到需求
+    go_back_to_destination,     # 快捷：回到目的地
+    go_back_to_transport,       # 快捷：回到交通
+    go_back_to_accommodation,   # 快捷：回到住宿
+    go_back_to_food,            # 快捷：回到餐饮
+    go_back_to_itinerary,       # 快捷：回到行程
+    go_back_to_budget,          # 快捷：回到预算
+    check_current_progress,     # 查询进度
+]

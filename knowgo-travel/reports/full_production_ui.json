@@ -1,0 +1,10 @@
+{
+  "entry": "http://127.0.0.1:8001/travel",
+  "login": "passed",
+  "memory_edit_save": "passed",
+  "test_memory_cleaned": "passed",
+  "history_replay": "passed",
+  "plan_map_dialog": "passed",
+  "screenshot": "reports/页面截图/正式入口历史与地图.png",
+  "note": "端口不同需要重新登录，未绕过认证弹窗"
+}

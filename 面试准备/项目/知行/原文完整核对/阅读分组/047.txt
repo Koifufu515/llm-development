@@ -1,0 +1,434 @@
+
+
+===== block 546 37ee5b6e2638 lines 1-150 source 知行旅行助手-v2#548 =====
+async def _produce(
+        db: AsyncSession, user_id: str, conversation_id: str, content: str, stream: EventStream,
+        force_planning: bool = False, persist_user: bool = True,
+        resume_stage: str | None = None,
+) -> None:
+    try:
+        stream = _SkillUiRecorder(stream)
+        # 会话标题：首条消息自动生成
+        conv = await get_owned_conversation(db, conversation_id, user_id)
+        if conv and conv.title == "新对话" and persist_user:
+            conv.title = content[:30]
+            await db.commit()
+
+        # 保存用户消息
+        if persist_user:
+            db.add(Message(conversation_id=conversation_id, role="user", content=content))
+            await db.commit()
+
+        # 读取最近4条消息作为上下文
+        hist_q = select(Message.role, Message.content).where(
+            Message.conversation_id == conversation_id
+        ).order_by(Message.created_at.desc()).limit(4)
+        hist_rows = (await db.execute(hist_q)).all()
+        history = [f"{r.role}: {r.content}" for r in reversed(hist_rows)]
+
+        _auto_quick_hit = _hit_auto_confirm(content)
+        if _auto_quick_hit:
+            stream.push(make_event(ROLE_ASSISTANT, "✈️ 正在为您规划行程，请稍候…\n"))
+
+        if force_planning:
+            router = RouterResult(
+                is_itinerary_planning=True,
+                inference_log="[卡片提交] 车次已选定，续跑住宿步",
+                skills=[],
+            )
+        else:
+            router = await chat_route(content, history=history)
+
+        # 直查票务确定性门禁，优先级高于意图路由
+        _direct_text = None if force_planning else await try_direct_ticket_query(content, stream, conversation_id)
+
+        # 推送规划提示文本
+        if _direct_text is None and router.is_itinerary_planning and not _auto_quick_hit:
+            _resume_text = _RESUME_PENDING_TEXT.get(resume_stage or "")
+            stream.push(make_event(ROLE_ASSISTANT, _resume_text or (
+                "\U0001F684 车次已确认，正在为您规划住宿…\n" if force_planning
+                else "\u2708\ufe0f 正在为您规划行程，请稍候…\n"
+            )))
+
+        for s in router.skills:
+            stream.push(make_event(ROLE_SKILLS, {
+                "skill_name": s.skill_name, "title": s.title, "desc": s.desc,
+            }))
+
+        # 快速通道分流
+        express_req = None
+        if _direct_text is None and router.is_itinerary_planning and not force_planning:
+            from app.services.express_planning_service import try_express_planning
+            express_req = await try_express_planning(user_id, content, stream)
+
+        # 执行分支：直查 / 快速通道 / 状态机
+        if _direct_text is not None:
+            full_text, state_step, committed, body = _direct_text, None, False, None
+        elif express_req is not None:
+            from app.services.express_planning_service import run_express_planning
+            # 快速通道同样产出结构化逐日行程，交给 generate_plan 作清单兜底
+            full_text, body = await run_express_planning(express_req, stream)
+            committed = False
+            if full_text is None:
+                app_logger.info("[express] 极速模式未接管，回落状态机")
+                full_text, state_step, committed, body = await execute_turn(
+                    user_id, conversation_id, content, router.is_itinerary_planning, stream
+                )
+            else:
+                state_step = "itinerary_generation"
+        else:
+            _warn = _manual_multi_city_day_warning(content)
+            if _warn:
+                stream.push(make_event(ROLE_ASSISTANT, _warn + "\n\n"))
+            full_text, state_step, committed, body = await execute_turn(
+                user_id, conversation_id, content, router.is_itinerary_planning, stream
+            )
+            if _warn:
+                full_text = f"{_warn}\n\n{full_text or ''}"
+
+        # 行程清单生成逻辑
+        plan_id = None
+        _auto_confirm_mode = _auto_quick_hit or express_req is not None
+        _ready_steps = _ITINERARY_READY_STEPS if _auto_confirm_mode else {
+            "budget_summarization", "report_generation"
+        }
+
+        _source = full_text if _looks_like_itinerary(full_text) else (
+            await _recent_itinerary_text(db, conversation_id) if committed else None
+        )
+        if not _source and body:
+            _source = full_text or ""
+
+        if (router.is_itinerary_planning
+                and state_step in _ready_steps
+                and (_source or body)):
+            stream.push(make_event(ROLE_ITINERARY, {
+                "status": "pending", "id": "", "message": "行程清单生成中...",
+            }))
+            try:
+                plan_id = await generate_plan(db, conversation_id, _source or "", structure=body)
+                stream.push(make_event(ROLE_ITINERARY, {
+                    "status": "success", "id": plan_id, "message": "行程清单已生成，点击查看！",
+                }))
+            except Exception:
+                app_logger.exception("行程清单生成失败")
+                stream.push(make_event(ROLE_ITINERARY, {
+                    "status": "error", "id": "", "message": "行程清单生成失败",
+                }))
+
+        # 快速通道短期记忆同步：**与清单是否生成成功解耦**
+        # 此前它写在 generate_plan 的 try 里，清单一失败就整段跳过，
+        # thread 里留着上一轮的旧目的地，下一轮天气/行程都按旧状态渲染
+        if express_req is not None:
+            try:
+                from app.services.express_planning_service import sync_express_state
+                await sync_express_state(
+                    conversation_id, express_req, full_text or "", plan_id
+                )
+            except Exception:
+                app_logger.exception("[express] 状态机短期记忆同步失败（不影响本轮回复）")
+        stream.push(make_event(ROLE_DONE, "finish", code=200))
+
+        # 消息落库，超长内容压缩
+        saved_text = full_text
+        if router.is_itinerary_planning and len(full_text) > COMPRESS_THRESHOLD:
+            saved_text = await compress_content(full_text)
+        extra: dict = {"original": full_text, "inference_steps": router.inference_log}
+        if stream.skill_ui:
+            extra["skill_ui"] = stream.skill_ui
+        if plan_id:
+            extra["itinerary_plans"] = {"status": "success", "id": plan_id, "message": "行程清单已生成，点击查看！"}
+        db.add(Message(
+            conversation_id=conversation_id,
+            role="assistant",
+            content=saved_text,
+            extra_info=extra,
+        ))
+        await db.commit()
+    except Exception as e:
+        app_logger.exception("对话服务异常")
+        stream.push(make_event(ROLE_ERROR, str(e)))
+        stream.push(make_event(ROLE_DONE, "finish", code=500))
+    finally:
+        stream.close()
+
+
+===== block 547 4be58abd0c3a lines 1-7 source 知行旅行助手-v2#549 =====
+try:
+    ...                                                      # 六段正常流程，末尾推 done(200)
+except Exception as e:
+    stream.push(make_event(ROLE_ERROR, str(e)))              # 先告诉前端出错了
+    stream.push(make_event(ROLE_DONE, "finish", code=500))   # 再明确"本回合结束"
+finally:
+    stream.close()                                           # 走哪条路都会执行
+
+
+===== block 548 ff59c1f5dd84 lines 1-36 source 知行旅行助手-v2#550 =====
+"""编排总线跑一轮（执行器还是桩）：看帧序、看落库、看会话标题（需 PG + DashScope 密钥）"""
+import asyncio
+import uuid
+
+from sqlalchemy import select
+
+from app.models.base import async_session_maker
+from app.models.message import Message
+from app.models.user import User
+from app.services.chat_contract_service import run_chat_turn
+from app.services.conversation_service import create_conversation
+from app.utils.security import hash_password
+
+async def main():
+    async with async_session_maker() as db:
+        sfx = uuid.uuid4().hex[:6]                       # 造一个测试用户 + 会话
+        user = User(username=f"bus_{sfx}", email=f"bus_{sfx}@example.com",
+                    password_hash=hash_password("secret123"), preferences={})
+        db.add(user)
+        await db.commit()
+        conv = await create_conversation(db, user.id)
+
+        stream = await run_chat_turn(db, str(user.id), str(conv.id), "你好呀")
+        async for ev in stream:
+            print(ev)                                    # 执行器还是桩：assistant 回显 → done
+        rows = (await db.execute(
+            select(Message.role, Message.content, Message.extra_info)
+            .where(Message.conversation_id == conv.id).order_by(Message.created_at)
+        )).all()
+        for r in rows:
+            print(f"落库 {r.role:9s} | {r.content[:24]:24s} | extra_info 键：{list((r.extra_info or {}).keys())}")
+        await db.refresh(conv)
+        print("会话标题：", conv.title)                     # 首条消息的前 30 字自动成了标题
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+
+===== block 549 eac663e001bb lines 1-33 source 知行旅行助手-v2#551 =====
+"""异常路径演示：让路由服务"挂掉"，流照样收尾——error 帧 + done(500)，然后 close（需 PG；不调 LLM）"""
+import asyncio
+import uuid
+from unittest.mock import patch
+
+from app.models.base import async_session_maker
+from app.models.user import User
+from app.services.chat_contract_service import run_chat_turn
+from app.services.conversation_service import create_conversation
+from app.utils.security import hash_password
+
+async def main():
+    async with async_session_maker() as db:
+        sfx = uuid.uuid4().hex[:6]
+        user = User(username=f"err_{sfx}", email=f"err_{sfx}@example.com",
+                    password_hash=hash_password("secret123"), preferences={})
+        db.add(user)
+        await db.commit()
+        conv = await create_conversation(db, user.id)
+
+        # ★ patch 目标是 chat_contract_service 里的 chat_route（它 import 进来的那个名字），
+        #   patch app.agents.routers.chat_router.chat_route 不会生效
+        with patch("app.services.chat_contract_service.chat_route",
+                   side_effect=RuntimeError("路由服务不可用")):
+            stream = await run_chat_turn(db, str(user.id), str(conv.id), "随便一条消息")
+            frames = [ev async for ev in stream]         # 能消费到末尾 = finally 里的 close 生效
+    for f in frames:
+        print(f)
+    assert frames[-1]["role"] == "done" and frames[-1]["code"] == 500
+    print("✅ 异常路径：error 帧 + done(500) 收尾，流正常关闭")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+
+===== block 550 4bd99d717d9d lines 1-3 source 知行旅行助手-v2#552 =====
+{'role': 'error', 'content': '路由服务不可用', 'code': None}
+{'role': 'done', 'content': 'finish', 'code': 500}
+✅ 异常路径：error 帧 + done(500) 收尾，流正常关闭
+
+
+===== block 551 bf7cabde231d lines 1-57 source 知行旅行助手-v2#553 =====
+"""Agent UI Skill API：聊天流内嵌组件（前端 Skill）的回提交口
+
+- POST /api/v1/skills/train_multi_segment/submit  多段高铁选择提交（校验 → 落库 → SSE 续跑）
+- POST /api/v1/skills/hotel_multi_segment/submit  多段住宿选择提交（校验 → 落库 → SSE 续跑）
+- POST /api/v1/skills/flight_multi_segment/submit 多段航班选择提交（校验 → 落库 → SSE 续跑）
+- POST /api/v1/skills/driving_multi_segment/submit 多段自驾路线确认提交（校验 → 落库 → SSE 续跑）
+
+为什么单独开路由：前端卡片是"一次选完 N 段 → 一次提交"的交互，走的是独立 HTTP 提交
+（不是对话消息），提交成功后由代码把段账本写入状态机并推进到下一步。
+
+为什么返回 SSE 而不是 JSON：只落状态不跑编排会让流程停住——卡片下发后旧 SSE 通道已关闭，
+前端只做"卡片收起"，没有任何人驱动住宿步那一轮（用户实证：选完高铁后停在原处、无后续输出）。
+故提交成功后用一条合成发言复用 run_chat_turn 续跑，事件流原样下发；
+前端沿用既有事件管道渲染，住宿/餐饮/行程各步与原来"逐段确认"时完全一致。
+"""
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.dependencies import get_current_user
+from app.api.v1.messages import _SSE_HEADERS, _sse  # 复用同一套 SSE 帧序列化与响应头
+from app.core.events import ROLE_ASSISTANT, ROLE_DONE, ROLE_ERROR, make_event
+from app.models.base import get_db
+from app.models.user import User
+from app.services.chat_contract_service import (  # 卡片提交态落库
+    mark_skill_ui_submitted,
+    run_chat_turn,
+)
+from app.services.conversation_service import get_owned_conversation
+from app.capabilities.driving_multi_segment.driving_flow import apply_driving_selection
+from app.capabilities.driving_multi_segment.driving_skill_schema import (
+    DRIVING_MULTI_SEGMENT_SKILL,
+    DrivingSubmitPayload,
+    DrivingSubmitResult,
+)
+from app.capabilities.flight_multi_segment.flight_flow import apply_flight_selection
+from app.capabilities.flight_multi_segment.flight_skill_schema import (
+    FLIGHT_MULTI_SEGMENT_SKILL,
+    FlightSubmitPayload,
+    FlightSubmitResult,
+)
+from app.capabilities.hotel_multi_segment.hotel_flow import apply_hotel_selection
+from app.capabilities.hotel_multi_segment.hotel_skill_schema import (
+    HOTEL_MULTI_SEGMENT_SKILL,
+    HotelMultiSegmentSubmitPayload,
+    HotelMultiSegmentSubmitResult,
+)
+from app.capabilities.train_multi_segment.train_flow import apply_train_selection
+from app.capabilities.train_multi_segment.train_skill_schema import (
+    TRAIN_MULTI_SEGMENT_SKILL,
+    TrainSubmitPayload,
+    TrainSubmitResult,
+)
+from app.utils.logger import app_logger
+
+router = APIRouter(prefix="/skills", tags=["Agent Skill"])
+
+
+===== block 552 cd7aeb59d1b8 lines 1-23 source 知行旅行助手-v2#554 =====
+class TrainSubmitRequest(BaseModel):
+    """提交请求体：会话 id + 前端 Skill 一次性选择结果"""
+
+    conversation_id: str = Field(min_length=1, description="会话 id（= LangGraph thread_id）")
+    payload: TrainSubmitPayload = Field(description="前端 onSubmit 抛出的选择结果")
+
+class HotelSubmitRequest(BaseModel):
+    """住宿提交请求体：会话 id + 前端 HotelMultiSegment 的 onSubmit 结果"""
+
+    conversation_id: str = Field(min_length=1, description="会话 id（= LangGraph thread_id）")
+    payload: HotelMultiSegmentSubmitPayload = Field(description="前端 onSubmit 抛出的选择结果")
+
+class FlightSubmitRequest(BaseModel):
+    """航班提交请求体：会话 id + 前端 FlightMultiSegment 的 onSubmit 结果 """
+
+    conversation_id: str = Field(min_length=1, description="会话 id（= LangGraph thread_id）")
+    payload: FlightSubmitPayload = Field(description="前端 onSubmit 抛出的选择结果")
+
+class DrivingSubmitRequest(BaseModel):
+    """自驾提交请求体：会话 id + 前端 DrivingMultiSegment 的 onSubmit 结果 """
+
+    conversation_id: str = Field(min_length=1, description="会话 id（= LangGraph thread_id）")
+    payload: DrivingSubmitPayload = Field(description="前端 onSubmit 抛出的确认结果")
+
+
+===== block 553 7c97bfe87bed lines 1-36 source 知行旅行助手-v2#555 =====
+def _resume_content(result: TrainSubmitResult) -> str:
+    """续跑用的合成发言（用户口吻）：住宿步提示词据此知道车次已定，直接进入酒店候选轮"""
+    legs = "；".join(result.texts) if result.texts else f"{len(result.accepted)} 段车次"
+    return f"我已按卡片选定全部车次：{legs}。请继续为我推荐住宿，并推进后续行程安排。"
+
+def _hotel_resume_content(result: HotelMultiSegmentSubmitResult) -> str:
+    """住宿续跑用的合成发言（用户口吻）
+
+    口径：餐饮偏好是表单必填项且已在落库时写入 selected_food_types，故住宿是本流程**最后一个
+    人工选择项**——合成发言必须要求"直接生成行程报告"，不能写"请继续为我安排餐饮"：
+    实测模型会顺着这句话去讲餐饮候选（甚至模仿住宿卡片话术），结果行程正文一个字都不出。
+    """
+    stays = "；".join(result.texts) if result.texts else f"{len(result.accepted)} 站住宿"
+    return f"我已按卡片选定全部住宿：{stays}。住宿是最后一项待确认内容，请直接为我生成完整行程报告。"
+
+def _flight_resume_content(result: FlightSubmitResult) -> str:
+    """航班续跑用的合成发言（用户口吻） 住宿步据此知道航班已定，直接进入酒店候选轮"""
+    legs = "；".join(result.texts) if result.texts else f"{len(result.accepted)} 段航班"
+    return f"我已按卡片选定全部航班：{legs}。请继续为我推荐住宿，并推进后续行程安排。"
+
+def _driving_resume_content(result: DrivingSubmitResult) -> str:
+    """自驾续跑用的合成发言（用户口吻） 住宿步据此知道路线已确认，直接进入酒店候选轮"""
+    legs = "；".join(result.texts) if result.texts else f"{len(result.accepted)} 段自驾"
+    return f"我已确认全部自驾路线：{legs}。请继续为我推荐住宿，并推进后续行程安排。"
+
+def _confirmed_content(label: str, texts: list[str]) -> str:
+    """ 提交成功后**立刻回显用户已选定的内容**（代码生成，各技能同款格式）
+
+    用户要求：选完高铁/住宿后，对话里要能看到自己选好的车次、酒店（或品牌），随后继续下一步。
+    因此这条帧必须在续跑之前下发——它是"已选结果"的确定性回执（results.texts 由服务端
+    依据真实候选回查拼出），而不是模型自由发挥；无内容时只回一句确认，绝不留空。
+    """
+    if not texts:
+        return f"✅ 已确认您选择的{label}。\n"
+    items = "\n".join(f"{index}. {text}" for index, text in enumerate(texts, 1))
+    return f"✅ 已确认您选择的{label}：\n{items}\n"
+
+
+===== block 554 60e4e30d2a24 lines 1-10 source 知行旅行助手-v2#556 =====
+"""卡片提交的两段文案演示：回显已选（给用户看）+ 续跑合成发言（喂给状态机）（纯函数，无需密钥）"""
+from app.api.v1.skills import _confirmed_content, _resume_content
+from app.capabilities.train_multi_segment.train_skill_schema import TrainSubmitResult
+
+texts = ["福州→杭州 G1650 08:12-12:30 二等座356元", "杭州→上海 G7512 09:05-10:02 二等座73元"]
+print(_confirmed_content("车次（按行程段顺序）", texts))
+print(_confirmed_content("住宿（按行程站顺序）", []))       # 没内容也回一句确认，绝不留空
+
+result = TrainSubmitResult(ok=True, code="OK", msg="全部段校验通过", texts=texts)
+print(_resume_content(result))                              # 用户口吻的合成发言：驱动住宿步
+
+
+===== block 555 0318d66af0af lines 1-7 source 知行旅行助手-v2#557 =====
+✅ 已确认您选择的车次（按行程段顺序）：
+1. 福州→杭州 G1650 08:12-12:30 二等座356元
+2. 杭州→上海 G7512 09:05-10:02 二等座73元
+
+✅ 已确认您选择的住宿（按行程站顺序）。
+
+我已按卡片选定全部车次：福州→杭州 G1650 08:12-12:30 二等座356元；杭州→上海 G7512 09:05-10:02 二等座73元。请继续为我推荐住宿，并推进后续行程安排。
+
+
+===== block 556 416ef7779f9f lines 1-39 source 知行旅行助手-v2#558 =====
+@router.post("/train_multi_segment/submit")
+async def submit_train_multi_segment(
+        req: TrainSubmitRequest,
+        user: User = Depends(get_current_user),
+        db: AsyncSession = Depends(get_db),
+):
+    """多段高铁提交：基础合法性校验（**不做任何列车时间校验**）→ 落库推进 → SSE 续跑住宿步"""
+    conv = await get_owned_conversation(db, req.conversation_id, user.id)
+    if not conv:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="会话不存在")
+
+    async def event_generator():
+        # ★ ① 校验 + 落库推进（第 9 章 capability）
+        result = await apply_train_selection(req.conversation_id, req.payload)
+        if not result.ok:
+            # 校验未过：只在流内如实告知（前端渲染为一条助手气泡，卡片保持展开供用户重选）
+            yield _sse(make_event(ROLE_ERROR, result.msg))
+            yield _sse(make_event(ROLE_DONE, "finish", code=400))
+            return
+        # 提交态 + 选中账本写回卡片帧消息（切会话/刷新后卡片仍为已提交锁定态）
+        # ★ ② 回填卡片提交态（切会话回来仍是锁定态）
+        await mark_skill_ui_submitted(db, conv.id, TRAIN_MULTI_SEGMENT_SKILL, req.payload)
+        app_logger.info(f"🚄 卡片提交成功，SSE 续跑后续步骤：已确认 {len(result.texts)} 段")
+        # 先在对话里回显用户已选定的车次（再续跑下一步），界面才能"看到选了什么"
+        # ★ ③ 先回显已选结果：服务端的权威回执
+        yield _sse(make_event(ROLE_ASSISTANT, _confirmed_content("车次（按行程段顺序）", result.texts)))
+        # ★ ④ 续跑：合成发言 + 三个续跑参数，复用整条编排链
+        stream = await run_chat_turn(
+            db, str(user.id), req.conversation_id, _resume_content(result),
+            force_planning=True,  # 续跑必须成立：不走概率性意图路由，由代码指定进规划状态机
+            persist_user=False,   # 合成发言不落库：历史里不该冒出用户没打过的句子
+            resume_stage="accommodation_planning",  # 反馈文案：车次已确认 → 正在规划住宿
+        )
+        async for event in stream:
+            yield _sse(event)
+
+    return StreamingResponse(
+        event_generator(), media_type="text/event-stream", headers=_SSE_HEADERS
+    )

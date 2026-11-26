@@ -1,0 +1,9 @@
+"""_strip_model_weather 演示：剔掉模型自写的天气行和"请稍等"占位语，其余内容保留（纯函数，无需密钥）"""
+from app.services.chat_stream_executor import _strip_model_weather
+
+text = """### 重庆
+- 推荐景点：洪崖洞、解放碑
+- **天气概况**：2026年9月19日 晴 28℃
+请稍等，我将查询更多天气信息……
+- 美食：老火锅、小面"""
+print(_strip_model_weather(text))

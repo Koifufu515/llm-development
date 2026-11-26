@@ -1,0 +1,5 @@
+async def push(self, event):          # ❌ 直觉写法：await put，调用方全链路都得是 async
+    await self._queue.put(event)
+
+def push(self, event) -> None:        # ✅ 实际写法：同步投递，任何上下文都能直接调
+    self._queue.put_nowait(event)

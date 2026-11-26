@@ -1,0 +1,1 @@
+curl.exe -F "file=@upload-test.md" "http://localhost:8100/v1/documents?collection_slug=internal-notes"

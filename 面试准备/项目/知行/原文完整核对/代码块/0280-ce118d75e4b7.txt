@@ -1,0 +1,10 @@
+"""_best_record_list 演示：递归找"最像酒店列表"的那个数组，不会误选城市列表、分页信息（纯函数，无需密钥）"""
+from app.capabilities.hotel_multi_segment.hotel_parser import _best_record_list, _record_score
+
+data = {"code": 0, "data": {
+    "cities": [{"name": "杭州", "id": 1}, {"name": "苏州", "id": 2}],
+    "page": {"total": 2, "size": 10},
+    "hotelInformationList": [{"name": "如家酒店", "price": 358, "starRating": 4.6, "address": "西湖区"},
+                             {"name": "汉庭酒店", "price": 280, "starRating": 4.3}]}}
+print("城市条目像度：", _record_score(data["data"]["cities"][0]), "| 酒店条目像度：", _record_score(data["data"]["hotelInformationList"][0]))
+print("选中：", [r["name"] for r in _best_record_list(data)])

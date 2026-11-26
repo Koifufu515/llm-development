@@ -1,0 +1,6 @@
+[
+["苏州明天天气怎么样","direct","weather"],["帮我查北京后天的气温","direct","weather"],["杭州这几天会下雨吗","direct","weather"],["明天上海到苏州的高铁有哪些","direct","rail"],["查一下北京去天津的车票","direct","rail"],["杭州到南京明天的动车","direct","rail"],
+["帮我规划苏州三日游","interactive","planning"],["从上海出发去苏州玩两天，人均2000","interactive","planning"],["把目的地换成北京","interactive","planning"],["还是明天出发吧","interactive","planning"],["我们两个人，没有小孩","interactive","planning"],["预算每人三千","interactive","planning"],["确认","interactive","planning"],["不要确认，我想改日期","interactive","planning"],["先不查高铁，帮我规划杭州三天","interactive","planning"],["不用查天气，先把目的地换成南京","interactive","planning"],["如果下雨，把行程改成室内","interactive","planning"],["我要去苏州和杭州各玩两天","interactive","planning"],["酒店太贵，换便宜一点的方案","interactive","planning"],["第一天安排太满，帮我减少两个景点","interactive","planning"],
+["记住我以后旅行都不吃辣","interactive","preference"],["把我的长期住宿偏好改为经济型","interactive","preference"],["记住我偏爱轻松的行程节奏","interactive","preference"],["以后推荐酒店优先考虑青旅，请记住","interactive","preference"],
+["你好","chat","other"],["谢谢你","chat","other"],["你是谁","chat","other"],["给我讲个笑话","chat","other"],["天气这个词用英语怎么说","chat","other"],["高铁为什么比普通火车快","chat","other"],["什么是旅行规划","chat","other"],["不用安排旅行，陪我聊聊天","chat","other"]
+]

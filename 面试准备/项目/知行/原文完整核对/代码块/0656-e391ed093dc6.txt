@@ -1,0 +1,8 @@
+"""行程样本矩阵：正样本、反样本、边界样本各测什么，结构和线上正文对不对得上（纯逻辑，无需密钥）"""
+from evaluation.itinerary_cases import ITINERARY_CASES
+
+for c in ITINERARY_CASES:
+    body = c["actual_output"]
+    days = body.count("#### Day ")
+    print(f"{'正' if c['positive'] else '反'} | Day 标题 {days} 个 | 有预算表 {'### 预算明细' in body} | {c['note']}")
+print("共", len(ITINERARY_CASES), "条，正样本", sum(c["positive"] for c in ITINERARY_CASES), "条")

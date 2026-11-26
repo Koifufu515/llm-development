@@ -1,0 +1,170 @@
+选择工具•交通按段、住宿按城，逐个确认、按字段记帐
+四把 select_* 工具负责交通、住宿、餐饮三步的推进。交通按游标逐段确认，每段是一个7字段的 LegChoice 对象，票价直接进账本；住宿多城时
+按城确认。卡片模式下中间件会摘掉这些工具，改由卡片代码直接推进，写的是同一套状态字段。
+select_transport_tool 段级循环（设计意图）L399-515；“现在该确认第几段“由leg.cursor记账，不交给模型
+②
+③
+过 schema
+算应有的段
+按游标匹配
+记一段
+最后一段才推进
+_parse_leg_choices 把每条 legs过 —
+_expected_legs ：北京 天津、上
+_match_leg 用出发城市、到达城市
+leg_selections［段］= summary（），
+一次写入 selected_transport、
+一遍 LegChoice，坏的不连累好的
+海=3段；单城也有去程+返程2段
+字段相等找当前段
+leg_prices［段］= price，游标+1
+selected_transport_legs 和
+×没找到一只回报错，告诉模型该交
+current_step = accommodation_planning
+实测：三段逐段确认 真实工具代码+LangChain 入参校验；北京出发—天津、上海，5天；车次和票价是测试输入
+模型交的 legs（按schema 传对象）
+Leg curson
+current step
+第1次
+｛from_city：北京，to_city：天津，vehicle_no:C2001，price：54.5，-｝0-1
+transport_planning
+第1/3段已确认：北京一天津
+第2次
+｛from_city：天津，to_city：上海，vehicle_no: G101, price: 515， ｝
+1-2
+transport_planning
+第2/3段已确认：天津一上海
+第3次
+2-3
+accommodation_planning
+交通方式已确认：高铁
+结果：三次调用各确认一段，最后一段确认时才推进到住宿步；三段票价直接写进 Leg_prices（北京一天津 54.5、天津-上海515、上海一北京553），预算第②级直接读这本账。
+数据模型 LegChoice 一段交通选择是7个字段，不是一句话；surnmary（）再把字段拼成给人看的文本
+from_city
+必填，须等于当前段起点
+vehicLe no
+车次或航班号，自驾留空
+HH:MM
+depart_time
+HH:MM
+arrive time
+席别可舱位
+seat CLass
+人均票价，查不到填0
+price
+summary（）例：G6279 05:40-07:07 二等座105.5元；字段全空时退化成「已确认」。展示文本进 Leg_selections，数字单独进 Leg_prices，预算不再从文本里抠价。
+住宿与餐饮的三把工具 住宿卡片接管时，这三把都不会出现在模型面前
+select_accommodation_tool
+select_accommodation_food_tool
+select_food_tool
+• 多城时按 stay_cursor 逐城确认，全部确认完才推到餐饮步
+• 自动确认专用：一次写住宿和餐饮，直达行程步
+• 枚举校验 specialty/ chain /local 后写入并推到行程步
+•匹配仍是子串：“天津”in“天津：如家.”，和交通段的字段化不
+• 为什么要合并：两把 select 同轮各写一次 current_step 会触发
+• 表单已勾餐饮时，中间件在手动模式下也会放出它
+对称
+并发写冲突
+• 住宿卡片提交后直接跳到行程步，卡片模式下根本不进餐饮步
+• 工具层守卫：手动模式一律拒绝，不写任何状态
+函数卡 本组9个函数
+select_transport_tool etool
+L399
+select_accommodation_tool ［etool
+L520
+select_accommodation_food_tool ［etool
+L631
+记下交通方式；多段时按游标一段一段确认，全部确认完才推
+记下住宿类型；多城时逐城确认，全部确认完推进到餐饮步。
+一次写住宿和餐饮，直达行程生成步；手动模式在工具里直接
+进到住宿步。
+拒绝。
+何时调用 住宿规划步，非卡片模式（缺出发日或天数时才会落到这
+何时调用 交通规划步；手动模式仅确认轮放出并强推；卡片模式和
+条路）
+何时调用
+自动确认模式的住宿步
+零段时被中间件摘掉
+谁来调用 模型经 ToolNode执行；工具表
+谁来调用
+模型经 ToolNode 执行；工具表
+谁来调用
+模型经 TooINode 执行；工具表 transport_planning
+accommodation_planning
+accommodation n.annina
+结果交给
+Command： 未完成只写 leg_selections /
+结果交给 Command: selected_hotels、stay_prices，多
+结果交给
+Command：两类偏好 ＋
+Leg_prices / Leg_cursor ；完成再写
+城时再加 stay_cursor；完成时加
+current_step=itinerary_generation
+selected_transport 与 current_step；不匹配只
+selected_accommodation_types、
+•-叉十
+curreht steo=1000 oLalnino
+select_food_tool etool
+L25d
+-expected_legs 四n
+L254
+_multi_city_names @n
+L204
+校验并记下餐饮偏好，推进到行程生成步。
+算出这趟行程应有的交通段，如「北京一天津」；出发地缺失返
+把目的地拆成城市列表，只有多城才返回，单城返回空，让单
+回空列表。
+城流程完全不受影响。
+何时调用
+餐饮规划步；表单已勾餐饮时直接调用
+谁来调用
+模型经ToolNode执行；工具表 food_planning
+何时调用
+任何地方要知道"一共几段、当前是哪段"时
+何时调用
+判断要不要走逐城循环时
+结果交给
+command. selected_tood_types、
+谁来调用
+本文件 select_transport_tool ；跨模块8处：中间件
+谁来调用
+本文件 select_accommodation_tool ；中间件住宿进
+current_step=itinerary_generation
+3、三个交通卡片3、执行器2
+度、执行器酒店降级补城
+结果交给
+段文本列表；口径借自快速通道的_build_legs +
+结果交给
+城市列表或空列表
+_split_cities
+-parse_Leg_choices ［n
+L371
+_match_leg ［n
+L387
+LegChoice.summary （method
+L363
+把模型交来的legs 逐条过 LegChoice，合法的留下，不合法
+按起点、终点字段严格相等，找出当前待确认的那一段；不做
+把一段选择的字段拼成展示文本，空字段自动跳过。
+的写成中文错误。
+子串匹配，返程段不会被认成去程。
+命中当前段、写账本时
+何时调用
+select_transport_tool 一开始
+何时调用
+拿到合法条目之后
+谁来调用
+本文件 select transport tool（2外）
+谁来调用
+本文件 select_transport_tool
+谁来调用
+本文件 select transport tool
+结果交给
+文本写进 leg_selections，后续行程步和正文渲染读
+结果交给
+（合法条目，错误说明）：前者给_match_Leg，后者拼进
+结果交绐
+命中的 LegChoice 或 None
+报错文案
+字段化让”判段、取车次、取票价“从抠文本变成读字段：签名是 listILegChoice］，模型看到的就是了个字段的对象schema；_match_Leg 按起讫城市严格匹配当前段，三段行程三次调用逐段推
+进，票价直接进leg_prices。卡片模式下这把工具被摘掉，由卡片代码写同一本账。

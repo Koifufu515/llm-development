@@ -1,0 +1,30 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+__________ test_markdown_fenced_code_heading_does_not_become_section ___________
+
+tmp_path = PosixPath('/private/var/folders/rk/qtxh2ds10vd6_cdg09pdzrbm0000gn/T/pytest-of-jarvis/pytest-49/test_markdown_fenced_code_head0')
+
+    def test_markdown_fenced_code_heading_does_not_become_section(tmp_path):
+        text='# 文档\n\n## 示例\n\n下面代码应保留完整。\n\n```python\n# 内部注释\nprint(1)\n```\n\n## 后续\n\n正文。\n';p=tmp_path/'a.md';p.write_text(text)
+        sections=MarkdownParser().parse(p)
+>       assert len(sections)==2
+E       AssertionError: assert 3 == 2
+E        +  where 3 = len([Section(heading_path=['文档', '示例'], content='下面代码应保留完整。\n\n```python', char_start=13, char_end=34, meta={}), Section(h...rt=42, char_end=54, meta={}), Section(heading_path=['内部注释', '后续'], content='正文。', char_start=63, char_end=66, meta={})])
+
+tests/unit/test_parser_integrity.py:8: AssertionError
+____________________ test_docx_without_headings_keeps_body _____________________
+
+tmp_path = PosixPath('/private/var/folders/rk/qtxh2ds10vd6_cdg09pdzrbm0000gn/T/pytest-of-jarvis/pytest-49/test_docx_without_headings_kee0')
+
+    def test_docx_without_headings_keeps_body(tmp_path):
+        p=tmp_path/'a.docx';doc=Document();doc.add_paragraph('没有标题也必须保留。');doc.save(p)
+        sections=DocxParser().parse(p)
+>       assert len(sections)==1
+E       assert 0 == 1
+E        +  where 0 = len([])
+
+tests/unit/test_parser_integrity.py:16: AssertionError
+=========================== short test summary info ============================
+FAILED tests/unit/test_parser_integrity.py::test_markdown_fenced_code_heading_does_not_become_section
+FAILED tests/unit/test_parser_integrity.py::test_docx_without_headings_keeps_body
+2 failed in 0.90s

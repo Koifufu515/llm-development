@@ -1,0 +1,33 @@
+{
+  "model_memory_events": [
+    {
+      "role": "error",
+      "content": "本轮未完成，请重试；已保存的数据仍保留。",
+      "code": 500
+    },
+    {
+      "role": "done",
+      "content": "finish",
+      "code": 500
+    }
+  ],
+  "allergy_in_correct_category": false,
+  "cross_conversation_reply": [
+    {
+      "role": "assistant",
+      "content": "你尚未提供任何饮食禁忌或偏好信息。是否需要我帮你记录？例如：素食、不吃辣、过敏食物（如花生、海鲜）、宗教饮食要求（如清真、犹太洁食）等。\n\n另外，为继续规划行程，请告诉我：\n- 出发城市（例如：上海、北京）\n- 想去的目的地（可多个，例如：京都、大阪）\n\n（当前未记录任何需求，我们正从头收集）",
+      "code": null
+    },
+    {
+      "role": "done",
+      "content": "finish",
+      "code": 200
+    }
+  ],
+  "cross_conversation_memory": true,
+  "pending_asks_date": true,
+  "short_answer_returns_train_data": true,
+  "disconnect_releases_lock": true,
+  "disconnect_followup_seconds": 2.81,
+  "city_picker_count": 342
+}

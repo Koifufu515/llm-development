@@ -1,0 +1,91 @@
+前后端暗号本•Agent 只说「什么」，前端按skill_name 认组件
+前后端约定一套消息协议：Agent只产出 role / content / code 三样东西；适配器把它包成 SSE流式帧推给前端；前端从 content 里拿到
+skill_name，去 UI_SKILL_REGISTRY 查出组件，再把 data 塞进去渲染。
+暗号本 一条消息只有三个字段，前后端都只认这份约定
+PROTOCOL message = ｛ role, content, code ｝
+｛大前后蝴唯一約定
+role
+CONTENT 展开
+谁在说话•例如 assistant
+"'skill_name"："train_card"，
+"data"：｛
+content
+"train_no"："G1234"，
+说了什么•一段 JSON 字符串，见右侧展开
+"from"："北京南"，“to"："上海虹桥"，
+"depart"："08:00"
+code
+消息类型•前端据此决定怎么处理这条消息
+• skill_name =前端组件名
+• data =业务数据
+一条消息的旅程 三层各干一件事，谁也不越界
+Agent• 只管说什么
+适配器•只管怎么传
+前端• 只管按名认组件
+产出一条消息就完事，不关心它怎么到前端
+把消息包装成 SSE流式帧推给前端
+解析 content 查注册表 塞数据渲染
+yield Message（
+event: message
+const ｛ skill_name,data ｝
+role="'assistant"，
+data： ｛"role"："'assistant"，
+= JSON.parse（msg.content）
+content=json.dumps（｛
+"content"："｛｝"，
+const Comp =
+"skill_name"："train_card"，
+"code"：.."｝
+UI_SKILL_REGISTRY［skill_name］
+"data"： train_info，
+＃ 空行 =一帧结束
+｝），
+<Comp data=｛data｝ />
+code=msg_type，
+00
+SSE
+WebSocket
+可整层替换
+train_card - TrainCard
+START - yield message
+- SSE 帧
+- JSON.parse
+- UI_SKILL_REGISTRY［skill_name］
+」 <TrainCard /> - 页面
+V SSE换成 WebSocket：只换适配器
+而且
+VAgent 代码：一行不改
+•重点：content 里到底放什么！
+直接传组件
+content 里塞 UI 代码 / 组件实例
+不要这样
+传 skill_name + data
+推荐
+名字对上暗号，前端自己找组件
+会出什么问题
+skill_name
+- UI_SKILL_REGISTRY
+TrainCard（data）
+• 渲染
+x 后端得知道前端用什么框架
+React、Vue 的写法混进 Agent，职责彻底搅在一起
+改成
+const UI_SKILL_REGISTRY = ｛
+train_card：
+TrainCard，
+// 火车
+× 数据流里夹着代码
+flight_card: FlightCard，
+// 航班
+帧变大，还多了一个执行不可信内容的口子
+hotel_card: HotelCard，
+// 酒店
+× 改个样式也要动后端
+｝
+前端想换组件，得等后端改完再发版
+•新增一种卡片=写一个组件＋注册表加一行，后端不用动
+× 换传输层时更难拆
+•查不到 skil1_name 时，建议降级成普通文本气泡兜底
+帧里夹着组件，SSE/ WebSocket 的序列化都要特殊处理
+为什么这么拆：Agent 只表达「说什么」，传输交给适配器—SSE换 WebSocket，Agent 零改动；content 只传 skill_name + data，组件由前端通过 UI_SKILL_REGISTRY 自己匹配—前后端只靠
+一本暗号本对齐，各自演进，互不绑死。

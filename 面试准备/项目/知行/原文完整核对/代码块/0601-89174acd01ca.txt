@@ -1,0 +1,76 @@
+# ===== 交通步骤"清单归代码"——正文里禁止出现任何班次/航班/自驾数字 =====
+# 正则用来匹配各种交通相关内容，后面直接删掉模型自己写的班次信息
+_TRANSPORT_LIST_RE = re.compile(
+    r"[GDCKTZ]\d{1,4}\b"                       # 车次号（G330 / D50 / K507 / T10 / Z162）
+    r"|\b[A-Z0-9]{2}\d{3,4}\b"                 # 航班号（CA4105 / 3U8885）
+    r"|经济舱|公务舱|头等舱|商务座|一等座|二等座|硬座|硬卧|软卧|机票|航班"
+    r"|历时|耗时|过路费|自驾|路程|里程"
+    r"|\d+(?:\.\d+)?\s*元"     # 模型自写的"残行"——只有时刻没有车次号，旧正则认不出来（实测
+    # "- 出发-到达时刻：07:21 - 14:31" 三条与代码直出表并存，用户看到两套互相矛盾的班次）
+    r"|出发\s*[-—~～至]?\s*到达|到达时刻|发车时刻"
+    r"|\d{1,2}:\d{2}\s*[-—~～至]\s*\d{1,2}:\d{2}"
+)
+# 匹配交通板块的标题行，带圈序号标题、交通查询结果标题都会命中
+_TRANSPORT_HEAD_RE = re.compile(
+    r"^#{2,4}\s*[①②③④⑤⑥⑦⑧⑩]"                # #### ① 重庆 → 石家庄
+    r"|^#{2,4}\s*交通(方式)?查询结果"
+    r"|^\s*[-*•]\s*\*\*(高铁|航班|自驾|火车|飞机)\*\*"
+)
+# 交通卡片模式下展示给用户的引导文字
+_TRANSPORT_LEAD = "已为您查询到以下真实班次，请选择各段的交通方式：\n"
+# 引导文案最少字符长度，清理完文字太短就替换成上面这句引导语
+_TRANSPORT_LEAD_MIN = 8
+
+def _zero_leg_guard(vals: dict) -> tuple[bool, str]:
+    """ 零段直通判定——出发地与目的地同城（本地游玩）时没有任何城际段
+     返回 (是否零段, 出发地城市)。出发地/目的地缺失、或存在城际段时返回 (False, 出发地)，
+     单目的地与多目的地均按同一口径（_expected_legs 已按"相邻节点城市不同"计算）
+    """
+    # 导入工具函数，拆分城市列表、计算需要多少城际交通段
+    from app.services.express_planning_service import _split_cities
+    from app.tools.state_transition import _expected_legs
+    # 取出用户填的出发城市，清理空格
+    dep = str(((vals.get("user_requirement") or {}).get("departure_city")) or "").strip()
+    # 出发城市为空，或者目的地解析不出城市，直接判定不是本地游玩
+    if not dep or not _split_cities(vals.get("selected_destination") or ""):
+        return False, dep
+    # 调用_expected_legs判断有没有城际段，没有就是本地零段游玩
+    return (not _expected_legs(vals)), dep  # ★ 段数口径只认第 11 章 _expected_legs
+
+def _leg_context(state: dict) -> tuple[str, int, int]:
+    """ 取"当前待确认段" → (段文本, 序号从1起, 总段数)。
+     多目的地段级循环专用；单目的地/未进入段级循环时返回 ("", 0, 0)，
+     调用方据此走老逻辑，单城行为完全不变
+    """
+    from app.tools.state_transition import _expected_legs
+    try:
+        # 算出全部城际交通段列表
+        legs = _expected_legs(state)
+    except Exception:
+        # 计算报错，直接返回空，走旧逻辑
+        return "", 0, 0
+    # 没有交通段，返回空
+    if not legs:
+        return "", 0, 0
+    # 拿到当前游标，限制范围防止越界
+    cur = max(0, min(int(state.get("leg_cursor") or 0), len(legs) - 1))
+    # 返回当前这段内容、当前段序号（从1开始）、总共有多少段
+    return legs[cur], cur + 1, len(legs)
+
+def _strip_transport_lists(text: str) -> str:
+    """剔除交通步骤正文里模型自编的班次/航班/自驾清单行及其小标题，只留引导语"""
+    # 用来存放过滤后保留的文本行
+    kept: list[str] = []
+    # 按行遍历所有文本
+    for line in (text or "").splitlines():
+        stripped = line.strip()
+        # 如果这一行命中交通班次正则或者交通标题正则，直接跳过这一行，不加入结果
+        if stripped and (
+            _TRANSPORT_LIST_RE.search(stripped) or _TRANSPORT_HEAD_RE.match(stripped)
+        ):
+            continue
+        kept.append(line)
+    # 合并文本，把连续多个空行压缩成最多两个换行
+    cleaned = re.sub(r"\n{3,}", "\n\n", "\n".join(kept)).strip()
+    # 文案微调，统一用词
+    return cleaned.replace("以上选项", "以下班次")

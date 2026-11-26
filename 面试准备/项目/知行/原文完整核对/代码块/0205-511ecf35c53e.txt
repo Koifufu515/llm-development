@@ -1,0 +1,40 @@
+"""build_train_multi_segment_payload 演示：全部段 asyncio.gather 并行查询 → 组装 payload → 写入提交侧缓存（纯逻辑，无需密钥）"""
+import asyncio
+
+from app.capabilities.train_multi_segment import train_agent_tool
+from app.capabilities.train_multi_segment.train_agent_tool import build_train_multi_segment_payload, get_cached_payload
+
+RAW = {
+    ("北京", "天津"): """G1 北京南(telecode:VNP) -> 天津(telecode:TJP) 08:30 -> 09:05 历时：00:35
+- 二等座: 有票 54.5元
+C2001 北京南(telecode:VNP) -> 天津(telecode:TJP) 06:30 -> 07:03 历时：00:33
+- 二等座: 无 54.5元""",
+    ("天津", "上海"): """G101 天津西(telecode:TXP) -> 上海虹桥(telecode:AOH) 09:10 -> 14:02 历时：04:52
+- 二等座: 有 509.0元
+G103 天津南(telecode:TIP) -> 上海虹桥(telecode:AOH) 07:48 -> 12:31 历时：04:43
+- 二等座: 候补 509.0元""",
+}
+
+class FakeTicketTool:        # 测试驱动：假装是 12306 查询工具，按段返回原始文本，并记下被调了几次
+    name = "get-tickets"
+
+    def __init__(self):
+        self.calls = 0
+
+    async def ainvoke(self, args: dict):
+        self.calls += 1
+        if args["fromStation"] == "故障站":
+            raise RuntimeError("12306 超时")
+        return RAW.get((args["fromStation"], args["toStation"]), "")
+
+async def main():
+    train_agent_tool._QUERY_TOOL = FakeTicketTool()      # 测试驱动：把 12306 工具换成假的，其余全是真实代码
+    legs = [{"from": "北京", "to": "天津", "date": "2026-10-01"}, {"from": "天津", "to": "上海", "date": "2026-10-02"}]
+    payload = await build_train_multi_segment_payload(legs, cache_key="conv-1")
+    for seg in payload.segments:
+        print(seg.segment_id, seg.from_, "→", seg.to, seg.date, [o.option_id for o in seg.train_list])
+    print("查询次数：", train_agent_tool._QUERY_TOOL.calls, "| 已缓存供提交校验：", get_cached_payload("conv-1") is payload)
+    empty = await build_train_multi_segment_payload([], cache_key="conv-2")
+    print("没有段 → 空 payload：", empty.segments)
+
+asyncio.run(main())

@@ -1,0 +1,15 @@
+"""就地补算演示：state 里还没有预算时，行程工具当场调预算工具算一份，和行程同一个 Command 写入（纯逻辑，无需密钥）"""
+from langchain.tools import ToolRuntime
+
+from app.tools.state_transition import submit_itinerary_body_tool
+
+state = {"messages": [], "current_step": "itinerary_generation", "selected_destination": "杭州",
+         "user_requirement": {"departure_city": "北京", "travel_days": 2, "adult_count": 2, "children_count": 0, "budget_max": 3000},
+         "leg_selections": {"北京→杭州": "G35 07:00"}}   # 没有 budget：模型同一轮并行调了预算工具，它的写入此刻还看不见
+rt = ToolRuntime(state=state, context=None, config={}, stream_writer=None, tool_call_id="call_1", store=None)
+days = [{"day": d, "city": "杭州", "morning": ["西湖断桥与苏堤漫步，建议停留 2 小时"], "noon": ["知味观小笼包，人均约 40 元，排队较长"],
+         "afternoon": ["灵隐寺祈福，门票 45 元，飞来峰石刻值得一看"], "evening": ["河坊街夜市小吃，人均约 50 元"]} for d in (1, 2)]
+up = submit_itinerary_body_tool.func(days=days, runtime=rt).update
+print("写进 state 的键：", [k for k in up if k != "messages"])
+print("就地补算的预算：", {k: v for k, v in up["budget"].items() if not isinstance(v, (list, dict))})
+print("补算结果里有 user_requirement 吗？", "user_requirement" in up)

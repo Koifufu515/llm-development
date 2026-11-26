@@ -1,0 +1,80 @@
+"""多段航班 UI Skill —— 与状态机「交通规划步」的接线层
+
+与多段高铁（train_flow）完全同构，仅数据源换成航班：
+  1. emit_flight_skill_ui   手动确认模式：并行查询全部段 → 推 skill_ui 帧（前端内嵌卡片）
+  2. auto_select_flights    自动确认模式：代码按「价格低」代选并推进（不弹 UI）
+  3. apply_flight_selection 前端提交 → 基础合法性校验（**不做任何时间校验**）→ 写段账本 → 推进
+
+优先级：高铁 > 航班（同时勾选高铁与航班时走高铁卡片，本模块 flight_card_mode 会返回 False）。
+"""
+from typing import Any, Optional
+
+from app.core.events import ROLE_SKILL_UI, make_event
+from app.capabilities.base import SignatureCache, get_agent_and_state, leg_signature
+from app.capabilities.flight_multi_segment.flight_agent_tool import (
+    build_flight_multi_segment_payload,
+    get_cached_payload,
+    validate_flight_submission,
+)
+from app.capabilities.flight_multi_segment.flight_skill_schema import (
+    FLIGHT_MULTI_SEGMENT_SKILL,
+    FlightLeg,
+    FlightMultiSegmentPayload,
+    FlightSubmitPayload,
+    FlightSubmitResult,
+)
+from app.capabilities.train_multi_segment.train_flow import train_mode_requested
+from app.utils.logger import app_logger
+
+# 表单"交通方式"可能是中文选项值，也可能是模型归一后的枚举值，两种都认
+_FLIGHT_WORDS = {"flight", "航班", "飞机", "航班/飞机", "飞机/航班"}
+
+# 交通步之后的步骤（用于提交接口的幂等判定：重复提交不再回写状态）
+_AFTER_TRANSPORT = {
+    "accommodation_planning", "food_planning", "itinerary_generation",
+    "budget_summarization", "report_generation",
+}
+
+def flight_mode_requested(state: dict) -> bool:
+    """是否走航班路线：表单勾了航班（或已选定 flight）才推卡片"""
+    if state.get("selected_transport") == "flight":
+        return True
+    req = state.get("user_requirement") or {}
+    picked = {str(v).strip() for v in (req.get("transport_types") or [])}
+    return bool(picked & _FLIGHT_WORDS)
+
+def _legs_with_dates(state: dict) -> list[FlightLeg]:
+    """按行程时序生成「段 + 段日期」：去程=出发日、城际=下一城首日（_leg_query_date 口径）"""
+    from app.core.middleware import _leg_query_date
+    from app.tools.state_transition import _expected_legs
+    legs = _expected_legs(state)
+    out: list[FlightLeg] = []
+    for index, leg in enumerate(legs):
+        frm, _, to = leg.partition("→")
+        if not frm or not to:
+            continue
+        out.append(FlightLeg(
+            from_=frm, to=to, travel_date=_leg_query_date(state, legs, index),
+        ))
+    return out
+
+def flight_card_mode(state: dict) -> bool:
+    """是否走"航班由代码供给卡片"的路线：选了航班 **且不是高铁路线**（高铁优先）且段数≥1"""
+    return (
+        flight_mode_requested(state)
+        # ★ 高铁优先：两个都勾了，走高铁卡片
+        and not train_mode_requested(state)
+        and len(_legs_with_dates(state)) >= 1
+    )
+
+def _fmt_option(opt: Any) -> str:
+    """航班 → 段账本文本（与 select_transport_tool 落库口径一致，行程步直接可读）
+
+    ★ 票价必须写进这串文本：预算侧 _legs_price_per_person() 是按 `(\\d+)元` 正则
+      从段账本里抠交通费的（高铁 _fmt_option 末尾就带"二等座553元"）。航班这边原先
+      一个"元"字都没有 → 正则空手而归 → 交通费恒按 500 元/人兜底估算，
+      用户选了航班就永远拿不到真实交通预算。取不到票价时不写，宁缺毋造。
+    """
+    base = f"{opt.flight_no} {opt.dep_time}-{opt.arr_time} {opt.dep_airport}→{opt.arr_airport}"
+    price = float(getattr(opt, "price", 0) or 0)
+    return f"{base} {price:g}元" if price > 0 else base

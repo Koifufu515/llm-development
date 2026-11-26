@@ -1,0 +1,22 @@
+[32m14:29:05.506[0m | [1mINFO   [0m | [36mquarry.rerank.factory[0m:[36mget_reranker[0m:[36m19[0m | [1m重排后端：api[0m
+Building prefix dict from the default dictionary ...
+Loading model from cache /var/folders/rk/qtxh2ds10vd6_cdg09pdzrbm0000gn/T/jieba.cache
+Loading model cost 0.195 seconds.
+Prefix dict has been built successfully.
+候选数 30
+
+原排名  第1名  重排耗时   查询
+   1    没换      353 ms   兵马俑的门票多少钱
+   2    换了      234 ms   从机场到市区怎么走
+  10    换了      239 ms   有什么本地小吃值得尝
+   6    换了      243 ms   景区几点开门
+   8    换了      215 ms   需要提前预约吗
+   3    换了      212 ms   住在哪个区域比较方便
+   2    换了      246 ms   冬天去合适吗
+  19    换了      202 ms   有没有适合带孩子去的地方
+   2    换了      218 ms   当地交通卡怎么买
+   8    换了      228 ms   去下一个城市坐什么车
+
+================================================
+第 1 名被换掉    9/10
+重排耗时中位数  231 ms

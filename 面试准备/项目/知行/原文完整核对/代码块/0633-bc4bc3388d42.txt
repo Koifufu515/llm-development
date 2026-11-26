@@ -1,0 +1,30 @@
+def build_itinerary_metrics(threshold: float = 0.5, require_budget: bool = True) -> list[GEval]:
+    """构造三维度 GEval（每次新建实例，避免 DeepEval 内部状态串扰）
+
+    require_budget：待判源料是否含预算明细
+    - True（默认）：源料是模型输出的 Markdown 正文，含预算表 → 严格校验预算完整性（离线评测口径不变）
+    - False：源料是 plan_to_text 产出的结构化清单，无预算字段 → 该条判据不适用，不扣分（在线质检）
+    """
+    judge = QwenJudge()  # ★ 每次都新建，避免 DeepEval 内部状态串扰
+    # 时段口径与代码渲染对齐——正文由 _render_itinerary_body 渲染为
+    # **上午/中午/下午/晚上** 四个时段 + 每天"小贴士"（schema 强制），旧判据只写三个时段，
+    # 判官口径与产物不一致；末日晚上允许只有 1 条（返程），不得据此判为不完整
+    completeness = ("判断行程正文是否完整：1) 每天都有『Day X』标题，且当天包含上午/中午/"
+                    "下午/晚上四个时段（末日晚上可只含返程 1 条，不算缺项），"
+                    "天数覆盖需求里的全部出行天数；"
+                    + (_BUDGET_CLAUSE if require_budget else _BUDGET_CLAUSE_NA))  # ★ 一个开关切两版判据
+    return [
+        GEval(name="行程完整性",
+              criteria=completeness,
+              evaluation_params=_PARAMS, model=judge, threshold=threshold),
+        GEval(name="需求匹配度",
+              criteria=("对照需求清单判断行程是否匹配：目的地正确；每天行程数量与出行天数一致；"
+                        "交通方式与需求一致；行程设计体现旅行风格；按人数与预算给出合理的"
+                        "餐饮住宿档次。明显偏离即扣分。"),
+              evaluation_params=_PARAMS, model=judge, threshold=threshold),
+        GEval(name="真实性（无编造）",
+              criteria=("判断行程中的景点、餐厅、门票价格是否真实可信：景点应为目的地真实存在"
+                        "的知名景点；餐厅应为当地真实特色；门票价格应与常识一致（如灵隐寺约"
+                        " 30 元），不应出现明显虚构的名称或离谱价格。发现编造嫌疑即扣分。"),
+              evaluation_params=_PARAMS, model=judge, threshold=threshold),
+    ]

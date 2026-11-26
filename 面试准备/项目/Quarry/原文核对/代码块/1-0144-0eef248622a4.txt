@@ -1,0 +1,5 @@
+def downgrade() -> None:
+    raise NotImplementedError(
+        "这个迁移不可逆：删列会丢失 documents.legacy_source 的数据。"
+        "如需回滚，请从备份恢复。"
+    )

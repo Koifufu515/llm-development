@@ -1,0 +1,5 @@
+{
+  "observed": "UI Failed to fetch",
+  "root_cause": "source HTML fetch hardcoded 8100, prose specified same-origin relative path",
+  "fix": "/debug/search"
+}

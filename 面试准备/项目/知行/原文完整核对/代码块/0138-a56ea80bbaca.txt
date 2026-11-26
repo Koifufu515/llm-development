@@ -1,0 +1,8 @@
+"""_expected_legs 演示：这趟行程应该有哪几段城际交通（纯函数，无需密钥）"""
+from app.tools.state_transition import _expected_legs
+
+def state(dep: str, dest: str) -> dict:
+    return {"user_requirement": {"departure_city": dep}, "selected_destination": dest}
+
+for dep, dest in [("北京", "上海"), ("北京", "天津、上海"), ("北京", "北京、天津"), ("北京", "北京"), ("", "杭州")]:
+    print(f"{dep or '（空）'} → {dest:6} 应有 {_expected_legs(state(dep, dest))}")

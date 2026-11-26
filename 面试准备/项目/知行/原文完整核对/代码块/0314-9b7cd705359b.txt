@@ -1,0 +1,16 @@
+"""_repair_dangling_tool_calls 演示：有 tool_calls 却没回应的补一条说明，孤立的 tool 消息丢掉（纯函数，无需密钥）"""
+from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
+
+from app.core.middleware import _repair_dangling_tool_calls
+
+msgs = [HumanMessage("查北京到天津的高铁"),
+        AIMessage("", tool_calls=[{"name": "get-tickets", "args": {}, "id": "t1"}, {"name": "maps_weather", "args": {}, "id": "t2"}]),
+        ToolMessage("G1 08:30→09:05", tool_call_id="t1"),          # t2 没有回应（工具中途被打断）
+        HumanMessage("选 G1"),
+        ToolMessage("不知道从哪来的结果", tool_call_id="t9")]      # 前面没有对应的 tool_calls
+fixed, inserted, dropped = _repair_dangling_tool_calls(msgs)
+print(f"补了 {inserted} 条、丢了 {dropped} 条")
+for m in fixed:
+    print(f"{m.type:5} {getattr(m, 'tool_call_id', '') or '':3} {str(m.content)[:40]}")
+same, *_ = _repair_dangling_tool_calls(fixed)
+print("修过一次再修：原样返回", same is fixed)

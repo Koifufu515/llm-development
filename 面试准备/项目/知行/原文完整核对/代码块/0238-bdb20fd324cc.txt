@@ -1,0 +1,10 @@
+"""flight_card_mode 演示：选了航班、且不是高铁路线（高铁优先）、且至少一段，才由代码供航班卡片（纯逻辑，无需密钥）"""
+from app.capabilities.flight_multi_segment.flight_flow import flight_card_mode, flight_mode_requested
+
+def state(transport: list, dest: str) -> dict:
+    return {"user_requirement": {"departure_city": "北京", "departure_date": "2026-10-01", "travel_days": 4,
+                                 "transport_types": transport}, "selected_destination": dest}
+
+for name, st in {"只勾航班      ": state(["航班"], "上海"), "高铁、航班都勾": state(["高铁", "航班"], "上海"),
+                 "航班但本地游  ": state(["航班"], "北京")}.items():
+    print(f"{name} → 选了航班 {flight_mode_requested(st)!s:5} | 航班卡片 {flight_card_mode(st)}")

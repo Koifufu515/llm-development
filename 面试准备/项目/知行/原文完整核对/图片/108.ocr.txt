@@ -1,0 +1,83 @@
+两条入口对照。卡片续跑复用同一个_produce，靠三个参数关掉三道闸
+卡片提交是一个独立的REST 动作。如果只落状态、不跑编排，流程会停在原地（skills.py 模块说明里记录的实测：选完高铁后没有任何后续输出）。
+所以提交成功后，用一句合成发言把「下一步」那一轮跑起来。
+MSG
+普通发消息
+默认参数
+uI
+•卡片提交续跑
+续跑参数
+messages.send_message• POST /api/v1/messages
+skills.submit_*_multi_segment ×4• POST /api/v1/skills/*/submit
+JWT 鉴权|
+- get_owned_Conversation -run_chat_turn（content）
+共用
+apply_*_selection
+一 mark_skill_ui_submitted
+推回显 assistant
+async for -_sse
+同
+run_chat_turn（合成发言）
+• content 是用户原话：会存进 message 表，首条还会被用来改会话标题
+• content是代码拼的：如「我已按卡片选定全部车次：…J，不存库
+• 由模型判意图：先过 chat_route，再依次过直查门禁、快速通道
+• 不问模型：跳过意图路由、直查门禁和快速通道，直接进状态机
+• 走哪条通道由内容决定：直查、快速通道、状态机三选一
+•状态机已被推到下一步：apply_*_selection 落了账本，execute_turn 接着跑住宿步
+或行程步
+force_planning=False
+persist_user=True
+resume_stage=None
+force_planning=True | persist_user=False
+resume_Stage=.
+三个参数在_produce 里各改了什么
+只有这三处分叉，其余流程两条入口完全一样
+参数
+普通发消息
+卡片续跑
+在_produce 里改变了什么
+force_planning
+False
+True
+① 不调 chat_route，直接造 RouterResult（is_itinerary_planning=True,skills=［］）（L215） ② 跳过直查门禁（L225） ③ 跳过快速通道
+（L242） ④ resume_stage 查不到文案时，兜底用「二 车次已确认⋯」（L231）
+persist_user
+True
+False
+① 不改会话标题（L195）② 不存 user 消息 （L200）：历史里不会冒出用户没打过的句子。assistant 消息照常存。
+resume_stage
+None
+见下表
+只用来挑等待提示：_RESUME_PENDING_TEXT.get （resume_stage）（L229），让提示文案和状态机实际所在的步骤对上。
+四个卡片路由买际传了什么
+•对照 api/v1/skills.py 的调用处，核对用户看到的提示是否与所选交通方式一致
+卡片
+调用行号
+resume_stage
+用户看到的提示（L179-181）
+核对
+train
+skills L155
+"'accommodation_planning"
+车次已确认，正在为您规划住宿⋯
+V一致
+hotel
+skills L192
+result.next_step
+（=
+住宿已确认，正在为您生成行程报告⋯
+V一致
+itinerary_generation ）
+flight
+skills L230
+''accommodation_planning"
+二车次已确认，正在为您规划住宿⋯
+X 选的是航班
+driving
+skills L267
+''accommodation_planning"
+车次已确认，正在为您规划住宿⋯
+X 选的是自驾
+同源问题：合成的路由结果把 inference_log 写死成「［卡片提交］车次已选定，续跑住宿步」（L218）。它最终存进 assistant消息的 extra_info.inference_steps，四种卡片都是这一句，住宿卡片也不例外。
+续跑的本质：卡片接口只负责把状态机往前推一步（apply_*_selection），再用一句合成发言把下一步那一轮跑起来。三个参数各管一件事：force_planning 让这一轮确定进入状态机，
+persist_user 不污染历史，resume_stage 让提示文案对上真实步骤。目前航班和自驾两条的文案还没对上。

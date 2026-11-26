@@ -1,0 +1,20 @@
+"""try_direct_ticket_query 门禁演示：前三道门禁全是正则，不命中立刻返回 None（前 5 句纯逻辑；最后一句需 12306 MCP）"""
+import asyncio
+
+from app.services.chat_stream_executor import try_direct_ticket_query
+
+NOT_HIT = [
+    "我想坐高铁去杭州玩",                        # 门禁①：没有票务对象词（"高铁"不算，"高铁票"才算）
+    "高铁票好贵啊",                             # 门禁①：有对象词，但既无查询动词也无日期词
+    "帮我规划行程，顺便查下福州到深圳的高铁票",    # 门禁②：含"规划/行程"→ 这是规划，交回原通道
+    "查一下明天的高铁票",                        # 门禁③：解析不出起讫城市
+    "你好呀",
+]
+
+async def main():
+    for text in NOT_HIT:
+        print(f"{text:22s} → {await try_direct_ticket_query(text)}")   # stream=None：只看返回值
+    print(await try_direct_ticket_query("查一下明天福州到深圳的高铁票"))  # 命中 → 真查 12306（需 MCP）
+
+if __name__ == "__main__":
+    asyncio.run(main())

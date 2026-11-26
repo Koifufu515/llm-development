@@ -1,0 +1,7 @@
+"""_dedupe_texts 演示：同回合整篇重贴只留"更靠后的完整版"，短段不参与比较（纯函数，无需密钥）"""
+from app.services.chat_stream_executor import _dedupe_texts
+
+body = "#### Day 1 杭州\n- 上午：西湖断桥、白堤、孤山\n" * 12          # ≥200 字的长正文
+rounds = [body[:260], "预算合计 4128 元。", body, "如需调整，直接告诉我即可。"]   # 第 1 轮是被截断的半篇
+kept = _dedupe_texts(rounds)
+print([f"{len(t)}字" for t in rounds], "→", [f"{len(t)}字" for t in kept])

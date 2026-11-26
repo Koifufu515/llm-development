@@ -1,0 +1,51 @@
+# 清单"必定生成"的代码兜底。LLM 提炼环节有多种失败可能（DeepSeek 欠费/
+# 思考模式偶发不返回 tool_calls/返回体不合 schema），任一失败都会让用户拿不到清单——但此时
+# 状态机里的 itinerary_body 已是 Pydantic 校验过的结构，信息完整，可直接由代码构造清单。
+# 故提炼只作为"增强手段"，不再是单点依赖。
+_SLOT_TIME_LABELS = (
+    ("morning", "上午"), ("noon", "中午"), ("afternoon", "下午"), ("evening", "晚上"),
+)
+
+_LEAD_TIME_RE = re.compile(r"^\s*\d{1,2}[:：]\d{2}(\s*[-~—]\s*\d{1,2}[:：]\d{2})?\s*(前后|左右)?\s*")
+
+def _spot_from_text(text: str) -> ScenicSpot:
+    """兜底清单的景点条目：条目首段作为景点名，整条作为介绍（图片/坐标留空，由增强补齐）
+
+    ★ 必须先剥掉开头时刻：按冒号切分会把 "09:00 天安门广场观升旗" 切成 "09"，
+      随后高德 POI 拿 "09" 去搜坐标与封面，整份兜底清单既没坐标也没图
+    """
+    text = text.strip()
+    head = re.split(r"[，,。；;：:\s（(]", _LEAD_TIME_RE.sub("", text), maxsplit=1)[0][:24]
+    return ScenicSpot(
+        toponym=head or text[:24], toponym_desc=text,
+        toponym_image="", toponym_image_list=[],
+    )
+
+def _fallback_title(markdown: str, days: int) -> str:
+    """兜底标题：优先取源料首个标题行，否则用"N 天行程规划" """
+    for line in (markdown or "").splitlines():
+        head = line.strip().lstrip("#＊* ").strip()
+        if head:
+            return head[:30]
+    return f"{days} 天行程规划"
+
+def _plan_from_structure(days: list[dict], markdown: str = "") -> TravelItinerary:
+    """用已过校验的 itinerary_body 直接构造行程清单（不依赖任何 LLM 提炼）"""
+    out: list[ItineraryDay] = []
+    for d in days or []:
+        if not isinstance(d, dict):
+            continue
+        items = [
+            ItineraryItem(
+                time=label,
+                scenic_spots_list=[_spot_from_text(str(t)) for t in (d.get(key) or []) if str(t).strip()],
+            )
+            for key, label in _SLOT_TIME_LABELS if d.get(key)
+        ]
+        out.append(ItineraryDay(
+            id=uuid.uuid4().hex[:12],
+            day=f"第{d.get('day')}天",
+            itinerary=items,
+        ))
+    # ★ 全程不经 LLM：用已过 Pydantic 校验的 itinerary_body 直接拼出一份合法清单
+    return TravelItinerary(title=_fallback_title(markdown, len(out)), itinerary_list=out)

@@ -1,0 +1,13 @@
+{
+  "scope": "可重复故障注入：实际LangGraph/工具/PG落库，模型协议和地图用先前真实产物回放。\n不计为新Qwen质量评测或实时地图查询；验证主生成异常→标准Agent工具提交→保存。\n",
+  "source_conversation": "25ccbe78-71cf-46ba-803a-859de7a400f4",
+  "checks": {
+    "fallback_skill_emitted": true,
+    "body_saved": true,
+    "terminal_step": true,
+    "model_protocol_used": true,
+    "rendered_full_budget": true
+  },
+  "plan_id": "20ccf0d3-dc64-4b99-bba4-6d287b3d8e74",
+  "status": "passed"
+}

@@ -1,0 +1,517 @@
+
+
+===== block 606 02fec71c33df lines 1-136 source 知行旅行助手-v2#608 =====
+# ===== 行程正文归代码渲染（模型只提交结构化数据） =====
+# 结构化数据经过Pydantic校验，正文与预算表由本函数确定性拼接。
+_BODY_READY_MARK = "天行程结构"
+_SLOT_RENDER = (("morning", "上午"), ("noon", "中午"), ("afternoon", "下午"), ("evening", "晚上"))
+_INVITE_TAIL = "\n\n如需调整（天数/预算/目的地等），直接告诉我即可。"
+
+def _render_confirmed_block(transport_legs: list | None, hotels: list | None) -> str:
+    """已确认的交通与住宿摘要块（数据来自状态机已落库的
+    selected_transport_legs / selected_hotels）。两者都空则整块不出——
+    本地零段游玩、或品牌兜底缺失时不硬凑。
+    """
+    # 过滤交通信息，去掉空字符串
+    legs = [str(x).strip() for x in (transport_legs or []) if str(x).strip()]
+    # 过滤住宿信息，去掉空字符串
+    stays = [str(x).strip() for x in (hotels or []) if str(x).strip()]
+    # 交通和住宿全都没有，直接返回空串，不输出这一块
+    if not legs and not stays:
+        return ""
+    # 开始拼markdown内容
+    out = ["### 已确认的交通与住宿\n"]
+    # 有交通信息就追加交通板块
+    if legs:
+        out.append("\n- **交通**\n")
+        out.extend(f"  - {t}\n" for t in legs)
+    # 有住宿信息就追加住宿板块
+    if stays:
+        out.append("\n- **住宿**\n")
+        out.extend(f"  - {h}\n" for h in stays)
+    return "".join(out)
+
+def _render_itinerary_body(
+    days: list, budget: dict, req: dict,
+    transport_legs: list | None = None, hotels: list | None = None,
+) -> str:
+    """结构化逐日行程 → Markdown 正文 + 预算明细（全部为代码生成，数字不来自模型）。
+    transport_legs / hotels：状态机已确认并落库的交通段与住宿
+    （selected_transport_legs / selected_hotels）。
+    """
+    # 没有行程天数数据，直接返回空
+    if not days:
+        return ""
+    # 先拿到已经确认的交通住宿摘要文本
+    confirmed = _render_confirmed_block(transport_legs, hotels)
+    # 如果有确认信息，就带上，否则直接从详细行程开始
+    lines = [confirmed + "\n", "### 详细行程\n"] if confirmed else ["### 详细行程\n"]
+
+    # 循环每一天的行程数据
+    for d in days:
+        city = str(d.get("city") or "").strip()
+        # 拼Day标题，带上城市名（有就加，没有就只写Day数字）
+        lines.append(f"\n#### Day {d.get('day')}{' ' + city if city else ''}\n")
+        # 遍历上午/中午/下午/晚上四个时段
+        for key, label in _SLOT_RENDER:
+            # 取出当前时段的活动列表，过滤空内容
+            items = [str(x).strip() for x in (d.get(key) or []) if str(x).strip()]
+            lines.append(f"\n- **{label}**\n")
+            lines.extend(f"  - {it}\n" for it in items)
+        # 取出当天小贴士
+        tips = [str(x).strip() for x in (d.get("tips") or []) if str(x).strip()]
+        # 有小贴士才追加这一块
+        if tips:
+            lines.append("\n- **小贴士**：\n")
+            lines.extend(f"  - {t}\n" for t in tips)
+
+    # 拿到预算字典，为空就用空字典兜底
+    b = budget or {}
+    # 如果存在总预算，才渲染预算明细板块
+    if b.get("total"):
+        # 成人+儿童人数，兜底至少1个人，防止除以0
+        people = int(req.get("adult_count") or 0) + int(req.get("children_count") or 0) or 1
+        total = float(b.get("total") or 0)
+        per = total / people
+        # 和自动确认模式的预算函数口径保持一致，避免两处算出来结果不一样
+        day_count = int(req.get("travel_days") or 0) or len(days) or 1
+        nights = max(day_count - 1, 1)
+        # 房间数，向上取整，不用导入math库
+        rooms = max((people + 1) // 2, 1)
+        # 统计一共多少个不同的城市
+        city_count = len({str(d.get("city")).strip() for d in days
+                          if str(d.get("city") or "").strip()}) or 1
+        # 取出各项费用
+        transport_cost = float(b.get("transport") or 0)
+        accommodation_cost = float(b.get("accommodation") or 0)
+        food_cost = float(b.get("food") or 0)
+        attractions_cost = float(b.get("attractions") or 0)
+        misc_cost = float(b.get("misc") or 0)
+        total_legs = len(transport_legs or [])
+        # 交通部分的备注文案
+        transport_detail = (f"（{total_legs} 段 × 各段票价）" if total_legs
+                            else "（本地游玩，无城际交通段）")
+        # 计算单间每晚均价，除数为0就置0
+        hotel_price = (accommodation_cost / (nights * rooms)) if nights * rooms else 0.0
+        # 住宿备注文案，有没有真实酒店数据文案不一样
+        hotel_detail = (f"各城均价 {hotel_price:.0f} 元" if hotels
+                        else f"各城估算 {hotel_price:.0f} 元/晚（实时房价不可用）")
+        # 获取用户设置的预算上限
+        bmax = req.get("budget_max")
+        if isinstance(bmax, (int, float)) and bmax > 0:
+            # 判断有没有超预算，生成结论文字
+            verdict = "人均未超预算" if per <= bmax else "人均超预算（建议下调住宿档位或减天数）"
+        else:
+            verdict = "未提供预算上限，仅作参考"
+        # 判断门票是真实数据还是估算，对应不同备注，防止文字和金额矛盾
+        ticket_note = (f"（实时票价合计 {attractions_cost / people:.0f} 元/人）"
+                       if b.get("attractions_source") == "real" else "（按 200元/人/天 估算）")
+        # 拼接完整预算markdown块
+        lines.append(
+            f"\n### 预算明细（{people} 人 / {nights} 晚 / {rooms} 间房 / {city_count} 城）\n"
+            f"- **交通费用**：{transport_cost:.2f} 元"
+            f"（人均 {transport_cost / people:.0f} 元，{transport_detail}）\n"
+            f"- **住宿费用**：{accommodation_cost:.2f} 元"
+            f"（{rooms} 间 × {nights} 晚 × {hotel_detail}）\n"
+            f"- **餐饮费用**：{food_cost:.2f} 元（150元/人/天）\n"
+            f"- **景点门票**：{attractions_cost:.2f} 元{ticket_note}\n"
+            f"- **其他杂费**：{misc_cost:.2f} 元\n"
+            f"**总计：{total:.2f} 元（{people} 人总价）｜人均：{per:.2f} 元**\n"
+            f"预算结论：{verdict}\n"
+        )
+    else:
+        # 没有预算数据，打警告日志，不输出预算，不编造数字
+        app_logger.warning("⚠️ 行程渲染时缺少预算数据，本轮不输出预算明细（避免编造数字）")
+    # 把所有行拼在一起，去掉首尾空白返回
+    return "".join(lines).strip()
+
+# 代码渲染正文分段推送，模拟流式观感
+_RENDER_CHUNK = 48
+_RENDER_DELAY = 0.025
+
+async def _push_rendered(stream: EventStream, text: str) -> None:
+    """把代码渲染的长正文按小段渐进推送（文本短于一段时零额外延迟）"""
+    # 按固定长度切分文本，一块一块推送给前端
+    for i in range(0, len(text), _RENDER_CHUNK):
+        stream.push(make_event(ROLE_ASSISTANT, text[i:i + _RENDER_CHUNK]))
+        # 还没到最后一段，才加一点延迟，模拟打字效果
+        if i + _RENDER_CHUNK < len(text):
+            await asyncio.sleep(_RENDER_DELAY)
+
+
+===== block 607 a1818a04755c lines 1-21 source 知行旅行助手-v2#609 =====
+"""_render_itinerary_body 演示：结构化逐日数据 + 已确认交通/住宿 → Markdown 正文 + 预算表（纯函数，无需密钥）"""
+from app.services.chat_stream_executor import _render_itinerary_body
+
+days = [
+    {"day": 1, "city": "杭州", "morning": ["西湖断桥"], "noon": ["知味观·片儿川"],
+     "afternoon": ["灵隐寺（需预约）"], "evening": ["河坊街夜市"], "tips": ["灵隐寺需提前 1 天预约"]},
+    {"day": 2, "city": "杭州", "morning": ["西溪湿地"], "noon": [], "afternoon": ["茶叶博物馆"],
+     "evening": ["返程 G1653"]},
+]
+budget = {"transport": 712, "accommodation": 716, "food": 900, "attractions": 1200, "misc": 600, "total": 4128}
+# ★ 已确认账本：apply_train_selection / apply_hotel_selection 落库的形态
+legs = ["福州→杭州 G1650 08:12-12:30 二等座356元", "杭州→福州 G1653 15:20-19:36 二等座356元"]
+hotels = ["杭州（10-01 至 10-03）：湖滨精选酒店，358元/晚，总价 716元"]
+
+print(_render_itinerary_body(days, budget, {"adult_count": 2, "budget_max": 3000},
+                             transport_legs=legs, hotels=hotels))
+
+# 两账本为空（本地零段游）→ 不出"已确认的交通与住宿"块
+body_empty = _render_itinerary_body(days, budget, {"adult_count": 2}, transport_legs=[], hotels=[])
+print("\n本地零段时有已确认块吗？", "### 已确认的交通与住宿" in body_empty)   # False：不硬凑
+print("缺预算数据时还有预算表吗？", "### 预算明细" in _render_itinerary_body(days[:1], {}, {}))   # False：绝不编造数字
+
+
+===== block 608 dfc51aaae7a8 lines 1-13 source 知行旅行助手-v2#610 =====
+### 已确认的交通与住宿
+
+- **交通**
+  - 福州→杭州 G1650 08:12-12:30 二等座356元
+  - 杭州→福州 G1653 15:20-19:36 二等座356元
+
+- **住宿**
+  - 杭州（10-01 至 10-03）：湖滨精选酒店，358元/晚，总价 716元
+
+### 详细行程
+
+#### Day 1 杭州
+...
+
+
+===== block 609 719fedb15d38 lines 1-20 source 知行旅行助手-v2#611 =====
+"""_push_rendered 演示：代码渲染的长正文按 48 字一段、每段隔 25ms 推送，观感就是流式（纯逻辑，无需密钥）"""
+import asyncio
+import time
+
+from app.core.event_stream import EventStream
+from app.services.chat_stream_executor import _push_rendered
+
+TEXT = "#### Day 1 杭州\n- **上午**\n  - 西湖断桥，沿白堤慢慢走\n" * 4
+
+async def main():
+    stream = EventStream()
+    t0 = time.perf_counter()
+    await _push_rendered(stream, TEXT)
+    stream.close()
+    frames = [e["content"] async for e in stream]
+    print(f"{len(TEXT)} 字 → {len(frames)} 帧，用时 {time.perf_counter() - t0:.3f}s，每帧 {[len(f) for f in frames]} 字")
+    assert "".join(frames) == TEXT              # 拼回去一字不差
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+
+===== block 610 b00a63e5b746 lines 1-1 source 知行旅行助手-v2#612 =====
+156 字 → 4 帧，用时 0.076s，每帧 [48, 48, 48, 12] 字
+
+
+===== block 611 483d2faa8dd4 lines 1-106 source 知行旅行助手-v2#613 =====
+def _queried_cities(tail: list) -> list[str]:
+    """从本轮 query_destination_info 的调用参数里取城市
+    多城"排序确认轮"selected_destination为空时，作为城市来源
+    """
+    # 存最后拿到的城市列表
+    out: list[str] = []
+    # 遍历尾部消息（只看本轮工具调用消息）
+    for m in tail:
+        # 取出这条消息里所有的工具调用，为空就直接跳过
+        for tc in (getattr(m, "tool_calls", None) or []):
+            # 不是查询目的地信息这个工具，直接跳过
+            if (tc.get("name") if isinstance(tc, dict) else None) != "query_destination_info":
+                continue
+            # 从工具入参里面拿出目的地城市，转字符串并去掉首尾空格
+            city = str(((tc.get("args") or {}) if isinstance(tc, dict) else {}).get("destination") or "").strip()
+            # 城市不为空，并且还没加到列表里，就追加进去
+            if city and city not in out:
+                out.append(city)
+    return out
+
+async def _weather_paragraph(cities: list[str], start: str, days: int) -> str:
+    """代码直查并段落式渲染行程窗口内天气。
+    返回空字符串表示查询失败/无可用预报，绝不编造天气。
+    """
+    # 清理城市列表：去空格，最多只取配置上限数量的城市
+    cities = [c.strip() for c in cities if c.strip()][:_WEATHER_CITY_MAX]
+    # 清洗完没有城市，直接返回空串
+    if not cities:
+        return ""
+    # 局部导入，减少顶层依赖
+    from app.tools.mcp_tools import get_weather_tools
+    from app.agents.routers.destination_router import WeatherForecast, _normalize_weather_payload
+
+    # 获取全部可用MCP工具
+    tools = await get_weather_tools()
+    # 找到天气预报对应的工具实例
+    tool = next((t for t in tools if t.name == "get_weather_forecast"), None)
+    # 找不到天气工具，打日志直接返回空，不瞎编天气
+    if tool is None:
+        app_logger.warning("天气工具未加载，本轮不追加天气（不编造）")
+        return ""
+
+    try:
+        # 把传入的起始日期字符串转成date对象
+        begin = date.fromisoformat(start) if start else None
+    except ValueError:
+        # 日期格式不对，置为None
+        begin = None
+    # 计算行程最后一天：起始日 + 总天数 -1
+    end = begin + timedelta(days=days - 1) if (begin and days > 0) else None
+
+    # 用来存放每个城市渲染好的天气文本块
+    parts: list[str] = []
+    # 逐个城市查天气
+    for city in cities:
+        try:
+            # 调用天气工具，拿到原始数据，再做标准化处理
+            payload = _normalize_weather_payload(await tool.ainvoke({"city": city}))
+            # 如果返回payload里面带错误标记，抛异常，跳过这个城市
+            if payload.get("error"):
+                raise RuntimeError(str(payload["error"]))
+            # 用Pydantic校验，转成强类型预报对象
+            casts = WeatherForecast.model_validate(payload).casts
+        except Exception as e:
+            # 这个城市查天气报错，打警告日志，直接换下一个城市
+            app_logger.warning(f"天气渲染跳过 {city}：{type(e).__name__}: {e}")
+            continue
+
+        # 如果起止日期有效，过滤出刚好在行程时间段里面的预报
+        if begin and end:
+            in_window = [c for c in casts if begin <= date.fromisoformat(c.date) <= end]
+            # 窗口内有数据就用窗口内的，没有就取前面最多days条兜底
+            casts = in_window or casts[:max(days, 1)]
+        else:
+            # 没有有效起止日期，就只取前面days条预报
+            casts = casts[:days] if days > 0 else casts
+        # 预报列表是空的，跳过这个城市
+        if not casts:
+            continue
+
+        # 拼天气块的标题头
+        header = (
+            f"出发日期前后（{begin.isoformat()}至{end.isoformat()}）的天气概况如下："
+            if begin and end else f"未来 {len(casts)} 天天气概况如下："
+        )
+        # 循环生成每一天天气的文本行
+        rows = [
+            f"- {c.date}: 白天{c.dayweather}，气温{c.nighttemp}~{c.daytemp}°C" for c in casts
+        ]
+        note = ""
+        # 有起止日期的时候，判断还差多少天预报拿不到
+        if begin and end:
+            missing = days - len(casts)
+            if missing == days:
+                note = f"（{begin.isoformat()} 起超出可预报范围，暂提供未来 {len(casts)} 天，临近出发再查）"
+            elif missing > 0:
+                note = f"（后 {missing} 天超出可预报范围，临近出发再查）"
+        # 把标题、每日天气、备注拼到一块
+        block = "\n".join([header] + rows + ([note] if note else []))
+        # 多个城市就加城市小标题，单个城市不用
+        parts.append(f"### {city}\n{block}" if len(cities) > 1 else block)
+    # 所有城市都处理完，parts为空就返回空字符串
+    if not parts:
+        return ""
+    # 多个城市的块用空行隔开，最后加上数据源说明
+    return "\n\n".join(parts) + "\n\n（数据来源：高德天气）"
+
+
+===== block 612 a0712915fd78 lines 1-9 source 知行旅行助手-v2#614 =====
+"""_strip_model_weather 演示：剔掉模型自写的天气行和"请稍等"占位语，其余内容保留（纯函数，无需密钥）"""
+from app.services.chat_stream_executor import _strip_model_weather
+
+text = """### 重庆
+- 推荐景点：洪崖洞、解放碑
+- **天气概况**：2026年9月19日 晴 28℃
+请稍等，我将查询更多天气信息……
+- 美食：老火锅、小面"""
+print(_strip_model_weather(text))
+
+
+===== block 613 1605015921cd lines 1-3 source 知行旅行助手-v2#615 =====
+### 重庆
+- 推荐景点：洪崖洞、解放碑
+- 美食：老火锅、小面
+
+
+===== block 614 de379dbefcd1 lines 1-12 source 知行旅行助手-v2#616 =====
+"""_queried_cities 演示：从本轮 query_destination_info 的调用参数里取城市（纯函数，无需密钥）"""
+from langchain_core.messages import AIMessage
+
+from app.services.chat_stream_executor import _queried_cities
+
+tail = [AIMessage(content="", tool_calls=[
+    {"name": "query_destination_info", "args": {"destination": "重庆"}, "id": "1"},
+    {"name": "query_destination_info", "args": {"destination": "成都"}, "id": "2"},
+    {"name": "query_destination_info", "args": {"destination": "重庆"}, "id": "3"},   # 重复 → 去重
+    {"name": "get-tickets", "args": {"fromStation": "重庆"}, "id": "4"},               # 别的工具 → 不算
+])]
+print(_queried_cities(tail))
+
+
+===== block 615 84c2a6940917 lines 1-1 source 知行旅行助手-v2#617 =====
+['重庆', '成都']
+
+
+===== block 616 caab5c976300 lines 1-14 source 知行旅行助手-v2#618 =====
+"""_weather_paragraph 演示：代码直查天气并按行程窗口段落式渲染（需 .env 配好天气 MCP / 高德密钥）"""
+import asyncio
+from datetime import date, timedelta
+
+from app.services.chat_stream_executor import _weather_paragraph
+
+async def main():
+    start = (date.today() + timedelta(days=1)).isoformat()
+    print(await _weather_paragraph(["杭州"], start, 3) or "（查不到 → 空串，调用方不追加、不编造）")
+    print("\n—— 多城 ——")
+    print(await _weather_paragraph(["杭州", "上海"], start, 2))
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+
+===== block 617 9c072f29b543 lines 1-12 source 知行旅行助手-v2#619 =====
+00:10:02 需求预选项: auto_confirm=False transport=['flight'] food=['specialty', 'chain', 'local'] hotel=['economy_hotel']
+00:10:49 用户选择目的地: 苏州
+00:11:15 ⚠️ flight_multi_segment s1（北京→苏州）无机场码，跳过查询
+00:11:15 ⚠️ flight_multi_segment s2（苏州→北京）无机场码，跳过查询
+00:11:15 ⚠️ [flight] payload 不值得缓存，不写签名缓存（留给下次重试）
+00:11:15 ⚠️ 交通步多段航班全部为空，本次不下发选择卡片（避免空卡片）      ← 第 1 次兜底话术
+         （用户：高铁吧）
+00:11:25 路由结果: planning=True, skills=['train_query', 'itinerary_planning']      ← 路由认出了"高铁"
+00:11:25 ✈️ 交通步：屏蔽模型自带查询/推进工具 6 个（多段航班：航班由代码并行查询供给）  ← 中间件仍按航班裁工具
+00:11:41 ⚠️ 交通步多段航班全部为空，本次不下发选择卡片（避免空卡片）      ← 第 2 次，一字不差
+         （用户：我说我选择高铁）
+00:12:04 ⚠️ 交通步多段航班全部为空，本次不下发选择卡片（避免空卡片）      ← 第 3 次，一字不差
+
+
+===== block 618 e8c692c1cff8 lines 1-17 source 知行旅行助手-v2#620 =====
+def flight_unreachable_cities(state: dict) -> list[str]:
+    """航班结构性不可查时返回拖累的城市（按出现顺序去重）；只要有一段可查就返回空列表
+    判据：每一段都至少有一端不在 _CITY_AIRPORT（如苏州本身无民用机场），此时 _query_one_leg
+    会逐段"无机场码，跳过查询"，payload必然全空，重试不会生效。
+    区分结构性不可查与数据源瞬时失败：前者直接降级说明，后者提示稍后重试。
+    只要存在一段两端都有机场码，仍走卡片流程，不可查段在卡片置灰占位放行。
+    """
+    from app.tools.mcp_tools import _CITY_AIRPORT
+    legs = _legs_with_dates(state)
+    if not legs or any(leg.from_ in _CITY_AIRPORT and leg.to in _CITY_AIRPORT for leg in legs):
+        return []
+    out: list[str] = []
+    for leg in legs:
+        for city in (leg.from_, leg.to):
+            if city not in _CITY_AIRPORT and city not in out:
+                out.append(city)
+    return out
+
+
+===== block 619 d2890ea7cda7 lines 1-110 source 知行旅行助手-v2#621 =====
+import re
+from typing import Any, Optional
+
+from app.utils.logger import app_logger
+
+_TRANSPORT_STEP = "transport_planning"
+
+# 方式 → 用户可读名（改选回执、降级说明共用）
+MODE_LABELS = {"train": "高铁", "flight": "航班", "driving": "自驾"}
+
+# 口语词 → 方式。与三个 flow 的表单词表同口径，另补口语变体；命名分组识别方式
+_MODE_RE = re.compile(
+    r"(?P<train>高铁|动车|火车|铁路)"
+    r"|(?P<flight>飞机|航班|机票|乘机|飞过去)"
+    r"|(?P<driving>自驾|开车|驾车)"
+)
+
+# 前置否定：否定词后最多隔2个字就是方式词
+_NEG_BEFORE = re.compile(
+    r"(不坐|不乘|不搭|不要|不想|不用|不选|不订|不买|不开|不走|不考虑|"
+    r"别坐|别乘|别订|别选|别开|放弃|取消|拒绝)[^，,。；;！!？?\s]{0,2}$"
+)
+# 后置否定：方式词后最多隔2个字出现否定
+_NEG_AFTER = re.compile(
+    r"^[^，,。；;！!？?\s]{0,2}(没有|没票|没了|不行|不要|不坐|算了|查不到|订不到|买不到|"
+    r"不可用|不方便|不考虑|去不了|到不了|太贵|太慢|太累|太远|取消)"
+)
+
+# 卡片提交后的合成续跑发言以此开头，不属于用户手动改选
+_SYNTH_PREFIXES = ("我已按卡片", "我已确认全部")
+
+def current_transport_mode(state: dict) -> Optional[str]:
+    """当前生效的交通方式，口径与卡片路由完全一致（高铁 > 航班 > 自驾）
+    复用三个flow的 *_mode_requested 判定，保证改选前后路由判定一致。
+    """
+    from app.capabilities.driving_multi_segment.driving_flow import driving_mode_requested
+    from app.capabilities.flight_multi_segment.flight_flow import flight_mode_requested
+    from app.capabilities.train_multi_segment.train_flow import train_mode_requested
+    if train_mode_requested(state):
+        return "train"
+    if flight_mode_requested(state):
+        return "flight"
+    if driving_mode_requested(state):
+        return "driving"
+    return None
+
+def detect_transport_switch(text: str, current: Optional[str] = None) -> Optional[str]:
+    """从用户原话识别改选目标（纯函数，无IO）
+    规则：
+    - 方式词前后紧邻否定词视为不选择该方式；
+    - 在肯定提及中取最后一个与当前方式不同的作为目标；
+    - 仅重申当前方式、无方式提及则返回 None，不修改状态。
+    """
+    text = str(text or "").strip()
+    if not text or text.startswith(_SYNTH_PREFIXES):
+        return None
+    positives: list[str] = []
+    for m in _MODE_RE.finditer(text):
+        before = text[max(0, m.start() - 6):m.start()]
+        after = text[m.end():m.end() + 8]
+        if _NEG_BEFORE.search(before) or _NEG_AFTER.search(after):
+            continue
+        positives.append(m.lastgroup)
+    for mode in reversed(positives):
+        if mode != current:
+            return mode
+    return None
+
+async def switch_transport_mode(agent: Any, config: dict, state: dict, target: str) -> dict:
+    """把交通方式改写为target（单选）并落库；返回写入后的状态视图
+    - transport_types 设置为单选列表，避免优先级覆盖；
+    - 清空交通步旧产物字段，防止残留旧方式干扰路由；
+    - 仅执行一次状态更新，避免多次更新冲突。
+    """
+    from app.tools.state_transition import STEP_STATE_FIELDS
+    req = dict(state.get("user_requirement") or {})
+    req["transport_types"] = [target]
+    update: dict = {field: None for field in STEP_STATE_FIELDS.get(_TRANSPORT_STEP, [])}
+    update["user_requirement"] = req
+    await agent.aupdate_state(config, update)
+    return {**state, **update}
+
+async def apply_transport_switch(agent: Any, config: dict, state: dict, content: str) -> Optional[str]:
+    """交通步前处理：识别用户改选意图，先落库再执行Agent
+    返回新方式中文名用于回执；非交通步、无改选意图、落库失败返回None。
+    落库失败仅记录日志，不中断本轮对话。
+    """
+    if (state or {}).get("current_step") != _TRANSPORT_STEP:
+        return None
+    current = current_transport_mode(state)
+    target = detect_transport_switch(content, current)
+    if not target:
+        return None
+    try:
+        await switch_transport_mode(agent, config, state, target)
+    except Exception as exc:
+        app_logger.warning(f"⚠️ 交通方式改选落库失败（本轮按原方式继续）：{exc}")
+        return None
+    app_logger.info(
+        f"🔀 交通步对话内改选：{current or '未指定'} → {target}（用户原话：{str(content)[:40]}）"
+    )
+    return MODE_LABELS[target]
+
+__all__ = [
+    "MODE_LABELS",
+    "current_transport_mode",
+    "detect_transport_switch",
+    "switch_transport_mode",
+    "apply_transport_switch",
+]

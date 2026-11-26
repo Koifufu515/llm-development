@@ -1,0 +1,1 @@
+docker compose exec postgres psql -U quarry -d quarry -c "DELETE FROM fact_extractions WHERE collection_id = (SELECT id FROM collections WHERE slug = 'travel-guide');"

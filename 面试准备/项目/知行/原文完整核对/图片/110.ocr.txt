@@ -1,0 +1,84 @@
+函数说明卡（一）•入口、编排核心与旁路记录器
+每张卡固定四项：作用、何时调用、谁来调用、结果交给谁。行号取自当前源码；调用方在别的文件时标「跨模块」，全项目找不到调用方的标「未被调
+用」。
+入口与编排 两个对外入口，加一个后台总调度
+run_Chat_turn （asyng
+L157-175
+mark_skill_ui_submitted （async
+L70-104
+先把一根空的事件管道交给路由，再把真正干活的_produce 丢到后台跑；路由拿到管道，
+把「这张卡片已提交、每段选了哪个」写回卡片所在的那条历史消息；切会话或刷新后，卡片
+马上就能开始读帧。
+直接显示为已锁定。
+何时调用 用户每发一条消息时；卡片提交校验落库成功、需要续跑下一步时。
+何时调用 卡片提交接口里，apply_*_selection 校验并落库成功之后、回显和续跑之前。校验失败
+谁来调用
+api/V1/messages.py • send_message L55跨模块
+时不调用。
+api/v1/skills.py •submit_｛train|hotel |flight|driving｝_multi_segment L155/
+谁来调用 api/v1/skills.py 四个提交路由L149/ 188 / 226/ 263跨模块
+192 / 230 /267跨模 ）
+结果交给 写 message 表：在最近10条 assistant 消息里找同名卡片帧，并入
+结果交给 返回 EventStream 路由的 event_generator 用 async for 逐帧取出一_sse（）序列
+extra_info.skill_ui.submitted.selections -由 GET /api/V1/messages 回放给前
+化一 StreamingResponse 推给前端。
+端。返回 None，异常只记日志。
+后台任务没有保存引用。asyncio 文档建议保留引用，以防任务中途被回收；同项目的
+选中项按 option_id -hotel_id- brand_id 依次取。自驾提交只带 segment_id，所以它的
+quality_check_service 就用 _BG_TASKS 持有。
+selections 是空字典，但仍会标为已提交。
+_produce Lasync
+L186-335
+一轮对话的总调度：存消息、判意图、选通道（直查/快速通道/状态机三选一）、出清单、收尾落库，全程往事件流里推帧。
+何时调用
+run_chat_turn 建好事件流后，立刻作为后台任务启动，和路由读帧同时进行。
+谁来调用
+run_chat_turn L170（ asyncio.create_task ），本文件。全项目只有这一处调用。
+结果交给
+返回 None，结果全是副作用：帧一记录器一 EventStream 一路由_sse 一前端；user/ assistant 消息- message 表；清单— itinerary_plans 表（经 generate_plan）；快速通道的状态一LangGraph
+thread（经 sync_express_state）。
+八个阶段逐一展开见图1，两种入口的参数差异见图2，清单门禁见图 3。
+蒡路记录器 class_SkillUiRecorder L42-68 ．只在_produce 內部使用
+包在 Eventstream 外面的一层。它不改推送，只在转发时顺手记下本轮最后一张 skill_ui 卡片，回合末随 assistant消息落库，刷新页面后卡片还能重新渲染出来。
+_init m
+push
+包住原来的事件流，并留一个空位，用来记本轮最后一张卡片。
+每推一帧都看一眼：是skill_ui 卡片帧就记下来，然后原样转给真正的事件流。
+何时调用 _produce 一进try 就创建，每轮一次。
+何时调用 本轮任何地方推帧的时候。
+谁来调用
+_produce L192，本文件。
+谁来调用
+_produce 自身；chat_stream_executor 的 execute_turn、_stream_agent、直查
+结果交给
+新对象替换掉 _produce 里的 stream 变量；之后传给直查、快速通道、execute_turn
+与天气函数等跨模块；express_planning_service 的 run_express_planning 等
+的都是它。
+跨模块 ；capabilities/*_flow.emit_*_skill_ui跨模
+。它们都是通过参数拿到
+的 stream。
+结果交给
+内层 EventStream 队列一路由一SSE；记下的卡片由 _produce L319写进
+extra_info.skill_ui。
+只留最后一张：同一轮推了两张卡片，落库的是后一张。记录出错会被吞掉，不影响转发。
+close|fn
+L63-64
+_aiter_
+lfn
+未被调用
+把「收工」信号转给内层事件流。
+让记录器自己也能被 async for 遍历，补齐和 EventStream 一样的接口。
+何时调用
+_produce 的finally里，无论成功还是失败都会调。
+何时调用 不会被调用。
+谁来调用
+_produce L335，本文件。
+谁来调用
+没有调用方。路由遍历的是 run_chat_turn 返回的原始 EventStream
+（L175）；记录器
+结果交给
+EventStream 放入结束哨兵一路由的 async for 结束—SSE 响应关闭。
+只是 _produce 内部的局部变量，路由拿不到它。
+结果交给 -
+入口层只有两个对外函数：run_chat_turn负责马上把管道交出去，mark_skill_ui_submitted 负责把卡片的锁定态记进历史。记录器是卡片回放机制的关键：它不改推送，只在转发时记下最后一
+张 skill_ui；它的_aiter_是为了接口完整而写的，实际没有人调用。

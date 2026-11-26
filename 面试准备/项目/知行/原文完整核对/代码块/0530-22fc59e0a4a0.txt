@@ -1,0 +1,61 @@
+async def run_express_planning(req: ExpressRequirement, stream):
+    """快速通道主流程：收集 → 选定 → 生成 → 预算拼接，返回完整回复文本。
+    调用方（chat_contract_service）拿到返回值后走既有清单生成/压缩/落库链路；
+    状态机记忆同步不在此处处理，挪至清单落库后与行程合并执行一次 aupdate_state，
+    分两次写入会触发 Ambiguous update 异常。
+    无目的地场景：auto_confirm模式下AI自动选定最优目的地（不经过RAG），
+    选定失败返回 None，调用方回落状态机。
+    """
+    if not req.destination:
+        picked = await _pick_destination(req)
+        if not picked:
+            app_logger.warning("[express] 目的地自动选定失败，回落状态机")
+            return None, None
+        req.destination, reason = picked.city, picked.reason
+        stream.push(make_event(
+            ROLE_ASSISTANT, f"🏛️ 已为您选定目的地：{req.destination}（{reason}）\n\n"))
+
+    stream.push(make_event(ROLE_ASSISTANT, "🚀 已识别自动确认需求，启用极速规划模式\n"))
+
+    # 多目的地天数调整：按游玩城市数×2规划紧凑行程，天数不足自动上调并告知用户，单目的地不受影响
+    # 使用 _plan_cities 计算，目的地包含出发地时，出发地计入游玩城市
+    _cities = _plan_cities(req)
+    if len(_cities) > 1:
+        _needed = len(_cities) * 2
+        if req.travel_days < _needed:
+            _old_days = req.travel_days
+            req.travel_days = _needed
+            stream.push(make_event(ROLE_ASSISTANT,
+                f"📅 由于您选择的是 {_old_days} 天，多目的地行程时间比较紧凑，已为您调整到 {_needed} 天\n\n"))
+
+    ctx = await _collect_context(req, stream)
+    sel = _select_choices(req, ctx)
+    stream.push(make_event(ROLE_ASSISTANT, f"\n{sel['summary']}\n\n"))
+
+    days = await _generate_itinerary(req, sel, stream)
+    if not days:
+        # 拿不到逐日结构绝不静默出预算（实测：无行程仍推预算，用户只见"正在生成逐日行程…"后跳预算）
+        # 回落状态机：调用方已有 None 分支（chat_contract_service），状态机行程步同样强推落库工具
+        app_logger.warning("[express] 逐日行程生成失败，放弃快速通道，回落状态机")
+        return None
+    budget = _build_budget(req, sel)
+
+    # 将结构化逐日行程渲染为Markdown正文推送给前端
+    from app.services.chat_stream_executor import _push_rendered, _render_itinerary_body
+    body = _render_itinerary_body(
+        days or [],
+        {},
+        {
+            "adult_count": req.adult_count,
+            "children_count": req.children_count,
+            "budget_max": req.budget_max,
+        },
+    )
+    if body:
+        await _push_rendered(stream, f"\n\n{body}")
+
+    stream.push(make_event(ROLE_ASSISTANT, "\n\n" + budget))
+    #   同时返回逐日结构：清单提炼失败时调用方要靠它兜底（此前只返回文本，
+    #   DeepSeek 欠费/不返工具调用时直接抛"无可用的结构化行程可兜底"）
+    sync = {"sel": sel, "breakdown": breakdown, "itinerary_body": days}
+    return f"{sel['summary']}\n\n{body}\n\n{budget}", days, sync

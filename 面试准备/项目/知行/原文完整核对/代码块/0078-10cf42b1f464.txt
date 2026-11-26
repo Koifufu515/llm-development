@@ -1,0 +1,26 @@
+# --- 1. 惰性创建 MCP 专用 Proactor 循环（后台线程常驻） ---
+def _get_mcp_loop() -> asyncio.AbstractEventLoop:
+    global _mcp_loop
+    if _WIN and (_mcp_loop is None or _mcp_loop.is_closed()):
+        with _mcp_loop_lock:
+            if _mcp_loop is None or _mcp_loop.is_closed():
+                _mcp_loop = asyncio.ProactorEventLoop()
+                threading.Thread(
+                    target=_mcp_loop.run_forever,   # 后台常驻运行
+                    daemon=True,
+                    name="mcp-proactor-loop",
+                ).start()
+    return _mcp_loop
+
+# --- 2. 跨循环调度协程 ---
+async def _run_on_mcp_loop(coro):
+    if not _WIN:
+        return await coro                     # 非 Windows: 直接跑
+    # Windows: 把协程扔到 mcp_loop 线程里跑，等结果
+    return await asyncio.wrap_future(
+        asyncio.run_coroutine_threadsafe(coro, _get_mcp_loop())
+    )
+
+# --- 3. 给每个 MCP 工具的协程包一层 ---
+# 见 _wrap_hopping()：把原始 coroutine 替换成 _hopped，
+# _hopped 内部用 _run_on_mcp_loop 调用原协程

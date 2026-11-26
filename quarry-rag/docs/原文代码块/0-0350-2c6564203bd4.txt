@@ -1,0 +1,7 @@
+    # ---------- 事实层（第六章） ----------
+    fact_model: str = ""
+    fact_base_url: str = ""
+    fact_api_key: SecretStr = SecretStr("")        # 留空 = 复用 LLM_API_KEY
+    fact_concurrency: int = Field(default=4, ge=1, le=16)
+    fact_timeout_s: float = Field(default=30.0, gt=0)
+    fact_ttl_days: int = Field(default=90, ge=1, le=3650)

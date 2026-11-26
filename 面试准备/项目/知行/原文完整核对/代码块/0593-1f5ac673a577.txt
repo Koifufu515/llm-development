@@ -1,0 +1,95 @@
+async def _stream_agent(
+        agent, input_data: dict, config: dict, stream: EventStream,
+        buffer_all: bool = False,
+        defer_push: bool = False,
+) -> str:
+    """
+    框架流式：astream_events 捕获 LLM token，工具调用由 Agent 自主决策
+    buffer_all=True（交通规划步骤）：全程只缓冲不逐字推，回合末一次性推送
+    完整拼接。用于高铁/航班类班次巨多、逐字流式渲染缓慢的步骤。
+    """
+    rounds: list[str] = []        # 每一轮的完整文本
+    round_buf: list[str] = []     # 当前轮的 token 缓冲
+    pushed: list[str] = []        # 已实时推送给前端的 token
+    round_meta: list[tuple[int, bool]] = []   # 诊断：每轮 (字数, 是否工具轮)
+    first_round_done = False      # 首轮是否已结束
+    round_had_tool = False        # 当前轮是否出现工具调用
+    leaky = False                 # 是否检测到协议泄漏句（需回合末复位重推）
+    seen_state: dict = {"paras": [], "notice": False}   # 跨轮折叠状态（重述段 / 预告语）
+
+    async for event in agent.astream_events(input_data, config=config, version="v2"):
+        etype = event.get("event")
+        if etype == "on_chat_model_stream":
+            chunk = event.get("data", {}).get("chunk")
+            if chunk is None:
+                continue
+            if _chunk_has_tool_call(chunk):
+                round_had_tool = True
+            content = getattr(chunk, "content", None)
+            if content:
+                if _is_protocol_leak(content):
+                    continue
+                round_buf.append(content)
+                if first_round_done and not buffer_all:
+                    pushed.append(content)
+                    stream.push(make_event(ROLE_ASSISTANT, content))
+        elif etype == "on_chat_model_end":
+            text = "".join(round_buf)
+            round_buf.clear()
+            cleaned = _scrub_leak_text(text)
+            cleaned = _fold_restatements(cleaned, seen_state)
+            if cleaned != text:
+                leaky = True
+            if cleaned.strip():
+                rounds.append(cleaned)
+            round_meta.append((len(text), round_had_tool))
+            round_had_tool = False
+            first_round_done = True
+
+    # 兜底处理未收到 end 事件的残留片段
+    if round_buf:
+        text = "".join(round_buf)
+        cleaned = _scrub_leak_text(text)
+        cleaned = _fold_restatements(cleaned, seen_state)
+        if cleaned != text:
+            leaky = True
+        if cleaned.strip():
+            rounds.append(cleaned)
+            round_meta.append((len(cleaned), round_had_tool))
+
+    rounds = _dedupe_texts(rounds)
+    if not rounds:
+        return ""
+
+    if defer_push:
+        return "".join(rounds)
+
+    shown = "".join(pushed)
+    app_logger.info(f"🧩 轮次明细（字数, 是否工具轮）：{round_meta}，已推送 {len(shown)} 字")
+
+    # 出口1：全程没有实时推送，回合末整块推送
+    if not shown:
+        text = "".join(rounds)
+        stream.push(make_event(ROLE_ASSISTANT, text))
+        app_logger.info(f"🔇 首轮未实时推送，回合末补推 {len(text)} 字")
+        return text
+
+    # 出口2：检测泄漏/重述，复位并重推清洗后完整文本
+    if leaky and shown:
+        text = "".join(rounds)
+        stream.push(make_event(ROLE_ASSISTANT_RESET))
+        stream.push(make_event(ROLE_ASSISTANT, text))
+        app_logger.info(f"↩️ 检测到泄漏/重述内容，撤销已推送 {len(shown)} 字，改推清洗后 {len(text)} 字")
+        return text
+
+    # 出口3：首轮为空或工具旁白，保留已推送内容，不回退
+    if round_meta[0][0] == 0 or round_meta[0][1]:
+        app_logger.info(f"✅ 首轮无可保留正文（0 字或工具轮旁白），保留已推送 {len(shown)} 字（不回退，防内容丢失）")
+        return shown
+
+    # 出口4：首轮是正文开头但被缓冲，复位并推送完整拼接文本
+    text = "".join(rounds)
+    stream.push(make_event(ROLE_ASSISTANT_RESET))
+    stream.push(make_event(ROLE_ASSISTANT, text))
+    app_logger.info(f"↩️ 首轮为正文开头，撤销已推送 {len(shown)} 字，改推完整 {len(text)} 字")
+    return text

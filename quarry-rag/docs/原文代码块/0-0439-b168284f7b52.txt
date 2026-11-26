@@ -1,0 +1,1 @@
+uv run python -m quarry.scripts.bench --concurrency 4 --requests 60 --no-rerank

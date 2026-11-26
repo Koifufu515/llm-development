@@ -1,0 +1,74 @@
+# ===== 车票结果代码层裁剪（防"4.5 万字淹没"）=====
+# 实测 12306 单次返回 287 趟/45,633 字，模型被淹没后编造出 G1001/G1003/G1005（¥154.5，
+# 真实数据里不存在）。提示词约束不住数据量，故在工具层做确定性裁剪：解析真实班次 →
+# 按发车时间排序 → 只保留前 N 趟 → 一行一趟（含席别票价）。模型只看到十几行，无从淹没。
+_TRAIN_ROW_RE = re.compile(
+    r"^([A-Z]\d{1,4})\s+(.+?)\(telecode:[^)]*\)\s*->\s*(.+?)\(telecode:[^)]*\)\s+"
+    r"(\d{2}:\d{2})\s*->\s*(\d{2}:\d{2})\s+历时：(\d{1,2}:\d{2})",
+    re.MULTILINE,
+)
+_SEAT_RE = re.compile(r"^-\s*([^:：]+)[:：]\s*(\S+)\s+([\d.]+)元", re.MULTILINE)
+# 裁剪后的紧凑行：车次|出发→到达|出发→到达时刻|历时|席别票价（同时供 chat 层回读校验）
+_COMPACT_ROW_RE = re.compile(
+    r"^([A-Z]\d{1,4})\|([^|\n]+?)→([^|\n]+?)\|(\d{2}:\d{2})→(\d{2}:\d{2})\|"
+    r"(\d{1,2}:\d{2})\|([^|\n]+)$",
+    re.MULTILINE,
+)
+_SEAT_ORDER = ("二等座", "硬座", "一等座", "硬卧", "软卧", "无座")
+# 这个是最多显示多少个高铁，因为有一些高铁会显示非常多，直接给你撑爆了，你可以自行调整
+_TICKET_LIMIT = 12
+
+def _raw_text(raw: Any) -> str:
+    """MCP 返回可能是 content blocks 列表，统一取纯文本"""
+    if isinstance(raw, list):
+        return "\n".join(b.get("text", "") for b in raw if isinstance(b, dict))
+    return str(raw or "")
+
+def parse_ticket_rows(raw: Any) -> list[dict]:
+    """解析 12306 原始返回：每趟车一条记录（车次/区间/时刻/历时/各席别票价）"""
+    text = _raw_text(raw)
+    rows: list[dict] = []
+    hits = list(_TRAIN_ROW_RE.finditer(text))
+    for i, m in enumerate(hits):
+        end = hits[i + 1].start() if i + 1 < len(hits) else len(text)
+        seats = {
+            s.group(1).strip(): (s.group(2).strip(), float(s.group(3)))
+            for s in _SEAT_RE.finditer(text[m.end():end])
+        }
+        rows.append({
+            "code": m.group(1), "from": m.group(2).strip(), "to": m.group(3).strip(),
+            "dep": m.group(4), "arr": m.group(5), "dur": m.group(6), "seats": seats,
+        })
+    return rows
+
+def parse_compact_rows(text: Any) -> list[dict]:
+    """解析裁剪后的紧凑班次行（供页面展示层回读真实数据做权威清单）"""
+    return [
+        {"code": m.group(1), "from": m.group(2), "to": m.group(3), "dep": m.group(4),
+         "arr": m.group(5), "dur": m.group(6), "seat": m.group(7)}
+        for m in _COMPACT_ROW_RE.finditer(_raw_text(text))
+    ]
+
+def compact_ticket_text(raw: Any, limit: int = _TICKET_LIMIT) -> str:
+    """把车票查询结果压成"一行一趟"（按发车时间升序取前 limit 趟）；解析失败则截断降级"""
+    rows = parse_ticket_rows(raw)
+    if not rows:
+        return _raw_text(raw)[:2000]
+    rows.sort(key=lambda r: r["dep"])
+    shown = rows[:limit]
+    lines = [
+        f"实时班次（共 {len(rows)} 趟，按发车时间排序，仅列前 {len(shown)} 趟）：",
+        "格式：车次|区间|出发→到达|历时|票价",
+    ]
+    for r in shown:
+        seat = next((k for k in _SEAT_ORDER if k in r["seats"]), None)
+        price = (
+            f"{seat} {r['seats'][seat][0]} {r['seats'][seat][1]:g}元"
+            if seat else "票价未返回"
+        )
+        lines.append(f"{r['code']}|{r['from']}→{r['to']}|{r['dep']}→{r['arr']}|{r['dur']}|{price}")
+    app_logger.info(
+        f"✂️ 车票结果裁剪：原始 {len(_raw_text(raw))} 字/{len(rows)} 趟 → "
+        f"压缩 {len(chr(10).join(lines))} 字/{len(shown)} 趟"
+    )
+    return "\n".join(lines)

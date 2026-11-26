@@ -1,0 +1,582 @@
+
+
+===== block 329 f16f46b056a7 lines 1-42 source 知行旅行助手-v2#329 =====
+"""
+消息模型
+"""
+import uuid
+from datetime import datetime, timezone
+from sqlalchemy import String, Text, DateTime, JSON, ForeignKey, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.dialects.postgresql import UUID
+from app.models.base import Base
+
+class Message(Base):
+    """消息表"""
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4
+    )  #主键
+
+    conversation_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("conversation.id", ondelete="CASCADE"),  # ★ 这里是单数：Conversation 用默认表名
+        index=True
+    ) #外键
+
+    # 角色：user, assistant, system
+    role: Mapped[str] = mapped_column(String(20), index=True)
+
+    # 消息内容
+    content: Mapped[str] = mapped_column(Text)  # ★ Text 不限长
+
+    # 元数据（JSON 格式）
+    extra_info: Mapped[dict] = mapped_column(JSON, default=dict)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=func.now(),
+        index=True
+    )
+
+    # 关系
+    conversation: Mapped["Conversation"] = relationship(back_populates="messages")
+
+
+===== block 330 70ecc42c14c3 lines 1-9 source 知行旅行助手-v2#330 =====
+"""
+数据库模型
+"""
+from app.models.base import Base
+from app.models.user import User
+from app.models.conversation import Conversation
+from app.models.message import Message
+
+__all__ = ["Base", "User", "Conversation", "Message"]
+
+
+===== block 331 3c0e3a1512c2 lines 1-2 source 知行旅行助手-v2#331 =====
+sqlalchemy.exc.InvalidRequestError: When initializing mapper Mapper[Conversation(conversation)],
+expression 'Message' failed to locate a name ('Message').
+
+
+===== block 332 6efdc50246a9 lines 1-12 source 知行旅行助手-v2#332 =====
+┌──────────────────────┐        ┌──────────────────────────┐        ┌──────────────────────────┐
+│ users                │        │ conversation             │        │ message                  │
+├──────────────────────┤        ├──────────────────────────┤        ├──────────────────────────┤
+│ id          UUID  PK │◄───┐   │ id          UUID  PK      │◄───┐   │ id              UUID  PK │
+│ username    唯一+索引 │    └───│ user_id     UUID  FK 索引 │    └───│ conversation_id UUID FK  │
+│ email       唯一+索引 │        │ title       varchar(200)  │        │ role        user/assistant│
+│ password_hash        │        │ status      active/deleted│        │ content     text         │
+│ preferences JSON     │        │ extra_info  JSON          │        │ extra_info  JSON         │
+│ created_at / updated │        │ created_at / updated_at   │        │ created_at  索引         │
+└──────────────────────┘        └──────────────────────────┘        └──────────────────────────┘
+        1 : N（删用户 → 级联删会话）          1 : N（删会话 → 级联删消息）
+                                 id == LangGraph thread_id
+
+
+===== block 333 4f808cea2991 lines 1-13 source 知行旅行助手-v2#333 =====
+"""三张表的结构：表名、外键、索引、排序都能直接从模型上读出来，不用连库（纯逻辑，无需密钥）"""
+from sqlalchemy.orm import configure_mappers
+
+from app.models import Base, Conversation, User
+
+configure_mappers()      # 把所有字符串懒引用（"Message"、"Message.created_at"）一次解析完，缺哪个模型这里就报错
+for name in sorted(Base.metadata.tables):
+    table = Base.metadata.tables[name]
+    fks = [f"{fk.parent.name} → {fk.target_fullname}（删除时 {fk.ondelete}）" for fk in table.foreign_keys]
+    print(f"{name}：外键 {fks or '无'}")
+    print(f"    建了索引的列 {[c.name for c in table.columns if c.index]}，唯一列 {[c.name for c in table.columns if c.unique]}")
+print("User 主键类型：", User.__table__.c.id.type)
+print("conv.messages 自带排序：", [str(col) for col in Conversation.messages.property.order_by])
+
+
+===== block 334 ae87cc2f6d89 lines 1-8 source 知行旅行助手-v2#334 =====
+conversation：外键 ['user_id → users.id（删除时 CASCADE）']
+    建了索引的列 ['user_id', 'status']，唯一列 []
+message：外键 ['conversation_id → conversation.id（删除时 CASCADE）']
+    建了索引的列 ['conversation_id', 'role', 'created_at']，唯一列 []
+users：外键 无
+    建了索引的列 ['username', 'email']，唯一列 ['username', 'email']
+User 主键类型： UUID
+conv.messages 自带排序： ['message.created_at']
+
+
+===== block 335 173e12784122 lines 1-26 source 知行旅行助手-v2#335 =====
+"""建表脚本（幂等，可反复跑）：uv run python scripts/Chapter_Ten/10_init_db.py
+
+把 users / conversation / message 三张表建出来。
+create_all 只补缺的表，已存在的表原样不动（需 PG）。
+"""
+import os
+import sys
+import asyncio
+
+if sys.platform.startswith("win"):
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# ★ 从 app.models 顶层 import 会触发 models/__init__.py，把三张表注册进 Base.metadata
+from app.models import User, Conversation, Message  # noqa: F401
+from app.models.base import Base, engine, init_db
+
+async def main():
+    print("[init_db] 开始建表...")
+    await init_db()
+    print("[init_db] 完成：", "、".join(sorted(Base.metadata.tables)))
+    await engine.dispose()
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+
+===== block 336 ef50d2d86b52 lines 1-2 source 知行旅行助手-v2#336 =====
+[init_db] 开始建表...
+[init_db] 完成： conversation、message、users
+
+
+===== block 337 7808d01cdb0a lines 1-35 source 知行旅行助手-v2#337 =====
+"""
+用户相关的 Pydantic 模型
+"""
+from pydantic import BaseModel, EmailStr, Field
+from typing import Optional, Dict, Any
+from datetime import datetime
+import uuid
+
+class UserRegister(BaseModel):
+    """用户注册"""
+    username: str = Field(..., min_length=1, max_length=50)
+    email: EmailStr
+    password: str = Field(..., min_length=6)
+
+class UserLogin(BaseModel):
+    """用户登录"""
+    username: str
+    password: str
+
+class UserResponse(BaseModel):  # ★ 白名单：没列 password_hash，就永远不会返回
+    """用户信息响应"""
+    id: uuid.UUID
+    username: str
+    email: str
+    preferences: Optional[Dict[str, Any]] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class TokenResponse(BaseModel):
+    """令牌响应"""
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse  #from_attributes = True的作用是：允许这个 Pydantic 模型直接读取 SQLAlchemy 的数据库对象。
+
+
+===== block 338 903ec3185970 lines 1-29 source 知行旅行助手-v2#338 =====
+"""
+会话相关的 Pydantic 模型
+"""
+from pydantic import BaseModel, Field
+from typing import Optional
+from datetime import datetime
+import uuid
+
+class ConversationCreate(BaseModel):
+    """创建会话"""
+    title: Optional[str] = "新对话"
+
+class ConversationUpdate(BaseModel):
+    """更新会话"""
+    title: Optional[str] = None
+    status: Optional[str] = None
+
+class ConversationResponse(BaseModel):
+    """会话响应"""
+    id: uuid.UUID
+    user_id: uuid.UUID
+    title: str
+    status: str
+    extra_info: dict
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+===== block 339 4443e6553804 lines 1-9 source 知行旅行助手-v2#339 =====
+"""
+消息相关的 Pydantic 模型
+"""
+from pydantic import BaseModel, Field
+
+class MessageSendRequest(BaseModel):
+    """发消息入参：资源式扁平契约，会话 id 走 body（与路径 /api/v1/messages 对齐）"""
+    conversation_id: str = Field(..., min_length=1)  # ★ 只查非空，UUID 格式交给领域层
+    content: str = Field(..., min_length=1)
+
+
+===== block 340 3109ef030dec lines 1-37 source 知行旅行助手-v2#340 =====
+"""数据契约：请求 schema 在进业务之前挡住非法输入，响应 schema 只吐白名单字段（纯逻辑，无需密钥）"""
+import uuid
+from datetime import datetime
+from types import SimpleNamespace
+
+from pydantic import ValidationError
+
+from app.schemas.conversation import ConversationUpdate
+from app.schemas.message import MessageSendRequest
+from app.schemas.user import UserRegister, UserResponse
+
+ok = UserRegister(username="alice", email="alice@example.com", password="secret123")
+print("合法注册 →", ok.username, ok.email)
+for bad in [{"username": "bob", "email": "not-an-email", "password": "secret123"},
+            {"username": "bob", "email": "bob@example.com", "password": "123"},
+            {"username": "", "email": "bob@example.com", "password": "secret123"}]:
+    try:
+        UserRegister(**bad)
+    except ValidationError as exc:
+        err = exc.errors()[0]
+        print(f"拦下 → 字段 {err['loc'][0]}，原因 {err['type']}")
+
+# 测试驱动：冒充一行 ORM 用户记录，多带一个绝不能外泄的 password_hash
+orm_user = SimpleNamespace(id=uuid.uuid4(), username="alice", email="alice@example.com",
+                           preferences={"theme": "dark"}, created_at=datetime(2026, 10, 1, 9, 0),
+                           password_hash="$2b$12$never-leak")
+dumped = UserResponse.model_validate(orm_user).model_dump()
+print("响应字段 →", list(dumped))
+print("password_hash 漏出去了吗？", "password_hash" in dumped)
+
+patch = ConversationUpdate(title="五一去杭州")
+print("PATCH 只传标题 →", patch.model_dump(), "| 真正传了的：", patch.model_dump(exclude_unset=True))
+try:
+    MessageSendRequest(conversation_id="abc", content="")
+except ValidationError as exc:
+    print("空消息 →", exc.errors()[0]["type"])
+print("会话 id 的格式不在这一层查 →", MessageSendRequest(conversation_id="not-a-uuid", content="你好").conversation_id)
+
+
+===== block 341 2bf63e0a84f6 lines 1-9 source 知行旅行助手-v2#341 =====
+合法注册 → alice alice@example.com
+拦下 → 字段 email，原因 value_error
+拦下 → 字段 password，原因 string_too_short
+拦下 → 字段 username，原因 string_too_short
+响应字段 → ['id', 'username', 'email', 'preferences', 'created_at']
+password_hash 漏出去了吗？ False
+PATCH 只传标题 → {'title': '五一去杭州', 'status': None} | 真正传了的： {'title': '五一去杭州'}
+空消息 → string_too_short
+会话 id 的格式不在这一层查 → not-a-uuid
+
+
+===== block 342 ac347615fbb8 lines 1-49 source 知行旅行助手-v2#342 =====
+"""
+安全工具（密码加密、JWT）
+"""
+from datetime import datetime, timedelta
+from typing import Optional
+import bcrypt
+import jwt
+from app.config import settings
+
+# ============== 密码加密 ==============
+
+def hash_password(password: str) -> str:
+    """哈希密码"""
+    salt = bcrypt.gensalt()  # ★ 每次随机加盐
+    return bcrypt.hashpw(password.encode(), salt).decode()
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """验证密码"""
+    return bcrypt.checkpw(plain_password.encode(), hashed_password.encode())
+
+# ============== JWT ==============
+
+SECRET_KEY = settings.jwt_secret_key  # 改用专门 JWT 密钥（原借用 dashscope_api_key）
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 天
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+    """创建 JWT 访问令牌"""
+    to_encode = data.copy()
+
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+
+    to_encode.update({"exp": expire})
+
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+def decode_access_token(token: str) -> Optional[dict]:
+    """解码 JWT 令牌"""
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:  # ★ 篡改、伪造、乱码都在这里变成 None
+        return None
+
+
+===== block 343 e0bba5eb3860 lines 1-1 source 知行旅行助手-v2#343 =====
+python -c "import secrets; print(secrets.token_urlsafe(48))"
+
+
+===== block 344 e7220a2be4b7 lines 1-25 source 知行旅行助手-v2#344 =====
+"""密码哈希与 JWT：随机加盐、校验、签发、解码；篡改、伪造、过期一律返回 None（纯函数，无需密钥）"""
+from datetime import timedelta
+
+import jwt
+
+from app.utils.security import (
+    ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, decode_access_token, hash_password, verify_password,
+)
+
+h1, h2 = hash_password("secret123"), hash_password("secret123")
+print("哈希开头：", h1[:7], "| 长度：", len(h1))
+print("同一个密码哈希两次，结果一样吗？", h1 == h2)
+print("正确密码 →", verify_password("secret123", h1), "| 错误密码 →", verify_password("wrong-pass", h1))
+
+token = create_access_token({"sub": "3f2c9a4e-0000-4000-8000-000000000001"})
+payload = decode_access_token(token)
+print("令牌段数：", len(token.split(".")), "| 解出的 sub：", payload["sub"], "| 带 exp：", "exp" in payload)
+print("默认有效期：", ACCESS_TOKEN_EXPIRE_MINUTES // (60 * 24), "天")
+
+head, body, sig = token.split(".")
+flipped = ("A" if sig[0] != "A" else "B") + sig[1:]
+print("改动签名 →", decode_access_token(f"{head}.{body}.{flipped}"))
+print("拿别的密钥伪造 →", decode_access_token(jwt.encode({"sub": "admin"}, "attacker-guessed-key-0123456789abcdef", algorithm="HS256")))
+print("已过期 →", decode_access_token(create_access_token({"sub": "x"}, expires_delta=timedelta(seconds=-1))))
+print("乱码 →", decode_access_token("not.a.jwt"))
+
+
+===== block 345 46e90f9bd7bd lines 1-9 source 知行旅行助手-v2#345 =====
+哈希开头： $2b$12$ | 长度： 60
+同一个密码哈希两次，结果一样吗？ False
+正确密码 → True | 错误密码 → False
+令牌段数： 3 | 解出的 sub： 3f2c9a4e-0000-4000-8000-000000000001 | 带 exp： True
+默认有效期： 7 天
+改动签名 → None
+拿别的密钥伪造 → None
+已过期 → None
+乱码 → None
+
+
+===== block 346 d8f68ee49f6d lines 1-63 source 知行旅行助手-v2#346 =====
+"""
+API 依赖项
+"""
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from app.models.base import get_db
+from app.models.user import User
+from app.utils.security import decode_access_token
+
+security = HTTPBearer()  # ★ 缺 Authorization 头时直接 401
+
+# HTTPBearer：这是一种安全模型，它告诉 FastAPI：“我的接口要求前端必须在 HTTP 请求头里带上 Authorization: Bearer <token> 格式的数据”。
+# 它就像安装了一个只能读特定格式门禁卡的读卡器。
+
+async def get_current_user(
+        credentials: HTTPAuthorizationCredentials = Depends(security),
+        db: AsyncSession = Depends(get_db)
+) -> User:
+    """
+    获取当前登录用户（依赖注入）
+
+    用法：
+        @app.get("/me")
+        async def get_me(user: User = Depends(get_current_user)):
+            return user
+    """
+
+    token = credentials.credentials  # 提取出纯粹的 token 字符串
+
+    # 解码 JWT
+    payload = decode_access_token(token)
+
+    if payload is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="令牌无效或已过期"
+        )  # 如果返回 None，说明 token 被篡改了或者过期了，直接抛出 401 Unauthorized (未授权) 异常，请求中断。
+
+    user_id = payload.get("sub")
+
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="令牌格式错误"
+        )
+
+    # 查询用户
+    result = await db.execute(select(User).where(User.id == user_id))  # ★ 每次都查库：账号删了，旧令牌立刻失效
+    user = result.scalar_one_or_none()
+    # SQLAlchemy 的特定方法。意思是：“从结果里取出唯一的那一行数据，转换成 User 对象；如果没查到，不要报错，返回 None
+
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="用户不存在"
+        )
+
+    return user
+
+    # 这段代码最爽的地方在于“复用”。你只需要写一次这个复杂的验证逻辑，
+    # 以后所有需要登录才能访问的接口，加一行代码就行了
+
+
+===== block 347 093f878bfd1a lines 1-40 source 知行旅行助手-v2#347 =====
+"""鉴权依赖的五种结局：最小 app 挂上真实的 get_current_user，数据库换成测试驱动（纯逻辑，无需密钥）"""
+from types import SimpleNamespace
+
+from fastapi import Depends, FastAPI
+from fastapi.testclient import TestClient
+
+from app.api.dependencies import get_current_user
+from app.models.base import get_db
+from app.utils.security import create_access_token
+
+USERS = {"u-alice": SimpleNamespace(username="alice")}      # 库里只有 alice；u-ghost 模拟"账号已被删"
+
+class FakeSession:
+    """测试驱动：只认 select(User).where(User.id == xxx) 这一种查询，按 id 查内存字典"""
+    async def execute(self, stmt):
+        user = USERS.get(stmt.whereclause.right.value)
+        return SimpleNamespace(scalar_one_or_none=lambda: user)
+
+async def fake_db():
+    yield FakeSession()
+
+app = FastAPI()
+app.dependency_overrides[get_db] = fake_db
+
+@app.get("/whoami")
+async def whoami(user=Depends(get_current_user)):
+    return {"username": user.username}
+
+client = TestClient(app)
+cases = {
+    "不带令牌": {},
+    "乱码令牌": {"Authorization": "Bearer not.a.jwt"},
+    "令牌里没有 sub": {"Authorization": f"Bearer {create_access_token({'name': 'alice'})}"},
+    "账号已被删": {"Authorization": f"Bearer {create_access_token({'sub': 'u-ghost'})}"},
+    "正常登录": {"Authorization": f"Bearer {create_access_token({'sub': 'u-alice'})}"},
+}
+for name, headers in cases.items():
+    r = client.get("/whoami", headers=headers)
+    print(f"{name:<8} → {r.status_code} {r.json()}")
+print("不带令牌时的响应头 WWW-Authenticate：", client.get("/whoami").headers.get("www-authenticate"))
+
+
+===== block 348 ddfcaf219076 lines 1-6 source 知行旅行助手-v2#348 =====
+不带令牌     → 401 {'detail': 'Not authenticated'}
+乱码令牌     → 401 {'detail': '令牌无效或已过期'}
+令牌里没有 sub → 401 {'detail': '令牌格式错误'}
+账号已被删    → 401 {'detail': '用户不存在'}
+正常登录     → 200 {'username': 'alice'}
+不带令牌时的响应头 WWW-Authenticate： Bearer
+
+
+===== block 349 cfed7c4ce506 lines 1-38 source 知行旅行助手-v2#349 =====
+"""会话服务层：/api/v1/conversations 与 /chat/* 契约路由共用，业务逻辑唯一实现"""
+import uuid
+from uuid import UUID
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+
+from app.models.conversation import Conversation
+
+async def create_conversation(db: AsyncSession, user_id: UUID, title: str = "新对话") -> Conversation:
+    """创建会话（落库）"""
+    conv = Conversation(user_id=user_id, title=title, status="active")
+    db.add(conv)
+    await db.commit()
+    await db.refresh(conv)
+    return conv
+
+async def list_conversations(db: AsyncSession, user_id: UUID) -> list[Conversation]:
+    """用户会话列表：过滤软删除，按更新时间倒序"""
+    result = await db.execute(
+        select(Conversation)
+        .where(Conversation.user_id == user_id)
+        .where(Conversation.status != "deleted")
+        .order_by(Conversation.updated_at.desc())
+    )
+    return list(result.scalars().all())
+
+async def get_owned_conversation(db: AsyncSession, session_id: str, user_id: UUID) -> Conversation | None:
+    """按 sessionId（前端传的字符串）查询属于该用户的会话，非法 UUID 或不存在均返回 None"""
+    try:
+        conv_id = uuid.UUID(session_id)
+    except ValueError:
+        return None
+    result = await db.execute(
+        select(Conversation).where(
+            Conversation.id == conv_id, Conversation.user_id == user_id  # ★ 横向越权的防线
+        )
+    )
+    return result.scalar_one_or_none()
+
+
+===== block 350 85d705af4c67 lines 1-43 source 知行旅行助手-v2#350 =====
+"""所有权校验：同一个 get_owned_conversation，把"越权"和"非法 id"都收敛成 None（需 PG）"""
+import asyncio
+import sys
+import uuid
+
+from sqlalchemy import delete
+
+from app.models import Conversation, User
+from app.models.base import async_session_maker, engine
+from app.services.conversation_service import create_conversation, get_owned_conversation, list_conversations
+from app.utils.security import hash_password
+
+if sys.platform.startswith("win"):
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+def new_user(tag: str) -> User:
+    sfx = uuid.uuid4().hex[:6]
+    return User(username=f"demo_{tag}_{sfx}", email=f"demo_{tag}_{sfx}@example.com",
+                password_hash=hash_password("secret123"), preferences={})
+
+async def main() -> None:
+    async with async_session_maker() as db:
+        alice, bob = new_user("a"), new_user("b")
+        db.add_all([alice, bob])
+        await db.commit()
+        conv = await create_conversation(db, alice.id, "五一去杭州")
+        print("新会话默认状态 →", conv.status, "| 时间戳由库生成：", conv.created_at is not None)
+
+        mine = await get_owned_conversation(db, str(conv.id), alice.id)
+        print("alice 查自己的会话 →", mine.title if mine else None)
+        print("bob 拿着 alice 的会话 id →", await get_owned_conversation(db, str(conv.id), bob.id))
+        print("非法 id \"abc\" →", await get_owned_conversation(db, "abc", alice.id))
+
+        conv.status = "deleted"
+        await db.commit()
+        print("软删之后 alice 的会话列表 →", len(await list_conversations(db, alice.id)), "条")
+        print("软删的会话按 id 还查得到吗？", (await get_owned_conversation(db, str(conv.id), alice.id)) is not None)
+
+        await db.execute(delete(User).where(User.id.in_([alice.id, bob.id])))   # 清理：级联删掉会话
+        await db.commit()
+    await engine.dispose()
+
+asyncio.run(main())
+
+
+===== block 351 152599f317df lines 1-6 source 知行旅行助手-v2#351 =====
+新会话默认状态 → active | 时间戳由库生成： True
+alice 查自己的会话 → 五一去杭州
+bob 拿着 alice 的会话 id → None
+非法 id "abc" → None
+软删之后 alice 的会话列表 → 0 条
+软删的会话按 id 还查得到吗？ True

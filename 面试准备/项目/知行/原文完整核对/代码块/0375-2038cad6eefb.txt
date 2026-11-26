@@ -1,0 +1,54 @@
+_FORM_DAYS_LABEL = "旅行天数"
+_FORM_DEST_PREFIX = "我想去"
+_FORM_DEST_SUFFIX = "旅行"
+
+def _value_after(text: str, label: str) -> str:
+    """取「…{label}：值」冒号后到行尾的内容，无匹配行返回空串"""
+    for line in str(text or "").splitlines():
+        pos = line.find(label)
+        if pos < 0:
+            continue
+        rest = line[pos + len(label):].lstrip()
+        # 兼容中英文冒号，标签后非冒号则忽略该行
+        if rest[:1] in ("：", ":"):
+            return rest[1:].strip()
+    return ""
+
+def _leading_int(text: str) -> int | None:
+    """提取字符串开头整数，如"5 天"→5；开头非数字返回None"""
+    digits = ""
+    for ch in str(text or "").strip():
+        if not ch.isdecimal():
+            break
+        digits += ch
+    return int(digits) if digits else None
+
+def _between(text: str, prefix: str, suffix: str) -> str:
+    """提取同一行内prefix与其后最近suffix之间的文本，找不到返回空串"""
+    for line in str(text or "").splitlines():
+        start = line.find(prefix)
+        if start < 0:
+            continue
+        start += len(prefix)
+        end = line.find(suffix, start + 1)
+        if end > start:
+            return line[start:end]
+    return ""
+
+def _form_travel_days(state) -> int | None:
+    """从本轮用户表单消息读取旅行天数，无表单行返回None，不干预原有逻辑"""
+    # 倒序遍历消息，取本轮最新人类消息作为表单提交文本
+    for m in reversed((state or {}).get("messages") or []):
+        if getattr(m, "type", None) == "human":
+            return _leading_int(_value_after(
+                str(getattr(m, "content", "") or ""), _FORM_DAYS_LABEL))
+    return None
+
+def _form_destination(state) -> str | None:
+    """从本轮用户表单消息读取目的地，无表单行返回None"""
+    for m in reversed((state or {}).get("messages") or []):
+        if getattr(m, "type", None) == "human":
+            found = _between(str(getattr(m, "content", "") or ""),
+                             _FORM_DEST_PREFIX, _FORM_DEST_SUFFIX).strip()
+            return found or None
+    return None

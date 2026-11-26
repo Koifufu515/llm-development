@@ -1,0 +1,21 @@
+{
+  "city": "佛山",
+  "title": "佛山景点资料 · Foshan",
+  "source_url": "https://en.wikivoyage.org/wiki/Foshan",
+  "text": "资料城市：佛山。本文是历史开放景点资料，不提供实时开放时间或价格；出行前需要核实。\n\nZumiao Temple\nInside is a Confucius temple, Memorial Hall of kung Fu legends Wong Fei Hong and Ip Man, and among other things regarding Foshan history.\n\nLiangyuan Park\nFormerly the residence of the Liang clan, the park is actually a large garden housing a number of traditional Chinese-style buildings. Well worth a visit.\n\nZhongshan Park\nOffers nine specific scenic areas and family entertainment facilities.\n\nTaoci Town\nA small village with a long tradition of pottery making. An excellent place to find some pieces of traditional-style Chinese porcelain.\n\nRenshou Temple\nFounded in 1925. The temple originally belonged to the Vajrayana school, but later was converted into a Chan (Zen) temple. Houses an exotic pagoda, and is an interesting mix of colorful Vajaryana icons and simple Chan aesthetics.\n\nShiwan's Nanfeng Ancient Furnace\nFounded during Zhengde period of Ming Dynasty(1506-1521). A reminder of Foshan's once great porcelain industry.\n\nSouthern Taoyuan\nSouthern Taoyuan peach hometown, tree beautiful, bud, flower color of fresh, long flowering period. Here picturesque scenery, green grass, forest covers an area of more than 90%. Every year before the Spring Festival, large tracts of peach trees in early puberty, peach strains, clump, bunch, sinks into the red.",
+  "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+  "license": "CC BY-SA 3.0",
+  "attribution": "Wikivoyage contributors; https://en.wikivoyage.org/wiki/Foshan",
+  "sha256": "dd224b1ac8118f2247415344592215ff1f26ad97a0e581a9139f6f351d752b8a",
+  "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+  "poi_count": 7,
+  "source_dataset": "https://github.com/wikivoyage/wikivoyage.github.io",
+  "excluded_fields": [
+    "price",
+    "hours",
+    "phone",
+    "email",
+    "hotel",
+    "restaurant"
+  ]
+}

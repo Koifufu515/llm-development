@@ -1,0 +1,60 @@
+from app.tools.rag_tools import get_rag_tools # 4.2就补上了现在报错是因为没有创建
+# 创建探索 Agent（带 RAG 工具）
+def _create_explore_agent():
+    """创建带 RAG 工具的探索 Agent"""
+
+    llm = ChatTongyi(
+        model=settings.qwen_model_name,
+        api_key=settings.dashscope_api_key,
+        temperature=0.7
+    )
+
+    # 获取 RAG 工具
+    rag_tools = get_rag_tools()
+
+    # 创建 Agent - Agent 会自主决定调用哪些工具
+    agent = create_agent(
+        model=llm,
+        tools=rag_tools,
+        system_prompt="""你是一位专业的旅行顾问，负责为用户提供目的地的详细信息。
+            你有以下工具可以使用：
+            - search_destination_guide: 检索景点攻略、门票、游玩建议
+            - search_food_recommendations: 检索美食推荐
+            - search_accommodation_info: 检索住宿建议
+            - search_travel_tips: 检索旅行注意事项
+            
+            **工作方式**：
+            1. 分析用户的查询需求
+            2. 根据需要选择合适的工具进行检索
+            3. 你可以调用多个工具来获取全面的信息
+            4. 基于检索到的信息，生成专业、详细的回答
+            
+            **注意**：
+            - 只有当你需要知识库中的信息时才调用工具
+            - 如果用户只是闲聊或问简单问题，直接回答即可
+            - 整合多个工具的结果时，注意信息的逻辑性和连贯性
+            """
+                )
+    return agent
+_explore_agent = None                          # 模块级单例：Agent 造一次就够，别每次进节点都重造
+
+async def explore_agent_node(state: dict) -> dict:
+    """探索 Agent 节点（并行分支之一）。签名 state: dict —— 收的是 Send 投喂的小 dict"""
+    global _explore_agent
+    query, destination = state["query"], state["destination"]
+    app_logger.info(f"🏛️ 探索 Agent 执行: {destination} - {query}")
+
+    # ★ 关键顺序：先注入城市，再调 Agent。这样 Agent 内部工具检索时，
+    #   _format_rag_results 才能按这个城市过滤（见 4.2），否则会"查上海返回西安攻略"。
+    from app.tools.rag_tools import set_rag_city
+    set_rag_city(destination)
+
+    if _explore_agent is None:                 # 懒加载：第一次用到才造（见 4.3）
+        _explore_agent = _create_explore_agent()
+
+    user_message = f"请为我提供关于 {destination} 的以下信息：{query}"
+    response = await _explore_agent.ainvoke({"messages": [{"role": "user", "content": user_message}]})
+    final_message = response["messages"][-1].content   # 取 Agent 调完工具、整合后的最后一句回复
+
+    formatted = f"## {destination} 旅游信息\n\n{final_message}\n\n---\n*信息来源：知识库检索*\n"
+    return {"agent_results": [{"agent_name": "explore", "result": formatted}]}   # 只交自己这条，reducer 会合并

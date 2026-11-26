@@ -1,0 +1,45 @@
+{
+  "role_pages": [
+    {
+      "role": "system_admin",
+      "page": "可信审核 人工校验与渐进退出",
+      "loaded": true
+    },
+    {
+      "role": "system_admin",
+      "page": "进化 Loop 反馈、反思与策略部署",
+      "loaded": true
+    },
+    {
+      "role": "system_admin",
+      "page": "记忆与实验 五层记忆和灰度观测",
+      "loaded": true
+    },
+    {
+      "role": "system_admin",
+      "page": "Agent 网络 部门执行单元与弹性",
+      "loaded": true
+    },
+    {
+      "role": "system_admin",
+      "page": "治理工作台 冲突、术语、策略与有效期",
+      "loaded": true
+    },
+    {
+      "role": "dept_admin",
+      "page": "overview",
+      "loaded": true
+    },
+    {
+      "role": "student",
+      "page": "chat",
+      "loaded": true
+    }
+  ],
+  "term_reviewed_in_browser": true,
+  "screenshots": [
+    "wenshu-admin-final.png",
+    "wenshu-dept-final.png",
+    "wenshu-student-final.png"
+  ]
+}

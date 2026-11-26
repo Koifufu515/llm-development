@@ -1,0 +1,1 @@
+uv run alembic revision -m "chunks composite pk" --rev-id 0002

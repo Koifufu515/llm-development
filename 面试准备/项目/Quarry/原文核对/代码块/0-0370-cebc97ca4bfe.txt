@@ -1,0 +1,1 @@
+uv run python -m quarry.scripts.extract_facts --dry-run --limit 5

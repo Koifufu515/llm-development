@@ -1,0 +1,70 @@
+图
+knowgo_travel_backend
+Y masterv
+当前文件、
+@
+Q
+试用
+项目
+圓 README.md
+［rl pyproject.toml x
+Lproject］
+~口 knowgo_travel_backend E:Wknowgo_travel_backend
+name = 'knowgo-travel！
+•.venv library根目录
+version = 0.1.0-
+-gitignore
+description
+= "旅行规划 Agent"
+好.python-version
+readme = README.md"
+>心 main.py
+requires-python = '>=3.12"
+dependencies = ［
+［Tl pyproject.toml
+# LangChain / LangGraph 全家桶
+口 README.md
+'Lan9chad0==2.2.9.
+［ 外部厍
+'langchadn:commund.ty==9.9.1"
+>目 临时文件和控制台
+'hangchadn..cone~=1.2.2，
+'Lan99capb==2.9.5
+'Lanaacaph:checkeodnt.=d.Q:2'.
+'hangscaeh=cheekpednt-pestanes==3.9:2".
+"hen9acaRh:Rnsbudl.tan2.0.总".
+'han9sndth==9:9:521
+'lanqchadn:openadw=l.2.7 .
+二二二一二二
+'Langshadn:text-sp.J5tense=2.2：.9
+# LLM 集成（阿里千问》
+'dashsc9pe==d:25:4°.
+＃ 数据库
+22
+'psysgealodnany.peeL）==3.3:2 .
+'RSXG9R9=R9QLc=8.3.8"，
+24
+•nedis==5.9.9°.
+°294A1.chemy~=2:9:55°.
+'phnomadb==9:5:23°.
+# Web 框架
+feStap2==9.229.4D
+'wiconnlstandandl：=9:35.9
+'websocket.92=15.0.2 .
+'pxthon:auL.t2pant==9.9:29°.
+2dofiles==24:2.9 .
+# RAG 相关
+TTTI
+'Langchadn-chnomaz=9.2.4'.
+'sentence-toansfonwsnS==3.3.只".
+查
+°2anK-2n25==9:2:2°.
+ieb==9.42.2°.
+# MCP 协该
+• knowgo_travel_backend >［rl pyproject.toml
+9:24
+日 TRAE
+knowgo_trave._backend
+Islands Dark
+LF UTF-8 B 4个空格
+架构；pyproject.json w （knowgo_travel_backend） ［Python 3.13.13］

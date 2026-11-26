@@ -1,0 +1,5 @@
+"""_duration 演示：起飞/到达时刻算历时；跨天或缺失就留空，不编造（纯函数，无需密钥）"""
+from app.capabilities.flight_multi_segment.flight_agent_tool import _duration
+
+for dep, arr in [("08:00", "10:10"), ("21:30", "00:45"), ("08:00", ""), ("08:00", "08:00")]:
+    print(f"{dep} → {arr or '（空）':5} 历时 {_duration(dep, arr)!r}")

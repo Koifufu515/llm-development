@@ -1,0 +1,5 @@
+# macOS / Linux
+curl -s -X POST http://127.0.0.1:8100/v1/search \
+  -H "Authorization: Bearer $QUARRY_KEY" -H "Content-Type: application/json" \
+  -d '{"collection": "travel-guide", "query": "兵马俑门票多少钱", "top_k": 3}' \
+  | python -m json.tool --no-ensure-ascii

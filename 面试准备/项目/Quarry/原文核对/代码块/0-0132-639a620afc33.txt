@@ -1,0 +1,4 @@
+BEGIN;
+UPDATE collections SET status = 'retired' WHERE id = $1;   -- 老的先退役
+UPDATE collections SET status = 'active'  WHERE id = $2;   -- 新的再上岗
+COMMIT;

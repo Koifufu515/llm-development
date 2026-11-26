@@ -1,0 +1,66 @@
+# 本地步骤切换工具：调用即代表本步骤结束，进入下一步骤
+_LOCAL_STEP_TOOLS = {
+    "record_requirement_tool",
+    "select_destination_tool",
+    "select_transport_tool",
+    "select_accommodation_tool",
+    "select_accommodation_food_tool",
+    "select_food_tool",
+    "generate_itinerary_tool",
+    "submit_itinerary_body_tool",
+    "summarize_budget_tool",
+}
+
+# 无轮次上限步骤：允许模型完整跑完生成逻辑，等待用户交由prompt与清单门禁控制
+_NO_ROUND_CAP_STEPS = {
+    "requirement_collection",
+    "itinerary_generation",
+    "budget_summarization",
+    "report_generation",
+}
+
+# 手动模式单次发言最多允许的数据查询轮数，超出则清空工具表收尾
+_MANUAL_MAX_QUERY_ROUNDS = 2
+
+from app.core.intent import detect_intent
+
+def _is_confirm_reply(text: str) -> bool:
+    """判断是否为纯确认语，仅简单肯定回复命中；带修改需求的回复不算确认"""
+    return detect_intent(text).is_confirm_reply
+
+# 手动模式各步骤对应的选择工具
+_MANUAL_STEP_SELECT = {
+    "destination_recommendation": "select_destination_tool",
+    "transport_planning": "select_transport_tool",
+    "accommodation_planning": "select_accommodation_tool",
+    "food_planning": "select_food_tool",
+}
+
+# 手动确认模式：一轮一步 + 确认闸门规则
+_MANUAL_STEP_MODE = (
+    "【手动确认模式 - 一轮一步 + 确认闸门】本步骤严格按下面三种轮次之一作答，禁止跨步骤混写："
+    "① 候选轮：只展示本步骤候选清单，结尾请用户挑选，本轮结束；严禁夹带后续步骤内容。"
+    "② 详单轮：用户选定对象后，只展示该对象详单，结尾询问是否确认；本轮select_*工具被屏蔽，不要调用，不得标记已锁定确认。"
+    "③ 确认轮：用户回复纯确认语时，调用对应select_*工具记录并推进，同轮展示下一步候选清单。"
+    "**判断依据**：工具列表无select_*代表非确认轮，仅允许查询展示，不可声称完成选择或跳过确认。"
+    "**重要**：无可用查询工具时，基于已有结果输出候选清单并结束本轮，禁止反复查询或报错；同一轮每个候选清单仅输出一次。"
+)
+
+# 自动确认模式规则
+_AUTO_CONFIRM_MODE = (
+    "【自动确认模式】AI自动选定推进，无需询问用户。"
+    "**同一回合仅允许输出一次完整行程正文+一次预算明细表**：回合内多轮工具迭代时，中间轮只写一句话说明进展，"
+    "禁止输出Day详情和预算表；仅最终收尾轮一次性输出最新版完整行程与预算。"
+)
+
+# 产出型步骤标识
+_PRODUCE_STEPS = ("itinerary_generation", "budget_summarization")
+
+# 手动模式产出步骤规则
+_MANUAL_PRODUCE_MODE = (
+    "【手动确认模式 - 产出步骤】本步骤无select_*工具，不等待候选挑选确认，按两类用户输入处理："
+    "① 用户表示满意/确认：调用submit_itinerary_body_tool提交定稿落库；"
+    "② 用户提出结构性变更：调用summarize_budget_tool重算预算，再提交新版完整结构，无需二次确认。"
+    "两类场景同一轮完成「调预算 → 提交结构」，不要自行编写正文，正文预算由系统渲染。"
+    "收尾固定措辞：「如需调整（天数/预算/目的地等），直接告诉我即可。」禁止额外确认反问。"
+)

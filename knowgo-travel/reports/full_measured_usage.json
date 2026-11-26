@@ -1,0 +1,79 @@
+[
+  {
+    "case": "自动多城高铁",
+    "requests": [
+      {
+        "status": "ok",
+        "llm_calls": 6,
+        "llm_errors": 0,
+        "request_id": "aeefab0c-a219-40fc-ad67-e0058e242454",
+        "input_tokens": 13956,
+        "output_tokens": 3038,
+        "usage_complete": true,
+        "elapsed_seconds": 77.7284,
+        "usage_reported_calls": 6
+      }
+    ]
+  },
+  {
+    "case": "自驾往返",
+    "requests": [
+      {
+        "status": "ok",
+        "llm_calls": 1,
+        "llm_errors": 0,
+        "request_id": "c4a9de00-5250-48af-a8e9-7cdff930437b",
+        "input_tokens": 5013,
+        "output_tokens": 1106,
+        "usage_complete": true,
+        "elapsed_seconds": 34.866,
+        "usage_reported_calls": 1
+      }
+    ]
+  },
+  {
+    "case": "航班往返",
+    "requests": [
+      {
+        "status": "ok",
+        "llm_calls": 3,
+        "llm_errors": 0,
+        "request_id": "9c6f0f72-f1f6-41e7-8497-10d244112780",
+        "input_tokens": 6614,
+        "output_tokens": 1090,
+        "usage_complete": true,
+        "elapsed_seconds": 36.5653,
+        "usage_reported_calls": 3
+      }
+    ]
+  },
+  {
+    "case": "最终多机场航班",
+    "requests": [
+      {
+        "status": "ok",
+        "llm_calls": 1,
+        "llm_errors": 0,
+        "request_id": "4b437fc2-04d8-4393-81ae-c20b580ea4d9",
+        "input_tokens": 5082,
+        "output_tokens": 869,
+        "usage_complete": true,
+        "elapsed_seconds": 35.8088,
+        "first_token_seconds": null,
+        "usage_reported_calls": 1
+      },
+      {
+        "status": "ok",
+        "llm_calls": 0,
+        "llm_errors": 0,
+        "request_id": "d151091c-b2a0-4635-a9e2-4ffa642d96c7",
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "usage_complete": true,
+        "elapsed_seconds": 2.2833,
+        "first_token_seconds": null,
+        "usage_reported_calls": 0
+      }
+    ]
+  }
+]

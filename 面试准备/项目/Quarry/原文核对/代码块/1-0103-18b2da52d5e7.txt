@@ -1,0 +1,4 @@
+-- documents 表里一份
+acl_labels     TEXT[] NOT NULL DEFAULT '{}',
+-- chunks 表里又一份
+acl_labels     TEXT[] NOT NULL DEFAULT '{}',

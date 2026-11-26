@@ -1,0 +1,26 @@
+{
+  "scope": "真实Playwright页面和native截图，非静态HTML推断；合成验收账号。",
+  "checks": {
+    "username_login": true,
+    "transport_order": "高铁 → 航班 → 自驾",
+    "food_defaults": 2,
+    "rename_archive_restore": true,
+    "saved_current_three_day_plan_opened": true,
+    "map_tiles_and_poi_images_visually_checked": true,
+    "poi_parking_bug_found_then_regression_fixed": true,
+    "final_museum_subject_visible": true,
+    "final_parking_absent": true
+  },
+  "screenshots": [
+    "output/playwright/reference-form.png",
+    "output/playwright/reference-plan.png",
+    "output/playwright/reference-current-three-day.png",
+    "output/playwright/reference-map-fixed.png",
+    "output/playwright/reference-map-final.png"
+  ],
+  "notes": [
+    "截图current-three-day保留停车场旧错误；map-fixed曾反映严格过滤后主体丢失，最终括号和描述清洗后将再补截图。",
+    "自动化曾使用旧ref及错按钮名称，按新快照纠正；不当作应用故障或全部UI已穷尽测试。",
+    "最终页面DOM museum=1/parking=0，已人工查看reference-map-final截图；未成功定位的活动保留正文，不虚构坐标。"
+  ]
+}

@@ -1,0 +1,10 @@
+"""卡片提交的两段文案演示：回显已选（给用户看）+ 续跑合成发言（喂给状态机）（纯函数，无需密钥）"""
+from app.api.v1.skills import _confirmed_content, _resume_content
+from app.capabilities.train_multi_segment.train_skill_schema import TrainSubmitResult
+
+texts = ["福州→杭州 G1650 08:12-12:30 二等座356元", "杭州→上海 G7512 09:05-10:02 二等座73元"]
+print(_confirmed_content("车次（按行程段顺序）", texts))
+print(_confirmed_content("住宿（按行程站顺序）", []))       # 没内容也回一句确认，绝不留空
+
+result = TrainSubmitResult(ok=True, code="OK", msg="全部段校验通过", texts=texts)
+print(_resume_content(result))                              # 用户口吻的合成发言：驱动住宿步

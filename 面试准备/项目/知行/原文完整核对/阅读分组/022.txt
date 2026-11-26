@@ -1,0 +1,470 @@
+
+
+===== block 226 a92623b56d69 lines 1-19 source 知行旅行助手-v2#226 =====
+"""_classify_arg / _price_args 演示：按票价工具自己声明的参数名组装入参，认不出就不盲调（纯逻辑，无需密钥）"""
+from app.capabilities.flight_multi_segment.flight_agent_tool import _classify_arg, _price_args
+
+class FakePriceTool:          # 测试驱动：只提供 name 与 args_schema
+    def __init__(self, props, required):
+        self.name = "getFlightPriceByCities"
+        self.args_schema = {"type": "object",
+                            "properties": {p: {"type": "string"} for p in props},
+                            "required": required}
+
+for p in ["depDate", "depCityCode", "arrCityCode", "toCity", "fromCity", "cabin"]:
+    print(f"{p:<12} → {_classify_arg(p) or '认不出'}")
+
+print()
+ok = FakePriceTool(["depCityCode", "arrCityCode", "depDate"],
+                   ["depCityCode", "arrCityCode", "depDate"])
+print("参数名认得出：", _price_args(ok, "2026-10-01", "BJS", "SHA"))
+bad = FakePriceTool(["routeKey", "depDate"], ["routeKey", "depDate"])
+print("必填认不出  ：", _price_args(bad, "2026-10-01", "BJS", "SHA"))
+
+
+===== block 227 8914522944e5 lines 1-6 source 知行旅行助手-v2#227 =====
+depDate      → date
+depCityCode  → dep
+arrCityCode  → arr
+toCity       → arr
+fromCity     → dep
+cabin        → 认不出
+
+
+===== block 228 517169e13143 lines 1-2 source 知行旅行助手-v2#228 =====
+参数名认得出： {'depCityCode': 'BJS', 'arrCityCode': 'SHA', 'depDate': '2026-10-01'}
+必填认不出  ： None
+
+
+===== block 229 6b79d768acdb lines 1-5 source 知行旅行助手-v2#229 =====
+"""_duration 演示：起飞/到达时刻算历时；跨天或缺失就留空，不编造（纯函数，无需密钥）"""
+from app.capabilities.flight_multi_segment.flight_agent_tool import _duration
+
+for dep, arr in [("08:00", "10:10"), ("21:30", "00:45"), ("08:00", ""), ("08:00", "08:00")]:
+    print(f"{dep} → {arr or '（空）':5} 历时 {_duration(dep, arr)!r}")
+
+
+===== block 230 5c74b8c18b2b lines 1-4 source 知行旅行助手-v2#230 =====
+08:00 → 10:10 历时 '02:10'
+21:30 → 00:45 历时 ''
+08:00 → （空）   历时 ''
+08:00 → 08:00 历时 ''
+
+
+===== block 231 ab64767d21a0 lines 1-113 source 知行旅行助手-v2#231 =====
+def _rows_to_options(
+    rows: list[dict], limit: int, prices: Optional[dict[str, float]] = None
+) -> list[FlightOption]:
+    """航班原始行 → FlightOption：按起飞时间升序取前 limit 班（仅排序取数，不做时间校验）
+
+    价格字段三级取值（依次回退，**取不到就是 0，绝不编造**）：
+      ① 时刻表行自带的票价（parse_flight_rows 按候选键抠出来的 row["price"]）
+      ② 票价接口按航班号返回的价（prices[航班号]）
+      ③ 都没有 → 0，前端展示"价格待定"，代选时按"价格未知"处理
+    """
+    table = prices or {}
+    options: list[FlightOption] = []
+    for row in sorted(rows, key=lambda r: r.get("dep") or ""):
+        code = row.get("code") or ""
+        # ★ 时刻表自带价优先（同一接口同一班，最不会串）；其次才查票价接口的表
+        price = float(row.get("price") or 0) or float(table.get(code.upper(), 0) or 0)
+        options.append(FlightOption(
+            flight_no=code,
+            dep_time=row.get("dep") or "",
+            arr_time=row.get("arr") or "",
+            dep_airport=row.get("from") or "",
+            arr_airport=row.get("to") or "",
+            price=price,
+            duration=_duration(row.get("dep") or "", row.get("arr") or ""),
+            option_id=option_id_of(row),
+        ))
+        if len(options) >= limit:
+            break
+    return options
+
+async def _query_one_leg(
+    query_tool: BaseTool, price_tool: Optional[BaseTool],
+    segment_id: str, leg: FlightLeg, limit: int
+) -> FlightSegment:
+    """查询单段航班（由 asyncio.gather 并行调度）；任何异常都降级为空 flight_list，绝不抛出"""
+    travel_date = (leg.travel_date or "").strip()
+    # ★ 城市先换成机场码；没有码的城市不查、不猜
+    dep, arr = _CITY_AIRPORT.get(leg.from_), _CITY_AIRPORT.get(leg.to)
+    if not dep or not arr:      # 城市未收录机场码：不放行直查，降级为空段
+        app_logger.warning(
+            f"⚠️ flight_multi_segment {segment_id}（{leg.from_}→{leg.to}）无机场码，跳过查询"
+        )
+        return FlightSegment(
+            segment_id=segment_id, from_=leg.from_, to=leg.to,
+            date=travel_date, flight_list=[],
+        )
+    # ★ 时刻表与票价**并发**查（票价是另一个接口，串行会把单段耗时翻倍）；
+    #   return_exceptions=True 保证票价炸了也不影响时刻表——卡片照出，只是没有价
+    schedule_raw, price_pair = await asyncio.gather(
+        query_tool.ainvoke({"date": travel_date, "dep": dep, "arr": arr}),
+        _query_leg_prices(price_tool, segment_id, leg, travel_date),
+        return_exceptions=True,
+    )
+    if isinstance(schedule_raw, Exception):  # 单段失败不影响其它段，前端对空段置灰
+        app_logger.warning(
+            f"⚠️ flight_multi_segment {segment_id}（{leg.from_}→{leg.to}）查询异常：{schedule_raw}"
+        )
+        return FlightSegment(
+            segment_id=segment_id, from_=leg.from_, to=leg.to,
+            date=travel_date, flight_list=[],
+        )
+    by_flight, lowest = ({}, 0.0) if isinstance(price_pair, Exception) else price_pair
+    rows = parse_flight_rows(schedule_raw)
+    options = _rows_to_options(rows, limit, by_flight)
+    priced = sum(1 for o in options if o.price > 0)
+    app_logger.info(
+        f"✈️ flight_multi_segment {segment_id} {leg.from_}→{leg.to} {travel_date} "
+        f"解析 {len(rows)} 班 → 取 {len(options)} 班（{priced} 班有票价）"
+    )
+    return FlightSegment(
+        segment_id=segment_id, from_=leg.from_, to=leg.to,
+        date=travel_date, flight_list=options,
+        # ★ 段级参考价：票价接口只给"XX元起"时放这里，**不**挨个填到每一班上（那是编造）
+        low_price=lowest,
+    )
+
+async def build_flight_multi_segment_payload(
+    legs: list[Any],
+    max_options_per_leg: int = 5,
+    cache_key: Optional[str] = None,
+) -> FlightMultiSegmentPayload:
+    """核心函数（非工具）：并行查询全部段 → 组装 payload，并缓存供提交侧校验
+
+    legs 长度即段数；日期为空时原样留空由前端展示，不推断时序、不校验时间先后。
+    数据源不可用 / 解析为空时返回**空段**而不是抛异常，避免打断对话。
+    cache_key：隔离键（调用方传 conversation_id），保证提交侧校验到的是**本会话**的候选表
+    """
+    try:
+        parsed = [leg if isinstance(leg, FlightLeg) else FlightLeg.model_validate(leg) for leg in legs]
+    except Exception as exc:
+        app_logger.warning(f"⚠️ flight_multi_segment 入参不合法，已降级为空 payload：{exc}")
+        return FlightMultiSegmentPayload(segments=[])
+    if not parsed:
+        return FlightMultiSegmentPayload(segments=[])
+    query_tool = await _resolve_query_tool()
+    if query_tool is None:                   # 数据源不可用：返回空段而不是抛错
+        empty = FlightMultiSegmentPayload(segments=[
+            FlightSegment(segment_id=f"s{i}", from_=leg.from_, to=leg.to,
+                          date=(leg.travel_date or "").strip(), flight_list=[])
+            for i, leg in enumerate(parsed, 1)
+        ])
+        _PAYLOAD_CACHE.store(empty, cache_key)
+        return empty
+    price_tool = await _resolve_price_tool()   # ★ 票价工具同样只解析一次，段间复用
+    segments = await asyncio.gather(*[     # ← 并行并发，非串行逐段
+        _query_one_leg(query_tool, price_tool, f"s{index}", leg, max_options_per_leg)
+        for index, leg in enumerate(parsed, 1)
+    ])
+    payload = FlightMultiSegmentPayload(segments=list(segments))
+    _PAYLOAD_CACHE.store(payload, cache_key)  # 供提交侧做「是否存在」校验
+    return payload
+
+# ==================== 提交侧：只做基础合法性校验（明确不做时间校验） ====================
+
+
+===== block 232 56a638a65e26 lines 1-17 source 知行旅行助手-v2#232 =====
+"""_rows_to_options 演示：航班行 → FlightOption；票价来自票价接口，对不上号的留 0（纯函数，无需密钥）"""
+from app.capabilities.flight_multi_segment.flight_agent_tool import _rows_to_options
+from app.tools.mcp_tools import parse_flight_rows
+
+RAW = str([
+    {"fcategory": "0", "FlightNo": "MU5104", "FlightCompany": "中国东方航空股份有限公司", "FlightDepAirport": "首都国际机场",
+     "FlightArrAirport": "虹桥国际机场", "FlightDeptimePlanDate": "2026-10-01 10:00:00", "FlightArrtimePlanDate": "2026-10-01 12:15:00"},
+    {"fcategory": "0", "FlightNo": "CA1501", "FlightCompany": "中国国际航空股份有限公司", "FlightDepAirport": "首都国际机场",
+     "FlightArrAirport": "虹桥国际机场", "FlightDeptimePlanDate": "2026-10-01 08:00:00", "FlightArrtimePlanDate": "2026-10-01 10:10:00"},
+])
+rows = parse_flight_rows(RAW)
+print("没有票价表：")
+for opt in _rows_to_options(rows, limit=5):
+    print("  ", opt.option_id, "| 历时", opt.duration, "| 票价", opt.price)
+print("票价表只对上 CA1501：")
+for opt in _rows_to_options(rows, limit=5, prices={"CA1501": 1280}):
+    print("  ", opt.option_id, "| 历时", opt.duration, "| 票价", opt.price)
+
+
+===== block 233 f4df8756f637 lines 1-6 source 知行旅行助手-v2#233 =====
+没有票价表：
+   CA1501-08:00-虹桥国际机场 | 历时 02:10 | 票价 0.0
+   MU5104-10:00-虹桥国际机场 | 历时 02:15 | 票价 0.0
+票价表只对上 CA1501：
+   CA1501-08:00-虹桥国际机场 | 历时 02:10 | 票价 1280.0
+   MU5104-10:00-虹桥国际机场 | 历时 02:15 | 票价 0.0
+
+
+===== block 234 a66915566977 lines 1-43 source 知行旅行助手-v2#234 =====
+"""_query_one_leg（航班）演示：时刻表用机场码、票价用城市码，两个接口并发查；没有机场码的城市直接跳过（纯逻辑，无需密钥）"""
+import asyncio
+import json
+
+from app.capabilities.flight_multi_segment.flight_agent_tool import _query_one_leg
+from app.capabilities.flight_multi_segment.flight_skill_schema import FlightLeg
+
+RAW = str([
+    {"fcategory": "0", "FlightNo": "MU5104", "FlightCompany": "中国东方航空股份有限公司", "FlightDepAirport": "首都国际机场",
+     "FlightArrAirport": "虹桥国际机场", "FlightDeptimePlanDate": "2026-10-01 10:00:00", "FlightArrtimePlanDate": "2026-10-01 12:15:00"},
+    {"fcategory": "0", "FlightNo": "CA1501", "FlightCompany": "中国国际航空股份有限公司", "FlightDepAirport": "首都国际机场",
+     "FlightArrAirport": "虹桥国际机场", "FlightDeptimePlanDate": "2026-10-01 08:00:00", "FlightArrtimePlanDate": "2026-10-01 10:10:00"},
+])
+PRICES = json.dumps({"data": [{"flightNo": "CA1501", "price": 1280},
+                              {"flightNo": "MU5104", "price": 860}]}, ensure_ascii=False)
+
+class FakeFlightTool:        # 测试驱动：假装是航班时刻表工具，打印真正收到的入参
+    async def ainvoke(self, args: dict):
+        print("   时刻表收到：", args)
+        return RAW
+
+class FakePriceTool:         # 测试驱动：假装是票价工具，schema 决定入参名
+    name = "getFlightPriceByCities"
+    args_schema = {"type": "object",
+                   "properties": {"depCityCode": {}, "arrCityCode": {}, "depDate": {}},
+                   "required": ["depCityCode", "arrCityCode", "depDate"]}
+
+    async def ainvoke(self, args: dict):
+        print("   票价收到  ：", args)
+        return PRICES
+
+async def main():
+    seg = await _query_one_leg(FakeFlightTool(), FakePriceTool(), "s1",
+                               FlightLeg(from_="北京", to="上海", travel_date="2026-10-01"), 5)
+    print("北京→上海：", [(o.flight_no, o.price) for o in seg.flight_list], "段最低", seg.low_price)
+    seg = await _query_one_leg(FakeFlightTool(), FakePriceTool(), "s2",
+                               FlightLeg(from_="北京", to="某小城", travel_date="2026-10-02"), 5)
+    print("北京→某小城：", seg.flight_list, "（没有机场码，没去查）")
+    seg = await _query_one_leg(FakeFlightTool(), None, "s3",
+                               FlightLeg(from_="北京", to="上海", travel_date="2026-10-01"), 5)
+    print("票价工具不可用：", [(o.flight_no, o.price) for o in seg.flight_list], "段最低", seg.low_price)
+
+asyncio.run(main())
+
+
+===== block 235 980c1ee9b8a0 lines 1-6 source 知行旅行助手-v2#235 =====
+   时刻表收到： {'date': '2026-10-01', 'dep': 'PEK', 'arr': 'SHA'}
+   票价收到  ： {'depCityCode': 'BJS', 'arrCityCode': 'SHA', 'depDate': '2026-10-01'}
+北京→上海： [('CA1501', 1280.0), ('MU5104', 860.0)] 段最低 860.0
+北京→某小城： [] （没有机场码，没去查）
+   时刻表收到： {'date': '2026-10-01', 'dep': 'PEK', 'arr': 'SHA'}
+票价工具不可用： [('CA1501', 0.0), ('MU5104', 0.0)] 段最低 0.0
+
+
+===== block 236 531901633849 lines 1-114 source 知行旅行助手-v2#236 =====
+def validate_flight_submission(
+    payload: FlightSubmitPayload, cache_key: Optional[str] = None
+) -> FlightSubmitResult:
+    """校验 segment_id 是否存在、option_id 是否在该段候选列表内；不比对任何时间先后"""
+    cached = get_cached_payload(cache_key)
+    if cached is None:                        # 没查过航班就提交：拦下，避免写进不存在的航班
+        return FlightSubmitResult(
+            ok=False, code="NO_PAYLOAD",
+            msg="后端尚无候选航班记录，请先在交通步重新查询航班后再提交",
+        )
+    items = payload.segments
+    if not items:
+        return FlightSubmitResult(
+            ok=False, code="EMPTY_SELECTION", msg="提交内容为空，至少要选择一段航班",
+        )
+    no_id = [f"{item.segment_id}·{item.flight_no or '未填写航班号'}"
+             for item in items if not (item.option_id or "").strip()]
+    if no_id:
+        return FlightSubmitResult(
+            ok=False, code="MISSING_OPTION_ID",
+            msg=f"以下选择缺少航班标识（option_id）：{'、'.join(no_id)}；"
+                f"请在卡片中重新选择后提交",
+        )
+    by_id = {seg.segment_id: seg for seg in cached.segments}
+    unknown = [item.segment_id for item in items if item.segment_id not in by_id]
+    if unknown:
+        return FlightSubmitResult(
+            ok=False, code="SEGMENT_NOT_FOUND",
+            msg=f"不存在的行程段：{'、'.join(unknown)}；合法段为 {'、'.join(by_id)}",
+        )
+    bad_flight = [
+        f"{item.segment_id}·{item.option_id}" for item in items
+        if item.option_id not in {f.option_id for f in by_id[item.segment_id].flight_list}
+    ]
+    if bad_flight:
+        return FlightSubmitResult(
+            ok=False, code="FLIGHT_NOT_FOUND",
+            msg=f"以下航班不在该段候选列表中：{'、'.join(bad_flight)}",
+        )
+    chosen = {item.segment_id for item in items}
+    # ★ 实时无候选（flight_list 为空/查询失败、卡片里置灰）的段不算"漏选"——否则该段无从选择、
+    #   用户永远凑不齐全部段而卡在交通步。只有"有候选却没选"的段才判 INCOMPLETE。
+    missing = [seg.segment_id for seg in cached.segments
+               if seg.segment_id not in chosen and seg.flight_list]
+    if missing:
+        return FlightSubmitResult(
+            ok=False, code="INCOMPLETE",
+            msg=f"以下行程段尚未选择航班：{'、'.join(missing)}",
+        )
+    return FlightSubmitResult(
+        ok=True, code="OK",
+        msg=f"已收到 {len(items)} 段选中航班，基础合法性校验通过（未做任何时间校验）",
+        accepted=items,
+    )
+
+# ==================== Agent 可调用的两个 Tool ====================
+
+@tool
+async def query_flight_multi_segment_tool(
+    legs: list[dict],
+    max_options_per_leg: int = 5,
+) -> str:
+    """并行查询多段航班，返回可直接下发前端的 flight_multi_segment skill payload。
+
+    适用于「多目的地行程」需要一次性给出各段候选航班的场景。段与段之间**并发查询**，
+    总耗时≈最慢一段，段数由 legs 长度决定。
+
+    Args:
+        legs: 行程段列表，按时间顺序排列。每项含 from（出发城市）、to（到达城市）、
+            travel_date（该段乘机日期 YYYY-MM-DD）。
+        max_options_per_leg: 每段返回的航班上限，默认 5。
+
+    Returns:
+        JSON 文本 {"skill_name":"flight_multi_segment","segments":[...]}。
+        **请原样下发给前端 UI Skill**：不要改写字段名、不要增删 segments、不要自己再校验时间；
+        某些段查不到航班时该段 flight_list 为空数组，如实告知用户即可。
+    """
+    payload = await build_flight_multi_segment_payload(legs, max_options_per_leg)
+    app_logger.info(f"✈️ flight_multi_segment 出参：{len(payload.segments)} 段")
+    return payload.model_dump_json(by_alias=True)
+
+@tool
+async def submit_flight_multi_segment_tool(segments: list[dict]) -> str:
+    """接收前端一次性回传的全部段选中航班，只做基础合法性校验。
+
+    **不做任何航班时间校验**（不比对到达/起飞先后）。
+
+    Args:
+        segments: 前端 onSubmit 抛回的数组，每项为
+            {"segment_id": "s1", "option_id": "CA1501-08:00-SHA", "flight_no": "CA1501"}。
+            **option_id 是身份**（航班号在一天内可能不唯一，不能当身份）。
+
+    Returns:
+        JSON 文本 {"ok": bool, "code": str, "msg": str, "accepted": [...]}。
+        ok 为 false 时把 msg 原样告知用户，并请其在界面上改选后重新提交；
+        ok 为 true 表示已确认全部段选择（未锁票、未做时间校验）。
+    """
+    try:
+        payload = FlightSubmitPayload.model_validate({"segments": segments})
+    except Exception as exc:                  # 结构缺失也走确定性回执，不抛错
+        return FlightSubmitResult(
+            ok=False, code="INVALID_PAYLOAD", msg=f"提交数据结构不合法：{exc}"
+        ).model_dump_json()
+    result = validate_flight_submission(payload)
+    app_logger.info(f"✈️ flight_multi_segment 提交校验：{result.code} / {result.msg}")
+    return result.model_dump_json()
+
+__all__ = [
+    "build_flight_multi_segment_payload",
+    "get_cached_payload",
+    "validate_flight_submission",
+    "query_flight_multi_segment_tool",
+    "submit_flight_multi_segment_tool",
+]
+
+
+===== block 237 40ef7806b000 lines 1-80 source 知行旅行助手-v2#237 =====
+"""多段航班 UI Skill —— 与状态机「交通规划步」的接线层
+
+与多段高铁（train_flow）完全同构，仅数据源换成航班：
+  1. emit_flight_skill_ui   手动确认模式：并行查询全部段 → 推 skill_ui 帧（前端内嵌卡片）
+  2. auto_select_flights    自动确认模式：代码按「价格低」代选并推进（不弹 UI）
+  3. apply_flight_selection 前端提交 → 基础合法性校验（**不做任何时间校验**）→ 写段账本 → 推进
+
+优先级：高铁 > 航班（同时勾选高铁与航班时走高铁卡片，本模块 flight_card_mode 会返回 False）。
+"""
+from typing import Any, Optional
+
+from app.core.events import ROLE_SKILL_UI, make_event
+from app.capabilities.base import SignatureCache, get_agent_and_state, leg_signature
+from app.capabilities.flight_multi_segment.flight_agent_tool import (
+    build_flight_multi_segment_payload,
+    get_cached_payload,
+    validate_flight_submission,
+)
+from app.capabilities.flight_multi_segment.flight_skill_schema import (
+    FLIGHT_MULTI_SEGMENT_SKILL,
+    FlightLeg,
+    FlightMultiSegmentPayload,
+    FlightSubmitPayload,
+    FlightSubmitResult,
+)
+from app.capabilities.train_multi_segment.train_flow import train_mode_requested
+from app.utils.logger import app_logger
+
+# 表单"交通方式"可能是中文选项值，也可能是模型归一后的枚举值，两种都认
+_FLIGHT_WORDS = {"flight", "航班", "飞机", "航班/飞机", "飞机/航班"}
+
+# 交通步之后的步骤（用于提交接口的幂等判定：重复提交不再回写状态）
+_AFTER_TRANSPORT = {
+    "accommodation_planning", "food_planning", "itinerary_generation",
+    "budget_summarization", "report_generation",
+}
+
+def flight_mode_requested(state: dict) -> bool:
+    """是否走航班路线：表单勾了航班（或已选定 flight）才推卡片"""
+    if state.get("selected_transport") == "flight":
+        return True
+    req = state.get("user_requirement") or {}
+    picked = {str(v).strip() for v in (req.get("transport_types") or [])}
+    return bool(picked & _FLIGHT_WORDS)
+
+def _legs_with_dates(state: dict) -> list[FlightLeg]:
+    """按行程时序生成「段 + 段日期」：去程=出发日、城际=下一城首日（_leg_query_date 口径）"""
+    from app.core.middleware import _leg_query_date
+    from app.tools.state_transition import _expected_legs
+    legs = _expected_legs(state)
+    out: list[FlightLeg] = []
+    for index, leg in enumerate(legs):
+        frm, _, to = leg.partition("→")
+        if not frm or not to:
+            continue
+        out.append(FlightLeg(
+            from_=frm, to=to, travel_date=_leg_query_date(state, legs, index),
+        ))
+    return out
+
+def flight_card_mode(state: dict) -> bool:
+    """是否走"航班由代码供给卡片"的路线：选了航班 **且不是高铁路线**（高铁优先）且段数≥1"""
+    return (
+        flight_mode_requested(state)
+        # ★ 高铁优先：两个都勾了，走高铁卡片
+        and not train_mode_requested(state)
+        and len(_legs_with_dates(state)) >= 1
+    )
+
+def _fmt_option(opt: Any) -> str:
+    """航班 → 段账本文本（与 select_transport_tool 落库口径一致，行程步直接可读）
+
+    ★ 票价必须写进这串文本：预算侧 _legs_price_per_person() 是按 `(\\d+)元` 正则
+      从段账本里抠交通费的（高铁 _fmt_option 末尾就带"二等座553元"）。航班这边原先
+      一个"元"字都没有 → 正则空手而归 → 交通费恒按 500 元/人兜底估算，
+      用户选了航班就永远拿不到真实交通预算。取不到票价时不写，宁缺毋造。
+    """
+    base = f"{opt.flight_no} {opt.dep_time}-{opt.arr_time} {opt.dep_airport}→{opt.arr_airport}"
+    price = float(getattr(opt, "price", 0) or 0)
+    return f"{base} {price:g}元" if price > 0 else base
+
+
+===== block 238 bdb20fd324cc lines 1-10 source 知行旅行助手-v2#238 =====
+"""flight_card_mode 演示：选了航班、且不是高铁路线（高铁优先）、且至少一段，才由代码供航班卡片（纯逻辑，无需密钥）"""
+from app.capabilities.flight_multi_segment.flight_flow import flight_card_mode, flight_mode_requested
+
+def state(transport: list, dest: str) -> dict:
+    return {"user_requirement": {"departure_city": "北京", "departure_date": "2026-10-01", "travel_days": 4,
+                                 "transport_types": transport}, "selected_destination": dest}
+
+for name, st in {"只勾航班      ": state(["航班"], "上海"), "高铁、航班都勾": state(["高铁", "航班"], "上海"),
+                 "航班但本地游  ": state(["航班"], "北京")}.items():
+    print(f"{name} → 选了航班 {flight_mode_requested(st)!s:5} | 航班卡片 {flight_card_mode(st)}")
+
+
+===== block 239 7a9651c47860 lines 1-3 source 知行旅行助手-v2#239 =====
+只勾航班       → 选了航班 True  | 航班卡片 True
+高铁、航班都勾 → 选了航班 True  | 航班卡片 False
+航班但本地游   → 选了航班 True  | 航班卡片 False

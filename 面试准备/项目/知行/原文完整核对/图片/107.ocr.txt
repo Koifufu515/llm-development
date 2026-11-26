@@ -1,0 +1,136 @@
+produce 编排主流程•八个阶段，三路执行只走其中一路
+run_chat_turn 用 asyncio.create_task 把它丢到后台（L170），路由那边同时开始读帧。整个函数包在一个try里：任何一步出错都推 error加
+done（500），finally 必定 close，SSE 不会挂住。
+按执行顺序 行号取自当前源码；「帧」只列本阶段直接产生的，下游经记录器推的另作标注
+阶段•行号
+做了什么
+调用了谁
+推什么帧
+1 准备
+•先用 _SkillUiRecorder 包住事件流，后面所有推帧都经过它（L192）
+_SkillUiRecorder
+-
+L191-209
+•会话还叫「新对话」且 persist_user 用发言前30字当标题（L195）
+本文件
+• persist_user 为真才存 user 消息（L200）
+get_owned_conversation
+•读最近 4 条消息拼成 history，给路由用（L205）
+services/conversation_service跨模块）
+message 表
+写 user•读最近4条
+路由
+•_hit_auto_confirm 命中，就先推「7正在为您规划行程」（L212）
+本文件- core/intent.detect_intent
+_hit_auto_confirm
+assistant
+L211-222
+•卡片续跑（force_planning）：直接造一个 RouterResult，判为规划、skills 为空，不问模型
+chat_route
+仅自动确认命中时
+（L215）
+•其余情况：调 chat_route 让模型判断「是不是规划」和「预计用哪些技能」（L222）
+agents/routers/chat_router 跨模块
+3
+直查门禁
+•不是续跑才进门禁。门禁全在代码里：有对象词，加动词或日期词，且没有规划噪声
+try_direct_ticket_query
+assistant
+L225
+•命中：返回代码渲染的班次表，或「缺出发地/到达地」的追问；不命中返回 None
+services/chat_stream_executor
+蹭模执
+由直查函数自己推
+提示帧•技能帧
+•直查没命中、判为规划、且没命中自动确认一推一条等待提示
+_RESUME_PENDING_TEXT
+本文件常量L178
+assistant
+L228-238
+•提示文案先按 resume_stage 查_RESUME_PENDING_TEXT ；查不到，再按 force_planning
+二选一
+•路由给出的每个技能各推一帧（续跑时 skills为空，不推）
+三路执行
+L241-269
+A 。 直查已命中
+B 。快速通道
+C•状态机
+try_express_planning
+assistant
+直接用直查文本；
+判为规划且非续跑一
+先
+run_express_planning
+services/express_planning_service
+跨模块
+告警帧由本函数推；下游经记录
+state_step=None，
+try_express_planning
+_manual_multi_city_day
+器再推
+committed=False，
+复核；命中就
+_warning，有告警就推帧
+execute_turn
+services/chat_stream_executor跨模块
+assistant
+body=None （L248）
+run_express_planning，
+并拼到正文前；再
+返回 None 时回落状态机
+execute_turn（L262-
+本文件
+_manual_multi_city_day_warning
+assistant_reset
+（L254）
+269）
+skill_ui
+三路的出口统一成四元组（fuLl_text，state_step,committed,body）。快速通道成功
+时，state_step 固定记为 itinerary_generation （L260）。
+6
+清单门禁
+•三个条件同时成立才生成清单：是规划、步骤就绪、有源料或结构（见图3）
+_looks_like_itinerary
+itinerary_plans
+L272-299
+•先推 pending；成功推 success 并带上 plan_id，失败推error。清单失败不中断本轮
+_recent_itinerary_text
+本文件
+pending success / error
+generate_plan
+services/itinerary_plan_service
+跨模块
+记忆同步
+• 只在走了快速通道时执行：把需求、目的地、行程一次性写回 LangGraph thread，下一轮状态机
+sync_express_state
+L304-311
+能接着聊
+services/express_planning_service
+跨模块
+• 和清单成败解耦：清单失败也照样同步，同步失败只记日志
+8
+收尾落库
+• 先推 done（200），再落库
+compress_content
+done
+code=200
+L312-329
+• 规划回合且全文超过2000字：content 存 DeepSeek 摘要，全文放进 extra_info.original
+services/chat_compress_service
+•extra_info 里还有 inference_steps、记录器抓到的最后一张 skill_ui、
+message 表
+itinerary_plans
+写 assistant消息
+异常• 收口
+•任何一步抛异常：推 error（异常文本）和 done（500）
+_SkillUiRecorder.close
+error
+done code=500
+L330-335
+• finally 永远 close：路由的 async for 结束，SSE 响应关闭
+本文件 EventStream.close
+START - 准备- 路由- 直查门禁- 提示帧一 三路执行 - 清单门禁—记忆同步 一收尾落库-close
+值得注意的顺序：done 帧先于落库推送（L312推done，L315-329才压缩、写库）。前端拿到 done 时，这轮消息可能还没进 message 表；如果写库抛异常，前端会在 done（200）之后再收到一组error 和
+done（500）。
+为什么能这样编排：三路执行的出口被统一成同一个四元组（full_text，state_step,committed,body），后面的清单门禁和落库只看这四个值，不关心是直查、快速通道还是状态机产出的。所
+以加一条新通道，只需要再交出这四个值。

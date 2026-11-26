@@ -1,0 +1,16 @@
+"""住宿数据契约演示：一段只有两种模式——hotel（真实门店）或 brand（品牌兜底）（纯逻辑，无需密钥）"""
+from pydantic import ValidationError
+
+from app.capabilities.hotel_multi_segment.hotel_skill_schema import HotelBrand, HotelMultiSegmentItem, HotelOption
+
+base = dict(segment_id="h1", city="杭州", checkInDate="2026-10-01", checkOutDate="2026-10-03", guestCount=2, priceLevel="经济型")
+store = HotelMultiSegmentItem(**base, mode="hotel", hotel_list=[HotelOption(
+    hotel_id="h1-1", hotelName="如家酒店(西湖北山街店)", totalPrice=716.0, pricePerNight=358.0, starRating=4.6, address="西湖区北山街 12 号")])
+brand = HotelMultiSegmentItem(**{**base, "segment_id": "h2", "city": "苏州"}, mode="brand",
+                              brand_list=[HotelBrand(brand_id="h2-1", brandName="如家"), HotelBrand(brand_id="h2-2", brandName="汉庭")])
+print("门店模式：", store.model_dump()["hotel_list"][0]["hotelName"], "总价", store.model_dump()["hotel_list"][0]["totalPrice"], "| brand_list =", store.brand_list)
+print("品牌模式：", [b.brandName for b in brand.brand_list], "| hotel_list =", brand.hotel_list)
+try:
+    HotelMultiSegmentItem(**base, mode="shop")
+except ValidationError as e:
+    print("第三种模式：", e.errors()[0]["type"], "→", e.errors()[0]["msg"])

@@ -1,0 +1,3 @@
+from app.api.v1 import users, cities, conversations, messages   # ★ 新增 messages
+
+app.include_router(messages.router, prefix="/api/v1")          # 发消息（SSE）+ 历史消息

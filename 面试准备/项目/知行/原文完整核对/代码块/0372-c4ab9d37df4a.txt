@@ -1,0 +1,4 @@
+return Command(update={
+    "user_requirement": requirement,               # 写业务数据
+    "current_step": "destination_recommendation"   # 推进到下一步
+})

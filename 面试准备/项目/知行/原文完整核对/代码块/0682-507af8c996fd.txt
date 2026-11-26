@@ -1,0 +1,9 @@
+'确认'                       → True
+'好的。'                      → True
+'OK！'                      → True
+' 满意 '                     → True
+'满意，但第二天换一下'               → False
+'G1630吧'                   → False
+'好的，但换个酒店'                 → False
+'确认一下行程'                   → False
+''                         → False

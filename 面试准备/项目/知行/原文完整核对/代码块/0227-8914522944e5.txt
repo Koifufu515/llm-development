@@ -1,0 +1,6 @@
+depDate      → date
+depCityCode  → dep
+arrCityCode  → arr
+toCity       → arr
+fromCity     → dep
+cabin        → 认不出

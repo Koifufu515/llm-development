@@ -1,0 +1,1 @@
+../../../../../../knowgo-travel/app/core/telemetry.py

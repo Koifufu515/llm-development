@@ -1,0 +1,43 @@
+"""所有权校验：同一个 get_owned_conversation，把"越权"和"非法 id"都收敛成 None（需 PG）"""
+import asyncio
+import sys
+import uuid
+
+from sqlalchemy import delete
+
+from app.models import Conversation, User
+from app.models.base import async_session_maker, engine
+from app.services.conversation_service import create_conversation, get_owned_conversation, list_conversations
+from app.utils.security import hash_password
+
+if sys.platform.startswith("win"):
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+def new_user(tag: str) -> User:
+    sfx = uuid.uuid4().hex[:6]
+    return User(username=f"demo_{tag}_{sfx}", email=f"demo_{tag}_{sfx}@example.com",
+                password_hash=hash_password("secret123"), preferences={})
+
+async def main() -> None:
+    async with async_session_maker() as db:
+        alice, bob = new_user("a"), new_user("b")
+        db.add_all([alice, bob])
+        await db.commit()
+        conv = await create_conversation(db, alice.id, "五一去杭州")
+        print("新会话默认状态 →", conv.status, "| 时间戳由库生成：", conv.created_at is not None)
+
+        mine = await get_owned_conversation(db, str(conv.id), alice.id)
+        print("alice 查自己的会话 →", mine.title if mine else None)
+        print("bob 拿着 alice 的会话 id →", await get_owned_conversation(db, str(conv.id), bob.id))
+        print("非法 id \"abc\" →", await get_owned_conversation(db, "abc", alice.id))
+
+        conv.status = "deleted"
+        await db.commit()
+        print("软删之后 alice 的会话列表 →", len(await list_conversations(db, alice.id)), "条")
+        print("软删的会话按 id 还查得到吗？", (await get_owned_conversation(db, str(conv.id), alice.id)) is not None)
+
+        await db.execute(delete(User).where(User.id.in_([alice.id, bob.id])))   # 清理：级联删掉会话
+        await db.commit()
+    await engine.dispose()
+
+asyncio.run(main())

@@ -1,0 +1,76 @@
+"""多段高铁 UI Skill —— 与状态机「交通规划步」的接线层
+
+背景：交通步原本是**逐段串行**流程（prompt 驱动：一次只查一段、只展示一段、用户确认一段），
+段账本由 select_transport_tool 的 leg_cursor/leg_selections 维护，多段行程要来回 N 轮。
+本模块把这段循环换成「代码一次并行查全部段 → 前端卡片一次选完 → 一次提交」：
+
+  1. emit_train_skill_ui   手动确认模式：并行查询全部段 → 推 skill_ui 帧（前端内嵌卡片）
+  2. auto_select_train_legs 自动确认模式：代码按「有票优先 → 耗时 → 价格」代选并推进（不弹 UI）
+  3. apply_train_selection  前端提交 → 基础合法性校验（**不做任何时间校验**）→ 写段账本 → 推进
+
+硬约束（与用户要求一致）：全流程不比对到站/发车先后，不判断中转时间是否够。
+"""
+from typing import Any, Optional
+
+from app.core.events import ROLE_SKILL_UI, make_event
+from app.capabilities.base import SignatureCache, duration_to_minutes, get_agent_and_state, leg_signature
+from app.capabilities.train_multi_segment.train_agent_tool import (
+    build_train_multi_segment_payload,
+    get_cached_payload,  # 读取提交侧校验缓存（查询侧由 build_train_multi_segment_payload 写入）
+    train_score,
+    validate_train_submission,
+)
+from app.capabilities.train_multi_segment.train_skill_schema import (
+    TRAIN_MULTI_SEGMENT_SKILL,
+    TrainLeg,
+    TrainMultiSegmentPayload,
+    TrainSubmitPayload,
+    TrainSubmitResult,
+)
+from app.utils.logger import app_logger
+
+# 刻意不做"同一批段只推一次"的去重：历史消息不携带 skill_ui 帧，用户刷新页面后
+# 卡片会消失，若此时去重仍生效则之后每一轮都不再下发 → 交通步变成死路（永远无法提交）。
+# 改为每轮都重推：候选走签名缓存 _SIG_CACHE（不会重复打 12306），前端同技能卡片只保留
+# 最新一张，因此重推在界面上是幂等的。
+
+# 表单"交通方式"可能是中文选项值，也可能是模型归一后的枚举值，两种都认
+_TRAIN_WORDS = {"train", "高铁", "火车", "动车", "高铁/火车"}
+
+# 交通步之后的步骤（用于提交接口的幂等判定：重复提交不再回写状态）
+_AFTER_TRANSPORT = {
+    "accommodation_planning", "food_planning", "itinerary_generation",
+    "budget_summarization", "report_generation",
+}
+
+def train_mode_requested(state: dict) -> bool:
+    """是否走高铁路线：表单勾了高铁（或已选定 train）才推卡片，航班/自驾保持原流程"""
+    if state.get("selected_transport") == "train":
+        return True
+    req = state.get("user_requirement") or {}
+    picked = {str(v).strip() for v in (req.get("transport_types") or [])}
+    return bool(picked & _TRAIN_WORDS)
+
+def multi_leg_train(state: dict) -> bool:
+    """是否走"高铁由代码供给卡片"的路线：高铁 + 段数≥1（0 段=本地游玩，走零段直通）"""
+    return train_mode_requested(state) and len(_legs_with_dates(state)) >= 1
+
+def _legs_with_dates(state: dict) -> list[TrainLeg]:
+    """按行程时序生成「段 + 段日期」：去程=出发日、城际=下一城首日（_leg_query_date 口径）"""
+    from app.core.middleware import _leg_query_date
+    from app.tools.state_transition import _expected_legs
+    legs = _expected_legs(state)
+    out: list[TrainLeg] = []
+    for index, leg in enumerate(legs):
+        frm, _, to = leg.partition("→")
+        if not frm or not to:
+            continue
+        out.append(TrainLeg(
+            from_=frm, to=to, travel_date=_leg_query_date(state, legs, index),
+        ))
+    return out
+
+def _fmt_option(opt: Any) -> str:
+    """车次 → 段账本文本（与 select_transport_tool 落库口径一致，行程步直接可读）"""
+    price = f"{opt.price:g}"
+    return f"{opt.trainNo} {opt.startTime}-{opt.endTime} {opt.seatType}{price}元"

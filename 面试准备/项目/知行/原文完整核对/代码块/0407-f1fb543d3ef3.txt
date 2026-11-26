@@ -1,0 +1,13 @@
+"""generate_itinerary_tool 演示：被取代的老工具只会生成占位内容——看它产出什么，就知道为什么要结构化（纯逻辑，无需密钥）"""
+from langchain.tools import ToolRuntime
+
+from app.tools.state_transition import generate_itinerary_tool
+
+state = {"messages": [], "current_step": "itinerary_generation", "selected_destination": "杭州",
+         "selected_transport": "train", "selected_accommodation_types": ["economy_hotel"], "selected_food_types": ["local"],
+         "user_requirement": {"departure_city": "北京", "destination": "杭州", "travel_days": 2, "adult_count": 2}}
+rt = ToolRuntime(state=state, context=None, config={}, stream_writer=None, tool_call_id="call_1", store=None)
+up = generate_itinerary_tool.func(runtime=rt).update
+print("current_step →", up.get("current_step"), "|", up["messages"][0].content[:40])
+for day in up.get("itinerary") or []:
+    print("  ", day)

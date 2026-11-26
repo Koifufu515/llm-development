@@ -1,0 +1,35 @@
+"""select_transport_tool 段级循环：段对不上 / 格式不合规 / 记下一段 / 最后一段推进（直接调真实工具，纯逻辑，无需密钥）"""
+from langchain.tools import ToolRuntime
+from langchain_core.messages import HumanMessage
+
+from app.tools.state_transition import select_transport_tool
+
+state = {"messages": [HumanMessage(content="好的")], "current_step": "transport_planning",
+         "user_requirement": {"departure_city": "北京", "travel_days": 4}, "selected_destination": "天津、上海",
+         "leg_cursor": 0, "leg_selections": {}, "leg_prices": {}}
+
+def call(**kwargs):
+    """测试驱动：用当前 state 调一次真实工具，返回它的 Command.update"""
+    rt = ToolRuntime(state=state, context=None, config={}, stream_writer=None, tool_call_id="call_1", store=None)
+    return select_transport_tool.func(runtime=rt, **kwargs).update
+
+# 出口 A①：当前该确认"北京→天津"，交上来的却是第 2 段
+up = call(transport_type="train", legs=[{"from_city": "天津", "to_city": "上海", "vehicle_no": "G7512"}])
+print("出口 A 段对不上   →", [k for k in up if k != "messages"] or "不写任何字段", "|", up["messages"][0].content[:34], "…")
+
+# 出口 A②：段是对的，但漏了 to_city —— 报错里会带上具体哪个字段不合规
+up = call(transport_type="train", legs=[{"from_city": "北京", "vehicle_no": "G1197"}])
+print("出口 A 格式不合规 →", [k for k in up if k != "messages"] or "不写任何字段", "|", up["messages"][0].content[:52], "…")
+
+# 出口 B：交对了当前段 → 展示文本 + 票价进数字账本，游标 +1，current_step 不动
+up = call(transport_type="train", legs=[{"from_city": "北京", "to_city": "天津", "vehicle_no": "G1197",
+                                         "depart_time": "08:00", "arrive_time": "08:35",
+                                         "seat_class": "二等座", "price": 54.5}])
+print("出口 B 记下第 1 段 →", {k: v for k, v in up.items() if k != "messages"})
+state.update({k: v for k, v in up.items() if k != "messages"})          # 测试驱动：像 LangGraph 一样合并回 state
+
+# 出口 C：最后一段确认 → 一次写入全部字段，推进到住宿步
+up = call(transport_type="train", legs=[{"from_city": "天津", "to_city": "上海", "vehicle_no": "G7512",
+                                         "depart_time": "09:05", "arrive_time": "13:20",
+                                         "seat_class": "二等座", "price": 553}])
+print("出口 C 最后一段   →", {k: v for k, v in up.items() if k != "messages"})

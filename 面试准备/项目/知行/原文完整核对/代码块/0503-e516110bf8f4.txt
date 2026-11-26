@@ -1,0 +1,111 @@
+# 自动确认快速通道
+# 自动走完整条流程，绕开多轮对话状态机，减少等待耗时；手动模式依旧走原有状态机
+from datetime import datetime
+import asyncio
+import json
+
+from pydantic import BaseModel, Field
+from langchain_community.chat_models import ChatTongyi
+
+from app.core.events import ROLE_ASSISTANT, make_event
+from app.core.intent import detect_intent
+from app.config import settings
+from app.utils.logger import app_logger
+
+_DIGITS = "0123456789"
+
+def _to_float(value, default: float = 0.0) -> float:
+    # 安全转数字，出错就返回默认值
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+def _number_before(text: str, unit: str) -> float:
+    # 提取单位前面的数字，找不到就返回0
+    if unit not in (text or ""):
+        return 0.0
+    head = text.split(unit, 1)[0].rstrip()
+    i = len(head)
+    while i > 0 and head[i - 1] in _DIGITS + ".":
+        i -= 1
+    return _to_float(head[i:])
+
+def _hit_auto_confirm(content: str) -> bool:
+    # 检测文字里有没有自动确认关键词
+    return detect_intent(content).auto_confirm
+
+# 表单文本提取出来的结构化出行需求
+class ExpressRequirement(BaseModel):
+    departure_city: str = Field(description="出发城市，为空则无")
+    destination: str = Field(description="目的地城市，多城用顿号隔开")
+    departure_date: str = Field(description="出发日期，必须转为YYYY-MM-DD格式")
+    travel_days: int = Field(default=3, description="出行天数，默认3天")
+    adult_count: int = Field(default=2, description="成年人数量，默认2人")
+    children_count: int = Field(default=0, description="儿童数量，默认0")
+    budget_max: float = Field(default=0, description="人均预算上限，无限制填0")
+    auto_confirm: bool = Field(description="是否开启全程自动确认")
+    transport_types: list[str] = Field(
+        default_factory=list,
+        description="交通方式：flight/train/driving"
+    )
+    food_preferences: list[str] = Field(
+        default_factory=list,
+        description="餐饮偏好：specialty/chain/local"
+    )
+    accommodation_types: list[str] = Field(
+        default_factory=list,
+        description="酒店类型：star_hotel/economy_hotel/hostel/youth_hostel"
+    )
+    travel_styles: list[str] = Field(
+        default_factory=list,
+        description="旅行风格：relaxation/culture/adventure/food"
+    )
+
+_EXTRACT_PROMPT = (
+    "从用户旅行清单提取结构化字段。今天日期：{today}\n"
+    "1. 日期必须转为YYYY-MM-DD，今天、下周这类相对日期要换算成具体日期\n"
+    "2. 枚举字段严格按给定值填写，没提到的列表直接留空\n"
+    "3. 多目的地全部保留，不能因为和出发城市一致就删掉\n"
+    "4. 只有出现「全程交给AI自动确认」时，auto_confirm才为true\n\n"
+    "需求清单：\n{content}"
+)
+
+async def extract_requirement(content: str) -> ExpressRequirement:
+    # 一次性调用大模型，把纯文本转为结构化数据
+    llm = ChatTongyi(
+        model=settings.qwen_model_name,
+        api_key=settings.dashscope_api_key,
+        temperature=0,
+    )
+    structured = llm.with_structured_output(ExpressRequirement)
+    result: ExpressRequirement = await structured.ainvoke(
+        _EXTRACT_PROMPT.format(
+            content=content,
+            today=datetime.now().strftime("%Y-%m-%d"),
+        )
+    )
+    app_logger.info(
+        f"[express] 需求提取: dest={result.destination} date={result.departure_date} "
+        f"days={result.travel_days} auto={result.auto_confirm} "
+        f"transport={result.transport_types} food={result.food_preferences}"
+    )
+    return result
+
+async def try_express_planning(user_id: str, content: str, stream) -> ExpressRequirement | None:
+    # 分流判断：只有开启自动确认才走快速通道，否则退回原状态机
+    # 第一层：关键词快速校验，不命中直接返回，不调用LLM
+    if not _hit_auto_confirm(content):
+        return None
+
+    # 第二层：LLM二次核验，防止闲聊提到关键词误进入通道
+    req = await extract_requirement(content)
+    if not req.departure_city or not req.auto_confirm:
+        app_logger.info("[express] 提取复核未通过，回落状态机")
+        return None
+
+    app_logger.info(
+        f"[express] 命中快速通道: {req.destination or '(无目的地，AI自动选定)'} "
+        f"{req.departure_date} {req.travel_days}天"
+    )
+    return req

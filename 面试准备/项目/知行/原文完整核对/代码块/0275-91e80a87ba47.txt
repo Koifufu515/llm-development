@@ -1,0 +1,5 @@
+"""_load_structured 演示：整体 JSON → 内嵌 JSON 片段 → Python 字面量（单引号 dict），三级都不行才返回 None（纯函数，无需密钥）"""
+from app.capabilities.hotel_multi_segment.hotel_parser import _load_structured
+
+for text in ['{"hotels": [{"name": "如家"}]}', '结果：{"hotels": [{"name": "汉庭"}]}', "{'hotels': [{'name': '全季'}]}", "如家酒店 每晚 358 元"]:
+    print(f"{text[:24]!r:30} → {_load_structured(text)!r}")

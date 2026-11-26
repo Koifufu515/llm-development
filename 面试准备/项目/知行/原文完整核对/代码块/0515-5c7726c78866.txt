@@ -1,0 +1,26 @@
+def _pick_flight(text: str, price_text: str = "") -> dict | None:
+    """从航班查询结果选最优航班；解析失败返回 None，交由上层降级兜底
+    数据源为 searchFlightsByDepArr 航班动态接口，多数航线不带票价，分两步处理：
+    ① parse_flight_rows 解析得到航班基础信息；
+    ② parse_flight_prices 按航班号补充票价。
+    有价则取最低价；无票价则取最早起飞航班，价格置0，摘要标记价格待定，不再丢弃无价格航班。
+    """
+    from app.tools.mcp_tools import parse_flight_prices, parse_flight_rows
+
+    rows = [
+        {"flight_no": r["code"], "price": float(r.get("price") or 0),
+         "dep": r.get("dep") or "", "arr": r.get("arr") or ""}
+        for r in parse_flight_rows(text) if r.get("code")
+    ]
+    if not rows:
+        return None
+
+    by_flight, _lowest = parse_flight_prices(price_text) if price_text else ({}, 0.0)
+    for r in rows:
+        if not r["price"]:
+            r["price"] = float(by_flight.get(r["flight_no"].upper()) or 0)
+
+    priced = [r for r in rows if r["price"] > 0]
+    if priced:
+        return min(priced, key=lambda r: r["price"])
+    return min(rows, key=lambda r: r.get("dep") or "")

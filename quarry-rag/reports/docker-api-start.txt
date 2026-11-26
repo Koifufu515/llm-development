@@ -1,0 +1,17 @@
+time="2026-11-07T14:30:46+08:00" level=warning msg="volume \"quarry-rag_init_sql\" already exists but was not created by Docker Compose. Use `external: true` to use an existing volume"
+ Container quarry-rag-postgres-1 Recreate 
+ Container quarry-rag-redis-1 Recreate 
+ Container quarry-rag-redis-1 Recreated 
+ Container quarry-rag-postgres-1 Recreated 
+ Container quarry-rag-api-1 Creating 
+ Container quarry-rag-api-1 Created 
+ Container quarry-rag-redis-1 Starting 
+ Container quarry-rag-postgres-1 Starting 
+ Container quarry-rag-redis-1 Started 
+ Container quarry-rag-postgres-1 Started 
+ Container quarry-rag-postgres-1 Waiting 
+ Container quarry-rag-redis-1 Waiting 
+ Container quarry-rag-redis-1 Healthy 
+ Container quarry-rag-postgres-1 Healthy 
+ Container quarry-rag-api-1 Starting 
+ Container quarry-rag-api-1 Started 

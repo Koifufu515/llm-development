@@ -1,0 +1,472 @@
+
+
+===== block 295 4517c98240df lines 1-99 source 知行旅行助手-v2#295 =====
+def _selection_text(segment: HotelMultiSegmentItem, item: HotelSubmitSelection) -> str:
+    """已选定段的展示文本（供路由侧拼合成发言续跑后续步骤）"""
+    head = f"{segment.city}（{segment.checkInDate} 至 {segment.checkOutDate}）"
+    if item.mode == "hotel":
+        picked = next((h for h in segment.hotel_list if h.hotel_id == item.hotel_id), None)
+        if picked:
+            return f"{head}：{picked.hotelName}，{picked.pricePerNight:g}元/晚，总价 {picked.totalPrice:g}元"
+    picked = next((b for b in segment.brand_list if b.brand_id == item.brand_id), None)
+    if picked:
+        return f"{head}：{picked.brandName}（实时报价不可用，仅选定品牌，具体门店到店择优选同档位）"
+    return head
+
+def _selection_price(segment: HotelMultiSegmentItem, item: HotelSubmitSelection) -> float:
+    """已选定段的每晚房价（元）；品牌兜底段没有实时报价，返回 0 表示"不计入"
+
+    和 _selection_text 读的是同一条候选、同一个字段，区别只在一个给人看、一个给代码算。
+    与其让下游从"358元/晚"这串文案里抠出 358，不如在这里直接把数字交出去
+    """
+    if item.mode != "hotel":
+        return 0.0
+    picked = next((h for h in segment.hotel_list if h.hotel_id == item.hotel_id), None)
+    return float(picked.pricePerNight) if picked else 0.0
+
+def validate_hotel_multi_submission(
+    payload: HotelMultiSegmentSubmitPayload, cache_key: Optional[str] = None
+) -> HotelMultiSegmentSubmitResult:
+    """校验：段是否存在、mode 是否与下发一致、id 是否在该段候选内、是否每段都选了"""
+    cached = get_cached_payload(cache_key)
+    if cached is None:                            # 没查过候选就提交：拦下，避免写进不存在的候选
+        return HotelMultiSegmentSubmitResult(
+            ok=False, code="NO_PAYLOAD",
+            msg="后端尚无住宿候选记录，请先获取住宿卡片后再提交",
+        )
+    items = payload.segments
+    if not items:
+        return HotelMultiSegmentSubmitResult(
+            ok=False, code="EMPTY_SELECTION", msg="提交内容为空，每段住宿都需要选择",
+        )
+    by_id = {seg.segment_id: seg for seg in cached.segments}
+    unknown = [item.segment_id for item in items if item.segment_id not in by_id]
+    if unknown:
+        return HotelMultiSegmentSubmitResult(
+            ok=False, code="SEGMENT_NOT_FOUND",
+            msg=f"不存在的住宿段：{'、'.join(unknown)}；合法段为 {'、'.join(by_id)}",
+        )
+    for item in items:                            # 逐段校验 mode 与身份 id 是否成对且合法
+        segment = by_id[item.segment_id]
+        # ★ 提交的模式必须和下发的一致
+        if item.mode != segment.mode:
+            return HotelMultiSegmentSubmitResult(
+                ok=False, code="MODE_MISMATCH",
+                msg=f"{item.segment_id} 段下发模式为 {segment.mode}，提交的却是 {item.mode}，请重新选择",
+            )
+        if item.mode == "hotel":
+            if not item.hotel_id.strip():
+                return HotelMultiSegmentSubmitResult(
+                    ok=False,
+                    code="MISSING_HOTEL_ID" if item.brand_id.strip() else "EMPTY_SELECTION",
+                    msg=f"{item.segment_id} 段尚未选择酒店门店，请在卡片中选中一家后提交",
+                )
+            ids = {h.hotel_id for h in segment.hotel_list}
+            if item.hotel_id not in ids:
+                return HotelMultiSegmentSubmitResult(
+                    ok=False, code="HOTEL_NOT_FOUND",
+                    msg=f"{item.segment_id} 段的酒店 {item.hotel_id} 不在候选列表中"
+                        f"（合法候选：{'、'.join(sorted(ids)) or '无'}）",
+                )
+        else:
+            if not item.brand_id.strip():
+                return HotelMultiSegmentSubmitResult(
+                    ok=False,
+                    code="MISSING_BRAND_ID" if item.hotel_id.strip() else "EMPTY_SELECTION",
+                    msg=f"{item.segment_id} 段尚未选择酒店品牌，请在卡片中选中一个品牌后提交",
+                )
+            ids = {b.brand_id for b in segment.brand_list}
+            if item.brand_id not in ids:
+                return HotelMultiSegmentSubmitResult(
+                    ok=False, code="BRAND_NOT_FOUND",
+                    msg=f"{item.segment_id} 段的品牌 {item.brand_id} 不在候选列表中"
+                        f"（合法候选：{'、'.join(sorted(ids)) or '无'}）",
+                )
+    chosen = {item.segment_id for item in items}
+    missing = [seg.segment_id for seg in cached.segments if seg.segment_id not in chosen]
+    if missing:
+        return HotelMultiSegmentSubmitResult(
+            ok=False, code="INCOMPLETE", msg=f"以下住宿段尚未选择：{'、'.join(missing)}",
+        )
+    by_item = {item.segment_id: item for item in items}
+    # ★ 一次遍历同时产出两份账本：展示文本 + 每晚房价
+    picked = {seg.city: _selection_price(seg, by_item[seg.segment_id]) for seg in cached.segments}
+    return HotelMultiSegmentSubmitResult(
+        ok=True, code="OK",
+        msg=f"已收到 {len(items)} 段住宿选择，基础合法性校验通过（未做任何日期校验）",
+        accepted=items,
+        texts=[_selection_text(seg, by_item[seg.segment_id]) for seg in cached.segments],
+        prices={city: price for city, price in picked.items() if price > 0},
+    )
+
+# ==================== Agent 可调用的两个 Tool ====================
+
+
+===== block 296 3027362f3e88 lines 1-41 source 知行旅行助手-v2#296 =====
+"""validate_hotel_multi_submission 演示：段存在、模式一致、id 在候选里、每段都选了；不做日期校验（纯逻辑，无需密钥）"""
+import asyncio
+import json
+
+from app.capabilities.hotel_multi_segment import hotel_parser
+from app.capabilities.hotel_multi_segment.hotel_agent_tool import build_hotel_multi_segment_payload, validate_hotel_multi_submission
+from app.capabilities.hotel_multi_segment.hotel_skill_schema import HotelMultiSegmentSubmitPayload
+
+HOTELS = {"杭州": json.dumps({"code": 0, "hotelInformationList": [
+    {"name": "如家酒店(西湖北山街店)", "price": {"message": "716CNY 共2晚 358CNY/晚"}, "starRating": 4.6, "address": "杭州市西湖区北山街 12 号"},
+    {"name": "锦江之星(Jinjiang Inn)", "price": {"message": "560CNY 共2晚 280CNY/晚"}, "starRating": 4.3, "address": "杭州市拱墅区体育场路 8 号"},
+]}, ensure_ascii=False)}
+
+class FakeHotelTool:         # 测试驱动：假装是酒店查询工具（带真实工具那种嵌套 schema），按城市返回结果
+    name = "searchHotels"
+    args_schema = {"type": "object", "properties": {"originQuery": {}, "place": {}, "checkInParam": {}, "filterOptions": {}, "size": {}}}
+
+    async def ainvoke(self, args: dict):
+        if args["place"] == "故障城":
+            raise RuntimeError("酒店服务超时")
+        return HOTELS.get(args["place"], "")
+
+async def main():
+    hotel_parser._QUERY_TOOL = FakeHotelTool()           # 测试驱动：把酒店工具换成假的，其余全是真实代码
+    segs = [{"city": "杭州", "checkInDate": "2026-10-01", "checkOutDate": "2026-10-03", "guestCount": 2, "priceLevel": "经济型"},
+            {"city": "故障城", "checkInDate": "2026-10-03", "checkOutDate": "2026-10-05", "guestCount": 2, "priceLevel": "经济型"}]
+    payload = await build_hotel_multi_segment_payload(segs, cache_key="conv-1")
+    print("下发：", [(s.segment_id, s.mode) for s in payload.segments])
+    ok = [{"segment_id": "h1", "mode": "hotel", "hotel_id": "h1-1"}, {"segment_id": "h2", "mode": "brand", "brand_id": "h2-1"}]
+    cases = {"两段都选对  ": ok,
+             "模式对不上  ": [ok[0], {"segment_id": "h2", "mode": "hotel", "hotel_id": "h2-1"}],
+             "门店不在候选": [{"segment_id": "h1", "mode": "hotel", "hotel_id": "h1-9"}, ok[1]],
+             "漏选一段    ": ok[:1]}
+    for name, items in cases.items():
+        r = validate_hotel_multi_submission(HotelMultiSegmentSubmitPayload.model_validate({"segments": items}), cache_key="conv-1")
+        print(f"{name} → {r.code:15} {r.msg}")
+        if r.ok:
+            for t in r.texts:
+                print("      ", t)
+
+asyncio.run(main())
+
+
+===== block 297 f8b26a3eb8fb lines 1-7 source 知行旅行助手-v2#297 =====
+下发： [('h1', 'hotel'), ('h2', 'brand')]
+两段都选对   → OK              已收到 2 段住宿选择，基础合法性校验通过（未做任何日期校验）
+       杭州（2026-10-01 至 2026-10-03）：如家酒店(西湖北山街店)，358元/晚，总价 716元
+       故障城（2026-10-03 至 2026-10-05）：如家（实时报价不可用，仅选定品牌，具体门店到店择优选同档位）
+模式对不上   → MODE_MISMATCH   h2 段下发模式为 brand，提交的却是 hotel，请重新选择
+门店不在候选 → HOTEL_NOT_FOUND h1 段的酒店 h1-9 不在候选列表中（合法候选：h1-1、h1-2）
+漏选一段     → INCOMPLETE      以下住宿段尚未选择：h2
+
+
+===== block 298 fc1a0c9a8f91 lines 1-61 source 知行旅行助手-v2#298 =====
+@tool
+async def query_hotel_multi_segment_tool(
+    segments: list[dict],
+    max_options_per_segment: int = 5,
+) -> str:
+    """并行查询多段住宿候选，返回可直接下发前端的 hotel_multi_segment skill payload。
+
+    适用于「多目的地闭环行程」需要一次性给出每站住宿候选的场景（如 石家庄→上海→石家庄）。
+    段与段之间**并发查询**，总耗时≈最慢一段；段数由 segments 长度决定，不是串行逐段查。
+    **每段独立判定模式**：能查到真实门店该段为 mode="hotel"，查不到则降级 mode="brand"，
+    同一份 payload 里两种模式可以混合（例如 h1 门店 + h2 品牌）。
+    本工具只查询与组装，不做推荐排序、不锁房、不下单。
+
+    Args:
+        segments: 住宿段列表，按行程顺序排列。每项含 city（城市）、checkInDate（入住
+            YYYY-MM-DD）、checkOutDate（离店 YYYY-MM-DD）、guestCount（人数，可选）、
+            priceLevel（档位，可选）。
+        max_options_per_segment: 每段向 MCP 请求的门店候选上限，默认 5。
+
+    Returns:
+        JSON 文本 {"skill_name":"hotel_multi_segment","segments":[...]}。
+        **请原样下发给前端 UI Skill**：不要改写字段名、不要增删 segments、不要自己再校验日期；
+        某段 mode="brand" 时如实告知用户"该城市实时酒店报价暂不可用，仅可选择品牌"。
+    """
+    payload = await build_hotel_multi_segment_payload(segments, max_options_per_segment)
+    return payload.model_dump_json()
+
+@tool
+async def submit_hotel_multi_segment_tool(segments: list[dict]) -> str:
+    """接收前端一次性回传的全部住宿段选择，只做基础合法性校验。
+
+    Args:
+        segments: 前端 onSubmit 抛回的数组，每项为
+            {"segment_id": "h1", "mode": "hotel", "hotel_id": "h1-1", "brand_id": ""}
+            或 {"segment_id": "h2", "mode": "brand", "hotel_id": "", "brand_id": "b2-2"}。
+            mode 必须与该段下发 payload 的 mode 一致；id 必须是该段候选里的 id。
+
+    Returns:
+        JSON 文本 {"ok": bool, "code": str, "msg": str, "accepted": [...], "texts": [...]}。
+        ok 为 false 时把 msg 原样告知用户，并请其在界面上改选后重新提交。
+    """
+    try:
+        payload = HotelMultiSegmentSubmitPayload.model_validate({"segments": segments})
+    except Exception as exc:                      # 结构不合法也走确定性回执，不抛错
+        return HotelMultiSegmentSubmitResult(
+            ok=False, code="INVALID_PAYLOAD", msg=f"提交数据结构不合法：{exc}"
+        ).model_dump_json()
+    result = validate_hotel_multi_submission(payload)
+    app_logger.info(f"🏨 hotel_multi_segment 提交校验：{result.code} / {result.msg}")
+    return result.model_dump_json()
+
+__all__ = [
+    "HOTEL_MULTI_SEGMENT_SKILL",
+    "build_hotel_multi_segment_payload",
+    "get_cached_payload",
+    "hotel_rank",
+    "pick_best_hotel",
+    "validate_hotel_multi_submission",
+    "query_hotel_multi_segment_tool",
+    "submit_hotel_multi_segment_tool",
+]
+
+
+===== block 299 d8fa35f9ef17 lines 1-121 source 知行旅行助手-v2#299 =====
+"""多段住宿 UI Skill —— 与状态机「住宿规划步」的接线层
+
+背景：住宿步原本是**逐城串行**流程（prompt 驱动：一次只查一城、只展示一城、用户确认一城），
+账本由 select_accommodation_tool 的 stay_cursor/selected_hotels 维护，多城行程要来回 N 轮。
+本模块把这段循环换成「代码一次并行查全部站 → 前端卡片一次选完 → 一次提交」，
+与 train_multi_segment（多段高铁）完全同构：
+
+  1. emit_hotel_skill_ui   手动确认模式：按行程各站并行查询 → 推 skill_ui 帧（前端内嵌卡片）
+  2. auto_select_hotels    自动确认模式：代码代选,并推进（不弹 UI）
+  3. apply_hotel_selection 前端提交 → 基础合法性校验（**不做任何日期校验**）→ 写账本 → 推进
+
+段口径（与高铁分段同源）：段 = 行程目的地**逐站**；入住 = 该城首日、离店 = 该城末日次日（退房日）。
+与 middleware._leg_query_date 完全一致，
+保证"住宿段"与"交通段"的日期时序不会互相矛盾。
+"""
+from typing import Any, Optional
+
+from app.core.events import ROLE_SKILL_UI, make_event
+from app.capabilities.base import SignatureCache, get_agent_and_state
+from app.capabilities.hotel_multi_segment.hotel_agent_tool import (
+    build_hotel_multi_segment_payload,
+    get_cached_payload,
+    pick_best_hotel,
+    validate_hotel_multi_submission,
+)
+from app.capabilities.hotel_multi_segment.hotel_skill_schema import (
+    HOTEL_MULTI_SEGMENT_SKILL,
+    HotelMultiSegmentPayload,
+    HotelMultiSegmentSubmitPayload,
+    HotelMultiSegmentSubmitResult,
+    HotelSegmentInput,
+)
+from app.utils.logger import app_logger
+
+# 住宿步之后的步骤（提交接口的幂等判定：重复提交不再回写状态，避免把状态机拽回住宿步）
+_AFTER_STAY = {
+    "food_planning", "itinerary_generation", "budget_summarization", "report_generation",
+}
+
+# 表单住宿档位（枚举） → 展示与检索用中文档位（hotel_parser._level_of 按中文关键字判档）
+_LEVEL_LABELS = {
+    "star_hotel": "星级酒店", "economy_hotel": "经济型",
+    "hostel": "民宿", "youth_hostel": "青年旅社",
+}
+
+def _stay_cities(state: dict) -> list[str]:
+    """住宿城市序列 = 目的地游玩城市序列（**出发地仅当本身也在目的地串里才计入**）
+
+ （用户规格）：不再无条件把出发地前置——北京→上海 = [上海] 一站；
+    北京→天津/上海 = [天津,上海] 两站；北京→北京 = [北京] 一站。
+    与快速通道 _plan_cities / 段日期 ordered_play_cities 完全同源
+    """
+    from app.services.express_planning_service import ordered_play_cities
+    req = state.get("user_requirement") or {}
+    dest = str(state.get("selected_destination") or "")
+    if not dest:
+        dest = str(req.get("destination") or "")
+    return ordered_play_cities(str(req.get("departure_city") or ""), dest)
+
+def _stay_windows(state: dict) -> list[tuple[str, str, str]]:
+    """每站 (城市, 入住日, 离店日)：首站 1 晚 + 剩余天数在其后城市均分（首站 = 出发日入住）
+
+    日期全部由代码算（模型不参与）：天数缺失/出发日非法 → 返回空列表，调用方退回原流程。
+ 与 middleware._leg_query_date 同源——离店日 = 下一段的乘车/转场日，
+    保证"住宿段日期"与"交通段日期"严格对齐。
+    末站离店日 = 末日（返程当天），总晚数 N-1 与预算口径一致；末站当天到当天走则不订住宿
+    """
+    from datetime import date as _date, timedelta as _timedelta
+    from app.services.express_planning_service import _stay_nights
+    cities = _stay_cities(state)
+    req = state.get("user_requirement") or {}
+    days = int(req.get("travel_days") or 0)
+    try:
+        start = _date.fromisoformat(str(req.get("departure_date") or "")[:10])
+    except Exception:
+        return []
+    if not cities or days <= 0:
+        return []
+    # ★ 与段日期同一口径：首站 1 晚，其余均分
+    nights = _stay_nights(days, len(cities))
+    if not nights:
+        return []
+    out: list[tuple[str, str, str]] = []
+    offset = 0
+    # ★ 末站离店日封顶到末日：返程当天退房，N 天住 N-1 晚
+    last_out = max(days - 1, 1)
+    for city, night in zip(cities, nights):
+        cin, cout = offset, min(offset + night, last_out)
+        if cout > cin:  # 末站当天到、当天返程：不需要住宿
+            out.append((
+                city,
+                (start + _timedelta(days=cin)).isoformat(),
+                (start + _timedelta(days=cout)).isoformat(),
+            ))
+        offset += night
+    return out
+
+def _segments(state: dict) -> list[HotelSegmentInput]:
+    """组装 Agent Skill 入参（段数动态 = 行程城市数；人数/档位取自表单，缺省兜底）"""
+    req = state.get("user_requirement") or {}
+    guest = max(1, int(req.get("adult_count") or 1) + int(req.get("children_count") or 0))
+    level = _LEVEL_LABELS.get(
+        str((list(req.get("accommodation_types") or []) or [""])[0]), "经济型"
+    )
+    return [
+        HotelSegmentInput(
+            city=city, checkInDate=check_in, checkOutDate=check_out,
+            guestCount=guest, priceLevel=level,
+        )
+        for city, check_in, check_out in _stay_windows(state)
+    ]
+
+def _accom_types(state: dict) -> list[str]:
+    """表单预选住宿档位（枚举列表，行程步据此安排住宿；未预选返回空列表）"""
+    valid = {"star_hotel", "economy_hotel", "hostel", "youth_hostel"}
+    return [t for t in ((state.get("user_requirement") or {}).get("accommodation_types") or [])
+            if t in valid]
+
+def hotel_card_mode(state: dict) -> bool:
+    """是否走"卡片一次性选择"路线：有城市且有合法出发日/天数才走，否则退回原逐城流程"""
+    return bool(_stay_windows(state))
+
+
+===== block 300 33fcbe676f7e lines 1-13 source 知行旅行助手-v2#300 =====
+"""_stay_cities / _stay_windows 演示：每站的（城市, 入住日, 离店日），首站 1 晚、其余均分，末站在末日离店（纯逻辑，无需密钥）"""
+from app.capabilities.hotel_multi_segment.hotel_flow import _stay_cities, _stay_windows
+
+def state(dest: str, days: int = 5, date: str = "2026-10-01", **req) -> dict:
+    return {"user_requirement": {"departure_city": "北京", "departure_date": date, "travel_days": days, **req},
+            "selected_destination": dest}
+
+for dest, days in [("杭州、苏州", 5), ("北京、天津", 4)]:
+    st = state(dest, days)
+    print(f"北京出发 {dest} {days} 天 → 住宿城市 {_stay_cities(st)}")
+    for city, check_in, check_out in _stay_windows(st):
+        print(f"    {city}：{check_in} 入住 → {check_out} 离店")
+print("没有出发日期：", _stay_windows(state("杭州", 3, date="")))
+
+
+===== block 301 0645c43d2b14 lines 1-7 source 知行旅行助手-v2#301 =====
+北京出发 杭州、苏州 5 天 → 住宿城市 ['杭州', '苏州']
+    杭州：2026-10-01 入住 → 2026-10-02 离店
+    苏州：2026-10-02 入住 → 2026-10-05 离店
+北京出发 北京、天津 4 天 → 住宿城市 ['北京', '天津']
+    北京：2026-10-01 入住 → 2026-10-02 离店
+    天津：2026-10-02 入住 → 2026-10-04 离店
+没有出发日期： []
+
+
+===== block 302 7ed9729f645a lines 1-12 source 知行旅行助手-v2#302 =====
+"""_segments / hotel_card_mode / _accom_types 演示：住宿段的入参全部取自表单，缺省有兜底（纯逻辑，无需密钥）"""
+from app.capabilities.hotel_multi_segment.hotel_flow import _accom_types, _segments, hotel_card_mode
+
+def state(dest: str, days: int = 5, date: str = "2026-10-01", **req) -> dict:
+    return {"user_requirement": {"departure_city": "北京", "departure_date": date, "travel_days": days, **req},
+            "selected_destination": dest}
+
+st = state("杭州、苏州", 5, adult_count=2, children_count=1, accommodation_types=["star_hotel", "villa"])
+for seg in _segments(st):
+    print(seg.city, seg.checkInDate, "→", seg.checkOutDate, "| 人数", seg.guestCount, "| 档位", seg.priceLevel)
+print("表单预选档位（过滤非法值）：", _accom_types(st))
+print("住宿卡片模式：", hotel_card_mode(st), "| 没填出发日期时：", hotel_card_mode(state("杭州", 3, date="")))
+
+
+===== block 303 0f543ed5523e lines 1-4 source 知行旅行助手-v2#303 =====
+杭州 2026-10-01 → 2026-10-02 | 人数 3 | 档位 星级酒店
+苏州 2026-10-02 → 2026-10-05 | 人数 3 | 档位 星级酒店
+表单预选档位（过滤非法值）： ['star_hotel']
+住宿卡片模式： True | 没填出发日期时： False
+
+
+===== block 304 93b4561343fb lines 1-77 source 知行旅行助手-v2#304 =====
+# 本批住宿段的签名缓存：同一会话、同一批住宿的后续轮次直接复用，避免被反复查 MCP
+_SIG_CACHE: SignatureCache[HotelMultiSegmentPayload] = SignatureCache("hotel")
+
+def _any_has_candidates(payload: HotelMultiSegmentPayload) -> bool:
+    """住宿的缓存口径：只要有一站有候选（门店或品牌）就缓存"""
+    # ★ 住宿口径：有一站有候选就行
+    return any(seg.hotel_list or seg.brand_list for seg in payload.segments)
+
+def _hotel_signature(segments: list[HotelSegmentInput]) -> str:
+    """住宿段没有 from_/to，签名改用"城市@入住日~离店日"拼接"""
+    return "|".join(f"{s.city}@{s.checkInDate}~{s.checkOutDate}" for s in segments)
+
+async def _payload_for(
+    conversation_id: str, segments: list[HotelSegmentInput]
+) -> HotelMultiSegmentPayload:
+    """同一会话同一批住宿只查一次；各站候选全为空时不写缓存，留给下次重试"""
+    sig = _hotel_signature(segments)
+    cached = _SIG_CACHE.get(conversation_id, sig)
+    if cached is not None:
+        return cached
+    payload = await build_hotel_multi_segment_payload(segments, cache_key=conversation_id)
+    _SIG_CACHE.store(conversation_id, sig, payload, is_complete=_any_has_candidates)
+    return payload
+
+async def emit_hotel_skill_ui(
+    stream: Any, conversation_id: str, state: dict
+) -> tuple[Optional[HotelMultiSegmentPayload], str]:
+    """手动确认模式：并行查全部站 → 推 skill_ui 帧
+
+    返回 (payload, status)，status 供调用方决定正文怎么写：
+      pushed    —— 已下发卡片（payload 非空）
+      empty     —— 各站都没查到任何候选，未下发卡片（调用方须如实告知，不能静默）
+      skipped   —— 缺城市/日期不合法（不接管，交回原逐城流程）
+    """
+    segments = _segments(state)
+    if not segments:
+        return None, "skipped"
+    payload = await _payload_for(conversation_id, segments)
+    if not any(seg.hotel_list or seg.brand_list for seg in payload.segments):
+        app_logger.warning("⚠️ 住宿步各站候选全为空，本次不下发选择卡片（避免空卡片）")
+        return None, "empty"
+    stream.push(make_event(ROLE_SKILL_UI, {
+        "skill_name": HOTEL_MULTI_SEGMENT_SKILL,
+        "data": payload.model_dump(by_alias=True),
+    }))
+    app_logger.info(
+        f"🏨 已下发多段住宿选择卡片：{len(payload.segments)} 站"
+        f"（模式 {[f'{s.segment_id}={s.mode}' for s in payload.segments]}）"
+    )
+    return payload, "pushed"
+
+def build_lead_text(payload: Optional[HotelMultiSegmentPayload]) -> str:
+    """卡片上方引导语（确定性文案）：**逐站写明城市与入住日期**，避免用户不知道每家酒店在哪"""
+    if not payload or not payload.segments:
+        return ""
+    lines = []
+    for index, seg in enumerate(payload.segments, 1):
+        note = "门店候选" if seg.mode == "hotel" else "品牌候选，该城市实时报价暂不可用"
+        lines.append(
+            f"- 第 {index} 站 {seg.city}：{seg.checkInDate} 入住 · {seg.checkOutDate} 离店（{note}）"
+        )
+    return (
+        f"已为您**并行查询**全部 {len(payload.segments)} 站的住宿候选：\n"
+        + "\n".join(lines)
+        + "\n请在下方卡片中**按城市逐站**选择（每站卡片顶部都标注了所在城市与入住日期），"
+          "全部选完后在预览页一次性提交。\n"
+    )
+
+def _next_step(state: dict) -> tuple[dict, str]:
+    """住宿确认完成后的落点：**直接进行程生成**（不再插入餐饮确认轮）
+
+    用户口径：餐饮偏好是表单必填项，住宿（最后一个需人工选择的项）确认后应直接出行程报告。
+    手动/自动模式一致；表单异常缺值时按"特色美食"兜底——不能因为一个空值把流程卡在餐饮轮，
+    那样用户会觉得"选完酒店就没反应了"（实测确实卡住过）。
+    """
+    prefs = [str(v) for v in ((state.get("user_requirement") or {}).get("food_preferences") or [])]
+    return {"selected_food_types": prefs or ["specialty"]}, "itinerary_generation"

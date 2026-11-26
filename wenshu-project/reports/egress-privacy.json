@@ -1,0 +1,9 @@
+{
+  "authorization": "用户2026-11-09明确允许仅脱敏文本发送百炼，用于Embedding/重排/Qwen问答",
+  "mapping_items": 82,
+  "checked_chunks": 34,
+  "known_identifier_residue": 0,
+  "python_boundary": true,
+  "pi_boundary": true,
+  "original_files_preserved": true
+}

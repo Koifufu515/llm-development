@@ -1,0 +1,30 @@
+多Agent 扇出扇入•classifier/并行 agents/synthesizer
+classifier 看用户问题决定派谁，条件边+ Send 动态扇出到 N 个 agent 并行跑，reducer 归并、synthesizer 合成一份 final_report。
+classifier
+决策
+看用户问题，决定派哪几个 Agent
+route_to_agents
+条件边+SBend 动态扇出
+扇出
+数量运行时才定
+没有硬编码分支
+explore agent
+weather
+（更多并行分支..）
+并行
+RAG 查攻略
+查天气
+transport/ hotel/...
+同时开跑
+互不等待
+reducer 每个分支的结果合流
+----
+synthesizer
+扇入
+合成
+等全部跑完
+扇入：合并成一份报告
+再归并成一份报告
+- final_report
+关键机制：用 Send 是”动态扇出”—分支数量不是硬编码，而是 classifier 在运行时根据用户问题决定；三个 agent在自己的图节点里各跑各的、互不阻塞；reducer（状态图上的合流规
+则）负责把N份分支结果按契约合起来；synthesizer 拿到齐全的合流值后才继续，输出 final_report。扇出一并行一扇入这个模式在第 09 章多段并行capabilities 里也是这个骨架。

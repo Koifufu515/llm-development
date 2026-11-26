@@ -1,0 +1,182 @@
+行程 Agent 完整流转逻辑。一条主链路，跑通六种业务场景
+fn 调用对应业务函数
+提交节点
+主流程
+用户请求依次经过 交通类型判定 一确认模式分流一 节点清洗与统计 -＞交通候选卡片轮 —>住宿候选卡片轮一行程报告。
+- 存在有效交通段，进入交通轮
+每到一个提交节点，都会调用对应的业务函数：落库推进、下发确认回执帧、生成用户口吻续跑消息。
+---• 无有效交通段，跳过交通轮
+场景 N 经过该节点的业务场景
+AI 帮忙确认•有目的地
+场景5
+读取用户给定的目的地列表
+x 相邻节点相同
+split_cities（）
+跳过该段交通，不生成对应交通候选
+用户发起行程请求
+判断行程交通类型
+判断是否 AI 帮忙确认
+行程节点预处理
+统计有效交通段、停留城市段
+表单或对话提交：
+高铁 航班 自驾
+看表单是否勾选
+AI 帮忙确认•无目的地
+场景6
+首尾是出发地，中间是目的地
+场景 2/4
+有效交通段数=查几次交通
+出发地、目的地、日期、
+天数、交通方式
+同时勾选时按优先级
+「全程交给 AI 自动确认」
+高铁>航班＞自驾
+分成三条路
+AI 自动选1座城市，构建行程节点序列
+构成节点序列（含返程）
+停留城市数=查几次酒店
+再清洗相邻重复节点
+piCK destinat1on（）
+例
+上海-上海-苏州-上海
+• 节点不同
+run_chat_turn（）
+try_express_planning（）
+保留该段交通，生成对应交通候选
+_expected_legs（）
+ChatoULe
+* mode reauested（）
+用户手动选择
+场景 1-4
+oUiLO LeosC
+SLaV winoows
+解析用户输入的行程节点序列
+上海 - 苏州
+场景 1/3/4/5/6
+没给目的地时先走目的地推荐
+V存在有效交通段
+交通候选卡片轮 高铁/航班/ 自驾 三类同构，代码并行查询全部有效交通段
+场景 1/3/4/5/6
+*_multi_segment
+6
+候选卡片轮
+fn 提交节点• 调用对应业务函数
+fn 调用对应业务函数
+fn 调用对应业务续跑函数
+是否存在有效交通段？
+推送交通候选卡片
+用户/ AI 提交交通选择
+V存在 进入交通候选卡片轮
+下发确认回执帧
+生成用户口吻续跑消息
+×不存在 跳过交通轮
+按段并行查询，推送 skill_ui选择卡片
+校验并写入段账本，产出对应 Result 对象
+提交成功后，立刻回显已选的车次、航班或路线
+用合成发言驱动下一轮，流转至住宿推荐环节
+AI 模式不弹卡片，由代码代选
+用户 aoolv * selection（）
+aauto seect*
+contirmed content（
+* resume content（）
+zero_leg_guard（）
+emit_*_skill_ui（）
+产出 Train / Flight / DrivingSubmitResult
+mark_skill_ui_submitted（）
+run_chat_turn（force_planning=True）
+x 无有效交通段（单城原地）：直接跳过交通轮，进入住宿推荐环节 场景2
+流转至住宿推荐环节
+advance_zero_leg（） 代码直接把流程推进到住宿步
+⑦
+多段住宿候选卡片轮 每个停留城市一站，代码并行查询全部站点
+全部场景
+hotel_multi_segment
+候选卡片轮
+fn 提交节点•调用对应业务函数
+En 调用对应业务函数
+fn调用住宿业务续跑函数
+END
+推送住宿候选卡片
+用户/ AI 提交住宿选择
+下发确认回执帧
+生成住宿续跑消息
+直接生成完整行程报告
+按站并行查询，查不到门店降级为品牌候选
+校验并写入住宿账本
+回显每一站已选的酒店或品牌
+住宿是最后一项
+代码渲染正文与预算表，行程清单落库，流程结束
+AI模式不弹卡片
+续跑消息要求直接生成行程报告
+逐日行程）（预算明细表）（行程清单
+E白 ann v aate speetionl
+Al auto_select_hotels（）
+_confirmed_content（）
+_hotel_resume_content（）
+emit_hotel_skill_ui（）
+产出 HotelMultiSegmentSubmitResult
+mark_skill_ui_submitted（）
+run_chat_turn（）
+submit_itinerary_body_tool（）| generate_plan（）
+FN 业务函数对照
+CASES 六种业务场景
+大到达对应节点都会调用对应的业务函数
+类型
+推候选卡片
+提交落库•产出 Result
+AI 自动代选
+续跑消息
+场景 1
+2次高铁
+1 次酒店
+高铁
+emit train skill uil）
+- TrainSubmitResult
+apply_train_selection（）
+auto_select_train_legs（）
+_resume_content（）
+有目的地就不走目的地推荐，无目的地走目的地推荐；走完整高铁＋住宿链路，到达对应节点会调用对应的业务函数
+单城原地 北京 -北京 跳过高铁
+）1次酒店
+航班
+emit fliaht skill uil）
+apply_flight_selection（）
+直接进入住宿环节，到达对应节点会调用对应的业务函数
+• FLightSubmitResult
+auto select flights（）
+tLiant resume content（
+多城不同城市 上海 -杭州 -南京 -上海
+3次高铁
+2 次酒店
+自驾
+emit_driving_skill_ui（）
+apply_driving_selection（）
+走完整高铁+住宿链路，到达对应节点会调用对应的业务函数
+- DrivingSubmitResult
+auto select driving（）
+•rvina resume Content.
+多城相邻相同 上海 -上海 -苏州 -上海 跳过上海一上海
+2次高铁
+2 次酒店
+住宿
+emit_hotel_skill_ui（）
+ann v noteL se ectionl
+- Hote.MultiseamentSuomitResut
+auto_select_hotels（）
+_hotel_resume_content（）
+走完整高铁＋住宿链路，到达对应节点会调用对应的业务函数
+场景 5
+AI 帮忙确认（有目的地）
+次数同上
+车次和酒店由 AI 自动选定
+链路同场景1/3/4，到达对应节点会调用对应的业务函数
+回执帧 统一调用_confirmed_content（），并用mark_skill_ui_submitted（） 锁定卡片
+续跑 统一调用run_chat_turn（force_planning=True, persist_user=False, resume_stage=..）
+场景6
+AI 帮忙确认（无目的地）
+AI 先选1座城
+北京 杭州 北京
+2 次高铁
+1 次酒店
+提交接口 POST /api/v1/skills/｛类型｝ multi segment/submit
+链路同场景1，到达对应节点会调用对应的业务函数

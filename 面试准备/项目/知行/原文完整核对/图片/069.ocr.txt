@@ -1,0 +1,146 @@
+工具分发与自建服务•按名字关键词筛，一类工具一个入口
+管理器手里是7个服务的全部工具。mcp_tools.py 的8个取工具函数按工具名里的关键词筛出每一类，供步骤配置、执行器、快速通道和卡片按需取
+用；其中车票工具在出口处统一套上参数守卫。天气和搜索两个服务是项目自建的，以子进程方式启动。
+8个取工具函数 都先经 get_mcp_client（）.get_tooLs（）拿到全集，再按名字筛
+函数
+按什么筛（工具名小写后包含）
+拿到什么
+谁在用
+get_all_mcp_tools
+不筛
+7个服务的全部工具
+travel_agent 注册全集；高铁卡片、酒店解析器从中定位查询工具
+get_train_tools
+train / ticket / railway ；车票工具套守卫
+12306 牛票尖一月
+父调市」具衣、以行希目省牛票、头速伸頂
+cet TLOnt tooLS
+flight
+航班时刻、票价
+交通步工具表、航班卡片、执行器航班表、快速通道
+get_ar2ving_toocs
+Iaos aurection arivung
+高德驾车路线
+交通步工具表、自驾卡片
+get_hotel_tools
+fin0-notels/ searchhotels
+aigohotel 酒店搜索
+任佰少上具衣、你行容、捕1
+get_weather_tools
+get _weather_forecast
+自建天气服务
+工具表、目的地天气节点、执行器、快速通道
+get_search_tools
+search traveL LnTo
+自建搜索服务
+步骤工具表
+get_date_tooLs
+get-current-date / gettodaydate
+取当天日期的工具
+步骤工具表
+酒店为什么不收周边搜索：高德的周边 POI搜索也能返回酒店，但格式是“评分/晚"的地图条目。源码注释记录，两种工具并存时模型会对同一城市各调一次、各展示一批，所以只保留真实酒店源。
+车票守卫要套两份 模型"看到的“工具和 LangGraph”执行的“工具不是同一批对象
+给模型看：get_train_tools
+真正执行：apply_train_arg_guard
+中间件按步骤把它注入请求，模型据此决定调哪个工具、传什么参数。
+ToolNode按名字到 create_agent注册的全集里取对象执行，所以注册全集也必须套守卫、
+天气 weather_server
+搜索 search_server
+城市名 — 高德地理编码取行政区划码 — 高德天气预报（约4天）
+- 指定日期就筛出那天
+get_all_mcp_tools lsyna
+L570
+get_flight_tools csyna贈棋块
+原样拿到全部 MCP 工具，不做任何筛选和包装。
+筛出名字里带 flight 的工具：航班时刻表和票价接口。
+何时调用
+建agent时；卡片要定位原始查询工具时
+何时调用
+何时调用 交通步、航班卡片、航班表、快速通道
+谁来调用
+travel_agent.create_travel_agent；高铁卡片、酒
+谁来调用
+step_config、执行器
+谁来调用
+上班杆学
+try_direct_ticket_query、快速通道
+结果交给 航班工具列表
+结果交给
+全部工具；注册前会再过一遍车票守卫
+结果交给
+带守卫的车票工具，返回值已是紧凑文本
+get_driving_tools
+［async
+L650
+get_hotel_tools Esyng贈模快）
+L578
+get_weather_tools （asyna贈機多
+L670
+筛出高德驾车路线规划工具。
+只筛真实酒店搜索工具，不收地图周边搜索。
+筛出自建天气服务的预报工具。
+何时调用
+交通步、自驾卡片
+何时调用
+住宿步、执行器判断有无酒店工具、快速通道
+何时调用
+步骤工具表、目的地天气、天气直查、正文天气段、快速
+谁来调用
+step_config、自驾卡片 _resolve_query_tool
+谁来调用
+step_config、执行器、快速通道
+通道
+结果交给
+驾车工具列表
+结果交给
+酒店工具列表
+谁来调用
+step_config、destination_router、执行器2
+处、快速通道
+结果交给
+天气工具列表
+get_search_tools lasyn
+LoYL
+get_date_tools Lasyns
+LILL
+get_weather_forecast［HCP tool
+L39
+筛出自建搜索服务的旅游信息搜索工具。
+筛出取当天日期的工具，让模型能換算"明天""！下周”。
+查一个城市未来约4天的天气预报，可只取指定日期那天。
+何时调用
+拼步骤工具表时
+何时调用
+拼步骤工具表时
+模型或代码调用天气工具时
+ste cont10.get step conT10
+谁来调用
+steo conti0.get step conT10
+谁来调用
+经MCP 协议由管理器转发（weather_server.py）
+结果交给
+搜索工具列表
+结果交给
+日期工具列表
+结果交给
+resolve_adcode
+async
+L24
+search_travel_info MeP tool
+L20
+用高德地理编码把城市名换成行政区划码，解析不出返回
+按关键词搜旅游信息，返回一段摘要和若干条结果。
+None。
+何时调用
+何时调用
+查天气之前
+谁来调用
+谁来调用
+经 MCP 协议由管理器转发（search_server.py）
+weather_server.get_weather_forecast
+结果交给
+JSON 字符串：摘要＋标题、链接、正文前300字
+结果交给
+行政区划码，作为天气接口的城市参数
+一类工具一个入口，筛选规则写在一处：8个取工具函数都按工具名关键词筛，换了服务或工具改名只需改这里；车票工具在出口统一套守卫，而且“给模型看的“和”真正执行的“两份都要套。自建服
+务出错时返回带 error 的JSON，和外部服务的降级文案一样，都不会把异常抛给上层。

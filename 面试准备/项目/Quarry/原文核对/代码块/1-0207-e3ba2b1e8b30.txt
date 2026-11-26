@@ -1,0 +1,4 @@
+from quarry.api.routers import ingest          # ← 加在 import 区
+
+app = FastAPI(title="quarry-rag", version="0.1.0", lifespan=lifespan)
+app.include_router(ingest.router)              # ← 加在 app = FastAPI(...) 之后

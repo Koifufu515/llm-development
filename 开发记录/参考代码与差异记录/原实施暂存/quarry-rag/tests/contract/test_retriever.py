@@ -1,0 +1,1 @@
+../../../../../../quarry-rag/tests/contract/test_retriever.py

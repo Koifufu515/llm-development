@@ -1,0 +1,43 @@
+async def auto_select_hotels(conversation_id: str, state: dict) -> list[str]:
+    """自动确认模式：不弹卡片，由代码代选全部站并推进（门店取首条 / 品牌取首个）
+
+    返回已选定站的展示文本（空列表 = 未推进，调用方跳过即可）
+    """
+    segments = _segments(state)
+    if not segments:
+        return []
+    payload = await _payload_for(conversation_id, segments)
+    texts: list[str] = []
+    prices: dict[str, float] = {}
+    for seg in payload.segments:
+        head = f"{seg.city}（{seg.checkInDate} 至 {seg.checkOutDate}）"
+        if seg.hotel_list:
+            hotel = seg.hotel_list[0]
+            texts.append(
+                f"{head}：{hotel.hotelName}，{hotel.pricePerNight:g}元/晚，总价 {hotel.totalPrice:g}元"
+            )
+            if float(hotel.pricePerNight) > 0:     # ★ 同一次循环产出数字账本
+                prices[seg.city] = float(hotel.pricePerNight)
+        elif seg.brand_list:
+            texts.append(
+                f"{head}：{seg.brand_list[0].brandName}（实时报价不可用，仅选定品牌，"
+                f"具体门店到店择优选同档位）"
+            )
+    if len(texts) != len(payload.segments):
+        app_logger.warning(
+            f"⚠️ 住宿自动模式代选不完整（{len(texts)}/{len(payload.segments)} 站有候选），本轮不推进"
+        )
+        return []
+    agent, config, _ = await get_agent_and_state(conversation_id)
+    extra, step = _next_step(state)
+    upd: dict = {
+        "selected_hotels": texts, "stay_cursor": len(texts), "current_step": step,
+        "stay_prices": prices,      # ★ 数字账本：第 11 章预算工具直接读，不解析展示文本
+        # 档位必须**无条件写入**（表单未预选时兜底经济型）。
+        # 行程步 requires 硬校验 selected_accommodation_types，字段缺失会直接抛错卡死流程
+        "selected_accommodation_types": _accom_types(state) or ["economy_hotel"],
+        **extra,
+    }
+    await agent.aupdate_state(config, upd)
+    app_logger.info(f"✅ 住宿自动模式已代选 {len(texts)} 站，推进到 {step}")
+    return texts

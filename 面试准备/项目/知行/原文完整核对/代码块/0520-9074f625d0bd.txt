@@ -1,0 +1,2 @@
+{'name': '湖滨精选酒店', 'price': 358.0, 'score': 4.6, 'address': '上城区'}
+None

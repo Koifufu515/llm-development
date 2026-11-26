@@ -1,0 +1,162 @@
+路由图
+意图识别与通道分流。直查/快速通道/状态机/闲聊
+四选一，短路判定
+4
+2
+O
+一条消息进来后依次过：回合预处理—路由判定 一直查门禁—快速通道门禁一四选一执行一统一收尾。卡片提交续跑不走路由LLM，由代码直接指定进规划状态机
+条执行通道
+道LLM 判定
+ms 词表快筛
+一 必经节点
+条件分支 fn调用对应业务函数/ 提交节点
+1
+2
+3
+4
+5
+回合入口（三种）
+回合预处理
+路由判定
+直查门禁（优先级最高）
+快速通道门禁（两层）
+对话输入
+会话标题
+首条消息取前30字
+force_planning=True 一直接判为规划（续跑）
+T 含票务对象词（高铁/车次/航班/机票⋯）
+1 0ms 词表快筛：去掉全部空白后比对固定表单文
+POST /api/V1/messages - run_chat_turn（）
+卡片续跑不走概率性路由，一次LLM 都不花
+案，
+上下文
+倒序取最近4条
+2 含查询动词或日期词，且不含规划噪声
+普通消息在这里就被挡掉，一次LLM 都不花
+（玩/旅游/行程/预算⋯出现即挡回）
+表单清单提交
+否则 chat_route（content, history）
+~3.7S LLM 结构化提取复核：防「闲聊里顺嘴提
+前端模板拼好的清单文本，走同一个对话入口
+自动确认快筛
+0ms词表扫描
+with_structured_output（RouterResult），带最近4
+能解析出起讫城市；缺了就追问补槽位，最多2轮
+到自动确认」
+命中固定表单文案先推占位语；
+条上下文，
+误入；出发地为空或 auto_confirm=false 返回
+卡片提交续跑
+「确认」这类短回答才能判成规划的延续
+对应 MCP 工具已加载；任一不满足 交回原通道
+None 回落
+POST /api/v1/skills/⋯/submit 合成发言，带三个
+续跑轮 persist_user=False，合成发言不落
+续跑参数
+库
+产出：is_itinerary_planning•inference_log•
+只在直查未命中＋判为规划+非续跑时才执行
+get_owned_conversation（）
+skillsl］
+try_direct_ticket_query（）
+aetect LntenL
+run_chat_turn（）
+-produce（）
+detect intent
+chat_route（）
+RouterResult
+_fill_slots（）
+try_express_planning（）
+extract_requirement（）
+6
+本轮走哪条通道？
+本轮命中其一 四条执行通道 按1-2 3-4短路，只会走进一条
+Cnat conracr Serce
+1 直查命中 直查通道
+fn 通道1• 不进状态机
+通道2• 绕过状态机
+通道3•LangGraph
+通道4。不进状态机
+2 快速通道接管 — express
+直查通道
+快速通道express
+规划状态机 handoffs
+闲聊通道
+代码直接调 12306/航班工具并渲染班次表
+并行查交通/酒店/天气一规则选定 一次LLM 出正
+手动确认：候选轮—详单轮—确认轮，推卡片等提交
+直连LLM 流式，不加载任何规划工具
+判为规划 规划状态机
+航班查不到直飞时，自动补查同日高铁
+文
+自动确认：auto_select_*代选，同样不弹卡片
+兜底：如果这句话里仍有交通对象词，
+全程不碰状态机，不生成行程清单
+全程0张卡片；接管失败（选城或正文不合规）
+多目的地天数不足先推告警，提交行程时由代码拦截
+改推确定性澄清话术，绝不编造班次
+4 其余一闲聊直连LLM
+返回 None 当场回落通道 3
+严格按 1-2-3-4短路
+前一条命中后面都不再判
+try_direct_ticket_query（）
+run_express_planning（）
+execute_turn（）
+stream_pLain（）
+_render_ticket_table（）
+sync_express_state（）
+_stream_agent（）
+_query_fallback_text（）
+_produce（）
+四条通道汇流，统一走清单门禁与落库
+ROLE_ITINERARY - ROLE_DONE
+V回合收尾 清单门禁 • 落库• 守卫 四条通道汇流到同一个收尾
+chat contract seryice
+这句话会走哪条路
+示例
+规划噪声词是直查与规划的分水岭
+门禁
+fn 调用对应业务函数
+状态机内守卫
+「查明天福州到深圳的高铁」
+直查
+行程清单生成门禁
+落库与压缩
+回退与确认闸门
+「帮我查下航班」（没给城市）
+直查• 追问
+三条同时成立才生成：判为规划+ current_step 在白名单
+超阈值正文压缩后存 content，全文存
+回退意图：换目的地/改交通/重新规划一go_back_*工
++有源料
+「我想坐高铁去上海玩」
+状态机
+extra_info［"original"］
+具
+自动确认白名单多一个 itinerary_generation，比手动模式
+卡片帧与清单 id 一并写进 extra_info，历史接口据此重渲染
+＞ 确认闸门：用户未发言或只说选择语时屏蔽 select_*；
+需求清单＋全程交给 AI 自动确认
+快速通道
+早一步出清单
+本轮
+回纯确认语才强制调工具，防止模型只说「已确认」却不动
+本轮文本不像行程时，回看最近8条助手消息找源料
+需求清单（未勾自动确认）
+状态机•手动
+状态
+generate_plan（）
+「确认」（上一轮停在目的地步）
+状态机
+_looks_like_itinerary（）
+compress_content（）
+detect_intent（）.wants_back（）
+卡片提交后的合成发言
+状态机•续跑
+_recent_itinerary_text（）
+ROLE_DONE
+forced_tool_choice
+「你好，今天天气不错」
+闲聊
+一句话记住
+先直查、再快速通道、再状态机、最后闲聊：前一条命中，后面全部短路；卡片续跑直接判规划，不花路由LLM

@@ -1,0 +1,21 @@
+{
+  "city": "大连",
+  "title": "大连景点资料 · Dalian/Shahekou",
+  "source_url": "https://en.wikivoyage.org/wiki/Dalian/Shahekou",
+  "text": "资料城市：大连。本文是历史开放景点资料，不提供实时开放时间或价格；出行前需要核实。\n\nDalian Modern Museum\nThis museum to the north of Xinghai Square contains a number of high quality, interactive exhibits on Dalian, both historical and current. It is well worth a visit for anyone even slightly interested in the city itself.\n\nXinghai Seashell Museum\nHoused in a European-style castle to the east of Xinghai Square, the seashell museum contains a huge variety of shells and other examples of sea life (including a preserved giant squid). Though very specialized, the museum still makes for an interesting diversion. The climb up to the museum itself can be a trial (those wishing to avoid the stairs can take a taxi up the side road). This building does not exit anymore. Will be replaced by a hotel\n\nDalian Natural History Museum\nMainly focuses on marine life though it also includes a dinosaur fossil exhibit.\n\nXinghai Square\nOn the coast south west of the city center, is the largest square in Asia, a fact frequently mentioned in Dalian tourist literature. There are a number of attractions around the square, including museums, a bathing beach, large aquarium (07:00-16:00, ¥70), Xinghai Convention and Exhibition Center, huge indoor tennis court and swimming pool, a number of seafood restaurants boasting local fare, bungee tower and a fairly small amusement park that's very kid-friendly. With the possible exception of the aquarium, museums and restaurants, few of the attractions are likely to be that interesting to visitors but it's still worth taking the time to visit the square and have a wander around the area.\n\nWalking (hiking)\nSmall mountains near Heping Square and also along Huanghe Lu offering some impressive views of the city and sea.",
+  "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+  "license": "CC BY-SA 3.0",
+  "attribution": "Wikivoyage contributors; https://en.wikivoyage.org/wiki/Dalian/Shahekou",
+  "sha256": "22e538ffca3db71dbc58c0477b144f9b2de8a38732f5b573c7c67d21a7177411",
+  "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+  "poi_count": 5,
+  "source_dataset": "https://github.com/wikivoyage/wikivoyage.github.io",
+  "excluded_fields": [
+    "price",
+    "hours",
+    "phone",
+    "email",
+    "hotel",
+    "restaurant"
+  ]
+}

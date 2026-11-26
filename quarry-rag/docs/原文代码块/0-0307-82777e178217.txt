@@ -1,0 +1,18 @@
+{
+    "object":  "list",
+    "results":  [
+                    {
+                        "index":  1,
+                        "relevance_score":  0.9357074009983357
+                    },
+                    {
+                        "index":  0,
+                        "relevance_score":  0.14892923447356882
+                    }
+                ],
+    "model":  "qwen3-rerank",
+    "id":  "c3ba55f0-899b-9635-9d28-bddd66cb4b68",
+    "usage":  {
+                  "total_tokens":  58
+              }
+}

@@ -1,0 +1,63 @@
+"""
+Handoffs 主 Agent（本章升级：注册回退工具 + 记忆工具）
+"""
+from langchain.agents import create_agent
+
+from app.core.state import TravelState
+from app.core.checkpointer import get_checkpointer
+from app.core.store import get_store
+from app.core.middleware import create_step_config_middleware
+from app.utils.llm_factory import get_qwen_llm
+from app.tools.state_transition import (
+    record_requirement_tool,
+    select_destination_tool,
+    select_transport_tool,
+    select_accommodation_tool,
+    select_food_tool,
+    generate_itinerary_tool,
+    summarize_budget_tool,
+    # 本章新增
+    ALL_ROLLBACK_TOOLS,
+)
+from app.tools.memory_tools import MEMORY_TOOLS   # 本章新增
+from app.utils.logger import app_logger
+
+async def create_travel_agent():
+    """
+    创建 Handoffs 旅行规划 Agent（8 步 + 中间件 + 回退 + 记忆）
+    """
+    app_logger.info("创建 Travel Agent（8 步 + 回退 + 记忆）...")
+
+    llm = get_qwen_llm(streaming=True)
+
+    # 总工具表：状态转换 + 回退 + 记忆
+    all_tools = [
+        # 状态转换（第 03-04 章）
+        record_requirement_tool,
+        select_destination_tool,
+        select_transport_tool,
+        select_accommodation_tool,
+        select_food_tool,
+        generate_itinerary_tool,
+        summarize_budget_tool,
+        # 回退（本章新增）
+        *ALL_ROLLBACK_TOOLS,
+        # 记忆（本章新增）
+        *MEMORY_TOOLS,
+    ]
+
+    step_config_middleware = await create_step_config_middleware()
+    checkpointer = await get_checkpointer()
+    store = await get_store()
+
+    agent = create_agent(
+        model=llm,
+        tools=all_tools,
+        state_schema=TravelState,
+        middleware=[step_config_middleware],
+        checkpointer=checkpointer,
+        store=store,
+    )
+
+    app_logger.info(f"✅ Travel Agent 创建完成，注册了 {len(all_tools)} 把总工具")
+    return agent

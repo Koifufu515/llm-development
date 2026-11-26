@@ -1,0 +1,25 @@
+"""_query_one_leg（自驾）演示：城市换坐标再查路线；缺城市、查询异常、返回解析不了，一律降级为 ok=False 的空段（纯逻辑，无需密钥）"""
+import asyncio
+import json
+
+from app.capabilities.driving_multi_segment.driving_agent_tool import _query_one_leg
+from app.capabilities.driving_multi_segment.driving_skill_schema import DrivingLeg
+
+AMAP = json.dumps({"status": "1", "route": {"paths": [{"distance": "137000", "duration": "6120", "tolls": "65",
+                                                         "traffic_lights": "12", "steps": [{"instruction": "沿京津塘高速行驶"}]}]}})
+
+class FakeAmapTool:          # 测试驱动：假装是高德驾车工具，打印真正收到的入参
+    async def ainvoke(self, args: dict):
+        print("   高德收到：", args)
+        if args["destination"] == "故障城":
+            raise RuntimeError("高德超时")
+        return AMAP if args["destination"] != "乱码城" else "服务繁忙"
+
+def show(seg):
+    print(f"   → {seg.segment_id} ok={seg.ok} {seg.distance_km}km {seg.duration_text or '—'} 过路费{seg.tolls:g} 红绿灯{seg.traffic_lights} {seg.summary}")
+
+async def main():
+    for i, to in enumerate(["天津", "故障城", "乱码城", ""], 1):
+        show(await _query_one_leg(FakeAmapTool(), f"s{i}", DrivingLeg(from_="北京", to=to, travel_date="2026-10-01")))
+
+asyncio.run(main())

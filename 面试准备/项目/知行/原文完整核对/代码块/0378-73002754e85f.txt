@@ -1,0 +1,132 @@
+# ============== 1️.需求收集工具 ==============
+
+@tool
+def record_requirement_tool(
+        # 出发城市
+        departure_city: str,
+        # 出发日期
+        departure_date: str,
+        # 旅行天数
+        travel_days: int,
+        # 预算下限（元/人）
+        budget_min: float,
+        # 预算上限（元/人）
+        budget_max: float,
+        # 旅行风格偏好
+        travel_styles: list[str],  # 传入字符串列表，工具内转换
+        # 特殊需求（可选）
+        special_needs: str = "",
+        # 成人数量（默认1）
+        adult_count: Optional[int] = 1,
+        # 儿童数量（< 12 岁）
+        children_count: Optional[int] = 0,
+        # 目的地（可选）
+        destination: Optional[str] = None,
+        # 确认模式：表单勾选"全程交给 AI 自动确认"时为 True，未勾选保持 False
+        auto_confirm: bool = False,
+        # 表单预选交通方式（可多选，可为空）
+        transport_types: Optional[list[str]] = None,
+        # 表单预选餐饮偏好（可多选，可为空）
+        food_preferences: Optional[list[str]] = None,
+        # 表单预选住宿偏好（可多选，可为空）
+        accommodation_types: Optional[list[str]] = None,
+
+        runtime: ToolRuntime[None, TravelState] = None
+) -> Command:
+    """
+    记录用户旅行需求，并转换到目的地推荐步骤。
+
+    参数(可为空)说明：
+    - destination 目的地
+    - departure_city 出发地
+    - departure_date: 出发日期，格式 YYYY-MM-DD，如 "2025-08-01"
+    - travel_days: 出行天数，如 5
+    - adult_count: 成人数量
+    - children_count: 儿童数量（< 12 岁）
+    - budget_min: 预算下限（元/人）
+    - budget_max: 预算上限（元/人）
+    - travel_styles: 旅行风格列表，可选值：["relaxation", "culture", "adventure", "food"]
+    - special_needs: 特殊需求（可选），如 "需要无障碍设施"
+    """
+
+    # 天数锁定——表单给了值就以表单为准，模型读错也不污染后续全部步骤
+    # ★ 表单天数是权威值：存在就覆盖模型传参（天数一错，住宿/餐饮/预算/正文全跟着漂移）
+    _form_days = _form_travel_days(runtime.state)
+    if _form_days and int(travel_days or 0) != _form_days:
+        app_logger.warning(f"⚠️ 天数以表单为准：模型传 {travel_days} 天 → 表单 {_form_days} 天")
+        travel_days = _form_days
+
+    # 目的地锁定——模型不传 destination 时以表单 head 为准（多城串全量保留）
+    if not str(destination or "").strip():
+        _form_dest = _form_destination(runtime.state)
+        if _form_dest:
+            app_logger.warning(f"⚠️ 目的地以表单为准：模型未传 → 表单 {_form_dest}")
+            destination = _form_dest
+
+    app_logger.info(f"记录用户需求: {departure_date}, {travel_days}天, 预算 {budget_min}-{budget_max}")
+
+    # 验证日期格式
+    try:
+        datetime.strptime(departure_date, "%Y-%m-%d")
+    except ValueError:
+        return Command(update={
+            "messages": [
+                ToolMessage(
+                    content="❌ 日期格式错误，请使用 YYYY-MM-DD 格式，如 2025-08-01",
+                    tool_call_id=runtime.tool_call_id
+                )
+            ]
+        })
+
+    # 推断预算等级
+    avg_budget = (budget_min + budget_max) / 2
+    if avg_budget < 3000:
+        # ★ 预算等级按区间由代码算，不让模型填
+        budget_level = "economy"
+    elif avg_budget < 8000:
+        budget_level = "comfort"
+    else:
+        budget_level = "luxury"
+
+    # 构建需求对象
+    requirement = UserRequirement(
+        departure_city=departure_city,
+        destination=destination,
+        departure_date=departure_date,
+        travel_days=travel_days,
+        adult_count=adult_count,
+        children_count=children_count,
+        budget_min=budget_min,
+        budget_max=budget_max,
+        budget_level=budget_level,
+        travel_styles=travel_styles,
+        special_needs=special_needs if special_needs else None,
+        # 表单预选项一并落库，供后续步骤判断"是否已选过、免重复询问"
+        transport_types=transport_types or [],
+        food_preferences=food_preferences or [],
+        accommodation_types=accommodation_types or [],
+    )
+
+    app_logger.info(
+        f"需求预选项: auto_confirm={auto_confirm} "
+        f"transport={transport_types} food={food_preferences} hotel={accommodation_types}"
+    )
+
+    # 返回 Command：更新状态并跳转到下一步
+    return Command(update={
+        "messages": [
+            ToolMessage(
+                content=f"需求已记录！\n"
+                        f"出发日期：{departure_date}\n"
+                        f"{travel_days} 天 | {adult_count + children_count} 人\n"
+                        f"预算：{budget_min}-{budget_max} 元/人（{budget_level}级）\n"
+                        f"风格：{', '.join(travel_styles)}",
+                tool_call_id=runtime.tool_call_id
+            )
+        ],
+        "user_requirement": requirement,
+        # 确认模式真源写入状态：middleware 据此渲染 {{ auto_confirm_mode }}，
+        # 各步骤 prompt 直接读模式变量，不再靠"清单里没有自动确认文案"反推手动模式
+        "auto_confirm": auto_confirm,  # ★ 模式开关写进 state：后面的 middleware、编排层、一站式工具都读这一份
+        "current_step": "destination_recommendation"  # 跳转到步骤2
+    })

@@ -1,0 +1,1 @@
+../../../../../../quarry-rag/quarry/common/vectors.py

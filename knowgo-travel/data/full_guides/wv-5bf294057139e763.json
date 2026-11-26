@@ -1,0 +1,21 @@
+{
+  "city": "上海",
+  "title": "上海景点资料 · Shanghai/Pudong",
+  "source_url": "https://en.wikivoyage.org/wiki/Shanghai/Pudong",
+  "text": "资料城市：上海。本文是历史开放景点资料，不提供实时开放时间或价格；出行前需要核实。\n\nOriental Pearl TV Tower\nBuilt in 1994, is the 3rd tallest building in Shanghai. Featuring 11 garish pink balls, the tower has become an internationally recognized symbol of the new Shanghai. Entry to the tower and all its attractions is ¥100; there are extra fees depending on how high you want to go up to a total of ¥220 for admission to the highest observation deck at 350 m (1,155 ft). You can literally step into Shanghai's skies on the ''glass floor of the outdoor viewing platform'' of the 2nd ball at 259 m (855 ft). Walk on a transparent path high above Pudong and the Huangpu River, probably one of the most thrilling adventures of the city, and also an unexpected one: your elevator will arrive one floor above the glass floor, a rather conventional observation platform - descend one floor to get to the thrill. On the way down you will have to descend past all the other observation decks and attractions. Space City at 90 m (297 ft) can be missed, but the Shanghai History Museum offers a glimpse into the past of the city.\n\nShanghai Municipal Museum\nThe museum recreates interiors of houses and shops from the farming era up to the swinging 1930s, has many miniatures of Shanghai's most impressive (colonial) buildings, and also displays vintage cars, old advertisements, and so on. Although light on actual historical information, its definitely worth a visit, and surprisingly big. (No access to tower view decks.)\n\nJinmao Tower\nThis edifice, one of China's tallest skyscrapers, stands just beside Oriental Pearl TV Tower. The tower houses the Grand Hyatt Shanghai and features a 31-story atrium that starts in the jazz lounge on the 57th story and rises up like a space station. An Italian restaurant Cucina, on the 55th floor offers spectacular views of the Bund and the rest of old Shanghai. For about the same cost as going up in the Pearl Tower, you can enjoy a gourmet pizza lunch and savor virtually the same view. Enter via the Grand Hyatt main entrance, take elevator to lobby on 54, then next elevator to Cucina, There is also a restaurant on the 88th floor, which is the top floor and China's second highest visitor platform. Alternatively, head for one of the Grand Hyatt's many bars (see Drink).\n\nShanghai Ocean Aquarium\nThis is an entertaining and up to standards exhibition over two floors, including a system of glass tunnels that lets you get up close and personal with sharks.\n\nCentury Park\nThis is Shanghai's biggest park. Unfortunately, there is a lot of concrete and paved roads, and many areas have vegetation that is still under development or poorly cared for. Still a good and relaxing get-away. Bike rental available (expensive, from ¥40 per hour).\n\nShanghai Science and Technology Museum\nFocuses on Western Science. Entertaining and educational for children. The buiding itself is quite impressive\n\nShanghai World Financial Centre Tower\nOpened in 2008 and is Shanghai's second tallest building. If you exclude spires and flagpoles, then it contended for the tallest building in the world, at least for a few months. There are 3 viewing levels on floors 94, 97 and 100. The observation level allows you to look down on the tall neighboring Jinmao and Oriental Pearl Towers. However, a better view of the river and the Bund can be obtained from the lower sphere of the Oriental Pearl than form the SWFC. An alternative to the 100F observation deck is to go to one of the hotel bars or restaurants on or near 98F.\n\nShanghai Tower\nat 632 metres (2,073 ft) high and 128 stories it is currently China's tallest building and the second tallest in the world.",
+  "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+  "license": "CC BY-SA 3.0",
+  "attribution": "Wikivoyage contributors; https://en.wikivoyage.org/wiki/Shanghai/Pudong",
+  "sha256": "1940d979ac1f2ae738854815e23cf67775d8c7008fb2aa4bcfd91177df1aa9f8",
+  "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+  "poi_count": 8,
+  "source_dataset": "https://github.com/wikivoyage/wikivoyage.github.io",
+  "excluded_fields": [
+    "price",
+    "hours",
+    "phone",
+    "email",
+    "hotel",
+    "restaurant"
+  ]
+}

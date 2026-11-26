@@ -1,0 +1,13 @@
+"""_is_protocol_leak / _chunk_has_tool_call 演示：流式 chunk 的两个即时判定（纯函数，无需密钥）"""
+from langchain_core.messages import AIMessageChunk
+
+from app.services.chat_stream_executor import _chunk_has_tool_call, _is_protocol_leak
+
+for text in ["为您查询到以下班次", "✿FUNCTION✿: get-tickets", "你可以在回复中插入以下命令……"]:
+    print(f"协议泄漏？{_is_protocol_leak(text)!s:5}  {text}")
+
+text_chunk = AIMessageChunk(content="让我查一下")
+tool_chunk = AIMessageChunk(content="", tool_call_chunks=[
+    {"name": "get-tickets", "args": "{", "id": "c1", "index": 0}])
+print("文本 chunk 带工具调用？", _chunk_has_tool_call(text_chunk))
+print("工具 chunk 带工具调用？", _chunk_has_tool_call(tool_chunk), "← 工具轮常常 0 文本，只能靠它认出来")

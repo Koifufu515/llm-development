@@ -1,0 +1,4 @@
+1. 从 runtime.state.get("user_id") 取用户 id
+2. 没有 user_id → 返 "⚠️ 未识别到用户身份"
+3. 拿 UserMemoryService → 调对应方法写入
+4. 返 "✅ 已记录 ..." 或 "⚠️ 保存失败"

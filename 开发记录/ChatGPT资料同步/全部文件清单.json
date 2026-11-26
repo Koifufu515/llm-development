@@ -1,0 +1,197 @@
+[
+  {
+    "path": "README.md",
+    "bytes": 2644,
+    "sha256": "25e4b50d9551f82dbcdaac57f2fcb407c086573670c051a2bea045f693aad9af"
+  },
+  {
+    "path": "skills/恢复说明.md",
+    "bytes": 1568,
+    "sha256": "45c656575ec01a3274871b3c2833754eb7957796c6a181b0b1585bec9f838965"
+  },
+  {
+    "path": "原始记录/哈啰实习_page001.json",
+    "bytes": 14902,
+    "sha256": "4fce3ceadc626900bcccfad37e729a72c43657f3fe3b5e606a7439742f5d8629"
+  },
+  {
+    "path": "原始记录/哈啰实习_用户消息摘录.txt",
+    "bytes": 1111,
+    "sha256": "d38a4687ffd1416ba2746e080ee4bc0342ac590cbb669cf9a334427c4fcf10d2"
+  },
+  {
+    "path": "原始记录/哈啰实习_近期记录.md",
+    "bytes": 11066,
+    "sha256": "85dde71985f73365f6b4d42e58cce1cd4e24b8d901f5ab177e904c4eba342476"
+  },
+  {
+    "path": "原始记录/大模型开发_page001.json",
+    "bytes": 4705,
+    "sha256": "a58069da59fc53f0062a4cb6f986c4a144ee9e83d62d1da2df8139b6c6de0380"
+  },
+  {
+    "path": "原始记录/大模型开发_用户消息摘录.txt",
+    "bytes": 686,
+    "sha256": "76f39360433e55895dbfd26b6f8937e872bba5918808945c57e2d152b70c9752"
+  },
+  {
+    "path": "原始记录/大模型开发_近期记录.md",
+    "bytes": 1642,
+    "sha256": "7f91362b4eff0f04aaf490a5b4c6a3f1a510625a0d4e21187ae07fc271b3cf75"
+  },
+  {
+    "path": "原始记录/本地补充资料清单.json",
+    "bytes": 4373,
+    "sha256": "e62c51e00e2a10857d5cde3f489e6ca4b177a6a68dd23e19dfcd8ad7a92221a9"
+  },
+  {
+    "path": "原始记录/模拟面试_page001.json",
+    "bytes": 8097,
+    "sha256": "586c826acebda244179f1d6ddc1a0eb325607cd6af799de329ff17ff29f9db0b"
+  },
+  {
+    "path": "原始记录/模拟面试_用户消息摘录.txt",
+    "bytes": 3366,
+    "sha256": "0f00a6cb12a18236b305fd98e1bbe418dedf48f5491fe4fa5dc6e9c56d15639a"
+  },
+  {
+    "path": "原始记录/模拟面试_近期记录.md",
+    "bytes": 4427,
+    "sha256": "e16efb140ece86cca62b6ae5ad7fe72bd84def5a70a779644aa6d8b567cd79c4"
+  },
+  {
+    "path": "原始记录/聊天清单_初始.json",
+    "bytes": 1393,
+    "sha256": "b7b4ae296901a2171a3ffc06603c4fe41e221e50dd47dc8b8ec61a55e1f6c5b5"
+  },
+  {
+    "path": "原始记录/读取统计.json",
+    "bytes": 4775,
+    "sha256": "ab827f4b74e34d8f63d53e356aa5b1daa8563c250d3590886e5c96b7b6de439b"
+  },
+  {
+    "path": "原始记录/附件清单.json",
+    "bytes": 1218,
+    "sha256": "9529617f4316ecc2151b26519ed0b5ed9b215f6506dbd4005edd4cb887775ed4"
+  },
+  {
+    "path": "原始记录/面经整理_page001.json",
+    "bytes": 38374,
+    "sha256": "8a342e47451ae7e800f1f99c853f38b374a4296705c1e14fb4751f6deecab137"
+  },
+  {
+    "path": "原始记录/面经整理_用户消息摘录.txt",
+    "bytes": 34072,
+    "sha256": "b0322c957f522fcc6d99fe546d37bc53d087edcfb46aef3cf2fa6aa4439a486c"
+  },
+  {
+    "path": "原始记录/面经整理_近期记录.md",
+    "bytes": 35024,
+    "sha256": "873eb90c67198eab2c04928a35d416f7b65a0828a76ad1a74ddd85a44ec406bf"
+  },
+  {
+    "path": "同步状态.json",
+    "bytes": 803,
+    "sha256": "5e3b0f23ca61efef07af7abfb33f725005f5860244e0c6d778dd4c24449de52f"
+  },
+  {
+    "path": "哈啰实际业务线索.md",
+    "bytes": 3640,
+    "sha256": "b69060f8cb35cce905a2f48cbf890fd86a6117ea1f9758409dc19b0a29b2e682"
+  },
+  {
+    "path": "学习与项目进度.md",
+    "bytes": 3417,
+    "sha256": "d147acbe35a0f2ecdeca4507822475110a58a21d1401e5b74dace8b4f83f7e1a"
+  },
+  {
+    "path": "待导入/放置说明.txt",
+    "bytes": 137,
+    "sha256": "a5d2b7a0fc64920d43892fe68d42210bba9890d96360adc521f4b0a41aefc045"
+  },
+  {
+    "path": "本地补充资料/FastAPI_从入门到实战.zip",
+    "bytes": 182637,
+    "sha256": "2d8da2984117de4f68b4fabed2a3926ec160dddb9cef5a55c53d8f57371e0030"
+  },
+  {
+    "path": "本地补充资料/FastAPI补充代码_已粘贴的文本.txt",
+    "bytes": 43969,
+    "sha256": "784d226419c13d5f5b0a63b20983056b2950d51f476216bb51ff763d58000a6f"
+  },
+  {
+    "path": "本地补充资料/wenshu-project.zip",
+    "bytes": 2200357,
+    "sha256": "716d2022e4c9c7ecad17ef082921f383aa779ff55bc0e86e07c395ee49ca479d"
+  },
+  {
+    "path": "本地补充资料/会话编排 状态机.md",
+    "bytes": 76127,
+    "sha256": "fd28db7e0b9ae0d82d32a2a19957da1d46024c032a4d486411a17df6bda974f8"
+  },
+  {
+    "path": "本地补充资料/哈啰客服Agent_项目梳理与实现路线.md",
+    "bytes": 10078,
+    "sha256": "e37a65e03eb9a254914b41092c9ec5432f154bc675d3583e9519068f3a386169"
+  },
+  {
+    "path": "本地补充资料/居丽叶的简历项目9：行政助手Agent.html",
+    "bytes": 1182407,
+    "sha256": "941fbaaba3298717263a04d807425520927359f8946a69b78beac9c06907c5a1"
+  },
+  {
+    "path": "本地补充资料/技术深挖.md",
+    "bytes": 45443,
+    "sha256": "ae6516f16a6cae94c261e39631f4675ef890aad4c177ecbc076729a0c8128988"
+  },
+  {
+    "path": "本地补充资料/热线托管 打断与承接.md",
+    "bytes": 33739,
+    "sha256": "69f437bfb57e045b4c88b874c9c6c1ef3d0335fec8cf8831856e9ec756e14279"
+  },
+  {
+    "path": "本地补充资料/线程隔离与虚拟线程.md",
+    "bytes": 25410,
+    "sha256": "7be0f6db29d663e9cc98dc1748325274777cbe9a8410c35f4697fe43083ddba3"
+  },
+  {
+    "path": "本地补充资料/面试稿 会话编排.md",
+    "bytes": 8682,
+    "sha256": "4fdf7b41bb9329f05aa3e5d5c3ee39da21535102d6e5e008783942bc3e739d5d"
+  },
+  {
+    "path": "用户背景与讲解偏好.md",
+    "bytes": 3101,
+    "sha256": "cd55e9844f033ec303bd67897231508759ae87239bd765b70d45ae22863711b1"
+  },
+  {
+    "path": "缺失与补齐清单.md",
+    "bytes": 1994,
+    "sha256": "8c887a38e1e507a1e480e1999dcbea1ce50959fd03ce9b264a20a8ed52b3d67a"
+  },
+  {
+    "path": "附件/FastAPI 从入门到实战(1).html",
+    "bytes": 747524,
+    "sha256": "491ac47a43af805be1469d084606957dd3f6fb3c8484a20cb71a2764fbb6ed78"
+  },
+  {
+    "path": "附件/FastAPI_HTML提取正文.txt",
+    "bytes": 117173,
+    "sha256": "e42a55fba050e8f5f6363455e61baa5a040a48032a7d0880c75bfb49177b09f3"
+  },
+  {
+    "path": "附件/image(20261010-064253).png",
+    "bytes": 169122,
+    "sha256": "6178a46d4c723f9b2bb3e09f43e802a96202182b843b3becf1fa41e90c56571c"
+  },
+  {
+    "path": "附件/image(20261010-064258).png",
+    "bytes": 139936,
+    "sha256": "be8571cda1360339317d42af4a93a7d554185848478414054b961b2acdc62b88"
+  },
+  {
+    "path": "附件/image(20261010-064704).png",
+    "bytes": 176229,
+    "sha256": "df835ebfb6c4a5093ce851440817ad3414ca1ccd9354f8e59a3a6953c8afb2c4"
+  }
+]

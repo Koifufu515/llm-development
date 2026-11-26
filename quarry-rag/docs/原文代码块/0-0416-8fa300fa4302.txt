@@ -1,0 +1,15 @@
+query,kind,gold_chunks,note
+量子色动力学的渐近自由是什么,unanswerable,,完全无关：物理
+如何配置 Kubernetes 的 Ingress,unanswerable,,完全无关：运维
+房贷等额本息怎么换算,unanswerable,,完全无关：金融
+小狗拉肚子该喂什么药,unanswerable,,完全无关：宠物
+光合作用的暗反应发生在哪里,unanswerable,,完全无关：生物
+公司差旅住宿标准是多少,unanswerable,,沾边：企业制度在 corp-policy
+出差打车超过多少钱要发票,unanswerable,,沾边：企业制度在 corp-policy
+新员工什么时候领工牌,unanswerable,,沾边：内部笔记在 internal-notes
+生产环境权限要满几个月才能申请,unanswerable,,沾边：内部笔记在 internal-notes
+明天西安下不下雨,unanswerable,,沾边：实时数据，平台不做实时数据源
+冰岛看极光的团怎么报名,unanswerable,,沾边：旅行但不在语料覆盖的城市范围内
+这张景点照片是哪里拍的,unanswerable,,沾边：多模态，明确不做
+用英文介绍一下这座城市,unanswerable,,沾边：跨语言，明确不做
+asdkjfh qwoieur,unanswerable,,无意义输入

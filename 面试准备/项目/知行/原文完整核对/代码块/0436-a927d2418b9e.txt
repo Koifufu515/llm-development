@@ -1,0 +1,32 @@
+# ============== 回退守卫 ==============
+def _recent_human_text(state) -> str:
+    """取最近一条用户消息文本，用于判断用户是否提出回退"""
+    try:
+        for m in reversed((state or {}).get("messages") or []):
+            if getattr(m, "type", None) == "human":
+                return str(getattr(m, "content", "") or "")
+    except Exception:
+        pass
+    return ""
+
+from app.core.intent import detect_intent
+
+def _wants_back(text: str, key: str) -> bool:
+    """判断用户文本是否表达换/改/重新选的回退意图"""
+    return detect_intent(text).wants_back(key)
+
+def _guard_back(runtime, key: str, tool_desc: str) -> Command | None:
+    """回退意图守卫：无用户明确回退意图则返回拒绝Command，返回None代表放行"""
+    text = _recent_human_text(runtime.state)
+    if text and _wants_back(text, key):
+        return None
+    app_logger.info(f"[guard] 用户未明确要求{tool_desc}，拒绝自动回退")
+    return Command(update={
+        "messages": [
+            ToolMessage(
+                content=(f"未检测到您要求『{tool_desc}』。若您确实想{'换目的地' if key=='destination' else ('换交通方式' if key=='transport' else '重新规划')}，"
+                         f"请直接在对话中说明（如『换个目的地』『重新选』），我会照办；当前继续本步骤"),
+                tool_call_id=runtime.tool_call_id,
+            )
+        ]
+    })

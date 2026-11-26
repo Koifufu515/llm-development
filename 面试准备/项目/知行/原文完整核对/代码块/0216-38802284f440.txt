@@ -1,0 +1,58 @@
+"""emit_train_skill_ui 演示：手动确认模式——并行查全部段，推一帧 skill_ui 卡片（纯逻辑，无需密钥）"""
+import asyncio
+
+from app.capabilities.train_multi_segment import train_agent_tool
+from app.capabilities.train_multi_segment.train_flow import build_lead_text, emit_train_skill_ui
+
+RAW = {
+    ("北京", "天津"): """G1 北京南(telecode:VNP) -> 天津(telecode:TJP) 08:30 -> 09:05 历时：00:35
+- 二等座: 有票 54.5元
+C2001 北京南(telecode:VNP) -> 天津(telecode:TJP) 06:30 -> 07:03 历时：00:33
+- 二等座: 无 54.5元""",
+    ("天津", "上海"): """G101 天津西(telecode:TXP) -> 上海虹桥(telecode:AOH) 09:10 -> 14:02 历时：04:52
+- 二等座: 有 509.0元
+G103 天津南(telecode:TIP) -> 上海虹桥(telecode:AOH) 07:48 -> 12:31 历时：04:43
+- 二等座: 候补 509.0元""",
+    ("上海", "北京"): """G2 上海虹桥(telecode:AOH) -> 北京南(telecode:VNP) 19:00 -> 23:18 历时：04:18
+- 二等座: 有 553.0元
+G6 上海虹桥(telecode:AOH) -> 北京南(telecode:VNP) 17:00 -> 21:36 历时：04:36
+- 二等座: 候补 553.0元""",
+}
+
+class FakeTicketTool:        # 测试驱动：假装是 12306 查询工具，按段返回原始文本，并记下被调了几次
+    name = "get-tickets"
+
+    def __init__(self):
+        self.calls = 0
+
+    async def ainvoke(self, args: dict):
+        self.calls += 1
+        if args["fromStation"] == "故障站":
+            raise RuntimeError("12306 超时")
+        return RAW.get((args["fromStation"], args["toStation"]), "")
+
+class Collector:             # 测试驱动：替代第 12 章的 EventStream，只把推过来的帧收起来
+    def __init__(self):
+        self.frames = []
+
+    def push(self, frame):
+        self.frames.append(frame)
+
+def state(transport: list, dest: str) -> dict:
+    return {"user_requirement": {"departure_city": "北京", "departure_date": "2026-10-01", "travel_days": 4,
+                                 "transport_types": transport}, "selected_destination": dest}
+
+async def main():
+    train_agent_tool._QUERY_TOOL = FakeTicketTool()      # 测试驱动：把 12306 工具换成假的
+    stream = Collector()
+    print("没勾高铁：", (await emit_train_skill_ui(stream, "conv-1", state(["自驾"], "天津")))[1])
+    print("查不到车：", (await emit_train_skill_ui(stream, "conv-1", state(["高铁"], "无车城")))[1])
+    payload, status = await emit_train_skill_ui(stream, "conv-1", state(["高铁"], "天津、上海"))
+    frame = stream.frames[-1]
+    print("正常下发：", status, "| 帧 role =", frame["role"], "| skill_name =", frame["content"]["skill_name"],
+          "| 各段候选数 =", [len(s["train_list"]) for s in frame["content"]["data"]["segments"]])
+    await emit_train_skill_ui(stream, "conv-1", state(["高铁"], "天津、上海"))
+    print("同一批段再推一次，12306 被调用的总次数：", train_agent_tool._QUERY_TOOL.calls)
+    print("引导语：", build_lead_text(payload).strip())
+
+asyncio.run(main())

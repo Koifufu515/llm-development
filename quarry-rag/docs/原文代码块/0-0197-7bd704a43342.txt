@@ -1,0 +1,8 @@
+-- ❌ 不推荐：历史无法追溯，而且 ON DELETE CASCADE 会把 chunks 一起带走
+DELETE FROM documents WHERE id = $1;
+
+-- ✅ 推荐：块删掉停止检索，文档行留着可审计、可恢复
+BEGIN;
+DELETE FROM chunks    WHERE collection_id = $1 AND document_id = $2;
+UPDATE documents SET status = 'retired' WHERE id = $2;
+COMMIT;

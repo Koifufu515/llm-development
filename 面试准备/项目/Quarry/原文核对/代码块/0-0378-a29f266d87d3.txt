@@ -1,0 +1,1 @@
+docker compose exec postgres psql -U quarry -d quarry -c "SELECT entity_name, attribute, qualifier, value, count(*) FROM fact_mentions GROUP BY 1, 2, 3, 4 ORDER BY count(*) DESC LIMIT 15;"

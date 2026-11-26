@@ -1,0 +1,7 @@
+# ALL_STEPS 是按顺序排列的 8 个步骤名
+target_index = ALL_STEPS.index("destination_recommendation")  # 2
+
+# 把 target_step 及之后所有步骤的字段全 None 掉
+for step in ALL_STEPS[target_index:]:
+    for field in STEP_STATE_FIELDS[step]:
+        state_update[field] = None

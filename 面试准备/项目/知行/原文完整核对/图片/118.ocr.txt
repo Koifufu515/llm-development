@@ -1,0 +1,102 @@
+knowgo_travel_backend_v2 ~
+mesterM
+心1~
+@
+Q
+试用
+X
+项目
+chat_contract_service.py x
+capabilities
+router = await chat_route（content, history=history）x个
+Aa
+c core
+•“对话服务层：编排层，产出统一事件流
+A16 A6
+a data
+框架化对应关系：
+回
+口 mcp_core
+- 路由阶段 + chat_route （with_structured_output，替代手写 JSON 解析）
+e models
+持久化
+• Message.extra_info 存储寫字段（original/inference_steps，前端历史渲染依赖）
+口 rag
+import asyncio
+炒 sChemas
+import re
+o scripts
+from sqlalchemy import select
+vGserices
+from sqLalchemy.ext.async1o import Asyncsession
+_init_：py
+>心 chat_compress_service.py
+11
+from app.core.events import
+12
+make_event, ROLE_SKILLS, ROLE_DONE, ROLE_ERROR, ROLE_ITINERARY，
+>它 chat_contract_service.py
+13
+ROLE_ASSISTANT，
+>心 chat_stream_executor.py
+14
+ROLE_SKILL_UI.
+>心 city_service.py
+15
+回到导包的地方将原来的进行替换
+>心 conversation_service.py
+16
+from app.core.event_stream
+moort EventStream
+>心 express_planning_service.py
+17
+from app.core.intent
+it detect_intent
+>心 itinerary_plan_service.py
+18
+from app.agents.ro
+rs.chat_router impont chat_route,RouterResult
+19
+>心 quality_check_service.py
+# from app.services.chat_stream_executor import execute_turn, try_direct_ticket_query
+>心 transport_switch_service.py
+21
+from app.services.chat_stream_executor import （
+> Dtools
+22
+execute_turn,try_direct_ticket_query, try_weather_qvery， _cities_in，
+> Dutils
+23
+苷
+init__py
+24
+> 心 config.py
+from app.services.itinerary_plan_service import generate-plan
+from app.services.chat_compress_service import compress_content，
+COMPRESS_THRESHOLD
+>心 main.py
+from app.services.conversation_service import get_owned_conversation
+run.py
+from app.models.message import Message
+a data
+from app.utils.Logger import app_Logger
+• evaluation
+& Image
+31
+# 行程特征守卫：匹配行程天数标记，兼容中文/阿拉伯数字、Day格式
+>elogs
+ne.IGNORECASE）
+33
+> I scripts
+＃ 清单生成步骤白名单：仅在行程生成及后续步骤才渲染清单
++.env
+-ITINERARY_READY_STEPS = ｛"itinerary-generation"，
+"budget_summarization"，
+'report_generation｝
+心 -gitignore
+• knowgo_travel_backend_v2 >app > services
+r chat_contract_service.py
+15:2
+日 TRAE
+knowgo_travel_backend_v2 M Islands Dark •
+CRLF UTF-8 艮 4个空格 wv （knowgo_travel_backend） ［Python 3.13.13］ 2

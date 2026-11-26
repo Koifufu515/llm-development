@@ -1,0 +1,10 @@
+写进 state 的键： ['user_requirement', 'auto_confirm', 'current_step']
+travel_days  → 4 （模型传 3，表单是 4）
+destination  → 天津、上海 （模型没传，从表单 head 抠出来）
+budget_level → economy （按预算区间由代码算）
+auto_confirm → True | current_step → destination_recommendation
+回给模型的话： 需求已记录！
+出发日期：2026-10-01
+4 天 | 2 人
+预算：2000-3000 元/人（economy级）
+ …

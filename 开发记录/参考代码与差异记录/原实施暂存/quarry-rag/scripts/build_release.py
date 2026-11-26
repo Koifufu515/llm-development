@@ -1,0 +1,1 @@
+../../../../../quarry-rag/scripts/build_release.py

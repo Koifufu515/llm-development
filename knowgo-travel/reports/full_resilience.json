@@ -1,0 +1,33 @@
+{
+  "model_memory_events": [
+    {
+      "role": "assistant",
+      "content": "已为您长期记住：海鲜过敏。  \n接下来，请告诉我您本次旅行的出发城市和计划前往的目的地（可多个）？",
+      "code": null
+    },
+    {
+      "role": "done",
+      "content": "finish",
+      "code": 200
+    }
+  ],
+  "allergy_in_correct_category": true,
+  "cross_conversation_reply": [
+    {
+      "role": "assistant",
+      "content": "你有海鲜过敏。",
+      "code": null
+    },
+    {
+      "role": "done",
+      "content": "finish",
+      "code": 200
+    }
+  ],
+  "cross_conversation_memory": true,
+  "pending_asks_date": true,
+  "short_answer_returns_train_data": true,
+  "disconnect_releases_lock": true,
+  "disconnect_followup_seconds": 7.99,
+  "city_picker_count": 342
+}

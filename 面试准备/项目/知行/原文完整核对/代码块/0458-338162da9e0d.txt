@@ -1,0 +1,8 @@
+[0.5s] 生产者 push：已识别出发地：福州
+[0.5s] 消费者收到：{'role': 'assistant', 'content': '已识别出发地：福州', 'code': None}
+[1.0s] 生产者 push：正在查询高铁…
+[1.0s] 消费者收到：{'role': 'assistant', 'content': '正在查询高铁…', 'code': None}
+[1.5s] 生产者 push：Day 1 西湖
+[1.5s] 消费者收到：{'role': 'assistant', 'content': 'Day 1 西湖', 'code': None}
+[1.5s] 消费者收到：{'role': 'done', 'content': 'finish', 'code': 200}
+[1.5s] async for 正常结束（收到了 close 哨兵）

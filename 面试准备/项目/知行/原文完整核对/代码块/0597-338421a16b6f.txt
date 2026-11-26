@@ -1,0 +1,7 @@
+"""_match_hotel_choice 演示：降级轮里识别"用户已经答了"（品牌名或委托语）（纯函数，无需密钥）"""
+from app.services.chat_stream_executor import _match_hotel_choice
+
+req = {"accommodation_types": ["star_hotel"]}
+for text in ["就住如家快捷酒店吧", "按推荐来", "随便，你决定", "我再想想"]:
+    print(f"{text:10s} → {_match_hotel_choice(text, req)!r}")
+print("没选档位 + 委托语 →", repr(_match_hotel_choice("都行", None)))    # 回落经济型的第一个品牌

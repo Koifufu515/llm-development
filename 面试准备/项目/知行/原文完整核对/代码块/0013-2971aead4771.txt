@@ -1,0 +1,56 @@
+# ============== LLM 配置 ==============
+DASHSCOPE_API_KEY=
+QWEN_MODEL_NAME=qwen-max
+QWEN_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+
+# ============== LangSmith 配置 ==============
+LANGSMITH_API_KEY=
+LANGSMITH_PROJECT=zhixing-travel-planer-dev
+LANGSMITH_TRACING=true
+LANGSMITH_ENDPOINT=https://api.smith.langchain.com
+
+# ============== 数据库配置 ==============
+# PostgreSQL（用于 Checkpointer 和 Store）
+# PostgreSQL（Docker 容器）
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=travel_planner_db
+POSTGRES_USER=travel_user
+POSTGRES_PASSWORD=
+DATABASE_URL=postgresql://travel_user:@localhost:5432/travel_planner_db
+
+# Redis（用于缓存）
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_DB=0
+REDIS_PASSWORD=
+
+# ============== MCP 服务配置 ==============
+# 高德 API（天气和地图）
+AMAP_API_KEY=
+
+# Tavily 搜索 API
+TAVILY_API_KEY=
+
+# Variflight 航班 API
+VARIFLIGHT_API_KEY=
+
+#AIGOHOTEL酒店获取API
+AIGOHOTEL_MCP_API=
+NO_PROXY=mcp.aigohotel.com
+no_proxy=mcp.aigohotel.com
+
+# ============== 应用配置 ==============
+APP_ENV=development
+APP_HOST=0.0.0.0
+APP_PORT=8000
+DEBUG=true
+
+# ==============JWT 密钥 ==============
+JWT_SECRET_KEY=shanyangcoding
+
+# ============== DeepSeek（行程压缩用） ==============
+DEEP_SEEK_API_KEY=
+
+# 腾讯地图key（必填），获取链接：https://lbs.qq.com/dev/console/application/mine
+QQ_MAP_KEY=

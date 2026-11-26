@@ -1,0 +1,12 @@
+from fastapi.exceptions import RequestValidationError
+from app.core.response import (
+    global_http_middleware,
+    validation_exception_handler,
+    wrap_json_middleware,
+)
+
+# ……lifespan / FastAPI(...) / CORSMiddleware 保持第 10 章原样……
+
+app.middleware("http")(global_http_middleware)
+app.middleware("http")(wrap_json_middleware)   # ★ 最后注册 = 最外层：兜底产出的包裹体不会被再包一次
+app.add_exception_handler(RequestValidationError, validation_exception_handler)

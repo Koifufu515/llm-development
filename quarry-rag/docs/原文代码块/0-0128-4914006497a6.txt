@@ -1,0 +1,4 @@
+def make_chunk_id(source_uri: str, path: list[str], content: str) -> str:
+    """内容决定 ID。第 2 章会讲这里的完整规则，并把它换成正式模块。"""
+    raw = "\0".join([source_uri, "/".join(path), content])
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:32]

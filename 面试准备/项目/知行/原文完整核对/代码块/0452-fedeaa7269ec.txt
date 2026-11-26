@@ -1,0 +1,7 @@
+async def gen():
+    async for chunk in agent_stream:
+        if chunk.type == "text":
+            yield f"data: {json.dumps({'kind': 'text', 'content': chunk.text})}\n\n"
+        elif chunk.type == "card":
+            yield f"data: {json.dumps({'kind': 'card', 'payload': chunk.payload})}\n\n"
+        # 每多一种消息，就再加一个 elif……

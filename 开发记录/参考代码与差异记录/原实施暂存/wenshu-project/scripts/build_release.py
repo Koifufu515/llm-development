@@ -1,0 +1,1 @@
+../../../../../wenshu-project/scripts/build_release.py

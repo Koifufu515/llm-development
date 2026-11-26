@@ -1,0 +1,3 @@
+门店模式： 如家酒店(西湖北山街店) 总价 716 | brand_list = []
+品牌模式： ['如家', '汉庭'] | hotel_list = []
+第三种模式： literal_error → Input should be 'hotel' or 'brand'

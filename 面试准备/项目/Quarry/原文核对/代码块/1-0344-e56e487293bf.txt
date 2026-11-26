@@ -1,0 +1,1 @@
+uv run python -m quarry.scripts.try_pipeline "量子色动力学的渐近自由"

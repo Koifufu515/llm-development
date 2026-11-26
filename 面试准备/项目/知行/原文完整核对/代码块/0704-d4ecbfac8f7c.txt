@@ -1,0 +1,68 @@
+# ===== 旅行域纯查询直通：单点事实查询不走状态机 =====
+# 用于识别单独查高铁/航班的请求，直接调用MCP工具并由代码渲染班次表，不读写状态机
+from app.core.intent import DAY_OFFSET as _DAY_OFFSET
+
+_FLIGHT_LIMIT = 10
+
+def _render_flight_table(rows: list[dict]) -> str:
+    """航班清单渲染：仅渲染解析出的真实航班，禁止模型编造"""
+    if not rows:
+        return ""
+    lines = [
+        "\n\n---\n",
+        "**以下为系统直出的实时航班（每班以本表为准，表外航班为无效信息）**\n", "\n",
+        "| 航班 | 出发→到达 | 航司 | 准点率 | 航站楼 | 价格 |\n|---|---|---|---|---|---|\n"
+    ]
+    for r in rows[:_FLIGHT_LIMIT]:
+        stop = f"（经停{r['stop']}）" if r.get("stop") else ""
+        # 仅使用航班号匹配到的真实票价，无匹配则显示占位符
+        price = f"{r['price']:.0f}元" if r.get("price") else "—"
+        lines.append(
+            f"| {r['code']}{stop} | {r['dep']}→{r['arr']} | {r['airline'][:8]} | "
+            f"{r['ontime'] or '—'} | {r['terminal'] or '—'} | {price} |\n"
+        )
+    lines.append("\n以上为实时航班时刻，票价与余座以航空公司官方渠道为准。\n")
+    app_logger.info(f"✅ 直出真实航班清单：{len(rows)} 班（表外航班均视为编造）")
+    return "".join(lines)
+
+async def _flight_table(frm: str, to: str, day: str) -> str:
+    """航班直查：城市→机场编码→调用VariFlight工具，代码渲染表格。无数据返回空串，不编造航班"""
+    from app.tools.mcp_tools import (_CITY_AIRPORT, _CITY_IATA, flight_price_args,
+                                     get_flight_tools, parse_flight_prices, parse_flight_rows)
+    # 时刻表使用机场码，票价接口使用城市码，两套编码不可混用
+    dep, arr = _CITY_AIRPORT.get(frm), _CITY_AIRPORT.get(to)
+    if not dep or not arr:
+        return ""
+
+    tools = await get_flight_tools()
+    tool = next((t for t in tools if t.name.lower() == "searchflightsbydeparr"), None)
+    if tool is None:
+        return ""
+
+    ptool = next((t for t in tools if t.name.lower() == "getflightpricebycities"), None)
+    cdep, carr = _CITY_IATA.get(frm), _CITY_IATA.get(to)
+
+    async def _prices() -> str:
+        """单独查询票价，票价失败仅价格列置空，不影响航班基础信息"""
+        if ptool is None or not (cdep and carr):
+            app_logger.info(f"[直查] 航班票价跳过：ptool={bool(ptool)} 城市码={cdep}/{carr}")
+            return ""
+        try:
+            return await ptool.ainvoke(flight_price_args(ptool, day, cdep, carr))
+        except Exception:
+            app_logger.warning("[直查] 航班票价查询失败，本次表内价格留空", exc_info=True)
+            return ""
+
+    try:
+        raw, price_raw = await asyncio.gather(
+            tool.ainvoke({"date": day, "dep": dep, "arr": arr}), _prices())
+    except Exception:
+        app_logger.warning("[直查] 航班查询失败", exc_info=True)
+        return ""
+
+    rows = parse_flight_rows(raw)
+    # 按航班号匹配票价，航线最低价不可直接当作单班票价
+    by_flight = parse_flight_prices(price_raw)[0] if price_raw else {}
+    for r in rows:
+        r["price"] = float(by_flight.get(str(r.get("code", "")).upper()) or 0)
+    return _render_flight_table(rows) if rows else ""

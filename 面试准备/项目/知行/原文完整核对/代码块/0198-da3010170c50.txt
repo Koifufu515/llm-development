@@ -1,0 +1,7 @@
+"""_compact_to_rows 演示：工具已被守卫压成紧凑行时，还原成和 parse_ticket_rows 同构的行（纯函数，无需密钥）"""
+from app.capabilities.train_multi_segment.train_agent_tool import _compact_to_rows
+
+TEXT = """G1|北京南→天津|08:30→09:05|00:35|二等座 有票 54.5元
+G3|北京南→天津|09:00→09:35|00:35|票价未返回"""
+for row in _compact_to_rows(TEXT):
+    print(row)

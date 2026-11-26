@@ -1,0 +1,663 @@
+[
+  {
+    "name": "目的地含出发地",
+    "events": [
+      {
+        "role": "skills",
+        "content": {
+          "skill_name": "express",
+          "title": "并行收集旅行资料",
+          "desc": "各段交通、各站住宿与各城天气同时查询"
+        },
+        "code": null
+      },
+      {
+        "role": "skills",
+        "content": {
+          "skill_name": "itinerary_generation",
+          "title": "生成与校验逐日行程",
+          "desc": "按已选交通、住宿和攻略来源生成"
+        },
+        "code": null
+      },
+      {
+        "role": "itinerary_plans",
+        "content": {
+          "status": "pending",
+          "message": "正在保存行程清单并核对地图地点"
+        },
+        "code": null
+      },
+      {
+        "role": "itinerary_plans",
+        "content": {
+          "status": "success",
+          "id": "513a974a-ea39-4dd2-85d3-fd3ef772723b",
+          "message": "行程清单已生成"
+        },
+        "code": null
+      },
+      {
+        "role": "assistant",
+        "content": "交通：上海→苏州 高德默认驾车路线\n交通：苏州→上海 高德默认驾车路线\n住宿：上海 康铂酒店(上海自然博物馆店)\n\n# 上海→苏州2日自驾行程\n\n## Day 1 · 上海\n\n**上午**\n- 09:00–11:30 **上海京剧传习馆参观**：上海京剧传习馆于2026年11月上旬开放日实行免预约随到随看，入馆前扫码登记即可免费入场。〔资料7〕\n\n**中午**\n- 12:00–13:30 **城隍庙及豫园周边漫步**：游览城隍庙、老城厢核心区域，体验传统建筑与市井文化，周边可品尝南翔小笼等本地小吃。〔资料1〕\n\n**下午**\n- 14:00–15:30 **外滩滨江步道散步**：沿黄浦江步行，欣赏万国建筑博览群与对岸陆家嘴天际线，适合摄影与城市风貌感知。〔资料2〕\n\n**晚上**\n- 16:30–17:30 **入住康铂酒店(上海自然博物馆店)**：办理入住手续，酒店位于南苏州路1455号，毗邻自然博物馆与苏州河畔，交通便利。〔资料1〕\n\n小贴士：上海京剧传习馆开放日需现场扫码登记，建议提前关注微信公众号‘上海京剧传习馆’预登记以节省时间；所有开放信息以当日官方公告为准。\n\n## Day 2 · 苏州\n\n**上午**\n- 07:30–10:30 **拙政园游览**：中国四大名园之一，明代古典园林代表作，分东中西三部分，以水为脉、建筑错落，体现江南园林精髓。〔资料10〕\n\n**中午**\n- 11:00–12:30 **苏州博物馆本馆参观**：贝聿铭设计的现代与传统融合建筑，馆藏丰富，需提前7天通过公众号预约，免费开放（周一闭馆）。〔资料10〕\n\n**下午**\n- 13:30–15:30 **平江路历史街区漫步**：保存完好的水陆并行古街，沿河而建，两侧多为白墙黛瓦民居与文创小店，可体验苏式生活气息。〔资料10〕\n\n**晚上**\n- 16:00–17:35 **驾车返回上海**：按高德默认路线自苏州返沪，全程约103.6公里，预计耗时95分钟，注意避开晚高峰拥堵路段。〔资料10〕\n\n小贴士：拙政园与苏州博物馆均需确认当日开放状态及限流政策；苏州博物馆务必提前7天在‘苏州博物馆’公众号预约，否则无法入馆。\n\n## 预算明细\n| 项目 | 数量 | 单价 | 金额 | 依据 |\n|---|---:|---:|---:|---|\n| 上海→苏州 | 1车 | 65.39 | 65.39 | 估算 |\n| 苏州→上海 | 1车 | 67.34 | 67.34 | 估算 |\n| 上海住宿 | 1间夜 | 528.00 | 528.00 | 查询参考价 |\n| 餐饮 | 2人天 | 150.00 | 300.00 | 估算 |\n| 门票 | 2人天 | 200.00 | 400.00 | 估算 |\n| 市内交通及杂费 | 2人天 | 100.00 | 200.00 | 估算 |\n\n合计 **1560.73元**，人均 **1560.73元**。\n报价为查询时参考价，估算单独列示；本系统不执行购票、订房或支付。\n\n## 资料来源（历史攻略与联网摘要，出行前核实）\n1. 上海景点资料 · Shanghai/Old City https://en.wikivoyage.org/wiki/Shanghai/Old%20City\n2. 上海景点资料 · Shanghai https://en.wikivoyage.org/wiki/Shanghai\n3. 上海景点资料 · Shanghai/Zhabei https://en.wikivoyage.org/wiki/Shanghai/Zhabei\n4. 苏州景点资料 · Suzhou https://en.wikivoyage.org/wiki/Suzhou\n5. 苏州景点资料 · Suzhou https://en.wikivoyage.org/wiki/Suzhou\n6. 苏州景点资料 · Suzhou https://en.wikivoyage.org/wiki/Suzhou\n7. {\"code\":0,\"stg_version\":\"v https://mp.weixin.qq.com/s?__biz=MzUxMDY1MDU5MA==&mid=2247850490&idx=1&sn=eba0c49d6bac272030f9ec71351b7149&chksm=f88624c8f4c3d5a7d4ec32c96e268bb6cc72b610e69bfb7e044470d8c3dbd9612ac875187986&scene=27\n8. 上海 https://sh.bendibao.com/tour/jingdianbao/\n9. 苏州 https://suzhou.bendibao.com/news/jingdianbao/\n10. 苏州两日游最佳安排(路线+景点预约+攻略) https://m.suzhou.bendibao.com/tour/115820.shtm",
+        "code": null
+      },
+      {
+        "role": "done",
+        "content": "finish",
+        "code": 200
+      }
+    ],
+    "state": {
+      "user_id": "19f262f2-e6bc-42eb-b041-5b28c1474893",
+      "current_step": "budget_summarization",
+      "requirement": {
+        "departure_city": "上海",
+        "destinations": [
+          "上海",
+          "苏州"
+        ],
+        "departure_date": "2026-10-31",
+        "travel_days": 2,
+        "adult_count": 1,
+        "children_count": 0,
+        "budget_max": 3000.0,
+        "transport_types": [
+          "driving"
+        ],
+        "accommodation_types": [
+          "economy_hotel"
+        ],
+        "food_preferences": [
+          "local",
+          "specialty"
+        ],
+        "travel_styles": [],
+        "special_needs": "",
+        "auto_confirm": true,
+        "city_days": null
+      },
+      "revision": 1,
+      "confirmed_revision": 1,
+      "destination_info": null,
+      "selected_transport": [
+        {
+          "option_id": "a0670e58b01261a185015696",
+          "name": "高德默认驾车路线",
+          "distance_km": 100.6,
+          "duration_minutes": 110,
+          "tolls_yuan": null,
+          "price_yuan": null,
+          "availability": "路线查询成功",
+          "note": "未核实油费、停车费与完整驾驶成本",
+          "segment_id": "s1",
+          "from": "上海",
+          "to": "苏州",
+          "date": "2026-11-01",
+          "return_leg": false,
+          "mode": "driving",
+          "source": "高德地图",
+          "queried_at": "2026-10-30T13:21:14.523615+00:00"
+        },
+        {
+          "option_id": "e8efd1e5f529342f6247d5d5",
+          "name": "高德默认驾车路线",
+          "distance_km": 103.6,
+          "duration_minutes": 95,
+          "tolls_yuan": null,
+          "price_yuan": null,
+          "availability": "路线查询成功",
+          "note": "未核实油费、停车费与完整驾驶成本",
+          "segment_id": "s2",
+          "from": "苏州",
+          "to": "上海",
+          "date": "2026-11-01",
+          "return_leg": true,
+          "mode": "driving",
+          "source": "高德地图",
+          "queried_at": "2026-10-30T13:21:14.472021+00:00"
+        }
+      ],
+      "selected_hotels": [
+        {
+          "option_id": "fc48dcb18cac9ca0ca86a168",
+          "name": "康铂酒店(上海自然博物馆店)",
+          "nightly_price_yuan": 528.0,
+          "stay_total_yuan": 528.0,
+          "address": "南苏州路1455号",
+          "rating": 3.0,
+          "distance_meters": 936.0,
+          "source": "AIGOHOTEL",
+          "currency": "CNY",
+          "segment_id": "h1",
+          "city": "上海",
+          "checkin": "2026-10-31",
+          "checkout": "2026-11-01",
+          "nights": 1,
+          "days": 1,
+          "mode": "hotel",
+          "queried_at": "2026-10-30T21:21:21.307485+08:00"
+        }
+      ],
+      "food_preferences": [
+        "local",
+        "specialty"
+      ],
+      "itinerary_body": {
+        "title": "上海→苏州2日自驾行程",
+        "days": [
+          {
+            "day": 1,
+            "city": "上海",
+            "morning": [
+              {
+                "name": "上海京剧传习馆参观",
+                "kind": "attraction",
+                "description": "上海京剧传习馆于2026年11月上旬开放日实行免预约随到随看，入馆前扫码登记即可免费入场。",
+                "start_time": "09:00",
+                "end_time": "11:30",
+                "source_ids": [
+                  "e5dae3e2ce08587f1e3ea028"
+                ]
+              }
+            ],
+            "noon": [
+              {
+                "name": "城隍庙及豫园周边漫步",
+                "kind": "attraction",
+                "description": "游览城隍庙、老城厢核心区域，体验传统建筑与市井文化，周边可品尝南翔小笼等本地小吃。",
+                "start_time": "12:00",
+                "end_time": "13:30",
+                "source_ids": [
+                  "8cdcfccf24482b8bbb9275d0"
+                ]
+              }
+            ],
+            "afternoon": [
+              {
+                "name": "外滩滨江步道散步",
+                "kind": "attraction",
+                "description": "沿黄浦江步行，欣赏万国建筑博览群与对岸陆家嘴天际线，适合摄影与城市风貌感知。",
+                "start_time": "14:00",
+                "end_time": "15:30",
+                "source_ids": [
+                  "6f6f9147f6ce7f304de0225f"
+                ]
+              }
+            ],
+            "evening": [
+              {
+                "name": "入住康铂酒店(上海自然博物馆店)",
+                "kind": "hotel",
+                "description": "办理入住手续，酒店位于南苏州路1455号，毗邻自然博物馆与苏州河畔，交通便利。",
+                "start_time": "16:30",
+                "end_time": "17:30",
+                "source_ids": [
+                  "8cdcfccf24482b8bbb9275d0"
+                ]
+              }
+            ],
+            "tips": [
+              "上海京剧传习馆开放日需现场扫码登记，建议提前关注微信公众号‘上海京剧传习馆’预登记以节省时间；所有开放信息以当日官方公告为准。"
+            ]
+          },
+          {
+            "day": 2,
+            "city": "苏州",
+            "morning": [
+              {
+                "name": "拙政园游览",
+                "kind": "attraction",
+                "description": "中国四大名园之一，明代古典园林代表作，分东中西三部分，以水为脉、建筑错落，体现江南园林精髓。",
+                "start_time": "07:30",
+                "end_time": "10:30",
+                "source_ids": [
+                  "d48c10f4a32fb1439b9c900c"
+                ]
+              }
+            ],
+            "noon": [
+              {
+                "name": "苏州博物馆本馆参观",
+                "kind": "attraction",
+                "description": "贝聿铭设计的现代与传统融合建筑，馆藏丰富，需提前7天通过公众号预约，免费开放（周一闭馆）。",
+                "start_time": "11:00",
+                "end_time": "12:30",
+                "source_ids": [
+                  "d48c10f4a32fb1439b9c900c"
+                ]
+              }
+            ],
+            "afternoon": [
+              {
+                "name": "平江路历史街区漫步",
+                "kind": "attraction",
+                "description": "保存完好的水陆并行古街，沿河而建，两侧多为白墙黛瓦民居与文创小店，可体验苏式生活气息。",
+                "start_time": "13:30",
+                "end_time": "15:30",
+                "source_ids": [
+                  "d48c10f4a32fb1439b9c900c"
+                ]
+              }
+            ],
+            "evening": [
+              {
+                "name": "驾车返回上海",
+                "kind": "transport",
+                "description": "按高德默认路线自苏州返沪，全程约103.6公里，预计耗时95分钟，注意避开晚高峰拥堵路段。",
+                "start_time": "16:00",
+                "end_time": "17:35",
+                "source_ids": [
+                  "d48c10f4a32fb1439b9c900c"
+                ]
+              }
+            ],
+            "tips": [
+              "拙政园与苏州博物馆均需确认当日开放状态及限流政策；苏州博物馆务必提前7天在‘苏州博物馆’公众号预约，否则无法入馆。"
+            ]
+          }
+        ]
+      },
+      "budget": {
+        "currency": "CNY",
+        "items": [
+          {
+            "category": "transport",
+            "label": "上海→苏州",
+            "segment_id": "s1",
+            "unit": "车",
+            "quantity": 1,
+            "unit_price": 65.39,
+            "amount": 65.39,
+            "basis": "estimate",
+            "source": "高德地图",
+            "queried_at": "2026-10-30T13:21:14.523615+00:00",
+            "note": "按整车估算油费0.65元/公里，加已返回过路费；不含停车费，不表示实际车辆成本"
+          },
+          {
+            "category": "transport",
+            "label": "苏州→上海",
+            "segment_id": "s2",
+            "unit": "车",
+            "quantity": 1,
+            "unit_price": 67.34,
+            "amount": 67.34,
+            "basis": "estimate",
+            "source": "高德地图",
+            "queried_at": "2026-10-30T13:21:14.472021+00:00",
+            "note": "按整车估算油费0.65元/公里，加已返回过路费；不含停车费，不表示实际车辆成本"
+          },
+          {
+            "category": "accommodation",
+            "label": "上海住宿",
+            "segment_id": "h1",
+            "unit": "间夜",
+            "quantity": 1,
+            "unit_price": 528.0,
+            "amount": 528.0,
+            "basis": "quote",
+            "source": "AIGOHOTEL",
+            "queried_at": "2026-10-30T21:21:21.307485+08:00",
+            "note": "1晚×1间；品牌参考不表示可订门店"
+          },
+          {
+            "category": "food",
+            "label": "餐饮",
+            "unit": "人天",
+            "quantity": 2,
+            "unit_price": 150,
+            "amount": 300.0,
+            "basis": "estimate",
+            "source": "规划估算"
+          },
+          {
+            "category": "attractions",
+            "label": "门票",
+            "unit": "人天",
+            "quantity": 2,
+            "unit_price": 200,
+            "amount": 400.0,
+            "basis": "estimate",
+            "source": "规划估算"
+          },
+          {
+            "category": "misc",
+            "label": "市内交通及杂费",
+            "unit": "人天",
+            "quantity": 2,
+            "unit_price": 100,
+            "amount": 200.0,
+            "basis": "estimate",
+            "source": "规划估算"
+          }
+        ],
+        "total": 1560.73,
+        "per_person": 1560.73,
+        "people": 1,
+        "rooms": 1,
+        "nights": 1,
+        "budget_max": 3000.0,
+        "over_budget": false,
+        "quote_total": 528.0,
+        "estimate_total": 1032.73,
+        "notice": "报价为查询时参考价，估算单独列示；本系统不执行购票、订房或支付。"
+      },
+      "plan_id": "513a974a-ea39-4dd2-85d3-fd3ef772723b",
+      "active_card": null
+    }
+  },
+  {
+    "name": "自动推荐目的地",
+    "events": [
+      {
+        "role": "skills",
+        "content": {
+          "skill_name": "express",
+          "title": "并行收集旅行资料",
+          "desc": "各段交通、各站住宿与各城天气同时查询"
+        },
+        "code": null
+      },
+      {
+        "role": "skills",
+        "content": {
+          "skill_name": "itinerary_generation",
+          "title": "生成与校验逐日行程",
+          "desc": "按已选交通、住宿和攻略来源生成"
+        },
+        "code": null
+      },
+      {
+        "role": "itinerary_plans",
+        "content": {
+          "status": "pending",
+          "message": "正在保存行程清单并核对地图地点"
+        },
+        "code": null
+      },
+      {
+        "role": "itinerary_plans",
+        "content": {
+          "status": "success",
+          "id": "f5d2da9f-7701-498e-9e26-a5c1ffe1872b",
+          "message": "行程清单已生成"
+        },
+        "code": null
+      },
+      {
+        "role": "assistant",
+        "content": "推荐目的地：苏州。苏州位于上海以西约100公里，高铁车程约25–30分钟，完全符合‘苏州方向的近郊城市、单日往返’要求；拥有中国最典型、保存最完好的江南古典园林群（拙政园、留园、网师园、狮子林等），高度契合‘江南古典园林’旅行风格；当地餐饮以苏帮菜为代表，松鼠鳜鱼、响油鳝糊、碧螺春茶点等属明确的地方特色与美食 specialty；经济型酒店（如如家、汉庭、格林豪泰等）密集且价格合理，单日交通+住宿+餐饮+门票总费用可轻松控制在3000元以内；所有要素均真实存在、无臆造，且为国家明确认定的历史文化名城和长三角核心旅游目的地。\n交通：上海→苏州 G986 二等座\n交通：苏州→上海 G735 二等座\n\n# 苏州单日江南古典园林之旅\n\n## Day 1 · 苏州\n\n**上午**\n- 07:05–07:34 **乘高铁抵达苏州北站**：乘坐G986次高铁从上海出发，07:05发车，07:34抵达苏州北站，全程29分钟。〔资料1〕\n\n**中午**\n- 08:30–11:30 **游览拙政园（中、西园）**：中国四大名园之一，明代古典园林代表作，以水为局、楼为心，中园远香堂与西园卅六鸳鸯馆为精华所在。〔资料5〕\n\n**下午**\n- 12:30–14:30 **参观苏州博物馆本馆**：贝聿铭设计的现代建筑杰作，白墙灰瓦与立体仿山相映成趣；需提前7天预约，免费入馆，周一闭馆（法定节假日除外）。〔资料5〕\n- 14:45–16:15 **漫步平江路历史街区**：千年石板古道，沿河而建，保留传统建筑风貌与苏式生活气息，可体验评弹、手作及临河茶馆。〔资料2〕\n\n**晚上**\n- 17:15–17:38 **乘高铁返回上海虹桥**：乘坐G735次高铁从苏州北站返程，17:15发车，17:38抵达上海虹桥站，全程23分钟。〔资料1〕\n\n小贴士：拙政园旺季门票80元，建议现场扫码购票；苏州博物馆须提前7天通过【苏州博物馆】公众号预约，否则无法入馆；平江路沿线餐饮推荐苏帮菜老字号，如松鹤楼（待核实具体分店营业状态）\n\n## 预算明细\n| 项目 | 数量 | 单价 | 金额 | 依据 |\n|---|---:|---:|---:|---|\n| 上海→苏州 | 1人 | 47.00 | 47.00 | 查询参考价 |\n| 苏州→上海 | 1人 | 40.00 | 40.00 | 查询参考价 |\n| 餐饮 | 1人天 | 150.00 | 150.00 | 估算 |\n| 门票 | 1人天 | 200.00 | 200.00 | 估算 |\n| 市内交通及杂费 | 1人天 | 100.00 | 100.00 | 估算 |\n\n合计 **537.00元**，人均 **537.00元**。\n报价为查询时参考价，估算单独列示；本系统不执行购票、订房或支付。\n\n## 资料来源（历史攻略与联网摘要，出行前核实）\n1. 苏州景点资料 · Suzhou https://en.wikivoyage.org/wiki/Suzhou\n2. 苏州景点资料 · Suzhou https://en.wikivoyage.org/wiki/Suzhou\n3. 苏州景点资料 · Suzhou https://en.wikivoyage.org/wiki/Suzhou\n4. 苏州 https://suzhou.bendibao.com/news/jingdianbao/\n5. 苏州两日游最佳安排(路线+景点预约+攻略) https://m.suzhou.bendibao.com/tour/115820.shtm",
+        "code": null
+      },
+      {
+        "role": "done",
+        "content": "finish",
+        "code": 200
+      }
+    ],
+    "state": {
+      "user_id": "19f262f2-e6bc-42eb-b041-5b28c1474893",
+      "current_step": "budget_summarization",
+      "requirement": {
+        "departure_city": "上海",
+        "destinations": [
+          "苏州"
+        ],
+        "departure_date": "2026-10-31",
+        "travel_days": 1,
+        "adult_count": 1,
+        "children_count": 0,
+        "budget_max": 3000.0,
+        "transport_types": [
+          "train"
+        ],
+        "accommodation_types": [
+          "economy_hotel"
+        ],
+        "food_preferences": [
+          "local",
+          "specialty"
+        ],
+        "travel_styles": [
+          "江南古典园林"
+        ],
+        "special_needs": "选择苏州方向的近郊城市，单日往返",
+        "auto_confirm": true,
+        "city_days": null
+      },
+      "revision": 1,
+      "confirmed_revision": 1,
+      "destination_info": null,
+      "selected_transport": [
+        {
+          "option_id": "98f5fc240f4e9d85e02a5439",
+          "train_code": "G986",
+          "from_station": "上海",
+          "to_station": "苏州北",
+          "departure_date": "2026-10-31",
+          "departure_time": "07:05",
+          "arrival_date": "2026-10-31",
+          "arrival_time": "07:34",
+          "duration": "00:29",
+          "seats": [
+            {
+              "name": "二等座",
+              "availability": "有",
+              "price_yuan": 47
+            },
+            {
+              "name": "一等座",
+              "availability": "有",
+              "price_yuan": 78
+            },
+            {
+              "name": "商务座",
+              "availability": "12",
+              "price_yuan": 165
+            }
+          ],
+          "name": "G986 二等座",
+          "price_yuan": 47,
+          "availability": "有",
+          "seat_type": "二等座",
+          "segment_id": "s1",
+          "from": "上海",
+          "to": "苏州",
+          "date": "2026-10-31",
+          "return_leg": false,
+          "mode": "train",
+          "source": "12306 via Joooook/12306-mcp",
+          "queried_at": "2026-10-30T13:22:01.550450+00:00"
+        },
+        {
+          "option_id": "29db716fe942f298cced87c9",
+          "train_code": "G735",
+          "from_station": "苏州北",
+          "to_station": "上海虹桥",
+          "departure_date": "2026-10-31",
+          "departure_time": "17:15",
+          "arrival_date": "2026-10-31",
+          "arrival_time": "17:38",
+          "duration": "00:23",
+          "seats": [
+            {
+              "name": "二等座",
+              "availability": "有",
+              "price_yuan": 40
+            },
+            {
+              "name": "一等座",
+              "availability": "有",
+              "price_yuan": 68
+            },
+            {
+              "name": "商务座",
+              "availability": "有",
+              "price_yuan": 134
+            }
+          ],
+          "name": "G735 二等座",
+          "price_yuan": 40,
+          "availability": "有",
+          "seat_type": "二等座",
+          "segment_id": "s2",
+          "from": "苏州",
+          "to": "上海",
+          "date": "2026-10-31",
+          "return_leg": true,
+          "mode": "train",
+          "source": "12306 via Joooook/12306-mcp",
+          "queried_at": "2026-10-30T13:22:01.566249+00:00"
+        }
+      ],
+      "selected_hotels": [],
+      "food_preferences": [
+        "local",
+        "specialty"
+      ],
+      "itinerary_body": {
+        "title": "苏州单日江南古典园林之旅",
+        "days": [
+          {
+            "day": 1,
+            "city": "苏州",
+            "morning": [
+              {
+                "name": "乘高铁抵达苏州北站",
+                "kind": "transport",
+                "description": "乘坐G986次高铁从上海出发，07:05发车，07:34抵达苏州北站，全程29分钟。",
+                "start_time": "07:05",
+                "end_time": "07:34",
+                "source_ids": [
+                  "fe4998bfc580fbb5e6db7202"
+                ]
+              }
+            ],
+            "noon": [
+              {
+                "name": "游览拙政园（中、西园）",
+                "kind": "attraction",
+                "description": "中国四大名园之一，明代古典园林代表作，以水为局、楼为心，中园远香堂与西园卅六鸳鸯馆为精华所在。",
+                "start_time": "08:30",
+                "end_time": "11:30",
+                "source_ids": [
+                  "d48c10f4a32fb1439b9c900c"
+                ]
+              }
+            ],
+            "afternoon": [
+              {
+                "name": "参观苏州博物馆本馆",
+                "kind": "attraction",
+                "description": "贝聿铭设计的现代建筑杰作，白墙灰瓦与立体仿山相映成趣；需提前7天预约，免费入馆，周一闭馆（法定节假日除外）。",
+                "start_time": "12:30",
+                "end_time": "14:30",
+                "source_ids": [
+                  "d48c10f4a32fb1439b9c900c"
+                ]
+              },
+              {
+                "name": "漫步平江路历史街区",
+                "kind": "attraction",
+                "description": "千年石板古道，沿河而建，保留传统建筑风貌与苏式生活气息，可体验评弹、手作及临河茶馆。",
+                "start_time": "14:45",
+                "end_time": "16:15",
+                "source_ids": [
+                  "32b19f6c4552e89f65293398"
+                ]
+              }
+            ],
+            "evening": [
+              {
+                "name": "乘高铁返回上海虹桥",
+                "kind": "transport",
+                "description": "乘坐G735次高铁从苏州北站返程，17:15发车，17:38抵达上海虹桥站，全程23分钟。",
+                "start_time": "17:15",
+                "end_time": "17:38",
+                "source_ids": [
+                  "fe4998bfc580fbb5e6db7202"
+                ]
+              }
+            ],
+            "tips": [
+              "拙政园旺季门票80元，建议现场扫码购票；苏州博物馆须提前7天通过【苏州博物馆】公众号预约，否则无法入馆；平江路沿线餐饮推荐苏帮菜老字号，如松鹤楼（待核实具体分店营业状态）"
+            ]
+          }
+        ]
+      },
+      "budget": {
+        "currency": "CNY",
+        "items": [
+          {
+            "category": "transport",
+            "label": "上海→苏州",
+            "segment_id": "s1",
+            "unit": "人",
+            "quantity": 1,
+            "unit_price": 47,
+            "amount": 47.0,
+            "basis": "quote",
+            "source": "12306 via Joooook/12306-mcp",
+            "queried_at": "2026-10-30T13:22:01.550450+00:00",
+            "note": "尚未预订；儿童暂按成人参考价，优惠以购票时为准"
+          },
+          {
+            "category": "transport",
+            "label": "苏州→上海",
+            "segment_id": "s2",
+            "unit": "人",
+            "quantity": 1,
+            "unit_price": 40,
+            "amount": 40.0,
+            "basis": "quote",
+            "source": "12306 via Joooook/12306-mcp",
+            "queried_at": "2026-10-30T13:22:01.566249+00:00",
+            "note": "尚未预订；儿童暂按成人参考价，优惠以购票时为准"
+          },
+          {
+            "category": "food",
+            "label": "餐饮",
+            "unit": "人天",
+            "quantity": 1,
+            "unit_price": 150,
+            "amount": 150.0,
+            "basis": "estimate",
+            "source": "规划估算"
+          },
+          {
+            "category": "attractions",
+            "label": "门票",
+            "unit": "人天",
+            "quantity": 1,
+            "unit_price": 200,
+            "amount": 200.0,
+            "basis": "estimate",
+            "source": "规划估算"
+          },
+          {
+            "category": "misc",
+            "label": "市内交通及杂费",
+            "unit": "人天",
+            "quantity": 1,
+            "unit_price": 100,
+            "amount": 100.0,
+            "basis": "estimate",
+            "source": "规划估算"
+          }
+        ],
+        "total": 537.0,
+        "per_person": 537.0,
+        "people": 1,
+        "rooms": 1,
+        "nights": 0,
+        "budget_max": 3000.0,
+        "over_budget": false,
+        "quote_total": 87.0,
+        "estimate_total": 450.0,
+        "notice": "报价为查询时参考价，估算单独列示；本系统不执行购票、订房或支付。"
+      },
+      "plan_id": "f5d2da9f-7701-498e-9e26-a5c1ffe1872b",
+      "active_card": null
+    }
+  }
+]

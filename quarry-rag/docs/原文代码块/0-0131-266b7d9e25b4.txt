@@ -1,0 +1,2 @@
+docker compose exec postgres psql -U quarry -d quarry -c "DELETE FROM chunks;"
+uv run python -m quarry.scripts.hello_retrieval

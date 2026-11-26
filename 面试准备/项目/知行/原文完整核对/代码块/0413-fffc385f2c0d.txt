@@ -1,0 +1,82 @@
+_ITINERARY_FILL: dict[str, tuple[str, ...]] = {
+    "morning": (
+        "{city}市区漫步或就近景点游览（09:00 出发），按体力灵活安排，建议停留 1~2 小时，多数免费开放；沿途可顺路打卡当地老街区与公园，注意补水与防晒，返程预留 30 分钟交通时间",
+        "上午到{city}人气街区与公园慢逛（09:30 前后出门），以拍照歇脚为主，用时约 2 小时，花费可控；建议先查当日开放时间与是否需要预约，人多时可改走周边支路避开人流",
+    ),
+    "noon": (
+        "{city}就近选一家本地口碑餐馆用餐（12:00 前后），人均约 50 元，避开景点门口高价店，饭后稍作休息；点单前可先看评分与招牌菜，人多时取号后到周边逛一圈再回",
+        "午餐在{city}商圈内解决（12:30 前后），优先本地小吃组合，人均约 40 元，吃完原地休息半小时；商圈内餐饮选择多，可先转一圈比价再决定，避免在景区门口就餐",
+    ),
+    "afternoon": (
+        "{city}街区闲逛或咖啡馆休整（14:00 开始），可挑周边小景点补充参观，建议停留 2 小时，多数无需门票；午后气温较高，建议室内外交替安排，并留意景点闭馆时间",
+        "下午安排{city}特色展馆或水岸步道（14:30 前后），以免费预约场馆为主，用时约 2 小时，注意闭馆时间；展馆多需提前一天线上预约，出发前再核实一次当日开放安排",
+    ),
+    "evening": (
+        "{city}就近晚餐后返回住处休息（18:00 前后），人均约 60 元，留意末班地铁与公交时间；餐后可散步消食，夜间出行尽量走主干道，保管好随身财物",
+        "晚上在{city}夜市或步行街觅食（18:30 前后），人均约 50 元，饭后早点回住处，方便次日出行；夜市人流密集，注意随身物品，返程优先地铁或正规网约车",
+    ),
+}
+
+def _fill_item(key: str, day: int, city: str) -> str:
+    """空缺时段补位条目，按天轮换文案并填充对应城市，避免多天重复"""
+    variants = _ITINERARY_FILL.get(key) or (
+        "{city}自由活动，按现场情况灵活安排，注意留出交通时间；可就近逛逛街区或公园，"
+        "人均花费可控，建议提前把当日行程与次日出发时间对齐",
+    )
+    return variants[(max(1, day) - 1) % len(variants)].replace("{city}", city or "当地")
+
+_FILL_TIPS: tuple[str, ...] = (
+    "提前查询景点开放时间与预约要求，避免现场排队；市内出行优先地铁并避开早晚高峰，"
+    "热门景点建议提前 3~7 天线上实名预约，随身携带身份证以备核验",
+    "当天行程较松，可临时加一处顺路小景点；随身带好身份证、充电宝与常用药品，"
+    "注意天气变化，雨季备好雨具，早晚温差大时及时增减衣物",
+)
+
+def _fill_tip(day: int, city: str) -> str:
+    """空缺小贴士补位条目，按天轮换文案，避免多天重复"""
+    return f"{city or '当地'}：{_FILL_TIPS[(max(1, day) - 1) % len(_FILL_TIPS)].strip()}"
+
+def _day_city_map(state) -> list[str]:
+    """生成逐日城市序列，与住宿、停留晚数同源"""
+    from app.services.express_planning_service import ordered_play_cities, _stay_nights
+    req = state.get("user_requirement") or {}
+    days = int(req.get("travel_days") or 0)
+    nodes = ordered_play_cities(
+        str(req.get("departure_city") or ""),
+        str(state.get("selected_destination") or "") or str(req.get("destination") or ""),
+    )
+    if not nodes or days <= 0:
+        return []
+    out: list[str] = []
+    for node, night in zip(nodes, _stay_nights(days, len(nodes))):
+        out.extend([node] * night)
+    return out
+
+def _fill_day_cities(days: list, cities: list[str]) -> list:
+    """为缺失城市字段的每日行程补全城市名称"""
+    out = []
+    for raw in days or []:
+        if not isinstance(raw, dict) or str(raw.get("city") or "").strip():
+            out.append(raw)
+            continue
+        try:
+            day = int(raw.get("day") or 0)
+        except (TypeError, ValueError):
+            day = 0
+        out.append({**raw, "city": cities[day - 1]} if 0 < day <= len(cities) else raw)
+    return out
+
+_ITEM_PAD = "（建议停留 1~2 小时，具体开放时间与预约要求请以官方当日公告为准，务必提前一天在官方渠道核实，并预留往返交通与排队时间）"
+_BACK_PAD = "，请提前 1 小时到站取票安检，按已确认的车次/航班对号入座乘车返程，到站后留意行李并预留换乘与出站时间，途中如遇晚点请及时与酒店沟通入住时间"
+_TIP_PAD = "，请提前在官方渠道核实预约要求与开放时间，旺季建议提前 3~7 天抢票，并留意当日临时闭馆或限流公告，出行前再次确认以免白跑"
+
+def _back_hint(state) -> str:
+    """生成末日晚上的返程兜底文案，优先读取已确认返程班次"""
+    if state.get("selected_transport") == "local":
+        return "傍晚结束本次本地行程，返回住处整理行李，按需预约次日送站/送机"
+    city = ((state.get("user_requirement") or {}).get("departure_city")) or ""
+    back = next((str(v) for k, v in reversed(list((state.get("leg_selections") or {}).items()))
+                 if v and city and str(k).endswith(f"→{city}")), "")
+    if back:
+        return f"按已确认班次返程（{back}）"
+    return f"傍晚返程回到{city}" if city else ""

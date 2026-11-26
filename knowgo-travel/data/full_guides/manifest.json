@@ -1,0 +1,255 @@
+{
+  "documents": [
+    {
+      "city": "北京",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "杭州",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "苏州",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "南京",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "西安",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "成都",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "重庆",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "广州",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "深圳",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "厦门",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "福州",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "武汉",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "天津",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "长沙",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "青岛",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "大连",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "沈阳",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "济南",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "长春",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "昆明",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "哈尔滨",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "丽江",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "桂林",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "大理",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "南宁",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "贵阳",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "海口",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "三亚",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "洛阳",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "郑州",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "兰州",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "太原",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "西宁",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "乌鲁木齐",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "拉萨",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "银川",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "南昌",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "宁波",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "上海",
+      "status": "failed",
+      "error": "ConnectError"
+    },
+    {
+      "city": "合肥",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "黄山",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "无锡",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "汕头",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "泉州",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "珠海",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "扬州",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "佛山",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "嘉兴",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "绍兴",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    },
+    {
+      "city": "湖州",
+      "status": "failed",
+      "error": "HTTPStatusError"
+    }
+  ],
+  "downloaded_at": "2026-10-29T15:26:37.750166+00:00"
+}

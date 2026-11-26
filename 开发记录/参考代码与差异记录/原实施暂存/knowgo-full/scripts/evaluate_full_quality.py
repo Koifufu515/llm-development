@@ -1,0 +1,1 @@
+../../../../../knowgo-travel/scripts/evaluate_full_quality.py

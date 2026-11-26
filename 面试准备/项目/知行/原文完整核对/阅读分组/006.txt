@@ -1,0 +1,640 @@
+
+
+===== block 49 3589a7f447c3 lines 1-271 source 知行旅行助手-v2#49 =====
+"""
+Handoffs 步骤配置
+
+一份"步骤 → {Prompt, Tools, Requires}" 的表。
+Middleware 每一轮开始时按 State.current_step 从这里取出配置注入。
+
+本章版本覆盖 8 个步骤，每步用一把状态转换工具收尾。
+后续章节会往每步的 tools 里补 MCP 工具、RAG 工具、capabilities 工具。
+"""
+from app.tools.state_transition import (
+    record_requirement_tool,
+    select_destination_tool,
+    select_transport_tool,
+    select_accommodation_tool,
+    select_food_tool,
+    generate_itinerary_tool,
+    summarize_budget_tool,
+)
+
+async def get_step_config() -> dict:
+    """
+    返回 8 步的完整配置。
+
+    Returns:
+        dict: 步骤名 → {"prompt": str, "tools": list, "requires": list}
+    """
+    return {
+
+        # ═══════════════════════════════════════════════════════
+        # 步骤 1：需求收集
+        # ═══════════════════════════════════════════════════════
+        "requirement_collection": {
+            "prompt": """你是专业的旅行规划顾问，负责收集用户的旅行需求。
+
+**当前阶段**：需求收集
+
+**任务**：
+1. 友好地询问以下信息：
+   - 🏠 出发城市
+   - 📅 出发日期（如"下个月"这类模糊表达，请转换为 YYYY-MM-DD）
+   - 🗓️ 出行天数
+   - 👨‍👩‍👧‍👦 成人 / 儿童数量
+   - 💰 预算范围（元/人）
+   - 🎨 旅行风格：relaxation / culture / adventure / food
+   - 📝 特殊需求（可选）
+2. 用户提供完整信息且做出简短确认后，**立即调用 `record_requirement_tool`**
+3. 信息不全时继续用自然语言追问，**不要**贸然调用工具
+4. 一次问 1-2 个问题，避免像填表
+""",
+            "tools": [record_requirement_tool],
+            "requires": [],  # 首步无前置依赖
+        },
+
+        # ═══════════════════════════════════════════════════════
+        # 步骤 2：目的地推荐
+        # ═══════════════════════════════════════════════════════
+        "destination_recommendation": {
+            "prompt": """你是目的地推荐专家。
+
+**当前阶段**：目的地推荐
+
+**已确定的用户需求**：
+- 出发地：{{ user_requirement.departure_city }}
+- 出发日期：{{ user_requirement.departure_date }}
+- 出行天数：{{ user_requirement.travel_days }} 天
+- 人数：{{ user_requirement.adult_count }} 成人 + {{ user_requirement.children_count }} 儿童
+- 预算：{{ user_requirement.budget_min }}-{{ user_requirement.budget_max }} 元/人（{{ user_requirement.budget_level }} 级）
+- 风格：{{ user_requirement.travel_styles }}
+
+**任务**：
+- 若用户已经指定目的地 → 简短点评"是否适合当前季节/预算"，然后询问确认
+- 若用户请你推荐 → 基于地理知识给出 3-4 个候选（每个候选 3 行以内：亮点 / 代表景点 / 为什么适合该用户），结尾问"您对哪个感兴趣"
+- 用户明确回复选定后 → 立即调用 `select_destination_tool` 记录并推进
+
+**边界**：
+- 本步骤没有交通/酒店查询工具；用户追问那些，回一句"确定目的地后立即为您查询"，先把当前步骤走完
+""",
+            "tools": [select_destination_tool],
+            "requires": ["user_requirement"],
+        },
+
+        # ═══════════════════════════════════════════════════════
+        # 步骤 3：交通规划
+        # ═══════════════════════════════════════════════════════
+        "transport_planning": {
+            "prompt": """你是交通规划专家。
+
+**当前阶段**：交通规划
+
+**已确定信息**：
+- 出发地：{{ user_requirement.departure_city }}
+- 目的地：{{ selected_destination }}
+- 出发日期：{{ user_requirement.departure_date }}
+- 人数：{{ user_requirement.adult_count }} 成人 + {{ user_requirement.children_count }} 儿童
+
+**任务**：
+1. 根据出发地-目的地的距离给出交通方式建议：
+   - < 300km：优先高铁
+   - 300-1000km：高铁或航班均可
+   - > 1000km：优先航班
+2. 用户明确选择某种方式后，调用 `select_transport_tool`，参数取值：
+   - 航班 → transport_type="flight"
+   - 高铁 → transport_type="train"
+   - 自驾 → transport_type="driving"
+
+**边界**：
+- 本步骤暂无真实票价查询工具（后续章节会加入）
+- 只给方式建议，不承诺具体班次；具体班次留到接入 MCP 查询后再展示
+""",
+            "tools": [select_transport_tool],
+            "requires": ["user_requirement", "selected_destination"],
+        },
+
+        # ═══════════════════════════════════════════════════════
+        # 步骤 4：住宿规划
+        # ═══════════════════════════════════════════════════════
+        "accommodation_planning": {
+            "prompt": """你是住宿规划专家。
+
+**当前阶段**：住宿规划
+
+**已确定信息**：
+- 目的地：{{ selected_destination }}
+- 出发日期：{{ user_requirement.departure_date }}
+- 出行天数：{{ user_requirement.travel_days }} 天
+- 预算等级：{{ user_requirement.budget_level }}
+
+**任务**：
+1. 结合预算等级给出**住宿类型**建议：
+   - economy → economy_hotel / youth_hostel
+   - comfort → economy_hotel / star_hotel / hostel
+   - luxury  → star_hotel
+2. 询问用户希望的住宿类型（可多选）
+3. 用户明确选定后调用 `select_accommodation_tool`（accommodation_types 传英文枚举列表）
+""",
+            "tools": [select_accommodation_tool],
+            "requires": ["user_requirement", "selected_destination", "selected_transport"],
+        },
+
+        # ═══════════════════════════════════════════════════════
+        # 步骤 5：餐饮规划
+        # ═══════════════════════════════════════════════════════
+        "food_planning": {
+            "prompt": """你是餐饮规划专家。
+
+**当前阶段**：餐饮规划
+
+**已确定信息**：
+- 目的地：{{ selected_destination }}
+- 出行天数：{{ user_requirement.travel_days }} 天
+- 旅行风格：{{ user_requirement.travel_styles }}
+- 已选住宿：{{ selected_accommodation_types }}
+
+**任务**：
+1. 简要介绍该目的地的餐饮特色（一段话，不超过 100 字）
+2. 询问用户希望的餐饮类型偏好（可多选）：
+   - specialty  ── 特色美食
+   - chain      ── 连锁快餐
+   - local      ── 本地小吃
+3. 用户明确选定后调用 `select_food_tool`
+""",
+            "tools": [select_food_tool],
+            "requires": [
+                "user_requirement", "selected_destination",
+                "selected_transport", "selected_accommodation_types",
+            ],
+        },
+
+        # ═══════════════════════════════════════════════════════
+        # 步骤 6：行程生成
+        # ═══════════════════════════════════════════════════════
+        "itinerary_generation": {
+            "prompt": """你是行程规划专家。
+
+**当前阶段**：行程生成
+
+**已确定信息**：
+- 目的地：{{ selected_destination }}
+- 天数：{{ user_requirement.travel_days }} 天
+- 交通：{{ selected_transport }}
+- 住宿：{{ selected_accommodation_types }}
+- 餐饮偏好：{{ selected_food_types }}
+- 旅行风格：{{ user_requirement.travel_styles }}
+
+**任务**：
+1. 根据以上信息为用户拟一份**逐日活动清单**：
+   - 每天 2-4 项活动，符合目的地实际景点
+   - 与旅行风格契合（culture 侧重博物馆/古迹、food 侧重美食街等）
+   - 第 1 天预留抵达时间、最后一天预留返程时间
+2. 拟完后**必须**调用 `generate_itinerary_tool`，
+   参数 `activities_by_day` 是一个二维数组，
+   外层长度 = 天数，内层每一项是那天的活动名称列表
+""",
+            "tools": [generate_itinerary_tool],
+            "requires": [
+                "user_requirement", "selected_destination",
+                "selected_transport", "selected_accommodation_types",
+                "selected_food_types",
+            ],
+        },
+
+        # ═══════════════════════════════════════════════════════
+        # 步骤 7：预算汇总
+        # ═══════════════════════════════════════════════════════
+        "budget_summarization": {
+            "prompt": """你是预算汇总专家。
+
+**当前阶段**：预算汇总
+
+**已确定信息**：
+- 出发地 → 目的地：{{ user_requirement.departure_city }} → {{ selected_destination }}
+- 天数：{{ user_requirement.travel_days }}
+- 人数：{{ user_requirement.adult_count }} + {{ user_requirement.children_count }}
+- 交通：{{ selected_transport }}
+- 住宿：{{ selected_accommodation_types }}
+- 预算范围：{{ user_requirement.budget_min }}-{{ user_requirement.budget_max }} 元/人（{{ user_requirement.budget_level }}）
+
+**任务**：
+1. 基于选定的**交通/住宿档位**估算各分项花费（元/人/全程）：
+   - transport（交通）
+   - accommodation（住宿 = 每晚均价 × (travel_days - 1)）
+   - food（餐饮，参考餐饮偏好档位）
+   - attractions（景点门票，参考行程活动）
+   - misc（其他，可留 0 或少量）
+2. 调用 `summarize_budget_tool` 落库
+3. 汇总后如果总额超出预算上限，用一句话提示用户
+""",
+            "tools": [summarize_budget_tool],
+            "requires": [
+                "user_requirement", "selected_destination",
+                "selected_transport", "selected_accommodation_types",
+                "selected_food_types", "itinerary",
+            ],
+        },
+
+        # ═══════════════════════════════════════════════════════
+        # 步骤 8：报告生成（终点）
+        # ═══════════════════════════════════════════════════════
+        "report_generation": {
+            "prompt": """你是旅行报告生成专家。
+
+**当前阶段**：报告生成（最终步骤）
+
+**已确定信息**：
+- 出发地：{{ user_requirement.departure_city }}
+- 目的地：{{ selected_destination }}
+- 天数：{{ user_requirement.travel_days }}
+- 交通：{{ selected_transport }}
+- 住宿：{{ selected_accommodation_types }}
+- 餐饮：{{ selected_food_types }}
+- 逐日行程：{{ itinerary }}
+- 预算合计：{{ budget.total }} 元/人
+
+**任务**：
+把以上信息整理成一份 Markdown 格式的**旅行报告**输出给用户，包含：
+1. 一段简短的总体介绍
+2. 逐日行程表（用 Markdown 表格或列表）
+3. 交通/住宿/餐饮安排小结
+4. 预算明细表
+5. 结尾一句祝愿
+
+**本步骤没有工具**——直接输出 Markdown 文本，Agent 循环自然结束
+""",
+            "tools": [],  # 终点步骤：模型直接文本回答，循环结束
+            "requires": [
+                "user_requirement", "selected_destination",
+                "selected_transport", "selected_accommodation_types",
+                "selected_food_types", "itinerary", "budget",
+            ],
+        },
+    }
+
+
+===== block 50 70b9b17496e9 lines 1-17 source 知行旅行助手-v2#50 =====
+from langchain.agents.middleware import AgentMiddleware, ModelRequest, ModelResponse
+
+class YourMiddleware(AgentMiddleware):
+
+    async def awrap_model_call(
+        self,
+        request: ModelRequest,                              # 即将发给模型的请求（含 messages/tools/prompt）
+        handler: Callable[[ModelRequest], ModelResponse]    # 后续处理链（真的调 LLM 在这里）
+    ) -> ModelResponse:
+        # === 前置处理 ===
+        modified = request.override(system_prompt="...", tools=[...])
+
+        # === 交给下一环 ===
+        response = await handler(modified)
+
+        # === 后置处理（可选）===
+        return response
+
+
+===== block 51 9177ea995aee lines 1-97 source 知行旅行助手-v2#51 =====
+"""
+StepConfigMiddleware
+根据 State.current_step 动态注入 Prompt 和 Tools。
+"""
+from typing import Callable
+from jinja2 import Template
+
+from langchain.agents.middleware import AgentMiddleware, ModelRequest, ModelResponse
+
+from app.core.state import TravelState
+from app.utils.logger import app_logger
+
+class StepConfigMiddleware(AgentMiddleware):
+    """
+    步骤配置中间件
+
+    职责：
+      每一次 LLM 调用之前：
+        1. 读 State.current_step
+        2. 从 step_config 中查该步的 Prompt / Tools / Requires
+        3. 前置依赖校验（Requires 的字段必须都在 State 中）
+        4. 用 Jinja2 渲染 Prompt 里的 {{ var }} 占位符
+        5. request.override(...) 注入 system_prompt + tools
+    """
+
+    def __init__(self, step_config: dict):
+        """
+        Args:
+            step_config: 预加载的 StepConfig（见 app/agents/handoffs/step_config.py）
+        """
+        self._step_config = step_config
+
+    async def awrap_model_call(
+            self,
+            request: ModelRequest,
+            handler: Callable[[ModelRequest], ModelResponse]
+    ) -> ModelResponse:
+        # ---------- 1. 读当前步骤 ----------
+        state: TravelState = request.state
+        # State 支持 .get() 但为了给 Jinja2 用，转成普通 dict 更保险
+        state_dict = dict(state) if hasattr(state, "items") else {}
+        current_step = state.get("current_step", "requirement_collection")
+        user_id = state.get("user_id")
+
+        app_logger.info(f"📋 用户 ID: {user_id}")
+        app_logger.info(f"📍 当前步骤: {current_step}")
+
+        # ---------- 2. 查 step_config ----------
+        if current_step not in self._step_config:
+            app_logger.error(f"❌ 未知步骤: {current_step}")
+            raise ValueError(f"未知步骤: {current_step}")
+
+        step_config = self._step_config[current_step]
+
+        # ---------- 3. 前置依赖校验 ----------
+        for required_field in step_config["requires"]:
+            if required_field not in state or state[required_field] is None:
+                error_msg = (
+                    f"步骤 {current_step} 需要 State 里已存在字段: {required_field}, "
+                    f"但当前 State 中该字段为空"
+                )
+                app_logger.error(f"❌ {error_msg}")
+                app_logger.error(f"   当前 State keys = {list(state.keys())}")
+                raise ValueError(error_msg)
+
+        # ---------- 4. Jinja2 渲染 Prompt ----------
+        try:
+            template = Template(step_config["prompt"])
+            system_prompt = template.render(**state_dict)
+            # ** 解包：把 dict 里每个 key 当变量名传给模板
+        except Exception as e:
+            app_logger.warning(f"⚠️ 提示词渲染失败: {e}，回退到原始模板")
+            system_prompt = step_config["prompt"]
+
+        # ---------- 5. 注入 request ----------
+        tools = step_config["tools"]
+        modified_request = request.override(
+            system_prompt=system_prompt,
+            tools=tools,
+        )
+
+        app_logger.info(f"✅ 已注入配置: {len(tools)} 个工具")
+
+        # ---------- 6. 交给下一环（真的调 LLM）----------
+        return await handler(modified_request)
+
+# ============== 工厂函数 ==============
+
+async def create_step_config_middleware() -> StepConfigMiddleware:
+    """
+    工厂：从 step_config 模块加载配置并构造 Middleware。
+    异步，因为 get_step_config() 是异步（后续章节要往里加 await get_mcp_tools() 之类）
+    """
+    from app.agents.handoffs.step_config import get_step_config
+
+    step_config = await get_step_config()
+    return StepConfigMiddleware(step_config)
+
+
+===== block 52 615d090ebd99 lines 1-4 source 知行旅行助手-v2#52 =====
+{{ variable }}                # 变量替换：把 variable 的值填进来
+{{ user.name }}               # 嵌套访问：user 是 dict/对象，取它的 name
+{% if condition %}...{% endif %}   # 条件块
+{% for x in list %}...{% endfor %} # 循环块
+
+
+===== block 53 a6b37efdfd3d lines 1-77 source 知行旅行助手-v2#53 =====
+"""
+Handoffs 主 Agent（本章版本）
+
+本章升级：
+- 移除 create_agent 的 prompt= 参数（第 03 章用它常驻单一 Prompt）
+- 改为传 middleware=[StepConfigMiddleware]，让 Prompt 按步骤动态注入
+- 工具列表变成 8 步的"总工具表"，中间件按步骤筛选
+
+后续：
+- 第 05 章：加入回退工具 + 长期记忆工具
+- 第 06 章：加入 MCP 工具（真实机票/酒店/天气查询）
+- 第 07 章：加入 RAG 目的地知识
+- 第 08 章：加入 capabilities 多段并行
+"""
+from langchain.agents import create_agent
+
+from app.core.state import TravelState
+from app.core.checkpointer import get_checkpointer
+from app.core.store import get_store
+from app.core.middleware import create_step_config_middleware
+from app.utils.llm_factory import get_qwen_llm
+from app.tools.state_transition import (
+    record_requirement_tool,
+    select_destination_tool,
+    select_transport_tool,
+    select_accommodation_tool,
+    select_food_tool,
+    generate_itinerary_tool,
+    summarize_budget_tool,
+)
+from app.utils.logger import app_logger
+
+async def create_travel_agent():
+    """
+    创建 Handoffs 旅行规划 Agent（8 步 + Middleware 版）
+
+    返回：编译好的 Agent
+
+    注意：
+        必须在 lifespan 内调用（Checkpointer / Store 需要事先启动）
+    """
+    app_logger.info("创建 Travel Agent（8 步 + Middleware）...")
+
+    # 1. 拿大脑
+    llm = get_qwen_llm(streaming=True)
+
+    # 2. 总工具表：8 步的所有工具都注册在这里
+    #    Middleware 会按 current_step 筛出该步能用的子集
+    all_tools = [
+        record_requirement_tool,
+        select_destination_tool,
+        select_transport_tool,
+        select_accommodation_tool,
+        select_food_tool,
+        generate_itinerary_tool,
+        summarize_budget_tool,
+    ]
+
+    # 3. 中间件：预加载 StepConfig
+    step_config_middleware = await create_step_config_middleware()
+
+    # 4. 拿持久化
+    checkpointer = await get_checkpointer()
+    store = await get_store()
+
+    # 5. 组装
+    agent = create_agent(
+        model=llm,
+        tools=all_tools,
+        state_schema=TravelState,
+        middleware=[step_config_middleware],  # ← 本章的关键变化
+        checkpointer=checkpointer,
+        store=store,
+    )
+
+    app_logger.info("✅ Travel Agent（8 步 + Middleware）创建完成")
+    return agent
+
+
+===== block 54 ad211099ed8a lines 1-156 source 知行旅行助手-v2#54 =====
+"""
+第 04 章冒烟测试：Middleware 驱动的 8 步 Handoffs 流程
+
+用法：
+    uv run python scripts/test_ch04_handoffs.py
+
+看点：
+- 每一轮都打印 current_step
+- 看它从 requirement_collection 一路推到 report_generation
+- 观察每一步的 tools 数量（Middleware 只暴露 1-2 个）
+"""
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Windows 事件循环兼容（见第 02 章 6.1）
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+import sys
+import asyncio
+import selectors
+
+if sys.platform == "win32":
+    selector = selectors.SelectSelector()
+    loop = asyncio.SelectorEventLoop(selector)
+    asyncio.set_event_loop(loop)
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
+
+from app.core.checkpointer import checkpointer_lifespan
+from app.core.store import store_lifespan
+from app.agents.handoffs.travel_agent import create_travel_agent
+
+THREAD_ID = "ch04_handoffs_thread_001"
+USER_ID = "ch04_handoffs_user_001"
+
+# 我们准备一段"走完全流程"的模拟对话
+# 每条都是用户 turn。Agent 在中间轮次会问一些问题——我们让下一条覆盖式回答
+USER_TURNS = [
+    # === 步骤 1：需求收集 ===
+    "我想在 10 月 1 日从北京出发，去武汉玩 4 天，两个人，预算大约每人 5000 元，喜欢文化探索和美食。",
+    "确认，就按这个来。",
+
+    # === 步骤 2：目的地推荐 ===
+    # 用户已经指定了武汉，模型简单点评一下即可推进
+    "确认，选武汉。",
+
+    # === 步骤 3：交通规划 ===
+    # 北京到武汉约 1100 km，模型应该给出建议；用户选高铁
+    "选高铁吧。",
+
+    # === 步骤 4：住宿规划 ===
+    "选经济酒店。",
+
+    # === 步骤 5：餐饮规划 ===
+    "特色美食和本地小吃都要。",
+
+    # === 步骤 6:行程生成 ===
+    "帮我把每天安排排出来。",
+
+    # === 步骤 7：预算汇总 ===
+    "汇总下预算吧。",
+
+    # === 步骤 8：报告生成（终点）===
+    "给我一份完整的旅行报告。",
+]
+
+def _short(text: str, n: int = 200) -> str:
+    if len(text) <= n:
+        return text
+    return text[:n] + "..."
+
+async def main():
+    print("╔" + "═" * 58 + "╗")
+    print("║" + " 第 04 章 · Middleware 驱动 8 步流程冒烟".center(58) + "║")
+    print("╚" + "═" * 58 + "╝")
+
+    async with checkpointer_lifespan():
+        async with store_lifespan():
+            agent = await create_travel_agent()
+
+            config = {
+                "configurable": {
+                    "thread_id": THREAD_ID,
+                    "user_id": USER_ID,
+                }
+            }
+
+            print("\n开始对话，每一轮打印 current_step 变化...")
+
+            prev_step = None
+            for i, user_text in enumerate(USER_TURNS, start=1):
+                print("\n" + "─" * 60)
+                print(f"[第 {i} 轮]")
+                print(f"  用户: {user_text}")
+
+                # 只推新消息，历史交给 Checkpointer
+                input_state = {"messages": [HumanMessage(content=user_text)]}
+
+                try:
+                    result = await agent.ainvoke(input_state, config=config)
+                except Exception as e:
+                    print(f"  ❌ 本轮出错: {type(e).__name__}: {e}")
+                    break
+
+                # 从 result 里挑 AI 最后一条可读回复
+                last_msg = result["messages"][-1]
+                if isinstance(last_msg, AIMessage):
+                    text = last_msg.content if isinstance(last_msg.content, str) else str(last_msg.content)
+                    print(f"  Agent: {_short(text)}")
+                    if last_msg.tool_calls:
+                        for tc in last_msg.tool_calls:
+                            print(f"    🔧 {tc['name']}({list(tc['args'].keys())})")
+                elif isinstance(last_msg, ToolMessage):
+                    print(f"  🛠️  {last_msg.content[:200]}")
+
+                # 打印 current_step 变化
+                cur_step = result.get("current_step")
+                if cur_step != prev_step:
+                    arrow = f"{prev_step or '(未开始)'} → {cur_step}"
+                    print(f"  📌 步骤推进: {arrow}")
+                else:
+                    print(f"  📌 步骤保持: {cur_step}")
+                prev_step = cur_step
+
+                # 到达终点直接停
+                if cur_step == "report_generation":
+                    # 让最后一轮把报告写出来即可
+                    if i >= len(USER_TURNS):
+                        pass
+                    elif isinstance(last_msg, AIMessage) and "旅行报告" in str(last_msg.content):
+                        break
+
+            # 结束后再拉一次 State 看总览
+            print("\n" + "=" * 60)
+            print(" 最终 State 概览")
+            print("=" * 60)
+            state = await agent.aget_state(config)
+            values = state.values
+            for k in [
+                "current_step", "user_requirement", "selected_destination",
+                "selected_transport", "selected_accommodation_types",
+                "selected_food_types", "itinerary", "budget",
+            ]:
+                v = values.get(k)
+                if v is None:
+                    print(f"  {k}: (未填)")
+                else:
+                    s = str(v)
+                    if len(s) > 200:
+                        s = s[:200] + "..."
+                    print(f"  {k}: {s}")
+
+            print("\n" + "🎉" * 20)
+            print("  第 04 章冒烟完成！")
+            print("🎉" * 20 + "\n")
+
+if __name__ == "__main__":
+    asyncio.run(main())

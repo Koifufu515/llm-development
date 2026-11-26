@@ -1,0 +1,9 @@
+PS E：> uv init knowgo_travel_backend
+Initialized project 'knowgo-travel-backend、at 'E： \knowgo_travel_backend、
+PS E：>cd knowgo_traveL_backend
+PS E：\knowgo_travel_backend> uv venv --python 3.13
+Using CPython 3.13.13
+Creating virtual environment at：.venv
+Activate with： .venv\Scripts \activate
+PS E：\knowgo_travel_backend>•venv\Scripts\Activate.ps1
+（knowgo_travel_backend） Ps E：\knowgo_travel_backend>|

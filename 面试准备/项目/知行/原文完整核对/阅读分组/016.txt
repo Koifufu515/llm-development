@@ -1,0 +1,371 @@
+
+
+===== block 144 6198dab66ea2 lines 1-98 source 知行旅行助手-v2#144 =====
+"""
+MCP 工具筛选器
+按需获取特定类型的 MCP 工具
+"""
+import ast
+import contextvars
+import json
+import re
+from datetime import date as _date
+from typing import Any, List
+from langchain_core.tools import BaseTool
+from app.mcp_core.client import get_mcp_client
+from app.utils.logger import app_logger
+
+# ===== 工具入参代码层兜底（准则：不允许只靠提示词保证参数合法） =====
+# 实测模型调 get-tickets 时漏传 fromStation/toStation、或把日期写成 trainDate，12306 直接
+# -32602 拒绝 → 该段降级"实时班次暂不可用"。prompt 里写参数名不可靠（用户明确准则），
+# 故在工具层做确定性处理：① 别名归一 ② 用本轮上下文回填 ③ 仍缺则返回可读提示。
+# 上下文用 contextvar（按请求任务隔离，不跨会话污染）；由 middleware 每轮写入。
+_TURN_CTX: contextvars.ContextVar[dict] = contextvars.ContextVar("tool_arg_ctx", default={})
+
+_TRAIN_ARG_ALIAS = {
+    # 日期别名
+    "trainDate": "date", "departureDate": "date", "travelDate": "date",
+    "dateStr": "date", "startDate": "date", "departureTime": "date",
+    # 出发站别名
+    "from": "fromStation", "fromStationName": "fromStation", "startStation": "fromStation",
+    "fromCity": "fromStation", "departure": "fromStation", "departureStation": "fromStation",
+    # 到达站别名
+    "to": "toStation", "toStationName": "toStation", "endStation": "toStation",
+    "toCity": "toStation", "arrival": "toStation", "arrivalStation": "toStation",
+}
+
+# ★ 中间件每轮写一次：本轮已知的出发地 / 目的地 / 日期 / 当前段，供车票守卫回填入参
+def set_turn_context(
+        departure_city: str = "", destination: str = "", date: str = "",
+        multi_leg: bool = False, leg_from: str = "", leg_to: str = ""
+) -> None:
+    """由中间件每轮写入本轮已知信息（出发地/目的地/出发日期/是否多段/当前段起），供工具入参回填"""
+    _TURN_CTX.set({
+        "departure_city": departure_city or "",
+        "destination": destination or "",
+        "date": date or "",
+        "multi_leg": bool(multi_leg),
+        # 多目的地段级循环下，"当前待确认段"的起讫站是参数的权威来源——
+        # 由段游标（代码）给出，模型漏传时按此回填，保证"一次只查当前段"
+        "leg_from": leg_from or "",
+        "leg_to": leg_to or "",
+    })
+
+def _normalize_train_args(kwargs: dict) -> dict | str:
+    """交通查询入参归一：别名纠正 → 缺失回填 → 仍缺返回可读提示（不再抛底层 MCP 报错）"""
+    args = dict(kwargs or {})
+    for k in list(args):
+        canon = _TRAIN_ARG_ALIAS.get(k)
+        if not canon:
+            continue
+        if not args.get(canon):
+            args[canon] = args[k]
+        args.pop(k, None)               # 别名键必须移除（服务端 schema 禁止多余字段）
+    ctx = _TURN_CTX.get() or {}
+    if not args.get("date") and ctx.get("date"):
+        args["date"] = ctx["date"]
+    if not ctx.get("multi_leg"):        # 多段时严禁猜测起讫站，否则会查到错误路段
+        if not args.get("fromStation") and ctx.get("departure_city"):
+            args["fromStation"] = ctx["departure_city"]
+        if not args.get("toStation") and ctx.get("destination"):
+            args["toStation"] = ctx["destination"]
+    else:
+        # 多段模式下**日期也按段定**，模型传的日期一律覆盖——实测它对三段
+        # 城际全填出发日（09-18），导致"同一天既在重庆又在北京"的荒谬时序；段日期由中间件
+        # 按城市天数分配算出，此处只认上下文里的权威值
+        if ctx.get("date"):
+            args["date"] = ctx["date"]
+        # 多段模式改为"按段游标回填当前段"——不再要求模型补全（它补的往往是
+        # 编造的段），只要中间件写入了当前段起讫站，就补齐缺失站名，确保查的是正在确认的那一段
+        if not args.get("fromStation") and ctx.get("leg_from"):
+            args["fromStation"] = ctx["leg_from"]
+        if not args.get("toStation") and ctx.get("leg_to"):
+            args["toStation"] = ctx["leg_to"]
+    missing = [k for k in ("date", "fromStation", "toStation") if not args.get(k)]
+    if missing:
+        return (
+            f"【调用参数不完整】缺少 {' / '.join(missing)}。请补全后重新调用本工具："
+            "fromStation=出发站中文名，toStation=到达站中文名，date=YYYY-MM-DD。"
+        )
+    # 日期必须不是过去——实测模型（Qwen）日期感错乱，在需求收集轮自行
+    # 调用 get-tickets 时传了过去的日期，12306 直接拒绝，用户看到"查询时出现了一个错误，
+    # 看起来是由于选择了过去的日期"。提示词约束不住（用户准则），此处做确定性拦截：
+    # 过去日期一律不发给服务端，也不猜测替代值（改动用户日期更危险），交由模型向用户确认
+    try:
+        if _date.fromisoformat(str(args["date"])[:10]) < _date.today():
+            app_logger.warning(f"⚠️ {args['date']} 是过去的日期，已拦下（12306 不查历史班次）")
+            return (f"【日期无效】{args['date']} 已是过去的日期，12306 只能查询今天及之后的班次。"
+                    "请先向用户确认出发日期，再用今天或之后的日期（YYYY-MM-DD）重新调用。")
+    except ValueError:
+        pass
+    return args
+
+
+===== block 145 8bcdb0bfd69e lines 1-14 source 知行旅行助手-v2#145 =====
+"""_normalize_train_args 演示：别名纠正 → 本轮上下文回填 → 仍缺就回一句可读提示（纯逻辑，无需密钥）"""
+from datetime import date, timedelta
+
+from app.tools.mcp_tools import _normalize_train_args, set_turn_context
+
+day = (date.today() + timedelta(days=3)).isoformat()
+set_turn_context(departure_city="北京", destination="上海", date=day)
+print("别名纠正    ：", _normalize_train_args({"trainDate": day, "from": "北京", "to": "上海"}))
+print("上下文回填  ：", _normalize_train_args({"fromStation": "北京"}))
+set_turn_context(date=day, multi_leg=True, leg_from="天津", leg_to="上海")
+print("多段按当前段：", _normalize_train_args({}))
+set_turn_context()
+print("仍然缺参    ：", _normalize_train_args({"fromStation": "北京"}))
+print("过去的日期  ：", _normalize_train_args({"date": "2020-01-01", "fromStation": "北京", "toStation": "上海"}))
+
+
+===== block 146 4af2c9664464 lines 1-5 source 知行旅行助手-v2#146 =====
+别名纠正    ： {'date': '2026-09-30', 'fromStation': '北京', 'toStation': '上海'}
+上下文回填  ： {'fromStation': '北京', 'date': '2026-09-30', 'toStation': '上海'}
+多段按当前段： {'date': '2026-09-30', 'fromStation': '天津', 'toStation': '上海'}
+仍然缺参    ： 【调用参数不完整】缺少 date / toStation。请补全后重新调用本工具：fromStation=出发站中文名，toStation=到达站中文名，date=YYYY-MM-DD。
+过去的日期  ： 【日期无效】2020-01-01 已是过去的日期，12306 只能查询今天及之后的班次。请先向用户确认出发日期，再用今天或之后的日期（YYYY-MM-DD）重新调用。
+
+
+===== block 147 b9da7ab61244 lines 1-74 source 知行旅行助手-v2#147 =====
+# ===== 车票结果代码层裁剪（防"4.5 万字淹没"）=====
+# 实测 12306 单次返回 287 趟/45,633 字，模型被淹没后编造出 G1001/G1003/G1005（¥154.5，
+# 真实数据里不存在）。提示词约束不住数据量，故在工具层做确定性裁剪：解析真实班次 →
+# 按发车时间排序 → 只保留前 N 趟 → 一行一趟（含席别票价）。模型只看到十几行，无从淹没。
+_TRAIN_ROW_RE = re.compile(
+    r"^([A-Z]\d{1,4})\s+(.+?)\(telecode:[^)]*\)\s*->\s*(.+?)\(telecode:[^)]*\)\s+"
+    r"(\d{2}:\d{2})\s*->\s*(\d{2}:\d{2})\s+历时：(\d{1,2}:\d{2})",
+    re.MULTILINE,
+)
+_SEAT_RE = re.compile(r"^-\s*([^:：]+)[:：]\s*(\S+)\s+([\d.]+)元", re.MULTILINE)
+# 裁剪后的紧凑行：车次|出发→到达|出发→到达时刻|历时|席别票价（同时供 chat 层回读校验）
+_COMPACT_ROW_RE = re.compile(
+    r"^([A-Z]\d{1,4})\|([^|\n]+?)→([^|\n]+?)\|(\d{2}:\d{2})→(\d{2}:\d{2})\|"
+    r"(\d{1,2}:\d{2})\|([^|\n]+)$",
+    re.MULTILINE,
+)
+_SEAT_ORDER = ("二等座", "硬座", "一等座", "硬卧", "软卧", "无座")
+# 这个是最多显示多少个高铁，因为有一些高铁会显示非常多，直接给你撑爆了，你可以自行设置
+_TICKET_LIMIT = 12
+
+def _raw_text(raw: Any) -> str:
+    """MCP 返回可能是 content blocks 列表，统一取纯文本"""
+    if isinstance(raw, list):
+        return "\n".join(b.get("text", "") for b in raw if isinstance(b, dict))
+    return str(raw or "")
+
+def parse_ticket_rows(raw: Any) -> list[dict]:
+    """解析 12306 原始返回：每趟车一条记录（车次/区间/时刻/历时/各席别票价）"""
+    text = _raw_text(raw)
+    rows: list[dict] = []
+    hits = list(_TRAIN_ROW_RE.finditer(text))
+    for i, m in enumerate(hits):
+        end = hits[i + 1].start() if i + 1 < len(hits) else len(text)
+        seats = {
+            s.group(1).strip(): (s.group(2).strip(), float(s.group(3)))
+            for s in _SEAT_RE.finditer(text[m.end():end])
+        }
+        rows.append({
+            "code": m.group(1), "from": m.group(2).strip(), "to": m.group(3).strip(),
+            "dep": m.group(4), "arr": m.group(5), "dur": m.group(6), "seats": seats,
+        })
+    return rows
+
+def parse_compact_rows(text: Any) -> list[dict]:
+    """解析裁剪后的紧凑班次行（供页面展示层回读真实数据做权威清单）"""
+    return [
+        {"code": m.group(1), "from": m.group(2), "to": m.group(3), "dep": m.group(4),
+         "arr": m.group(5), "dur": m.group(6), "seat": m.group(7)}
+        for m in _COMPACT_ROW_RE.finditer(_raw_text(text))
+    ]
+
+def compact_ticket_text(raw: Any, limit: int = _TICKET_LIMIT) -> str:
+    """把车票查询结果压成"一行一趟"（按发车时间升序取前 limit 趟）；解析失败则截断降级"""
+    rows = parse_ticket_rows(raw)
+    if not rows:
+        return _raw_text(raw)[:2000]
+    rows.sort(key=lambda r: r["dep"])
+    shown = rows[:limit]
+    lines = [
+        f"实时班次（共 {len(rows)} 趟，按发车时间排序，仅列前 {len(shown)} 趟）：",
+        "格式：车次|区间|出发→到达|历时|票价",
+    ]
+    for r in shown:
+        seat = next((k for k in _SEAT_ORDER if k in r["seats"]), None)
+        price = (
+            f"{seat} {r['seats'][seat][0]} {r['seats'][seat][1]:g}元"
+            if seat else "票价未返回"
+        )
+        lines.append(f"{r['code']}|{r['from']}→{r['to']}|{r['dep']}→{r['arr']}|{r['dur']}|{price}")
+    app_logger.info(
+        f"✂️ 车票结果裁剪：原始 {len(_raw_text(raw))} 字/{len(rows)} 趟 → "
+        f"压缩 {len(chr(10).join(lines))} 字/{len(shown)} 趟"
+    )
+    return "\n".join(lines)
+
+
+===== block 148 ada794f231cf lines 1-14 source 知行旅行助手-v2#148 =====
+"""parse_ticket_rows 演示：12306 原始返回 → 每趟车一条记录（纯函数，无需密钥）"""
+from app.tools.mcp_tools import parse_ticket_rows
+
+RAW = """G1234 北京南(telecode:VNP) -> 上海虹桥(telecode:AOH) 08:00 -> 12:28 历时：04:28
+- 二等座: 有票 662.0元
+- 一等座: 5张 1060.0元
+G7 北京南(telecode:VNP) -> 上海(telecode:SHH) 07:00 -> 11:35 历时：04:35
+- 商务座: 无票 2318.0元
+- 二等座: 候补 669.0元
+K51 北京(telecode:BJP) -> 上海(telecode:SHH) 06:15 -> 21:40 历时：15:25
+- 硬卧: 有票 304.5元"""
+for row in parse_ticket_rows(RAW):
+    print(row)
+print("MCP 返回 content blocks 列表也能解析：", len(parse_ticket_rows([{"type": "text", "text": RAW}])), "趟")
+
+
+===== block 149 de07e0570b5e lines 1-4 source 知行旅行助手-v2#149 =====
+{'code': 'G1234', 'from': '北京南', 'to': '上海虹桥', 'dep': '08:00', 'arr': '12:28', 'dur': '04:28', 'seats': {'二等座': ('有票', 662.0), '一等座': ('5张', 1060.0)}}
+{'code': 'G7', 'from': '北京南', 'to': '上海', 'dep': '07:00', 'arr': '11:35', 'dur': '04:35', 'seats': {'商务座': ('无票', 2318.0), '二等座': ('候补', 669.0)}}
+{'code': 'K51', 'from': '北京', 'to': '上海', 'dep': '06:15', 'arr': '21:40', 'dur': '15:25', 'seats': {'硬卧': ('有票', 304.5)}}
+MCP 返回 content blocks 列表也能解析： 3 趟
+
+
+===== block 150 84a37d1604a9 lines 1-10 source 知行旅行助手-v2#150 =====
+"""parse_compact_rows 演示：把"一行一趟"的紧凑班次行读回成记录（纯函数，无需密钥）"""
+from app.tools.mcp_tools import parse_compact_rows
+
+TEXT = """实时班次（共 2 趟，按发车时间排序，仅列前 2 趟）：
+格式：车次|区间|出发→到达|历时|票价
+G7|北京南→上海|07:00→11:35|04:35|二等座 候补 669元
+G1234|北京南→上海虹桥|08:00→12:28|04:28|二等座 有票 662元"""
+for row in parse_compact_rows(TEXT):
+    print(row)
+print("表头、说明行不会被当成班次：", len(parse_compact_rows(TEXT)), "条")
+
+
+===== block 151 08e78857a4aa lines 1-3 source 知行旅行助手-v2#151 =====
+{'code': 'G7', 'from': '北京南', 'to': '上海', 'dep': '07:00', 'arr': '11:35', 'dur': '04:35', 'seat': '二等座 候补 669元'}
+{'code': 'G1234', 'from': '北京南', 'to': '上海虹桥', 'dep': '08:00', 'arr': '12:28', 'dur': '04:28', 'seat': '二等座 有票 662元'}
+表头、说明行不会被当成班次： 2 条
+
+
+===== block 152 c6da93c150bc lines 1-14 source 知行旅行助手-v2#152 =====
+"""compact_ticket_text 演示：几千字的原始返回压成"一行一趟"，按发车时间排、只留前几趟（纯函数，无需密钥）"""
+from app.tools.mcp_tools import compact_ticket_text
+
+RAW = """G1234 北京南(telecode:VNP) -> 上海虹桥(telecode:AOH) 08:00 -> 12:28 历时：04:28
+- 二等座: 有票 662.0元
+- 一等座: 5张 1060.0元
+G7 北京南(telecode:VNP) -> 上海(telecode:SHH) 07:00 -> 11:35 历时：04:35
+- 商务座: 无票 2318.0元
+- 二等座: 候补 669.0元
+K51 北京(telecode:BJP) -> 上海(telecode:SHH) 06:15 -> 21:40 历时：15:25
+- 硬卧: 有票 304.5元"""
+print(compact_ticket_text(RAW, limit=2))
+print("---- 解析不出班次时，截断原文降级返回：")
+print(compact_ticket_text("12306 服务繁忙，请稍后再试"))
+
+
+===== block 153 e4f887e3e9eb lines 1-6 source 知行旅行助手-v2#153 =====
+实时班次（共 3 趟，按发车时间排序，仅列前 2 趟）：
+格式：车次|区间|出发→到达|历时|票价
+K51|北京→上海|06:15→21:40|15:25|硬卧 有票 304.5元
+G7|北京南→上海|07:00→11:35|04:35|二等座 候补 669元
+---- 解析不出班次时，截断原文降级返回：
+12306 服务繁忙，请稍后再试
+
+
+===== block 154 d7b130cd3f45 lines 1-41 source 知行旅行助手-v2#154 =====
+class _ArgGuardTool(BaseTool):
+    """ 入参兜底包装（name/description/args_schema 原样透传，仅拦截调用入参）"""
+    name: str
+    description: str
+    inner: Any = None
+
+    def _run(self, *args, **kwargs):
+        raise NotImplementedError("仅支持异步调用")
+
+    async def _arun(self, **kwargs):
+        args = _normalize_train_args(kwargs)
+        if isinstance(args, str):
+            app_logger.warning(f"⚠️ {self.name} 入参不完整，已拦下并提示补全：{kwargs}")
+            return args
+        # ★ 只拦截入参：纠正、回填之后交给原工具去查
+        result = await self.inner.ainvoke(args)
+        # 结果裁剪后再交给模型（防海量班次淹没上下文诱发编造）
+        # ★ 结果顺手压成"一行一趟"：模型看得清，上下文也不会被撑爆
+        return compact_ticket_text(result)
+
+def _guard_train_tool(tool: BaseTool) -> BaseTool:
+    """仅包装"必填 date/fromStation/toStation"的车票查询工具（按 schema 判定，不写死工具名）"""
+    schema = tool.args_schema if isinstance(tool.args_schema, dict) else {}
+    # ★ 按 schema 认车票工具，不写死工具名
+    if not {"date", "fromStation", "toStation"} <= set(schema.get("required") or []):
+        return tool
+    return _ArgGuardTool(
+        name=tool.name, description=tool.description,
+        args_schema=tool.args_schema, inner=tool,
+    )
+
+def apply_train_arg_guard(tools: List[BaseTool]) -> List[BaseTool]:
+    """ 对全量工具套用车票守卫（注册侧同源，供 create_agent 使用）
+
+    A 的包装此前只作用于 get_train_tools() 的返回值——那是 middleware 注入给模型
+    "看"的一份；而 LangGraph 的 ToolNode 是按工具名到 create_agent(tools=...) 的注册表里取对象
+    **执行**的，那里注册的是 get_all_mcp_tools() 的原始工具。两者不是同一批对象，
+    导致参数兜底与结果裁剪在真实跑图时被整体绕过（实测：跑图时 ToolMessage 是 39,265 字
+    12306 原文、日志无"车票结果裁剪"，并因此撑爆模型 30720 输入上限）。
+    """
+    return [_guard_train_tool(t) for t in tools]
+
+
+===== block 155 21ac3e5ee3fd lines 1-40 source 知行旅行助手-v2#155 =====
+"""apply_train_arg_guard 演示：车票工具被套上入参守卫，别的工具原样放行（纯逻辑，无需密钥）"""
+import asyncio
+from datetime import date, timedelta
+
+from langchain_core.tools import StructuredTool
+
+from app.tools.mcp_tools import apply_train_arg_guard, set_turn_context
+
+RAW = """G1234 北京南(telecode:VNP) -> 上海虹桥(telecode:AOH) 08:00 -> 12:28 历时：04:28
+- 二等座: 有票 662.0元
+- 一等座: 5张 1060.0元
+G7 北京南(telecode:VNP) -> 上海(telecode:SHH) 07:00 -> 11:35 历时：04:35
+- 商务座: 无票 2318.0元
+- 二等座: 候补 669.0元
+K51 北京(telecode:BJP) -> 上海(telecode:SHH) 06:15 -> 21:40 历时：15:25
+- 硬卧: 有票 304.5元"""
+TICKET_SCHEMA = {"type": "object", "properties": {"date": {"type": "string"}, "fromStation": {"type": "string"},
+                 "toStation": {"type": "string"}}, "required": ["date", "fromStation", "toStation"]}
+WEATHER_SCHEMA = {"type": "object", "properties": {"city": {"type": "string"}}, "required": ["city"]}
+
+async def fake_tickets(**kwargs):          # 测试驱动：假装是 12306 MCP，打印真正收到的入参
+    print("   12306 收到的入参：", kwargs)
+    return RAW
+
+async def fake_weather(**kwargs):
+    return "晴"
+
+async def main():
+    tickets = StructuredTool.from_function(coroutine=fake_tickets, name="get-tickets", description="查车票", args_schema=TICKET_SCHEMA)
+    weather = StructuredTool.from_function(coroutine=fake_weather, name="maps_weather", description="查天气", args_schema=WEATHER_SCHEMA)
+    guarded = apply_train_arg_guard([tickets, weather])
+    print("被套上守卫：", [(t.name, type(t).__name__) for t in guarded])
+    day = (date.today() + timedelta(days=3)).isoformat()
+    set_turn_context(departure_city="北京", destination="上海", date=day)
+    print("模型用了别名 trainDate/from/to：")
+    print(await guarded[0].ainvoke({"trainDate": day, "from": "北京", "to": "上海"}))
+    set_turn_context()
+    print("模型只传了出发站：", await guarded[0].ainvoke({"fromStation": "北京"}))
+
+asyncio.run(main())
+
+
+===== block 156 a2a66b7ed956 lines 1-9 source 知行旅行助手-v2#156 =====
+被套上守卫： [('get-tickets', '_ArgGuardTool'), ('maps_weather', 'StructuredTool')]
+模型用了别名 trainDate/from/to：
+   12306 收到的入参： {'date': '2026-09-30', 'fromStation': '北京', 'toStation': '上海'}
+实时班次（共 3 趟，按发车时间排序，仅列前 3 趟）：
+格式：车次|区间|出发→到达|历时|票价
+K51|北京→上海|06:15→21:40|15:25|硬卧 有票 304.5元
+G7|北京南→上海|07:00→11:35|04:35|二等座 候补 669元
+G1234|北京南→上海虹桥|08:00→12:28|04:28|二等座 有票 662元
+模型只传了出发站： 【调用参数不完整】缺少 date / toStation。请补全后重新调用本工具：fromStation=出发站中文名，toStation=到达站中文名，date=YYYY-MM-DD。

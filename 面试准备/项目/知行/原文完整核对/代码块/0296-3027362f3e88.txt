@@ -1,0 +1,41 @@
+"""validate_hotel_multi_submission 演示：段存在、模式一致、id 在候选里、每段都选了；不做日期校验（纯逻辑，无需密钥）"""
+import asyncio
+import json
+
+from app.capabilities.hotel_multi_segment import hotel_parser
+from app.capabilities.hotel_multi_segment.hotel_agent_tool import build_hotel_multi_segment_payload, validate_hotel_multi_submission
+from app.capabilities.hotel_multi_segment.hotel_skill_schema import HotelMultiSegmentSubmitPayload
+
+HOTELS = {"杭州": json.dumps({"code": 0, "hotelInformationList": [
+    {"name": "如家酒店(西湖北山街店)", "price": {"message": "716CNY 共2晚 358CNY/晚"}, "starRating": 4.6, "address": "杭州市西湖区北山街 12 号"},
+    {"name": "锦江之星(Jinjiang Inn)", "price": {"message": "560CNY 共2晚 280CNY/晚"}, "starRating": 4.3, "address": "杭州市拱墅区体育场路 8 号"},
+]}, ensure_ascii=False)}
+
+class FakeHotelTool:         # 测试驱动：假装是酒店查询工具（带真实工具那种嵌套 schema），按城市返回结果
+    name = "searchHotels"
+    args_schema = {"type": "object", "properties": {"originQuery": {}, "place": {}, "checkInParam": {}, "filterOptions": {}, "size": {}}}
+
+    async def ainvoke(self, args: dict):
+        if args["place"] == "故障城":
+            raise RuntimeError("酒店服务超时")
+        return HOTELS.get(args["place"], "")
+
+async def main():
+    hotel_parser._QUERY_TOOL = FakeHotelTool()           # 测试驱动：把酒店工具换成假的，其余全是真实代码
+    segs = [{"city": "杭州", "checkInDate": "2026-10-01", "checkOutDate": "2026-10-03", "guestCount": 2, "priceLevel": "经济型"},
+            {"city": "故障城", "checkInDate": "2026-10-03", "checkOutDate": "2026-10-05", "guestCount": 2, "priceLevel": "经济型"}]
+    payload = await build_hotel_multi_segment_payload(segs, cache_key="conv-1")
+    print("下发：", [(s.segment_id, s.mode) for s in payload.segments])
+    ok = [{"segment_id": "h1", "mode": "hotel", "hotel_id": "h1-1"}, {"segment_id": "h2", "mode": "brand", "brand_id": "h2-1"}]
+    cases = {"两段都选对  ": ok,
+             "模式对不上  ": [ok[0], {"segment_id": "h2", "mode": "hotel", "hotel_id": "h2-1"}],
+             "门店不在候选": [{"segment_id": "h1", "mode": "hotel", "hotel_id": "h1-9"}, ok[1]],
+             "漏选一段    ": ok[:1]}
+    for name, items in cases.items():
+        r = validate_hotel_multi_submission(HotelMultiSegmentSubmitPayload.model_validate({"segments": items}), cache_key="conv-1")
+        print(f"{name} → {r.code:15} {r.msg}")
+        if r.ok:
+            for t in r.texts:
+                print("      ", t)
+
+asyncio.run(main())

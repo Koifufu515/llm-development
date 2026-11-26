@@ -1,0 +1,72 @@
+execute_turn 主流程•跑完 Agent，再用七道后处理收尾
+一轮对话分两路：规划消息走六个阶段，核心是第5阶段的七道后处理；闲聊消息按天气、交通、其他三类分流。每道后处理都写明了触发条件和用到的
+函数，标【跨模块〕的调用在 capabilities 或 transport_switch_service 里。
+规划分支 planning =True ：意图路由判定为行程规划，或卡片提交续跑（force_planning）
+1 准备
+create_travel_agent 建 Agent, aget_state 读回合前的current_step；处在需求、目的地、交通、住宿、餐饮、行程6个步骤时打开 buffer_all：整回合只缓冲、最后一次性推，避免
+前端内容闪变。
+② 改选 若停在交通步，先跑 transport_switch_ service.appLy-transport_switch（棋肉：用户口头说“改坐飞机”，先落库再跑Agent。
+3 跑Agent _stream_agent 收 token、逐轮清洗、回合未去重（详见图2），拿回清洗后的全文 text。
+4 读结果 再次 aget_state：取 state_step、本回合消息 tail、是否落库 committed、逐日结构 itinerary_body。
+5 后处理 按 state_step 依次检查七道后处理，命中就由代码接管（下表）。
+行程步 本轮没落库，但正文已覆盖第1~N天 _covers_al1_days 为True- aupdate.state 把current step推到预算步，省一轮确认
+② 交通步 出发地=目的地，一段城际交通都沒
+_zero_Leg_guard 判零段— train_flow.advance_zero_Leg 跨模块］直推住宿步，正文换成一句说明
+③
+住宿步 工具结果带降级标记，或酒店工具没
+加载
+_has_hotel_search_tool -_match_hotel_choice 认用户选的品牌— _buitd_hotel_fallback 出品牌参考文案
+④
+住宿步
+hotel_card_mode 成立（有城市、
+有合法日期）
+自动模式 hotel_flow.auto_select_hotels 代选；手动模式 emit_hotel_skil1_ui 推住宿卡片跨模块
+⑤
+目的地步
+回合结束停在目的地推荐
+_strip_model_weather删模型写的天气一城市取状态，取不到用_queried_cities -_weather_paragraph 插入天气段
+（仅进入轮）
+◎
+交通步 回合结束停在交通规划
+_leg_context + _ticket_table_from_tail 出权威班次表，_strip_transport_lists 删自编班次；航班无机场码一
+switch_transport_mode 降级高铁；再按高铁＞航班＞自驾 推卡片或代选跨模块
+任意步 本回合出现「V 已接收 N 天行程结
+构」回执
+_render_itinerary_body 渲染正文＋预算，丢弃模型旁白；非缓冲时先推 assistant_reset 再_push_ rendered
+收尾
+buffer_all 时把最终文本一次性推出（代码渲染的正文走 _push_rendered ）；返回（text，state_step，committed，body）给 _produce。
+闲聊分支 planning=False：天气和交通问题不交给裸模型，走确定性兜底
+命中天气意图词
+命中交通对象词
+其余闲聊
+try_weather_query
+try_direct_ticket_query
+_stream_plain
+代码直查高德天气，逐城推送；有第二诉求再让模型补答（详见图
+再试一次直查（不带会话id）；仍返回 None 就用
+直连大模型流式回复，不进 Agent、不读写状态机。
+4）。
+_query_fallback_text 给一句澄清（详见图3）。
+本组函数 2个函数 其余43个函数按职责分在图2~5
+execute_turn Fasync
+L1126-1524
+_stream_plain lasynd
+L15-22
+一轮对话的总调度：规划类消息交给LangGraph Agent 跑，跑完按当前步骤做七道代码后处理；
+纯闲聊兜底：不走Agent，直接让大模型流式回一段话。
+不是规划就走闲聊分支。
+何时调用 每条用户消息、每次卡片提交续跑，只要直查没命中、快速通道没接管，就走一次。
+谁来调用
+chat_contract_service._produce 跨模块）：L265 常规分支；L256快速通道返回 None时
+回落。
+何时调用
+闲聊分支里，既不是天气问题、也不是交通查询时。
+结果交给
+返回四元组（text，state_step，committed,body）给 _produce，决定要不要生成行程清
+谁来调用
+execute_turn 最后一行L1524。
+单、消息怎么落库。
+结果交给
+每个token推进 Eventstream；拼好的全文返回给 execute_turn。
+为什么后处理这么重：每一道都对应一个实测过的模型失误—不调落库工具、编造班次、自写天气、查不到酒店就编门店。execute_turn 的策略是先让 Agent 跑完，再按 state_step 用代码改写
+结果，而不是指望提示词约束住模型。

@@ -1,0 +1,50 @@
+"""_plan_cities 演示：快速通道的游玩城市序列 + 对应交通段 + IATA + 住宿晚数（纯函数，无需密钥）"""
+from app.services.express_planning_service import (
+    ExpressRequirement,
+    _build_legs,
+    _plan_cities,
+    _iata,
+    _stay_nights
+)
+
+# 测试用例：(出发城市, 目的地串, 总行程天数)
+test_cases = [
+    ("福州", "杭州", 4),                      # 普通：福州→杭州
+    ("北京", "天津、上海", 7),                 # 多目的地顿号分隔
+    ("北京", "北京、天津", 5),                 # 目的地包含出发城市
+    ("北京", "北京", 3),                       # 只在本地游玩，无航班
+    ("福州市", "福州，厦门、泉州", 6),         # 出发带【市】后缀 + 混合分隔符，重点测试归一化差异
+    ("上海", "西安,成都,重庆", 10),            # 英文逗号分隔多城
+    ("厦门", "", 2),                           # 目的地为空，边界
+    ("广州", "长沙、张家界、昆明", 12),         # 长多目的地串联
+]
+
+print(f"{'出发':<6}{'目的地':<12}{'游玩城市列表':<30}{'IATA出发':<8}{'交通航段':<30}{'住宿晚数分配'}")
+print("-" * 120)
+
+for dep, dest, total_days in test_cases:
+    req = ExpressRequirement(
+        departure_city=dep,
+        destination=dest,
+        departure_date="2026-10-01",
+        auto_confirm=True
+    )
+    cities = _plan_cities(req)
+    legs = _build_legs(dep, cities)
+    stations_count = len(cities)
+    nights = _stay_nights(total_days, stations_count)
+    dep_iata = _iata(dep)
+
+    # 航段转IATA版本，方便看航班查询参数
+    leg_iata = [(_iata(a), _iata(b)) for a, b in legs]
+
+    print(
+        f"{dep:<6}{dest:<12}{str(cities):<30}{dep_iata:<8}{str(legs):<30}{nights}"
+    )
+    # 附加打印IATA航段（单独一行，方便看并行查询用的参数）
+    print(f"{'':<42}  → IATA航段: {leg_iata}")
+
+print("\n=== 说明 ===")
+print("1. 交通段：(起,终)，自动生成城际+返程；同城市段会自动过滤")
+print("2. IATA为空代表该城市不在城市码映射表，无法调用航班接口")
+print("3. 住宿晚数：首站固定1晚，剩余天数均分，余数优先给前面城市")

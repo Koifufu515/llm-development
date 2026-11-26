@@ -1,0 +1,5 @@
+"""_ticket_status 演示：12306 的余票写法五花八门，统一成前端能直接展示的几种（纯函数，无需密钥）"""
+from app.capabilities.train_multi_segment.train_agent_tool import _ticket_status
+
+for raw in ["有", "有票", "无", "--", "", "候补", "12", "少量"]:
+    print(f"{raw!r:6} → {_ticket_status(raw)}")

@@ -1,0 +1,9 @@
+合法注册 → alice alice@example.com
+拦下 → 字段 email，原因 value_error
+拦下 → 字段 password，原因 string_too_short
+拦下 → 字段 username，原因 string_too_short
+响应字段 → ['id', 'username', 'email', 'preferences', 'created_at']
+password_hash 漏出去了吗？ False
+PATCH 只传标题 → {'title': '五一去杭州', 'status': None} | 真正传了的： {'title': '五一去杭州'}
+空消息 → string_too_short
+会话 id 的格式不在这一层查 → not-a-uuid

@@ -1,0 +1,21 @@
+{
+  "city": "上海",
+  "title": "上海景点资料 · Shanghai/Huangpu",
+  "source_url": "https://en.wikivoyage.org/wiki/Shanghai/Huangpu",
+  "text": "资料城市：上海。本文是历史开放景点资料，不提供实时开放时间或价格；出行前需要核实。\n\nCustoms House\nAn eight storey building on the Bund featuring a highly visible clocktower nicknamed \"Big Ching\". Built in 1927, it is seen as one of the symbols of the Bund.\n\nHSBC Building\nThe grandest building on the Bund is now home to the Pudong Development Bank.\n\nHuangpu Park\nAt the northern tip of the Bund, was the legendary home of the \"No dogs or Chinese\" sign &mdash; which in fact never existed, although Chinese not accompanied by foreigners were indeed banned until 1928. The '''Bund Historical Museum''' located here is also worth a quick visit.\n\nShanghai Museum\nThe exterior evokes a bronze urn, which is appropriate since the museum holds the world's greatest collection of Chinese bronzes. The collection is well-presented and state-of-the-art. Directions and information are presented in Chinese and English, and the facilities are world-class. The audio guide, &yen;40, is excellent, especially if you do not know much about Chinese art.\n\nShanghai Art Museum\nThis is a large international gallery with a frequently changing program.\n\nShanghai Urban Planning Exhibition Hall\nMore interesting than you'd expect given its name, this museum documents the history of Shanghai and attempts to chart its future, with changing exhibits on the first two floors and a permanent exhibition on the rest. Particularly worthwhile is the massive scale model of what Shanghai should look like in 2020.\n\nShanghai Grand Opera Palace\nThe Opera Palace is often listed as one of the ten best opera houses in the world.  Performances are normally \"classic\" Western-style opera.\n\nHuangpu River cruise\nAt the Bund's southern ferry port with the following: One hour, two hour and three hour cruises on the Huangpu. There is a large number of ticket offices and the prices differ slightly.\n\nHuangpu River ferry\nFor those on a budget or short on time, you can take the ferry across to Pudong. This takes about 15 min and costs ¥2.\n\nBund \"Sightseeing\" Tunnel\nA slow-moving tram, through a comically low-tech tunnel with bizarre commentary in English and Chinese. It is marketed as a Sightseeing Tunnel, however there are no sights other than 80s-era rope lights, lasers and some inflatables that look as though they belong in a car dealership. It is a rather surreal experience. This is the fastest way of crossing between the Bund in Puxi and the Pearl TV Tower in Pudong but also the most expensive; it is essentially a tourist trap. After arriving you'll be dropped off in a hall full of tourist-trap shops, which should come as no surprise since the entrance is a few meters from the TV Tower and this is a mode of transportation that locals rarely use. '''Not recommended''' for those sensitive to strobe lights or mediocrity  — unless you are prepared to spend some cash to look at flashing lights instead of walking 5 minutes to the South and taking the ferry or walking 5 minutes West to Nanjing Road East metro station and taking the Metro. On the other hand, it is also significantly less packed than either of those during peak hours.",
+  "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+  "license": "CC BY-SA 3.0",
+  "attribution": "Wikivoyage contributors; https://en.wikivoyage.org/wiki/Shanghai/Huangpu",
+  "sha256": "ea7f635d44df07e4043afa84bc432f34a093f66db6fb95f699e3a6edac4a1a2f",
+  "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+  "poi_count": 10,
+  "source_dataset": "https://github.com/wikivoyage/wikivoyage.github.io",
+  "excluded_fields": [
+    "price",
+    "hours",
+    "phone",
+    "email",
+    "hotel",
+    "restaurant"
+  ]
+}

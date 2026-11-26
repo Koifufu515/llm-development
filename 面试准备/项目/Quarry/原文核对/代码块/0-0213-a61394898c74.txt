@@ -1,0 +1,2 @@
+docker compose exec redis redis-cli XLEN quarry:ingest
+docker compose exec redis redis-cli XPENDING quarry:ingest ingest-workers

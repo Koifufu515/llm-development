@@ -1,0 +1,9 @@
+              List of relations
+ Schema |      Name       | Type  | Owner
+--------+-----------------+-------+--------
+ public | alembic_version | table | quarry
+ public | chunks          | table | quarry
+ public | collections     | table | quarry
+ public | documents       | table | quarry
+ public | tenants         | table | quarry
+(5 rows)

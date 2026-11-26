@@ -1,0 +1,21 @@
+{
+  "city": "乌鲁木齐",
+  "title": "乌鲁木齐景点资料 · Urumqi",
+  "source_url": "https://en.wikivoyage.org/wiki/Urumqi",
+  "text": "资料城市：乌鲁木齐。本文是历史开放景点资料，不提供实时开放时间或价格；出行前需要核实。\n\nGrand Bazaar\nThe Xinjiang International Grand Bazaar, a traditional Islamic market area and the main Uyghur enclave in downtown – definitely worth a visit in the evenings for some food and people watching. In the summer time, the Da Bazar at night is a rather lively place, if you come just as it is getting dark you can see tight rope walkers walking from one side of two the next with the tall minaret in the background.\n\nRed Mountain\nThis pleasant park has, among other things, a Ferris wheel, a Buddhist temple and great views over the city. The park itself has a free entrance but you have to pay for some of the attractions.\n\nPeople's Park\nA wonderful place for people watching. Busy at all times of day but particularly in the early mornings and evenings, with people making music, singing, dancing, playing games, exercising, doing tai chi, practicing calligraphy, in fact pretty much any recreational activity.\n\nPeople's Square\nA big square in the middle of town with an army monument in the middle.\n\nXinjiang Silk Road Museum (新疆丝绸之路博物馆)\nEasy to find - located right next to the Grand Bazaar at No.160 Shengli Rd. Bus No.110 stops very close to it. It is on the fifth and sixth floor of a very large European style building which houses a shopping complex as well. The admission charge is ¥30 per person. Most of the exhibits have English names as well and some of their guides speak some English.\n\nConfucian Temple\nA beautiful, quiet and peaceful temple. To find it follow the red wall alongside the Autonomous Regional Party Committee building north from People's Square.  Take the first turn to the right and follow the road east to the end where you will find the temple.  It closes at 13:00 for lunch.\n\nLiyushan Park\nThe park is showing old trees from the desert, large stone trees, stones with carvings from BC and some Przewalski horses (which are rare) plus other animals. The north entrance is hard to find and just behind the Yema International Business Hotel (4th floor of the building in the back yard).",
+  "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+  "license": "CC BY-SA 3.0",
+  "attribution": "Wikivoyage contributors; https://en.wikivoyage.org/wiki/Urumqi",
+  "sha256": "f7d7f6ae290975400e607ecaab40171e853bfff39c2cf9d5941cf8b76a78effc",
+  "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+  "poi_count": 7,
+  "source_dataset": "https://github.com/wikivoyage/wikivoyage.github.io",
+  "excluded_fields": [
+    "price",
+    "hours",
+    "phone",
+    "email",
+    "hotel",
+    "restaurant"
+  ]
+}

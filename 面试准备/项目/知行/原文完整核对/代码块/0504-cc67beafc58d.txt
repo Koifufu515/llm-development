@@ -1,0 +1,56 @@
+"""
+演示脚本：_number_before 数字提取工具演示
+标题：演示从酒店price.message字段提取单晚价格
+真实样本输入：{"message":"查价成功。2晚总价：438CNY（约219CNY/晚）","hasPrice":true,"lowestPrice":219.0}
+"""
+
+_DIGITS = "0123456789"
+
+def _to_float(value, default: float = 0.0) -> float:
+    """安全转 float，转不了给默认值"""
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+def _number_before(text: str, unit: str) -> float:
+    """取紧挨在 unit 前面的数字，如 ('均价356CNY/晚', 'CNY/晚') → 356；没有 unit 返回 0"""
+    if unit not in (text or ""):
+        return 0.0
+    head = text.split(unit, 1)[0].rstrip()
+    i = len(head)
+    while i > 0 and head[i - 1] in _DIGITS + ".":
+        i -= 1
+    return _to_float(head[i:])
+
+if __name__ == "__main__":
+    # 真实业务样本
+    sample = {
+        "message": "查价成功。2晚总价：438CNY（约219CNY/晚）",
+        "hasPrice": True,
+        "lowestPrice": 219.0
+    }
+
+    msg_text = sample["message"]
+    print("===== 演示从酒店price.message字段提取单晚价格 =====")
+    print(f"原始message文本：{msg_text}")
+    print(f"样本自带lowestPrice真值：{sample['lowestPrice']}")
+
+    # 提取「CNY/晚」前面的单晚价格
+    extract_price = _number_before(msg_text, "CNY/晚")
+    print(f"_number_before(..., 'CNY/晚')提取结果：{extract_price}")
+
+    # 额外测试：提取总价 CNY 前面数字
+    total_price = _number_before(msg_text, "CNY")
+    print(f"_number_before(..., 'CNY')提取结果（取总价）：{total_price}")
+
+    print("\n---边界测试样例---")
+    test_cases = [
+        "均价356CNY/晚",
+        "暂无报价CNY/晚",
+        "价格：120.5CNY/晚",
+        "没有匹配的标记文本"
+    ]
+    for case in test_cases:
+        res = _number_before(case, "CNY/晚")
+        print(f"输入：{case!r:35} → 输出：{res}")

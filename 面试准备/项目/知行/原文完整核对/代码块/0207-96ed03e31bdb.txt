@@ -1,0 +1,121 @@
+def validate_train_submission(
+    payload: TrainSubmitPayload, cache_key: Optional[str] = None
+) -> TrainSubmitResult:
+    """校验 segment_id 是否存在、option_id 是否在该段候选列表内；不比对任何时间先后"""
+    cached = get_cached_payload(cache_key)
+    if cached is None:                        # 没查过班次就提交：拦下，避免写进不存在的车次
+        return TrainSubmitResult(
+            ok=False, code="NO_PAYLOAD",
+            msg="尚无候选班次记录，请先获取班次卡片后再提交",
+        )
+    items = payload.segments
+    if not items:
+        return TrainSubmitResult(
+            ok=False, code="EMPTY_SELECTION", msg="提交内容为空，至少要选择一段车次",
+        )
+    # 身份校验用 option_id（车次号在同段可重复，不能当身份）：缺 option_id 一律拦下要求重选，
+    # 绝不用 trainNo 兜底匹配，避免静默写错车次
+    no_id = [f"{item.segment_id}·{item.trainNo or '未填写车次号'}"
+             for item in items if not (item.option_id or "").strip()]
+    if no_id:
+        return TrainSubmitResult(
+            ok=False, code="MISSING_OPTION_ID",
+            msg=f"以下选择缺少车次标识（option_id）：{'、'.join(no_id)}；"
+                f"请在卡片中重新选择后提交",
+        )
+    by_id = {seg.segment_id: seg for seg in cached.segments}
+    unknown = [item.segment_id for item in items if item.segment_id not in by_id]
+    if unknown:
+        return TrainSubmitResult(
+            ok=False, code="SEGMENT_NOT_FOUND",
+            msg=f"不存在的行程段：{'、'.join(unknown)}；合法段为 {'、'.join(by_id)}",
+        )
+    bad_train = [
+        f"{item.segment_id}·{item.option_id}" for item in items
+        if item.option_id not in {t.option_id for t in by_id[item.segment_id].train_list}
+    ]
+    if bad_train:
+        return TrainSubmitResult(
+            ok=False, code="TRAIN_NOT_FOUND",
+            msg=f"以下车次不在该段候选列表中：{'、'.join(bad_train)}",
+        )
+    chosen = {item.segment_id for item in items}
+    # ★ 实时无候选（train_list 为空/查询失败、卡片里置灰）的段不算"漏选"——否则该段无从选择、
+    #   用户永远凑不齐全部段而卡在交通步。只有"有候选却没选"的段才判 INCOMPLETE。
+    missing = [seg.segment_id for seg in cached.segments
+               if seg.segment_id not in chosen and seg.train_list]
+    if missing:
+        return TrainSubmitResult(
+            ok=False, code="INCOMPLETE",
+            msg=f"以下行程段尚未选择车次：{'、'.join(missing)}",
+        )
+    return TrainSubmitResult(
+        ok=True, code="OK",
+        msg=f"已收到 {len(items)} 段选中车次，基础合法性校验通过（未做任何时间校验）",
+        accepted=items,
+    )
+
+# ==================== Agent 可调用的两个 Tool ====================
+
+@tool
+async def query_train_multi_segment_tool(
+    legs: list[dict],
+    seat_type: str = "二等座",
+    max_options_per_leg: int = 5,
+) -> str:
+    """并行查询多段高铁班次，返回可直接下发前端的 train_multi_segment skill payload。
+
+    适用于「多目的地闭环行程」需要一次性给出各段候选车次的场景
+    （如 石家庄→北京→上海→石家庄）。段与段之间**并发查询**，总耗时≈最慢一段，
+    段数由 legs 长度决定（2/3/4 段均可），不是串行逐段查。
+
+    Args:
+        legs: 行程段列表，按时间顺序排列。每项含 from（出发城市）、to（到达城市）、
+            travel_date（该段乘车日期 YYYY-MM-DD）；闭环行程最后一段回到起点。
+        seat_type: 期望席别，默认二等座。
+        max_options_per_leg: 每段返回的车次上限，默认 5。
+
+    Returns:
+        JSON 文本 {"skill_name":"train_multi_segment","segments":[...]}。
+        **请原样下发给前端 UI Skill**：不要改写字段名、不要增删 segments、不要自己再校验时间；
+        某些段查不到班次时该段 train_list 为空数组，如实告知用户即可。
+    """
+    payload = await build_train_multi_segment_payload(legs, seat_type, max_options_per_leg)
+    app_logger.info(f"🚄 train_multi_segment 出参：{len(payload.segments)} 段")
+    return payload.model_dump_json(by_alias=True)
+
+@tool
+async def submit_train_multi_segment_tool(segments: list[dict]) -> str:
+    """接收前端一次性回传的全部段选中车次，只做基础合法性校验。
+
+    **不做任何列车时间校验**（不比对到站/发车先后、不判断耗时是否够中转）。
+
+    Args:
+        segments: 前端 onSubmit 抛回的数组，每项为
+            {"segment_id": "s1", "option_id": "G1308-08:36-正定机场", "trainNo": "G1308"}。
+            **option_id 是身份**（车次号在同段可能有多趟，不能当身份）。
+
+    Returns:
+        JSON 文本 {"ok": bool, "code": str, "msg": str, "accepted": [...]}。
+        ok 为 false 时把 msg 原样告知用户，并请其在界面上改选后重新提交；
+        ok 为 true 表示已确认全部段选择（未锁票、未做时间校验）。
+    """
+    try:
+        payload = TrainSubmitPayload.model_validate({"segments": segments})
+    except Exception as exc:                  # 结构缺失（如没有 trainNo）也走确定性回执，不抛错
+        return TrainSubmitResult(
+            ok=False, code="INVALID_PAYLOAD", msg=f"提交数据结构不合法：{exc}"
+        ).model_dump_json()
+    result = validate_train_submission(payload)
+    app_logger.info(f"🚄 train_multi_segment 提交校验：{result.code} / {result.msg}")
+    return result.model_dump_json()
+
+__all__ = [
+    "TRAIN_MULTI_SEGMENT_SKILL",
+    "build_train_multi_segment_payload",
+    "get_cached_payload",
+    "train_score",
+    "validate_train_submission",
+    "query_train_multi_segment_tool",
+    "submit_train_multi_segment_tool",
+]

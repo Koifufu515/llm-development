@@ -1,0 +1,9 @@
+@tool
+async def query_destination_info(destination: str, query: str = "") -> str:
+    """查询目的地详细信息（并行查询多个源）"""
+    router = create_destination_router()          # ← 造一张子图（本章环节 6 实现）
+    result = await router.ainvoke({               # ← 把子图跑一遍
+        "original_query": query or f"推荐{destination}旅游",
+        "destination": destination,
+    })
+    return result["final_report"]                 # ← 拿归并后的综合报告

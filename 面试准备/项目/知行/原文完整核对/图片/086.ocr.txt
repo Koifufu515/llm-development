@@ -1,0 +1,6 @@
+（knowgo_traveL_backend） PS E：\knowgo_travel_backend> uv add asyncpg email-validator
+Resolved 220 packages in 9.21s
+Checked 196 packages in 77ms
+（knowgo_travel_backend） PS E：\knowgo_travel_backend> New-Item -ItemType Directory -Path "app\api\v1"-Force I Out-NuLL
+（knowgo_travel_backend） PS E：\knowgo_travel_backend> if （-not （Test-Path "app\api\vi\_init__.py"））｛ New-Item -ItemType File -Path "app\api\vi\__init__.py" | Out-NuLL ｝
+（knowqo_travel_backend）Ps E：\knowqo_travel_backend>

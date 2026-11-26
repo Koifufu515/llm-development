@@ -1,0 +1,2 @@
+{'code': 'CA1501', 'airline': '中国国际航空', 'from': '首都国际机场', 'to': '虹桥国际机场', 'date': '2026-10-01', 'dep': '08:00', 'arr': '10:10', 'terminal': 'T3', 'ontime': '93%', 'stop': '', 'state': '计划', 'price': 0.0}
+{'code': 'MU5104', 'airline': '中国东方航空', 'from': '首都国际机场', 'to': '虹桥国际机场', 'date': '2026-10-01', 'dep': '10:00', 'arr': '12:15', 'terminal': 'T2', 'ontime': '91%', 'stop': '', 'state': '计划', 'price': 0.0}

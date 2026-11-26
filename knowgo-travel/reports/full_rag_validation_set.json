@@ -1,0 +1,156 @@
+{
+  "scope": "18城冻结验证集，与先前6城开发诊断分离；助手按原文实体标注，未经过用户人工审阅；仅评实体检索，不是问答准确率。",
+  "sha256": "1f4c7502762ba07688dd253e347cbd745611a5a03c14f291ac3ca44e90a7809f",
+  "cases": [
+    {
+      "city": "成都",
+      "query": "成都大熊猫繁育研究基地有哪些值得看的内容？",
+      "target_name_in_source": "Chengdu Panda Research Base of Giant Panda Breeding",
+      "relevant_parent_ids": [
+        "b010ad762cbca4b895db9fd5"
+      ]
+    },
+    {
+      "city": "广州",
+      "query": "广州陈家祠有什么建筑特色？",
+      "target_name_in_source": "Chen Clan Academy",
+      "relevant_parent_ids": [
+        "50f1ba6a70d9aae0e26672ab"
+      ]
+    },
+    {
+      "city": "深圳",
+      "query": "深圳世界之窗主要能看什么？",
+      "target_name_in_source": "Window of The World",
+      "relevant_parent_ids": [
+        "55cad94317460f45a2358c46"
+      ]
+    },
+    {
+      "city": "青岛",
+      "query": "青岛栈桥有哪些看点？",
+      "target_name_in_source": "Zhan Qiao",
+      "relevant_parent_ids": [
+        "5fe8b70b9ddcf91f06c50483"
+      ]
+    },
+    {
+      "city": "大理",
+      "query": "大理三塔有什么历史与游览特点？",
+      "target_name_in_source": "Tang Dynasty Three Pagodas",
+      "relevant_parent_ids": [
+        "58b66bc29fc4159ec9d71c7e"
+      ]
+    },
+    {
+      "city": "哈尔滨",
+      "query": "哈尔滨圣索菲亚教堂有什么特点？",
+      "target_name_in_source": "St. Sophia Cathedral",
+      "relevant_parent_ids": [
+        "656c1ba7f68bf6bf8c472b84"
+      ]
+    },
+    {
+      "city": "敦煌",
+      "query": "敦煌莫高窟有哪些文化看点？",
+      "target_name_in_source": "Mogao Caves",
+      "relevant_parent_ids": [
+        "7f1e3026ca530cf9b0f2f8fc"
+      ]
+    },
+    {
+      "city": "拉萨",
+      "query": "拉萨布达拉宫有什么历史特点？",
+      "target_name_in_source": "Potala Palace",
+      "relevant_parent_ids": [
+        "6cc03ad4bbf901eb3bb1b067",
+        "974e5dd178a9648e3d1a83c6",
+        "95281f18e05107c14d247a30",
+        "2317c5a917f70c3ad57ff31e"
+      ]
+    },
+    {
+      "city": "泉州",
+      "query": "泉州开元寺值得看什么？",
+      "target_name_in_source": "Kaiyuan Temple",
+      "relevant_parent_ids": [
+        "42d27a0559749df742e15308",
+        "b1fcff9fda6d23186db19019"
+      ]
+    },
+    {
+      "city": "太原",
+      "query": "太原晋祠有什么历史看点？",
+      "target_name_in_source": "Jinci Temple",
+      "relevant_parent_ids": [
+        "1891cddb8f3dfab26d60c93d"
+      ]
+    },
+    {
+      "city": "兰州",
+      "query": "兰州白塔山有哪些景观？",
+      "target_name_in_source": "White Pagoda Mountain",
+      "relevant_parent_ids": [
+        "dc704b9a2dada64c31907a4d"
+      ]
+    },
+    {
+      "city": "无锡",
+      "query": "无锡鼋头渚适合看哪些景色？",
+      "target_name_in_source": "Taihu Lake Yuantouzhu (Turtle's Head) Scenic Area",
+      "relevant_parent_ids": [
+        "bd768eb2f033213a04ab6a7e"
+      ]
+    },
+    {
+      "city": "济南",
+      "query": "济南趵突泉有什么特色？",
+      "target_name_in_source": "Baotu Springs",
+      "relevant_parent_ids": [
+        "1bf20ad79e4d5cecc1147eac"
+      ]
+    },
+    {
+      "city": "洛阳",
+      "query": "洛阳龙门石窟有哪些看点？",
+      "target_name_in_source": "Longmen Grottoe",
+      "relevant_parent_ids": [
+        "cce683e1569bd7cfc6080d2f"
+      ]
+    },
+    {
+      "city": "丽江",
+      "query": "丽江黑龙潭可以欣赏什么？",
+      "target_name_in_source": "Black Dragon Pool",
+      "relevant_parent_ids": [
+        "d8eceb5bb70ed2871f10236e",
+        "839604f9405281ddc5b465bf",
+        "ea2df70b71cf844fa8b926d3"
+      ]
+    },
+    {
+      "city": "三亚",
+      "query": "三亚天涯海角有什么景观？",
+      "target_name_in_source": "Tianya Haijiao",
+      "relevant_parent_ids": [
+        "944d1a54d72333fb9c517f66"
+      ]
+    },
+    {
+      "city": "扬州",
+      "query": "扬州瘦西湖有哪些特色？",
+      "target_name_in_source": "Slender West Lake",
+      "relevant_parent_ids": [
+        "201622e108ebf7f741435707"
+      ]
+    },
+    {
+      "city": "长沙",
+      "query": "长沙岳麓山有什么值得游览的？",
+      "target_name_in_source": "Yuelu Mountain",
+      "relevant_parent_ids": [
+        "8baf22f06c1d4fbf2b45fc09"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+_LEG_UNAVAILABLE = "实时班次暂不可用（可现场购票/改期）"
+
+async def apply_driving_selection(
+    conversation_id: str, payload: DrivingSubmitPayload
+) -> DrivingSubmitResult:
+    """前端一次性提交 → 校验 + 写段账本 + 推进到住宿步（全程只读确认，不做任何校验）"""
+    result = validate_driving_submission(payload, cache_key=conversation_id)
+    if not result.ok:
+        return result
+    agent, config, state = await get_agent_and_state(conversation_id)   # ← 复用 base
+    # 步骤守卫（代码层，不看模型措辞）：只有仍停在交通步才允许落库推进——
+    # 重复提交（前端连点/已确认过）按幂等成功处理，避免把已推进的状态机拉回来
+    step = str(state.get("current_step") or "")
+    if step != "transport_planning":
+        if step in _AFTER_TRANSPORT:
+            return DrivingSubmitResult(
+                ok=True, code="OK", msg="该批自驾路线已确认，无需重复提交",
+                accepted=list(payload.segments),
+                texts=list(state.get("selected_transport_legs") or []),
+            )
+        return DrivingSubmitResult(
+            ok=False, code="STEP_MISMATCH",
+            msg=f"当前流程步骤为 {step or '未知'}，不在交通确认阶段，无法提交自驾路线",
+        )
+    legs = _legs_with_dates(state)
+    cached = get_cached_payload(conversation_id)
+    by_id = {seg.segment_id: seg for seg in (cached.segments if cached else [])}
+    selections: dict[str, str] = {}
+    texts: list[str] = []
+    for index, leg in enumerate(legs):
+        seg = by_id.get(f"s{index + 1}")
+        key = f"{leg.from_}→{leg.to}"
+        if seg is not None and seg.ok:
+            selections[key] = _fmt_route(seg)
+            texts.append(f"{key} {_fmt_route(seg)}")
+        elif seg is not None and not seg.ok:
+            # ★ 该段实时无路线（高德查询失败、卡片里置灰）：占位放行，让用户能走下去
+            selections[key] = _LEG_UNAVAILABLE
+            texts.append(f"{key} {_LEG_UNAVAILABLE}")
+        # else：seg 不存在（理论不会）——跳过
+    if not legs or len(selections) != len(legs):
+        return DrivingSubmitResult(
+            ok=False, code="INCOMPLETE",
+            msg=f"提交的自驾路线未能覆盖全部行程段（应 {len(legs)} 段，可确认 {len(selections)} 段），"
+                f"请稍后在卡片里重新确认后提交",
+        )
+    await agent.aupdate_state(config, {
+        "leg_selections": selections,
+        # ★ 自驾没有票价可记，但必须把数字账本**显式清空**：用户如果是从高铁/航班
+        #   回退过来改成自驾的，上一次的票价还留在状态里，预算会算出一笔不存在的车票钱
+        "leg_prices": {},
+        "leg_cursor": len(legs),
+        "selected_transport": "driving",
+        "selected_transport_legs": texts,
+        "current_step": "accommodation_planning",
+    })
+    app_logger.info(f"✅ 多段自驾已提交并落库：{len(selections)} 段，推进到住宿步")
+    return DrivingSubmitResult(
+        ok=True, code="OK",
+        msg=f"已确认 {len(selections)} 段自驾路线，继续为您规划住宿与行程",
+        accepted=list(payload.segments),
+        texts=texts,  # 段文本回传：路由侧据此合成"我已确认自驾…"发言续跑住宿步
+    )
+    
+    
+    
+__all__ = [
+    "driving_mode_requested",
+    "driving_card_mode",
+    "emit_driving_skill_ui",
+    "auto_select_driving",
+    "apply_driving_selection",
+    "build_lead_text",
+]

@@ -1,0 +1,13 @@
+"""三张表的结构：表名、外键、索引、排序都能直接从模型上读出来，不用连库（纯逻辑，无需密钥）"""
+from sqlalchemy.orm import configure_mappers
+
+from app.models import Base, Conversation, User
+
+configure_mappers()      # 把所有字符串懒引用（"Message"、"Message.created_at"）一次解析完，缺哪个模型这里就报错
+for name in sorted(Base.metadata.tables):
+    table = Base.metadata.tables[name]
+    fks = [f"{fk.parent.name} → {fk.target_fullname}（删除时 {fk.ondelete}）" for fk in table.foreign_keys]
+    print(f"{name}：外键 {fks or '无'}")
+    print(f"    建了索引的列 {[c.name for c in table.columns if c.index]}，唯一列 {[c.name for c in table.columns if c.unique]}")
+print("User 主键类型：", User.__table__.c.id.type)
+print("conv.messages 自带排序：", [str(col) for col in Conversation.messages.property.order_by])

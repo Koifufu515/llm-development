@@ -1,0 +1,364 @@
+{
+  "date": "2026-10-29",
+  "tests_passed": 56,
+  "real_acceptance": "reports/acceptance.json",
+  "provider": "qwen",
+  "model": "qwen-plus",
+  "limitations": [
+    "腾讯地图日配额耗尽，高德驾车另行通过",
+    "多城自动规划默认高铁；航班/驾车提供查询入口",
+    "小型知识语料，非全国攻略覆盖",
+    "SSE阶段事件，非逐Token流",
+    "本机演示无生产身份认证、写操作串行"
+  ],
+  "files": [
+    {
+      "path": ".gitignore",
+      "sha256": "d1eb266a7d6e327ba583bebb643278e222a9f021a2a30cb2fb85a0948448b37a"
+    },
+    {
+      "path": "README.md",
+      "sha256": "a58350f7238fe503b026f2e901ae41b167afe78a380809714186c251a1b16eab"
+    },
+    {
+      "path": "app/__init__.py",
+      "sha256": "898a0c71c8cba05feb469887daa1890d4fd462228c2da8aca395347929a056c9"
+    },
+    {
+      "path": "app/agents/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "app/agents/travel_agent.py",
+      "sha256": "d9ef2617125c7526c0d1e918f0e133f7ec7c4f644a70c54ef88da7fa9b816df9"
+    },
+    {
+      "path": "app/api/delivery.py",
+      "sha256": "65195b24a706a96e61d04dbc9f1070e1f911d6de6f3cf82064c935b25a6cf66d"
+    },
+    {
+      "path": "app/config.py",
+      "sha256": "40de3f450726f345dea00f02e6b090962251caa25861a51b11b681ff0a1f8a6c"
+    },
+    {
+      "path": "app/core/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "app/core/checkpointer.py",
+      "sha256": "7463490ec4b1f2556e264713694d9c29099c8003ed85d70ed7a2727fd3c79350"
+    },
+    {
+      "path": "app/core/middleware.py",
+      "sha256": "8b91663ce08277e357d5cf41f6be72fd148eacece390be25546d4e26ff930673"
+    },
+    {
+      "path": "app/core/rail.py",
+      "sha256": "47dfb59459cf4c7854b1cfd59eb44e5301bef6aeba9f6283904b0f0b133289b1"
+    },
+    {
+      "path": "app/core/state.py",
+      "sha256": "c39e261a1f1b4a263abef7ef2ec3ff61069f01e7f8f46e171f34cfbe4ab17023"
+    },
+    {
+      "path": "app/core/store.py",
+      "sha256": "d15f859b372c322dadb50e4e40ee1235483310b58d275772c16f04dc148b2bc3"
+    },
+    {
+      "path": "app/core/telemetry.py",
+      "sha256": "1bfd91490cb15b2dae96a6e6599122b80692035d1e0eb60749aca1e5206b18e5"
+    },
+    {
+      "path": "app/core/transitions.py",
+      "sha256": "5926bd9275b9267b2643577d51f5888b2c4e20c06f087b4ea5b26bdc63bf07c1"
+    },
+    {
+      "path": "app/main.py",
+      "sha256": "740487da2a90f3a44ddde3d4aae67c78717f0ea4f01aac34eccbe46d745517a6"
+    },
+    {
+      "path": "app/mcp_core/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "app/mcp_core/client.py",
+      "sha256": "9e67b6b0bb8c898f8adf661bbb4bcb481ac4f283d5c159e584b7258b4516e407"
+    },
+    {
+      "path": "app/mcp_core/servers/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "app/mcp_core/servers/weather_data.py",
+      "sha256": "84e4334048f6c863195117c89c0ef17ec89cf96e29a480810087301b8e2943fa"
+    },
+    {
+      "path": "app/mcp_core/servers/weather_server.py",
+      "sha256": "c66ec51255e758639fe203fd46ac63df2ac2a8d4e6000017625dc3a26d487e0f"
+    },
+    {
+      "path": "app/services/contracts.py",
+      "sha256": "392cbf6ab75c1b0aa5256c0ae55b71ad684d0da93a1388733036c31203d17b61"
+    },
+    {
+      "path": "app/services/knowledge.py",
+      "sha256": "e9ba9769d2c31a09c89a0a050ad14d433e67047ee8eea99931646b82fbc7b58c"
+    },
+    {
+      "path": "app/services/planning.py",
+      "sha256": "a9c2cf5a8acc966d730aa09b1832c23d095249f361dc1c25c9738c01f77d5b50"
+    },
+    {
+      "path": "app/services/providers.py",
+      "sha256": "01cdb3715c5de6830aeb7b747ea7cebcd1c59afda4184ad880ad0e7ef0ff9a48"
+    },
+    {
+      "path": "app/services/remote.py",
+      "sha256": "b3b5ee21d37427592a9e7e34b0382f9989a1876575f37270dc5c854c9c875b87"
+    },
+    {
+      "path": "app/services/routing.py",
+      "sha256": "ce2c4b9a6a37223e362f933d5aef80ad9405702540bd6368ac7311d7120f4bc7"
+    },
+    {
+      "path": "app/static/learn.html",
+      "sha256": "7bf1ba9bd4cf66b10cadf6a59cfd554f7e774845b0d9cf7d52221ac9287d7a94"
+    },
+    {
+      "path": "app/static/studio.html",
+      "sha256": "76893fc3dd6dd7f01d04ddfbb73aa8dbca3ad339eb5f9a71c178c06efb442227"
+    },
+    {
+      "path": "app/tools/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "app/tools/completion_tools.py",
+      "sha256": "9925bc6de3040c84bdf0ce07e22693bbcb3a0d4327e31a87decc405b8a78d0aa"
+    },
+    {
+      "path": "app/tools/rail_tools.py",
+      "sha256": "93d962a92041a7390ee7361fb98d9ec984eeb3a2fc1c4e267debd8da992906f5"
+    },
+    {
+      "path": "app/tools/state_transition.py",
+      "sha256": "482dd03d2cb9c5ce8dd7258ecad699359058324bee1c9de1a39cec0fe5bf1bba"
+    },
+    {
+      "path": "app/utils/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "app/utils/llm_factory.py",
+      "sha256": "466209aa7d8a9b9b1a24f83d07948697843659da9ba9dcf00dbcbce0f7308794"
+    },
+    {
+      "path": "compose.yaml",
+      "sha256": "c4bed49edccbac4e8c2585d807f7fc03576d05bd55271cdb4b7f95e4fcb16235"
+    },
+    {
+      "path": "data/guides/00-苏州.json",
+      "sha256": "ce3752a8258511e884a615805fdbf17f92fb043bdf8b2292c39c5067a2d419cb"
+    },
+    {
+      "path": "data/guides/01-杭州.json",
+      "sha256": "426044ab5678a9d259c629a873f70762c43c2873651df8aa658e14875295d28b"
+    },
+    {
+      "path": "data/guides/02-北京.json",
+      "sha256": "573d18eb78d6e38421474beabf5eb27badde1065af02b4ac0ef6fafaa3b9b4a2"
+    },
+    {
+      "path": "data/guides/03-北京.json",
+      "sha256": "8df3c4e32c5ad58420244adcea83cee5d5d5ea38455c5a1beed5f47a4f92cddb"
+    },
+    {
+      "path": "data/guides/04-北京.json",
+      "sha256": "1d5ea624aecbd5b91a106edf7b814e91207eca8ffcd9d12a553a59c9805aec6d"
+    },
+    {
+      "path": "data/guides/05-西安.json",
+      "sha256": "3677f5527fe4acd085e20625534caa7522a4d497cdd9402af564494ddf8d9079"
+    },
+    {
+      "path": "data/guides/06-南京.json",
+      "sha256": "47290f5ec3b9b4e4bb928376c3e5a22411fb12494e016458665191474d889ee2"
+    },
+    {
+      "path": "data/guides/07-成都.json",
+      "sha256": "8f7b752d80a62de4064ee04fed251f632c4aafb7a188b376df96a289e556d94f"
+    },
+    {
+      "path": "data/guides/08-黄山.json",
+      "sha256": "4795fff8591554434adead1ff5ab377de270f774172485f147e98e79df9ada02"
+    },
+    {
+      "path": "data/guides/09-北京.json",
+      "sha256": "b1f275d05446e5c557ac5bbceaf9e41acf438342022736f2a6d9c758e8c70b96"
+    },
+    {
+      "path": "data/samples/rail_raw_2026-10-27.json",
+      "sha256": "d952c4a54d83256357859ede49fa92df73542d7aef1c9c9275266643168ed0a2"
+    },
+    {
+      "path": "evaluation/rag_cases.json",
+      "sha256": "0b7281acb780c8c0c98703c251ca4f62234abad1703708c31a85e8b4576d5c54"
+    },
+    {
+      "path": "evaluation/route_cases.json",
+      "sha256": "be988182e5dd2b061524b460c0fa6696ee2c283a960925f244d72ce15b8dc32f"
+    },
+    {
+      "path": "pyproject.toml",
+      "sha256": "a75165ebb099d2d07f07c804d27945af96e2ff27f725fca02c7c967200f328a6"
+    },
+    {
+      "path": "reports/acceptance.json",
+      "sha256": "014d72fc8d0f9310e200a56a0a6227b6f2132e4091e17471155046034f0c1a10"
+    },
+    {
+      "path": "reports/external_live.json",
+      "sha256": "2029186c4d76b7710489ccc0c59769bb54c39ec61179ae81b49015d6ef08e327"
+    },
+    {
+      "path": "reports/hotel_raw_sample.json",
+      "sha256": "9506a08a8f8ba7e2550f33cfdb792be87af9216f3c2a82f9203fc5999e955548"
+    },
+    {
+      "path": "reports/live_delivery.json",
+      "sha256": "cbfe7e3e185371b594ea1faddb1a12f864548e618bb5f1a7a059d1298f75fc3c"
+    },
+    {
+      "path": "reports/performance_benchmark.json",
+      "sha256": "2ea8443c003eae3e37539218ed659d6fbf8ca98d5ad4b0868afab76a8eba8499"
+    },
+    {
+      "path": "reports/performance_benchmark_before_date_fix.json",
+      "sha256": "9991f6fbfa3ce3a596fd460eddcecf1984747072ead52a75ef09a1150a1ed833"
+    },
+    {
+      "path": "reports/performance_benchmark_deepseek.json",
+      "sha256": "c123a9c1606575f3881a9e307b968c5877bbaad667e1ae40227c69aae679e2dd"
+    },
+    {
+      "path": "reports/provider_diagnostics.json",
+      "sha256": "0425d3fe2702cee0b986ba4e4f0f9a60dcca68db045567ea64c6206ad56f6041"
+    },
+    {
+      "path": "reports/quality_benchmark.json",
+      "sha256": "1e4adf3f219b631762329e1274569c42c9020a9ec54b6415564f236d6b3245cb"
+    },
+    {
+      "path": "reports/quality_benchmark_deepseek.json",
+      "sha256": "dd0939442d50f18ceb8f1b99dce8d6a47da07a08c39a525657374f64fc24c13c"
+    },
+    {
+      "path": "reports/remote_schemas.json",
+      "sha256": "b4f7a735a41d19dfbd674a112ed60089459867eaaddbb27b404c3d25e1a8c12e"
+    },
+    {
+      "path": "reports/复盘路线.md",
+      "sha256": "ab7a016f44ce97a5d0cc193376a0303c6303e59a1b8d887a4265f50f3eed8c51"
+    },
+    {
+      "path": "reports/指标实测报告.md",
+      "sha256": "d8a963a8b695ca60c66229abe86a74e7f23e72d52c7936186bf38f4fd7c2a4c1"
+    },
+    {
+      "path": "reports/指标摘要.json",
+      "sha256": "579042da4d6bc9ff8bc3d179f6fa2af213d20aec20764ebb02a75c6a3798741e"
+    },
+    {
+      "path": "reports/简历项目描述.md",
+      "sha256": "35a571183c1698434e44729e1636e4be07e407d89d8f224207384cb3940f8d1b"
+    },
+    {
+      "path": "scripts/benchmark_performance.py",
+      "sha256": "4f49ec2a36eda5289aa2f97a0f9caeacce97508479f8c8f5ace31440e735c686"
+    },
+    {
+      "path": "scripts/benchmark_quality.py",
+      "sha256": "46b42a09d3b148268c2fd5321666d9df63c59106e66d3f4520ee8c831738eebd"
+    },
+    {
+      "path": "scripts/check_mcp.py",
+      "sha256": "d6df9e5dad33f285efac16817384c2b5f8a226431443fd8ac982841d74135dd2"
+    },
+    {
+      "path": "scripts/check_model.py",
+      "sha256": "0412b2f1189cab7054f57ba48462b14ac2968d1759ab3382f5aedf497661746f"
+    },
+    {
+      "path": "scripts/dev.sh",
+      "sha256": "50ad24a7ca0658a73fb87534f24e01ff928c9c13355c84b11198fbf46f69164b"
+    },
+    {
+      "path": "scripts/import_guides.py",
+      "sha256": "1aeb516e595cc86ee0e51e715497167c22d8cb63095e35f680fdfea4c9df2046"
+    },
+    {
+      "path": "scripts/patch_rail_mcp.py",
+      "sha256": "2ad94b4cab3dc5fa99ba592d1756f4b88c33c6ee95ac145d7f829eef3ceed1c4"
+    },
+    {
+      "path": "scripts/verify_acceptance.py",
+      "sha256": "8dfeb9f5038e1e2ae7e4821d9273d8646cd03e7293463b8c7cf28b86ad124617"
+    },
+    {
+      "path": "scripts/verify_delivery_live.py",
+      "sha256": "4c785166f498271951c5161ea0210b02f02270a3fe913dd41708958c81b41106"
+    },
+    {
+      "path": "tests/test_delivery.py",
+      "sha256": "f415403d96c35ee18babbe414612cbdd0311282400d80c6e614747d78eb2e5fd"
+    },
+    {
+      "path": "tests/test_memory_guard.py",
+      "sha256": "a994fdc9ed145cfaacdafbe3aa01ffa9b99a24efc4d312dd58c992757094861a"
+    },
+    {
+      "path": "tests/test_persistence.py",
+      "sha256": "aa1ab7b2913eed0f86fc54987d76f82acd77bdb3fc2071b4cf45ae69098d6c1d"
+    },
+    {
+      "path": "tests/test_rail.py",
+      "sha256": "f23ace0d5972ea2496e8bdc1f10b93d65c4abf6d6065ec5a89560800f3b1afcd"
+    },
+    {
+      "path": "tests/test_requirements.py",
+      "sha256": "f527b6b971e205af154da4a2352195e41135e3d7e94b35568d9a93da5c1b3338"
+    },
+    {
+      "path": "tests/test_telemetry.py",
+      "sha256": "09df4b292e8af58b1496e2fdc7b574e4bb9b920daf391994e8453f1fbe0d3a79"
+    },
+    {
+      "path": "tests/test_transitions.py",
+      "sha256": "4b7421ae93337e22af27a84c29d7c2b88a1019d15d5196e19a443ab5d7be5847"
+    },
+    {
+      "path": "tests/test_weather.py",
+      "sha256": "a6ab03ba942e9e13bed706a699d08bed2b576c6c2d7cbfeef8812cfa6a62ce9e"
+    },
+    {
+      "path": "uv.lock",
+      "sha256": "2228925b1ddfdd5bb68931ab94a3c95c73626822bdab5c308d762a4323085096"
+    },
+    {
+      "path": "停止容器环境.command",
+      "sha256": "2849227b140dc6f1407c353bda77c8994aa81d8a488e138396d44a6fce9b91e9"
+    },
+    {
+      "path": "启动后端.command",
+      "sha256": "579edf41f6fe7dbdbd1698c86e87d86fccd2df87d0522fe3605521a4c7f9afd1"
+    },
+    {
+      "path": "启动容器环境.command",
+      "sha256": "20cf63b3f11757bf2b491c87adb7aa59191ef3839a11d80d1cdb4cae03de33b3"
+    },
+    {
+      "path": "查看环境.command",
+      "sha256": "6d17d067f1efa8c7de844854298bf3905c99e686cba24527df0eb981df264710"
+    }
+  ]
+}

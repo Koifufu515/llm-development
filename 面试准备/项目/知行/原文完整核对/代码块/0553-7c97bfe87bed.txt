@@ -1,0 +1,36 @@
+def _resume_content(result: TrainSubmitResult) -> str:
+    """续跑用的合成发言（用户口吻）：住宿步提示词据此知道车次已定，直接进入酒店候选轮"""
+    legs = "；".join(result.texts) if result.texts else f"{len(result.accepted)} 段车次"
+    return f"我已按卡片选定全部车次：{legs}。请继续为我推荐住宿，并推进后续行程安排。"
+
+def _hotel_resume_content(result: HotelMultiSegmentSubmitResult) -> str:
+    """住宿续跑用的合成发言（用户口吻）
+
+    口径：餐饮偏好是表单必填项且已在落库时写入 selected_food_types，故住宿是本流程**最后一个
+    人工选择项**——合成发言必须要求"直接生成行程报告"，不能写"请继续为我安排餐饮"：
+    实测模型会顺着这句话去讲餐饮候选（甚至模仿住宿卡片话术），结果行程正文一个字都不出。
+    """
+    stays = "；".join(result.texts) if result.texts else f"{len(result.accepted)} 站住宿"
+    return f"我已按卡片选定全部住宿：{stays}。住宿是最后一项待确认内容，请直接为我生成完整行程报告。"
+
+def _flight_resume_content(result: FlightSubmitResult) -> str:
+    """航班续跑用的合成发言（用户口吻） 住宿步据此知道航班已定，直接进入酒店候选轮"""
+    legs = "；".join(result.texts) if result.texts else f"{len(result.accepted)} 段航班"
+    return f"我已按卡片选定全部航班：{legs}。请继续为我推荐住宿，并推进后续行程安排。"
+
+def _driving_resume_content(result: DrivingSubmitResult) -> str:
+    """自驾续跑用的合成发言（用户口吻） 住宿步据此知道路线已确认，直接进入酒店候选轮"""
+    legs = "；".join(result.texts) if result.texts else f"{len(result.accepted)} 段自驾"
+    return f"我已确认全部自驾路线：{legs}。请继续为我推荐住宿，并推进后续行程安排。"
+
+def _confirmed_content(label: str, texts: list[str]) -> str:
+    """ 提交成功后**立刻回显用户已选定的内容**（代码生成，各技能同款格式）
+
+    用户要求：选完高铁/住宿后，对话里要能看到自己选好的车次、酒店（或品牌），随后继续下一步。
+    因此这条帧必须在续跑之前下发——它是"已选结果"的确定性回执（results.texts 由服务端
+    依据真实候选回查拼出），而不是模型自由发挥；无内容时只回一句确认，绝不留空。
+    """
+    if not texts:
+        return f"✅ 已确认您选择的{label}。\n"
+    items = "\n".join(f"{index}. {text}" for index, text in enumerate(texts, 1))
+    return f"✅ 已确认您选择的{label}：\n{items}\n"

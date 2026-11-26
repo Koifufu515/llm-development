@@ -1,0 +1,22 @@
+（knowgo_travel_backend） PS E：\knowgo_travel_backend> docker ps
+LMAGE
+COMMAND
+CREATED
+NAMES
+CONTAINER LD
+STATUS
+PORTS
+7c1586d5724b
+pgvector/pgvector:pg17
+"docker-entrypoint.s."
+o weeKs ago
+5432/tcp
+travel_postgres
+Up Less than a second
+"docker-entrypoint.s."
+232489e39e21
+redis:7-alpine
+6 weeks ago
+Up Less than a second
+6379/tcp
+traveL_redis

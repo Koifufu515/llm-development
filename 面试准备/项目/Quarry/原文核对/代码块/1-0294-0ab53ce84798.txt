@@ -1,0 +1,2 @@
+uv run python tmp_timing.py
+Remove-Item tmp_timing.py

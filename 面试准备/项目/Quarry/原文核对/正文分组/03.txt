@@ -1,0 +1,564 @@
+Step 4：写依赖清单
+用 VS Code 打开
+quarry-rag
+目录，用下面这份内容
+完整替换
+掉
+uv init
+生成的
+pyproject.toml
+：
+这份清单有四个地方要说明：
+为什么同时有 asyncpg 和 psycopg2-binary
+。业务代码全部走 asyncpg（异步驱动），但 Alembic 是同步的，它需要一个同步驱动才能连库。psycopg2 只在执行迁移的那几秒钟被用到，不参与任何业务查询。
+为什么显式写上 httpx
+。openai 本身就依赖 httpx，不写也能装上。但第三章的抓取脚本、第五章的重排、第八章的客户端文件都直接
+import httpx
+，直接用到的包就该直接声明，不要靠别的包"顺带"装进来：哪天 openai 换了底层库，你的代码会莫名其妙地挂掉。
+为什么 parse 组只有一个包
+。第三章只实现 A 档（Markdown，正则解析，不需要第三方库）和 B 档（Word）。PDF、Excel 只给思路，没有注册进解析器，所以不装对应的库。第一节课如果先等十分钟下载用不上的包，体验的代价比省下的那几行代码大得多。
+package = false
+** 是什么意思**。quarry-rag 是一个应用，不发布到 PyPI，不需要把自己打成包。设成
+false
+之后
+uv sync
+只装依赖，不构建本项目，改代码也不用重新安装。
+Step 5：安装依赖
+这一步通常在一两分钟内结束（第一次还要下载 Python，会再慢一点）。如果超过五分钟，大概率是网络问题，回到 Step 1 配镜像源。
+验证
+：
+看到
+imports OK
+就算过。
+3.4 Docker Compose 编排（两容器）
+Step 6：写 compose 文件
+不用手敲一长串
+docker run
+，直接写 compose 文件，第八章会往里再加一个接口服务。
+先建目录(手动创建也可以)：
+写文件：
+docker-compose.yml
+（项目根目录
+）
+这个 compose 文件里有四处是刻意这么写的：
+① 镜像 tag 钉到具体版本
+。
+:pg17
+或
+:latest
+这种浮动 tag，半年后指向的已经不是同一个镜像了。团队里两个人在不同时间拉镜像，拿到的可能是两个版本，而调参结论是按其中一个写的。
+② 密码走
+${}
+从
+.env
+注入
+。
+docker compose
+会自动读取同目录下的
+.env
+。明文写进 compose 文件，提交的时候就带上去了。
+③ healthcheck 是必须的
+。容器起来不等于能连上：PostgreSQL 进程启动之后还要初始化数据目录、执行初始化脚本，这个过程有几秒。有了 healthcheck，
+docker compose ps
+一眼就能看出是不是真的好了。
+④ 端口映射避开常用端口
+。用 5433 和 6380，免得和你本机可能已经装着的 PostgreSQL、Redis 撞上。注意这个映射意味着：
+从宿主机连数据库要用 5433，从容器内部连要用 5432
+。
+写文件：
+docker/init-db.sql
+这个文件挂进
+/docker-entrypoint-initdb.d/
+，官方镜像会在
+数据目录为空
+的时候自动执行里面的 SQL。
+⚠️
+重要
+：如果你已经起过一次容器，后来改了这个文件，重启是不会重新执行的，要
+docker compose down -v
+把数据卷删掉才行。
+写文件：
+.dockerignore
+这个文件第八章构建接口镜像时才用到，现在先写好。漏了它，构建镜像时会把
+.venv
+和
+.git
+一起打包进去，镜像体积翻好几倍，
+.env
+里的密钥也会被打进镜像。
+Step 7：配置环境变量
+**先写 **
+.gitignore
+（顺序很重要：先有
+.gitignore
+，再有
+.env
+）。
+uv init
+可能已经生成了一个
+.gitignore
+，用下面这份完整替换：
+第一行最重要：
+.env
+里有真密钥，提交上去就麻烦了。
+**再写 **
+.env.example
+（这份提交进仓库，当模板用）：
+后面每一章用到新配置时，都会在这个文件末尾追加一段（第五章的重排、第六章的事实层、第七章的评测、第八章的对外接口）。
+复制一份成真正用的配置
+：
+然后打开
+.env
+，只需要改一行：把
+LLM_API_KEY
+换成你自己在百炼控制台申请的 key。数据库密码可以保持原样，本地开发用。
+Step 8：启动容器
+-d
+是 detached 模式，容器在后台跑。第一次执行会拉镜像，大约需要 3–5 分钟。
+查看状态
+：
+STATUS 那一列要看到
+(healthy)
+，不是
+(health: starting)
+也不是
+(unhealthy)
+。看到 starting 说明健康检查还没通过，等 10 秒再看一次。
+常用排查命令
+：
+命令
+作用
+docker compose ps
+看两个容器是否 (healthy)
+docker compose logs postgres --tail 50
+看 PostgreSQL 最近 50 行日志（启动失败时先看这个）
+docker compose logs redis --tail 50
+看 Redis 最近 50 行日志
+docker compose restart postgres
+重启某个服务，数据保留
+docker compose down
+停止并删除容器，数据卷保留
+docker compose down -v
+停止并删除容器，连数据卷一起删（所有数据清空，init-db.sql 会重新执行）
+netstat -ano | findstr :5433
+Windows 上查 5433 端口被谁占了（macOS / Linux 用 lsof -i :5433）
+Step 9：验证容器连通
+这一步只用 docker 命令，不写 Python，因为现在项目里还一行业务代码都没有。
+① 进 PostgreSQL 看一眼
+docker compose exec
+的意思是"在正在运行的 postgres 容器里执行一条命令"。因为是在容器内部通过本地 socket 连接，不会提示你输密码。
+执行成功之后，提示符会变成：
+看到
+quarry=#
+就说明进到数据库里了。现在敲两条 SQL（每条都要以分号结尾）：
+按回车，应该输出一长串 PostgreSQL 的版本信息。
+应该输出：
+只要是 0.8.2 或更高就行。如果这里返回
+(0 rows)
+，说明扩展没装上：检查
+docker/init-db.sql
+有没有正确挂载，或者直接在这里手动执行
+CREATE EXTENSION vector;
+。
+通过pycharm的工具验证连接也可以：
+几个新手常卡的地方：
+**每条 SQL 结尾必须有分号 **
+;
+。不打分号按回车，psql 会以为你还没写完，提示符变成
+quarry-#
+一直等着。这时候补一个分号回车就行。
+**退出用 **
+\q
+（反斜杠加 q），然后回车。不是
+exit
+，不是 Ctrl+C。
+想在 PowerShell 里不进 psql、直接跑一条 SQL，就用
+-c
+：
+docker compose exec postgres psql -U quarry -d quarry -c "SELECT extversion FROM pg_extension WHERE extname = 'vector';"
+。外层双引号、里面单引号，这个顺序不要反。
+② 进 Redis 看一眼
+提示符会变成：
+敲一条命令测试：
+看到
+PONG
+就算过。退出用
+exit
+。
+💡 浏览器打开
+http://localhost:8001
+能看到 RedisInsight 可视化界面。第三章看接入队列时会用到它。
+3.5 数据库扩展与初始迁移（Alembic）
+这一节是本章最容易出错的地方，一步一步来。
+3.5.1 为什么用 Alembic 而不是直接跑建表脚本
+区别在于 Alembic 在数据库里维护一张
+alembic_version
+表，记录"当前库处在哪个版本"。你执行
+alembic upgrade head
+，它自己判断哪些迁移还没跑过，只跑没跑过的。而建表脚本每次都要人工判断该不该跑，跑重了会报"表已存在"，跑漏了会缺表，团队协作时尤其容易乱。本项目到第八章一共有六个迁移，没有 Alembic 很难管。
+3.5.2 关于本章那份"给好的"迁移
+按大纲，第一章的验收标准是"跑通检索链路"，不是"理解表结构"。所以本章会直接给一份初始迁移建表：你先把表建起来跑通链路，第二章再回来解释每个字段为什么存在。
+别假装已经懂了
+。本章你只需要知道：
+表建好了，可以往里写数据了
+有四张核心表：租户、集合、文档、文本块
+用 Alembic 管理这些迁移
+3.5.3 第一步：清理可能已经存在的 migrations 目录
+如果你之前尝试过
+alembic init
+或按其他教程手工建过
+migrations
+，现在必须先删掉，否则
+alembic init
+会报错：
+第一次做的话，这个目录本来就不存在，命令会静默返回，这是正常的。
+3.5.4 第二步：初始化 Alembic
+你应该看到这样的输出（Windows 上路径是反斜杠，不影响）：
+看到最后那句
+Please edit configuration...
+就算成功。这条命令生成了四样东西：
+生成物
+作用
+本课程要不要改
+alembic.ini（注意文件在项目根目录）
+Alembic 的配置文件：迁移目录在哪、日志怎么打
+只确认一行 prepend_sys_path = .
+migrations/env.py
+每次执行迁移时运行的脚本，负责连库
+要改：改成从 .env 读连接串
+migrations/script.py.mako
+新迁移文件的模板
+不改
+migrations/versions/
+放迁移文件的目录，现在是空的
+下面往里写文件
+⚠️ 这一步不能跳。后面
+alembic revision
+要靠
+alembic.ini
+才知道去哪儿找迁移目录。
+3.5.5 第三步：改 migrations/env.py
+生成出来的
+env.py
+默认从
+alembic.ini
+里读数据库地址。但我们的地址在
+.env
+里，而且里面有密码，不能写进要提交到仓库的
+alembic.ini
+。
+先创建一个最小的 settings 模块（完整版在 4.3 节写，这里只放一个够 Alembic 用的）：
+写文件：
+quarry/infra/settings.py
+（第一版，4.3 节会补全
+）
+然后用下面这份
+完整替换
+掉
+migrations/env.py
+的内容：
+改动只有两处：一是从
+quarry.infra.settings
+读连接串，二是用
+create_engine
+直接建引擎，不走
+alembic.ini
+里的
+sqlalchemy.url
+。
+poolclass=pool.NullPool
+的意思是迁移不用连接池，执行完就断开：迁移是一次性操作，不需要复用连接。
+顺便打开
+alembic.ini
+，确认
+[alembic]
+段里有这一行
+（新版本 Alembic 默认会生成）：
+它的作用是把当前目录加进 Python 的搜索路径，这样
+env.py
+里的
+from quarry.infra.settings import ...
+才能找到项目包。没有的话手工加上，放在
+[alembic]
+段的开头附近。
+3.5.6 第四步：准备初始迁移的 SQL
+这份 SQL 是本章"给好的"，直接抄进去。第二章会逐字段解释。
+migrations/versions
+目录在 3.5.4 已经生成，不用再建。
+写文件：
+migrations/versions/0001_core_tables.sql
+💡 这份表结构第二章、第五章还会各改一次（块主键、邻块索引），每次都是写一个新迁移，而不是回来改这个文件。
+已经执行过的迁移文件永远不要再改
+。
+3.5.7 第五步：生成迁移文件
+你应该看到：
+--rev-id 0001
+是自己指定版本号。不加的话 Alembic 会生成一串随机字符（形如
+a1b2c3d4e5f6
+），迁移一多就很难按顺序找。本项目的六个迁移统一编号
+0001
+到
+0006
+，第二章 2.8.1 会细讲这条命名规范。
+3.5.8 第六步：编辑生成的 Python 文件
+用编辑器打开刚才生成的
+migrations/versions/0001_core_tables.py
+，看到大致这样的内容（不同 Alembic 版本的模板略有差别，不影响）：
+只做两处修改
+：在 import 区加一行
+from pathlib import Path
+，再把
+upgrade()
+和
+downgrade()
+两个函数替换成下面这样。
+revision
+、
+down_revision
+那几行原样保留，不要动：
+为什么把 DDL 写在
+.sql
+文件里，而不是用 Alembic 的 Python API
+。本项目的建表语句里有
+halfvec(1024)
+、部分唯一索引、
+jsonb_path_ops
+、多条 CHECK，这些在 SQLAlchemy 里要么表达不了，要么写出来比原生 SQL 长三倍还更难读。而且
+.sql
+文件可以直接粘进 psql 调试。
+**为什么用
+op.get_bind().exec_driver_sql(sql)
+而不是 **
+op.execute(sql)
+。
+op.execute
+会把 SQL 交给 SQLAlchemy 的
+text()
+处理，而
+text()
+会把
+:xxx
+当成参数占位符去解析。我们的 SQL 里有中文注释，注释里出现冒号很常见，一旦被当成参数就会报"缺少参数绑定"。
+exec_driver_sql
+把字符串原样交给数据库驱动，不做任何解析。
+**为什么
+read_text
+要写 **
+encoding="utf-8"
+。不写的话，Windows 上 Python 会用系统默认的 GBK 去读这份带中文注释的文件，直接报
+UnicodeDecodeError
+。凡是读项目里的文本文件，都显式写上编码。
+3.5.9 第七步：执行迁移
+head
+的意思是"最新的那一版"。
+成功的输出长这样：
+3.5.10 第八步：验证
+① 看表
+：
+\dt
+是 psql 的元命令，列出所有表。应该看到五张表：
+alembic_version
+是 Alembic 自己维护的版本表，存的就是当前跑到了哪个版本号。剩下四张是我们建的业务表。
+② 看 chunks 上的索引
+：
+应该列出八条索引（七个我们建的，加上主键自带的那个）：
+③ 看 Alembic 认为自己在哪个版本
+：
+应该输出
+0001 (head)
+。
+3.5.11 Alembic 常见报错
+报错
+原因
+解决
+FAILED: Directory migrations already exists and is not empty
+之前建过 migrations
+回到 3.5.3 删掉再来
+ModuleNotFoundError: No module named 'quarry'
+alembic.ini 里没有 prepend_sys_path = .，或者不是在项目根目录执行
+补上那一行；cd 到项目根目录再执行
+pydantic_core ... ValidationError ... postgres_password Field required
+.env 不存在，或者不在项目根目录
+回到 Step 7 复制 .env
+connection refused / Connection timed out
+容器没起来，或者端口写错
+docker compose ps 看是否 healthy；.env 里端口应是 5433
+password authentication failed for user "quarry"
+.env 的密码和容器初始化时的密码不一致（改过 .env 但没重建数据卷）
+改回原密码；或者 docker compose down -v 后重新 up -d 再迁移
+UnicodeDecodeError: 'utf-8' codec can't decode byte ...（连库时）
+连到了本机另装的、中文区域设置的 PostgreSQL，它返回的 GBK 报错信息 psycopg2 解不开
+检查端口是不是 5433、有没有别的 PostgreSQL 占着这个端口（Step 8 的 netstat 命令）
+UnicodeDecodeError: 'gbk' codec can't decode ...（读 SQL 时）
+read_text 没写 encoding="utf-8"
+按 3.5.8 补上
+type "halfvec" does not exist
+pgvector 扩展没装上，或者版本低于 0.7.0
+回到 Step 9 检查 extversion
+relation "tenants" already exists
+库里已经有这些表，但 alembic_version 里没有记录（手工建过表）
+确认没有要保留的数据后 docker compose down -v，重新起容器再迁移
+Can't locate revision identified by '...'
+删了迁移文件，但库里 alembic_version 还记着它
+本地开发直接 docker compose down -v 重来
+想从头再来一遍
+：
+想连数据一起清掉
+：
+第二条执行完先
+docker compose ps
+确认两个容器都 healthy，再跑第三条。
+3.6 环境变量与密钥管理小结
+顺序（不能反）：
+**先写 **
+.gitignore
+，把
+.env
+拉进去。
+**再写 **
+.env.example
+，提交进仓库，当模板用。示例值用一眼能看出没填的形式，如
+sk-xxxx-REPLACE-ME
+。不要写
+your-api-key
+，后者容易被当成已填好，然后调用报 401，排查半小时。第五章起的几个模型客户端都会检查 key 里是否还带着
+REPLACE-ME
+，没填就在启动时报错。
+**最后复制成 **
+.env
+，填自己的 key。
+密钥在代码里用
+SecretStr
+包裹（下一节 4.3 讲），避免误打进日志。
+4. 项目结构设计
+4.1 目录结构规划与分层原则
+先给出整个项目做完之后的目录树（对应项目介绍第五节的模块划分），并立三条规矩：
+一个目录 = 一层职责
+。写代码前先问"这段逻辑属于哪一层"。
+每个目录对外只暴露一个清晰入口
+。检索链路对外只有
+pipeline.py
+里的
+search_evidence()
+。
+下层不 import 上层
+。
+retrieval/
+永远不该 import
+api/
+。
+各目录的依赖关系：
+目录
+可以 import
+不可以 import
+common/
+只有标准库和第三方库
+项目里任何其他子包，包括 infra/
+infra/
+infra/ 自己
+项目里任何其他子包
+ingest/、retrieval/
+common/、infra/
+api/、eval/、pipeline.py
+rerank/、context/、facts/
+下层子包（比如 retrieval 的 Hit）
+api/、eval/、pipeline.py
+pipeline.py
+链路上的所有子包
+api/、eval/
+api/、eval/、scripts/
+任何子包；检索只通过 search_evidence() 进入
+—（没有人 import 它们）
+依赖规则
+：
+infra/
+不 import 项目里的任何其他子包。它是整栋楼的地基，地基不能依赖楼上的房间。
+4.2 创建项目骨架
+一条命令建好本章需要的所有目录和
+init.py
+：
+3.5.5 已经建过
+quarry/infra/
+和两个
+init.py
+，重复执行不会报错。注意
+New-Item -ItemType File -Force
+遇到已存在的文件会把它
+清空重建
+：对空的
+init.py
+无所谓，但
+不要对写过代码的文件执行它
+，比如
+settings.py
+。
+tests/
+目录第四章写第一个测试时再建。
+验证：
+应该看到四个
+init.py
+。
+4.3 配置中枢 infra/settings.py
+3.5.5 建了一个最小版，现在把它扩展成本章的完整版。用下面这份
+完整替换
+：
+为什么要写这个模块
+。
+不写它，配置就会散落成
+os.environ.get("POSTGRES_HOST", "localhost")
+这种调用，分布在十几个文件里。三个问题会跟着来：
+拼写错了不报错（
+os.environ.get
+拿不到就返回
+None
+）
+类型全是字符串，
+POOL_MAX_SIZE
+拿到的是
+"20"
+不是
+20
+缺一项关键配置，要等到第一次用到它的时候才发现
+pydantic-settings 把这三件事一起解决了：字段名对应环境变量名（不区分大小写），类型自动转换，缺必填项在进程启动时就抛异常。
+四个设计点
+：
+**密钥用 **
+SecretStr
+。
+print(settings.llm_api_key)
+输出的是
+**********
+，日志里也不会漏。要拿真值必须显式调
+.get_secret_value()
+。
+postgres_password
+** 故意不给默认值**。没配就在进程启动时报一个清清楚楚的"字段缺失"，而不是用一个默认密码去连库、连不上、再报一个
+connection refused
+让你去查网络。
+开关和参数做成配置项，不做构造参数
+。构造参数只在创建对象那一处生效，调用链上任何一层忘了透传，开关就静默失效了。
+switches()
+** 只挑开关和参数返回**。有了这个方法，
+/healthz
+就不会被人顺手写成
+return settings.model_dump()
+：那会把连接串和密钥全打出去。后面每一章加了新开关，都往
+switches()
+里补一行。
+验证配置能不能加载
+：
+应该输出类似
+localhost 5433 text-embedding-v4 **********
+。最后那一串星号，就是
+SecretStr
+在工作。
+如果报
+ValidationError
+并列出缺失字段，对照
+.env
+补上。
+4.4 日志模块 infra/logging.py
+写文件：
+quarry/infra/logging.py
+两个参数值得单独说：
+diagnose=True

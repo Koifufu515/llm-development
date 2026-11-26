@@ -1,0 +1,9 @@
+# 解压之后执行下面的步骤
+uv venv --python 3.13
+
+# 激活（macOS / Linux）
+source .venv/bin/activate
+# 激活（Windows PowerShell）
+.venv\Scripts\Activate.ps1
+
+uv sync

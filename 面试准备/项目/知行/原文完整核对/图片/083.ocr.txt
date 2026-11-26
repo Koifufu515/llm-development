@@ -1,0 +1,59 @@
+Web 层四条防线• 请求进 Agent 前的四道门
+前端每一次请求要到 Agent内核，必须先答四个问题：谁在说话、对话归谁、字段合法吗、谁能操作谁。四条漏一条，就是一个漏洞。
+① 鉴权
+归属
+校验
+授权
+前端
+谁在说话？
+对话归谁？
+字段合法吗？
+谁能操作谁？
+Agent 内核
+Alice：
+想去西安
+怎么办
+怎么办
+怎么办
+怎么办
+状态机
+JWT header
+conversation
+Pydantic
+WHERE user_id
+引擎
+验签 + 查过期
+.user_id （FK）
+Request Schema
+= current_user
+X拦
+X拦
+X拦
+• 无token
+• 多会话可区分
+•
+content：""
+• Bob 猜URL
+• 伪造/冒充
+• 切回来还能看
+• id:nuLl
+• 读Alice 会话
+POST
+/convs/｛id｝/msg
+• 已过期
+•让④成立
+•类型错误
+• 403
+第11章
+Web 层（本章）
+内核
+Agent层（第11章）
+鉴权 /归属/ 校验/ 授权 四条防线+ conversation、
+message 两张业务表；
+状态机引擎+Checkpointer图运行状态（channel_values /channel_versions）；
+message.extra_info: JSON 留给后面存“卡片回放数据”。
+conversation.id == thread_id ，两表用同一UUID 关联，各司其职。
+四条漏一条，都是漏洞。没鉴权是最傻的：Bob 塞 user_id="alice" 就冒充成功；没归属就无法区分 Alice 昨天和今天的会话；没校验会让 ｛"content"：""！｝、
+｛conversation_id"：nuLl｝直达业务逻辑；没授权是最常见的越权：Bob 从 URL 猜到Alice 的
+conversation_id 就能读她的历史。这就是为什么必须在 TravelState.user_id
+（前端可伪造的字符串）之外，再造一整套Web外壳。

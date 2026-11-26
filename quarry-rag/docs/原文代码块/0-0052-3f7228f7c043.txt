@@ -1,0 +1,2 @@
+uv run alembic downgrade base
+uv run alembic upgrade head

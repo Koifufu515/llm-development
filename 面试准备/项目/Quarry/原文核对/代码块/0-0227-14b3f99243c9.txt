@@ -1,0 +1,4 @@
+uv run python -m quarry.scripts.export_snapshot travel-guide
+Copy-Item snapshots/travel-guide/manifest.json $env:TEMP/m1.json
+uv run python -m quarry.scripts.export_snapshot travel-guide
+if (Compare-Object (Get-Content $env:TEMP/m1.json) (Get-Content snapshots/travel-guide/manifest.json)) { "有差异" } else { "完全一致" }

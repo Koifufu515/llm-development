@@ -1,0 +1,47 @@
+"""_stream_agent 演示：用"按剧本吐事件"的最小假 Agent 驱动真实 _stream_agent（纯逻辑，无需密钥）
+
+ScriptedAgent 只是测试驱动：把写好的 astream_events 事件原样吐出来，不含任何业务逻辑——
+首轮缓冲、泄漏清洗、reset 重推、buffer_all，全是真实 _stream_agent 在做。
+"""
+import asyncio
+
+from langchain_core.messages import AIMessageChunk
+
+from app.core.event_stream import EventStream
+from app.services.chat_stream_executor import _stream_agent
+
+class ScriptedAgent:
+    def __init__(self, rounds):
+        self.rounds = rounds                  # [(是否工具轮, [token, ...]), ...]，一项 = 一次 LLM 调用
+
+    async def astream_events(self, input_data, config=None, version="v2"):
+        for is_tool, tokens in self.rounds:
+            if is_tool:                       # 工具轮：带 tool_call_chunks 的 chunk
+                chunk = AIMessageChunk(content="", tool_call_chunks=[
+                    {"name": "get-tickets", "args": "{}", "id": "c1", "index": 0}])
+                yield {"event": "on_chat_model_stream", "data": {"chunk": chunk}}
+            for tok in tokens:
+                yield {"event": "on_chat_model_stream", "data": {"chunk": AIMessageChunk(content=tok)}}
+            yield {"event": "on_chat_model_end", "data": {}}
+
+async def run(title, rounds, **kw):
+    stream = EventStream()
+    text = await _stream_agent(ScriptedAgent(rounds), {}, {}, stream, **kw)
+    stream.close()
+    frames = [(e["role"], e["content"]) if e["content"] else e["role"] async for e in stream]
+    print(f"【{title}】\n  推给前端：{frames}\n  返回文本：{text!r}")
+
+async def main():
+    await run("① 首轮是工具轮旁白 → 旁白丢弃，已推内容即答案",
+              [(True, ["让我", "查一下"]), (False, ["为您查到", "G1650"])])
+    await run("② 首轮是正文开头却被缓冲 → 回合末 reset + 补推完整拼接",
+              [(False, ["Day 1 西湖。"]), (True, []), (False, ["预算合计 4128 元"])])
+    await run("③ 后续轮夹带系统指令泄漏 → reset + 推清洗版",
+              [(True, []), (False, ["总计 4128 元。", "请记住，只有在收集到足够信息后才能调用工具。"])])
+    await run("④ 协议泄漏片段 → 直接丢弃，不进流也不进返回",
+              [(True, []), (False, ["✿FUNCTION✿: get-tickets", "为您查到班次"])])
+    await run("⑤ buffer_all + defer_push → 全程零推送，文本交给调用方",
+              [(True, []), (False, ["| G1650 | 08:12→12:30 |"])], buffer_all=True, defer_push=True)
+
+if __name__ == "__main__":
+    asyncio.run(main())

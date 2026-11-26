@@ -1,0 +1,118 @@
+[
+  {
+    "title": "哈啰实习",
+    "threadId": "6abcbb1e-96c0-83ec-9976-ddf5f94abaae",
+    "turnsReturned": 5,
+    "messagesReturned": 10,
+    "referenceOnlyMessages": 0,
+    "messagesWithEmbeddedReferences": 2,
+    "missingMessageReferences": [],
+    "completeHistoryVerified": false,
+    "toolReportedHasMore": false,
+    "attachments": 0
+  },
+  {
+    "title": "大模型开发",
+    "threadId": "6ad5e692-81ac-83ec-86f8-218b792fce2e",
+    "turnsReturned": 5,
+    "messagesReturned": 9,
+    "referenceOnlyMessages": 4,
+    "messagesWithEmbeddedReferences": 0,
+    "missingMessageReferences": [
+      {
+        "turnId": "2cb6a5ae-d86f-4fd1-87e7-bc56821fb41e",
+        "messageId": "845be878-409f-4192-9175-7e37c53228a0",
+        "reference": "::chatgpt-content-reference{index=\"0\" source_message_id=\"845be878-409f-4192-9175-7e37c53228a0\"}"
+      },
+      {
+        "turnId": "d9e5dd74-4b65-4baa-8fea-dc096c128811",
+        "messageId": "525d1ad5-2125-4e56-a41f-f8247f7ee1a8",
+        "reference": "::chatgpt-content-reference{index=\"0\" source_message_id=\"525d1ad5-2125-4e56-a41f-f8247f7ee1a8\"}"
+      },
+      {
+        "turnId": "91ec345a-aad5-4bfb-a625-4fcc5dc0d365",
+        "messageId": "c765e8dd-7ea6-43d6-9b65-355157c0efa7",
+        "reference": "::chatgpt-content-reference{index=\"0\" source_message_id=\"c765e8dd-7ea6-43d6-9b65-355157c0efa7\"}"
+      },
+      {
+        "turnId": "16439427-0fe8-4340-a88f-50fc27ce9d0a",
+        "messageId": "4bbbfd89-3ae0-448a-ab1a-0d54238f59b2",
+        "reference": "::chatgpt-content-reference{index=\"10\" source_message_id=\"4bbbfd89-3ae0-448a-ab1a-0d54238f59b2\"}"
+      }
+    ],
+    "completeHistoryVerified": false,
+    "toolReportedHasMore": false,
+    "attachments": 0
+  },
+  {
+    "title": "模拟面试",
+    "threadId": "6aae8f48-8a10-83ec-851f-fc0ea3852626",
+    "turnsReturned": 5,
+    "messagesReturned": 10,
+    "referenceOnlyMessages": 5,
+    "messagesWithEmbeddedReferences": 0,
+    "missingMessageReferences": [
+      {
+        "turnId": "0a1b7c00-022d-487a-bd08-7209cc8c9ba2",
+        "messageId": "dd72261a-0bfd-4e77-bf96-f2f468c56241",
+        "reference": "::chatgpt-content-reference{index=\"0\" source_message_id=\"dd72261a-0bfd-4e77-bf96-f2f468c56241\"}"
+      },
+      {
+        "turnId": "7cd7ebf6-8c92-4b30-8c02-5610298a9259",
+        "messageId": "b83b00a0-61a6-4201-bc2f-f5bd63e05f54",
+        "reference": "::chatgpt-content-reference{index=\"1\" source_message_id=\"b83b00a0-61a6-4201-bc2f-f5bd63e05f54\"}"
+      },
+      {
+        "turnId": "bc6e05e7-e48d-42c6-82b2-47243bf0fdc5",
+        "messageId": "f3b84fce-a100-40ec-b09d-3c92024d86f3",
+        "reference": "::chatgpt-content-reference{index=\"0\" source_message_id=\"f3b84fce-a100-40ec-b09d-3c92024d86f3\"}"
+      },
+      {
+        "turnId": "81ffc5db-de93-4f2e-840f-fdfaf483a9cb",
+        "messageId": "56b7edc3-aaa6-402f-9fc8-a440546ab0e7",
+        "reference": "::chatgpt-content-reference{index=\"0\" source_message_id=\"56b7edc3-aaa6-402f-9fc8-a440546ab0e7\"}"
+      },
+      {
+        "turnId": "8463c060-17c5-44e0-beca-afdc4ec89a52",
+        "messageId": "f8fe1f8f-63aa-4217-a295-1cd255da1962",
+        "reference": "::chatgpt-content-reference{index=\"1\" source_message_id=\"f8fe1f8f-63aa-4217-a295-1cd255da1962\"}"
+      }
+    ],
+    "completeHistoryVerified": false,
+    "toolReportedHasMore": false,
+    "attachments": 3
+  },
+  {
+    "title": "面经整理",
+    "threadId": "6acafbcf-ceb8-83ec-b62c-3da1b492c842",
+    "turnsReturned": 5,
+    "messagesReturned": 9,
+    "referenceOnlyMessages": 4,
+    "messagesWithEmbeddedReferences": 0,
+    "missingMessageReferences": [
+      {
+        "turnId": "0bc73d24-5ba9-4bc8-84f1-0d27851ce6eb",
+        "messageId": "d1a0a8dc-d439-4524-bb33-76056a41eac3",
+        "reference": "::chatgpt-content-reference{index=\"2\" source_message_id=\"d1a0a8dc-d439-4524-bb33-76056a41eac3\"}"
+      },
+      {
+        "turnId": "80a4244e-d5fa-4ce8-9f27-fe5f185aa8e2",
+        "messageId": "c3c90a4f-2361-48bb-a80e-dcf6239fb15d",
+        "reference": "::chatgpt-content-reference{index=\"2\" source_message_id=\"c3c90a4f-2361-48bb-a80e-dcf6239fb15d\"}"
+      },
+      {
+        "turnId": "90f744e3-01c9-4fc4-81d7-d3ba3a93abf7",
+        "messageId": "06041678-f378-4e3b-8c7b-affddca3fcab",
+        "reference": "::chatgpt-content-reference{index=\"1\" source_message_id=\"06041678-f378-4e3b-8c7b-affddca3fcab\"}"
+      },
+      {
+        "turnId": "0423c999-a522-425b-b68a-26d8d7cf3c47",
+        "messageId": "31adedf9-80e0-4cca-b4ae-9fc378cbba8b",
+        "reference": "::chatgpt-content-reference{index=\"1\" source_message_id=\"31adedf9-80e0-4cca-b4ae-9fc378cbba8b\"}"
+      }
+    ],
+    "completeHistoryVerified": false,
+    "toolReportedHasMore": false,
+    "attachments": 1
+  }
+]

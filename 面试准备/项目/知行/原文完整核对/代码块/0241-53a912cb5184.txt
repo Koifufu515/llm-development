@@ -1,0 +1,18 @@
+"""缓存口径演示：同样是"一段有结果、一段为空"，高铁不写签名缓存，航班写（纯逻辑，无需密钥）"""
+from app.capabilities.flight_multi_segment.flight_flow import _any_has_options
+from app.capabilities.flight_multi_segment.flight_skill_schema import FlightMultiSegmentPayload, FlightOption, FlightSegment
+from app.capabilities.train_multi_segment.train_flow import _all_have_options
+from app.capabilities.train_multi_segment.train_skill_schema import TrainMultiSegmentPayload, TrainOption, TrainSegment
+
+g1 = TrainOption(trainNo="G1", startTime="08:30", endTime="09:05", startStation="北京南", endStation="天津", duration="00:35",
+                 price=54.5, seatType="二等座", ticketStatus="有票", option_id="G1-08:30-天津")
+ca = FlightOption(flight_no="CA1501", dep_time="08:00", arr_time="10:10", dep_airport="首都国际机场", arr_airport="虹桥国际机场",
+                  price=0, option_id="CA1501-08:00-虹桥国际机场")
+train = TrainMultiSegmentPayload(segments=[
+    TrainSegment(segment_id="s1", from_="北京", to="天津", date="2026-10-01", train_list=[g1]),
+    TrainSegment(segment_id="s2", from_="天津", to="上海", date="2026-10-02", train_list=[])])      # 12306 这次没返回
+flight = FlightMultiSegmentPayload(segments=[
+    FlightSegment(segment_id="s1", from_="北京", to="上海", date="2026-10-01", flight_list=[ca]),
+    FlightSegment(segment_id="s2", from_="上海", to="某小城", date="2026-10-02", flight_list=[])])   # 没有机场码，永远查不到
+print("高铁：一段有车、一段偶发为空 → 写缓存：", _all_have_options(train), "（下次重查，那一段可能就有了）")
+print("航班：一段有航班、一段没机场 → 写缓存：", _any_has_options(flight), "（没机场的段重查也是空，不值得反复查）")

@@ -1,0 +1,104 @@
+# ============== 交通方式选择工具 ==============
+@tool
+def select_transport_tool(
+        transport_type: str,  # "flight" | "train" | "driving"
+        legs: Optional[list[LegChoice]] = None,
+        runtime: ToolRuntime[None, TravelState] = None
+) -> Command:
+    """
+    确认用户选择的交通方式，并转换到住宿规划步骤。
+
+    参数说明：
+    - transport_type: 交通方式，可选值：flight（航班）、train（高铁）、driving（自驾）
+    - legs: 多目的地必传（单目的地可省略）：仅传入当前正在确认的一段，
+      每段为结构化对象，示例：
+      [{"from_city": "天津", "to_city": "石家庄", "vehicle_no": "G6279",
+        "depart_time": "05:40", "arrive_time": "07:07",
+        "seat_class": "二等座", "price": 105.5}]
+      from_city / to_city 必填，必须与当前待确认段保持一致；price填所选班次人均票价，
+      无数据填0，禁止编造。全部路段确认完成后，才会推进至住宿步骤。
+    """
+    app_logger.info(f"[LEGACY] select_transport_tool 被调用：type={transport_type} legs={legs}")
+
+    # 校验交通方式枚举
+    if transport_type not in ["flight", "train", "driving"]:
+        return Command(update={
+            "messages": [
+                ToolMessage(
+                    content="❌交通方式无效，请选择：flight、train 或 driving",
+                    tool_call_id=runtime.tool_call_id
+                )
+            ]
+        })
+
+    picked, errors = _parse_leg_choices(legs)
+    expected = _expected_legs(runtime.state)
+    leg_texts = [f"{c.from_city}→{c.to_city} {c.summary()}" for c in picked]
+    leg_state: dict = {}
+
+    if expected:
+        recorded = dict(runtime.state.get("leg_selections") or {})
+        prices = dict(runtime.state.get("leg_prices") or {})
+        cursor = max(0, min(int(runtime.state.get("leg_cursor") or 0), len(expected) - 1))
+        pending = expected[cursor]
+        hit = _match_leg(picked, pending)
+
+        if hit is None:
+            app_logger.info(f"[guard] 段级循环：待确认段 {pending} 未出现在 legs={legs}")
+            _frm, _, _to = pending.partition("→")
+            err_msg = f"❌ 当前待确认的是第 {cursor + 1}/{len(expected)} 段「{pending}」。"
+            if errors:
+                err_msg += f"提交的 legs 有格式问题：{'；'.join(errors)}。"
+            else:
+                err_msg += "本次 legs 里没有这一段。"
+            err_msg += (f"请先查询并展示「{pending}」的班次，等用户挑选后，把该段写成对象传进 legs："
+                        f'{{"from_city": "{_frm}", "to_city": "{_to}", "vehicle_no": "车次号", '
+                        f'"depart_time": "HH:MM", "arrive_time": "HH:MM", '
+                        f'"seat_class": "席别", "price": 票价数字}}'
+                        f"（其余段不要提前展示）")
+            return Command(update={"messages": [ToolMessage(
+                content=err_msg,
+                tool_call_id=runtime.tool_call_id)]})
+
+        shown = hit.summary()
+        recorded[pending] = shown
+        if hit.price > 0:
+            prices[pending] = float(hit.price)
+
+        if cursor + 1 < len(expected):
+            nxt = expected[cursor + 1]
+            app_logger.info(
+                f"[legs] 第 {cursor + 1}/{len(expected)} 段已确认 {pending}｜{shown}，待确认 {nxt}"
+            )
+            return Command(update={
+                "messages": [ToolMessage(
+                    content=(f"✅ 第 {cursor + 1}/{len(expected)} 段已确认：{pending}｜{shown}\n"
+                             f"请立即查询并展示下一段「{nxt}」的班次供用户挑选"
+                             f"（只展示这一段，禁止提前展示其它段，也不要再说已确认该段）"),
+                    tool_call_id=runtime.tool_call_id)],
+                "leg_selections": recorded,
+                "leg_prices": prices,
+                "leg_cursor": cursor + 1,
+            })
+
+        leg_texts = [f"{k} {v}" for k, v in recorded.items()]
+        leg_state = {"leg_selections": recorded, "leg_prices": prices, "leg_cursor": cursor + 1}
+
+    transport_labels = {
+        "flight": "航班",
+        "train": "高铁",
+        "driving": "自驾"
+    }
+
+    return Command(update={
+        "messages": [
+            ToolMessage(
+                content=f"交通方式已确认：{transport_labels[transport_type]}",
+                tool_call_id=runtime.tool_call_id
+            )
+        ],
+        "selected_transport": transport_type,
+        "selected_transport_legs": leg_texts,
+        "current_step": "accommodation_planning",
+        **leg_state,
+    })

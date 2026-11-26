@@ -1,0 +1,8 @@
+# 分别调两个工具（自动模式同轮）：
+#   select_accommodation_tool → Command(update={"current_step": "food_planning"})
+#   select_food_tool          → Command(update={"current_step": "itinerary_generation"})
+#   ↑ 同一步对 current_step 写了两次 → InvalidUpdateError
+
+# 合并一个工具：
+#   select_accommodation_food_tool → Command(update={"current_step": "itinerary_generation"})
+#   ↑ 只写一次 → 安全

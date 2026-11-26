@@ -1,0 +1,3 @@
+'data: {"role": "assistant", "content": "你好"}\n\n'
+'data: {"role": "itinerary_plans", "content": {"status": "pending", "id": "", "message": "行程清单生成中..."}}\n\n'
+'data: {"role": "done", "content": "finish", "code": 200}\n\n'

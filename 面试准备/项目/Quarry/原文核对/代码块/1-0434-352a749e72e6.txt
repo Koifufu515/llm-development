@@ -1,0 +1,3 @@
+# 临时把 .env 里的 RERANK_CANDIDATES 改成 15
+uv run python -m quarry.scripts.run_eval --label rerank-15 --no-facts
+uv run python -m quarry.scripts.compare_eval --base rerank-on --new rerank-15

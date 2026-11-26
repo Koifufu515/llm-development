@@ -1,0 +1,1 @@
+{"public_corpus": {"documents": 29, "parents": 977, "children": 1231, "parent_characters": 345984}, "facts": {"mentions": 272, "bad_offsets": 0}, "official_values": 3, "migration": "0008", "public_citations": {"checked": 2208, "mismatch": 0}, "dataset_sha256": "91d4bac317ff565c20fad588fab6b20fa61d941c385735adf6e26ad0af802a5b"}

@@ -1,0 +1,3 @@
+报告已生成：eval/report-candidates.html（334 KB，40 题）
+闸门：✅ 通过
+直接用浏览器打开即可，不需要起服务

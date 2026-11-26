@@ -1,0 +1,7 @@
+"""薄转发：evaluation/ 里的裁判和标尺，就是业务服务里的同一个对象（导入真实模块，需 .env 里的 DashScope 密钥，不发起调用）"""
+from app.services.quality_check_service import QwenJudge, build_itinerary_metrics
+from evaluation.itinerary_metric import build_itinerary_metrics as fwd_build
+from evaluation.qwen_judge import QwenJudge as FwdJudge
+
+print("QwenJudge 是同一个类？", FwdJudge is QwenJudge)
+print("build_itinerary_metrics 是同一个函数？", fwd_build is build_itinerary_metrics)

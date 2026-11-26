@@ -1,0 +1,12 @@
+# 裁判上下文：INPUT=需求清单，ACTUAL_OUTPUT=行程正文
+_PARAMS = [LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT]
+
+# 完整性维度的"预算明细"判据按源料二选一
+# 背景：预算明细只存在于**流式 Markdown 正文**里（summarize_budget_tool / _build_budget 拼接），
+# 结构化清单 TravelItinerary 只有 title + itinerary_list，**没有预算字段**。
+# 离线评测喂的是 Markdown 正文（含预算表）→ 判据成立；
+# 在线质检喂的是 plan_to_text 生成的结构化清单（无预算）→ 判据恒不满足，会系统性扣分。
+# 因此改为显式开关，而不是让裁判自己去揣摩"这段文本里有没有预算"（确定性优先）。
+_BUDGET_CLAUSE = ("2) 正文末尾附有预算明细（交通/住宿/餐饮/门票等构成）。缺任一项即扣分。")  # ★ 离线：源料是含预算表的正文
+_BUDGET_CLAUSE_NA = ("《本条不适用》当前待判内容为结构化行程清单，本身不含预算明细，"  # ★ 在线：源料是没有预算字段的清单
+                     "因此不得因缺少预算而扣分；只需判断第 1 项（天数与上午/下午/晚上时段）是否完整。")

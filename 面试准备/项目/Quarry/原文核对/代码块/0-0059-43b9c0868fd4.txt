@@ -1,0 +1,1 @@
+uv run python -c "from quarry.infra.settings import get_settings; s = get_settings(); print(s.postgres_host, s.postgres_port, s.model_embed, s.llm_api_key)"

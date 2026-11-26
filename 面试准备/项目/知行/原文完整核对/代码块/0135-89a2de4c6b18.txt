@@ -1,0 +1,23 @@
+def _multi_city_names(state) -> list[str]:
+    """多目的地城市列表（按游览顺序）；单目的地返回空列表（调用方跳过校验）
+
+    单城返回空列表是刻意设计：单目的地流程保持完全不变，不引入任何新校验
+    """
+    from app.services.express_planning_service import _split_cities
+    cities = _split_cities(state.get("selected_destination") or "")
+    return cities if len(cities) > 1 else []
+
+def _expected_legs(state) -> list[str]:
+    """应有的交通段：出发地→第一城 + 城际转场 + 末城→出发地返程（节点相邻城市不同才生成）。
+
+ 单目的地同样纳入段级校验（此前单城返回空列表跳过校验）。
+ （用户规格）：按 _build_legs 口径——末城→出发地返程段一并计入，
+    北京→上海 = 2 段、北京→天津→上海 = 3 段、北京→北京 = 0 段；出发地缺失时返回空列表
+    """
+    from app.services.express_planning_service import _build_legs, _split_cities
+    departure = ((state.get("user_requirement") or {}).get("departure_city") or "").strip()
+    if not departure:
+        return []
+    cities = _split_cities(state.get("selected_destination") or "")
+    # ★ "应有几段"的唯一口径：交通卡片、段日期、中间件都认它
+    return [f"{a}→{b}" for a, b in _build_legs(departure, cities)]

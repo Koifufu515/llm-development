@@ -1,0 +1,32 @@
+def _level_of(price_level: str) -> str:
+    """档位文案 → 档位键（未命中按经济型）"""
+    text = price_level or ""
+    for level, hints in _LEVEL_HINTS:
+        if any(hint in text for hint in hints):
+            return level
+    return "economy_hotel"
+
+def stay_nights(check_in: str, check_out: str) -> int:
+    """住几晚 = 离店 - 入住；日期不合法或倒挂时按 1 晚兜底（不做业务校验）"""
+    try:
+        span = (_date.fromisoformat(str(check_out)[:10]) - _date.fromisoformat(str(check_in)[:10])).days
+        return span if span > 0 else 1
+    except ValueError:
+        return 1
+
+def _to_number(value: Any) -> float:
+    """从任意形态取值里抠出数字（'¥302' / '302元' / '4.5分' / 302 → 302.0）；取不到返回 0"""
+    if isinstance(value, (int, float)):
+        return float(value)
+    hit = re.search(r"\d+(?:\.\d+)?", str(value or ""))
+    return float(hit.group()) if hit else 0.0
+
+# ==================== 第 ① 级：JSON 解析 ====================
+
+def _raw_text(raw: Any) -> str:
+    """MCP 返回可能是 content blocks 列表，统一取纯文本"""
+    if isinstance(raw, list):
+        return "\n".join(
+            b.get("text", "") if isinstance(b, dict) else str(b) for b in raw
+        )
+    return str(raw or "")

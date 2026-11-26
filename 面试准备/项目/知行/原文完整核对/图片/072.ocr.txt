@@ -1,0 +1,135 @@
+middleware •每次调模型前的13道关：只改这一次请求
+StepConfigMiddleware.awrap_model_call 包在每一次模型调用外面，一回合里模型来回调几次工具，它就跑几次。它按 current_step 取本步配
+置，拼系统提示词、裁剪工具表、必要时强推工具、修补消息历史，再把改好的请求交给模型。全程不写LangGraph 状态，只额外给车票工具留一份入参
+兜底。
+13 道关，分四段 编号沿用源码里的「看点①-⑥」，按执行顺序排列
+读状态与校验
+图2
+拼提示词
+图2
+裁工具与强推
+图3
+修历史与下发
+图4
+① 读当前步和用户，把表单多选字段补成空
+④ 确认模式三选一：自动/手动产出步/手
+⑥ 起点：本步工具表
+1 补悬空工具调用，按用户轮裁窗口
+列表
+动其它步
+⑦ 行程步正文没落库一>强推提交工具
+12 一次性覆盖提示词、工具表、tool_choice
+② 取本步配置，前置字段缺了直接抛错
+⑤ 注入交通段、住宿城进度，用 Jinja2 渲染
+③ 有 user_id 才加载长期记忆
+本步模板
+⑧ 手动确认闸门、查询轮数封顶、确认轮强
+13 写本轮工具入参上下文，交给模型
+推
+⑨ 交通卡片接管：高铁＞航班＞自驾，零段
+直通
+10 住宿卡片接管
+谁调进来—文件内部一结果去哪 调用关系按AST统计；8个函数（含类的2个方法），每个都有调用方
+FELE app/core/middleware.py］
+建实例•1处
+改好的请求一模型
+travel_agent.create_travel_agent
+StepConfigMiddleware.awrap_model_call
+L218-633
+L70 调工厂函数，把中间件放进
+13道关全在这一个方法里，占全文件三分之二
+system_prompt、tools、
+tool_choice，以及需要时重建的
+create_agent 的middleware列表。
+messages，经 handler 交给模型。
+—init
+L209
+create_step_config_middleware
+L636
+存下预加载的步骤配置
+工厂：加载配置并建实例
+每次调模型前•框架回调
+工具入参上下文一 车票守卫
+LangChain create_agent
+_is_confirm_reply
+L74
+_history_has_itinerary
+L117
+写进 mcp_tools._TURN_CTX，12306查询的
+Agent 循环每发起一次模型调用，就先过一遍
+是不是纯确认语（图3）
+历史里写没写过 Day 正文（图3）
+_normalize_train_args 在模型漏传参数时
+awrap_model_call。
+据此回填。
+-repair_dangling_tool_calts
+L134
+_trim_window
+L183
+补悬空工具调用（图4）
+按用户轮裁窗口（图4）
+借用段日期•4处
+抛错 本轮失败
+_leg_query_date 被三个交通卡片的
+_leg_query_date
+L9
+_Legs_with_dates 和快速通道
+算第N段的乘车日期，本文件和4个外部模块共用（图4）
+当前步不在配置里，或本步前置字段为None，抛
+ValueError。
+-collect_context 借用。
+常量 四段模式文案、步骤切换工具清单、免封顶步骤、查询轮数上限2、窗口阈值40/24
+不写的东西
+不写 LangGraph 状态，不改checkpoint；裁窗
+口、补历史都只作用于这一次请求。
+请求里被改的四样东西 第@关一次性覆盖；没被改的字段原样透传
+字段
+怎么改
+由哪几关决定
+system_prompt
+本步 Jinja2模板按状态渲染，长期记忆追加在末尾
+③ 记忆、④ 模式文案、⑤进度
+tools
+从本步工具表出发，按模式和卡片路线逐关删减
+⑥ 起点，⑧⑨10删减
+tool_choice
+只在需要强推时才设置；强推的工具被后面的关删掉时，同时撤销强推
+⑦⑧设置，⑨ 10 可撤销
+Iessaoes
+只在检出残缺工具调用或超过40条时重建，正常路径零拷贝
+①
+函数卡 本图3个：主方法、构造方法、工厂函数
+awrap_model_call fasynd
+L218
+_init_mn
+L209
+create_step_config_middleware Lasyne
+蹭模块
+每次调模型前的总闸：按当前步把提示词、工具表、
+把预加载好的步骤配置字典存起来，之后每次调用直接按步骤
+L636
+tool_choice、消息历史改好再放行，不写任何状态
+查，不再重复加载。
+工厂函数：先异步加载全部步骤配置（提示词、工具表、前置
+字段），再建中间件实例。
+何时调用 每一次模型调用之前；一回合里模型循环调工具几次，就
+何时调用 中间件实例创建时
+跑几次
+谁来调用 本文件 create_step_config_middleware
+何时调用
+每次建 agent 时：执行器、卡片流程、快速通道同步都会
+谁来调用 LangChain create_agent 的中间件链（实例由
+结果交给 self._step_config，供 awrap_model_caLl 按
+调 create_travel_agent
+travel_agent 注册）
+current_step 取配置
+谁来调用
+agents/handoffs/travel_agent.create_travel_ag
+结果交给 改好的 ModelRequest 交 handler（模型）；入参上下
+ent L70跨模块
+文写进_TURN_CTX；配置不全时拋 ValueError
+结果交给
+StepConfigMiddleware 实例，进 create_agent 的
+middleware 列表
+中间件是状态机的“硬约束层“：提示词里那些“只展示不推进“”先落库再收尾“交通由卡片供给”的规矩，在这里都被改写成了确定性的工具表裁剪和tool_choice。它只改这一次请求、不碰状态，所
+以每一次调模型都按当时的状态重新算一遍—状态变了，规矩跟着变。

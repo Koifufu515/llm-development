@@ -1,0 +1,30 @@
+双事件循环•MCP跑在后台线程，调用靠跨线程调度
+Windows上两类依赖对事件循环的要求正好相反：psycopg的异步模式不能跑在 ProactorEventLoop 上，而stdio 方式的 MCP要起子进程，
+SelectorEventLoop 不支持。于是 MCP 会话单独放进后台线程，主线程要调工具时，把协程跨线程投递过去，再把结果 await 回来。
+主线程
+SelectorEventLoop
+线程边界
+MCP 后台线程
+ProactorEventLoop
+FastAPI
+psyCOPg
+LangGraph 主流程
+MCP 会话所在•即代码里的 mcp_1oop
+跨线程调度
+Agent想调
+weather.get_•
+MCP会话
+run_coroutine_threadsafe
+stdio 通信
+返回
+结果
+MCP Server 子进程
+wrap_future - await
+跨线程调度用
+asyncio.wrap_future（
+② 外层：包成 asyncio.Future，主循环里直接 await，等结果时不阻塞
+asyncio.run_coroutine_threadsafe（coro,mcp_loop）
+① 内层，先执行：线程安全地把 coro 投递到 mcp_10op，立刻返回
+concurrent.futures.Future
+为什么外层还要包一层：run_coroutine_threadsafe返回的是 concurrent.futures.Future，在主循环里直接.result（）会把整个事件循环卡住；
+wrap_future把它换成asyncio.Future，主线程await等结果的同时，主循环照常服务别的请求。

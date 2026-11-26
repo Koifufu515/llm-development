@@ -1,0 +1,2 @@
+SELECT chunk_id FROM chunks
+WHERE tokens @@ plainto_tsquery('simple', '兵马俑 的 门票 多少 钱') AND level = 1;

@@ -1,0 +1,84 @@
+[32m14:19:32.291[0m | [33m[1mWARNING[0m | [36mquarry.ingest.worker[0m:[36m_claim_stale[0m:[36m126[0m | [33m[1m[1794032372261-0] 认领超时消息，这是第 2 次投递[0m
+[32m14:19:32.291[0m | [1mINFO   [0m | [36mquarry.ingest.worker[0m:[36m_handle[0m:[36m56[0m | [1m[1794032372261-0] 文档 e5fa7fa0-ca16-41d7-937a-bedfc17c53c8 阶段 parsing[0m
+[32m14:19:32.499[0m | [1mINFO   [0m | [36mquarry.scripts.ingest_corpus[0m:[36mingest_file[0m:[36m74[0m | [1mtravel-guide/upload-smoke.md: 内容未变，跳过整条管道[0m
+[32m14:19:32.502[0m | [1mINFO   [0m | [36mquarry.ingest.worker[0m:[36m_handle[0m:[36m61[0m | [1m[1794032372261-0] 完成[0m
+[32m14:19:32.504[0m | [1mINFO   [0m | [36mquarry.ingest.worker[0m:[36m_handle[0m:[36m56[0m | [1m[1794032372583-0] 文档 1e741ac1-442c-46a3-9f24-b150413b8f0b 阶段 parsing[0m
+[32m14:19:32.505[0m | [31m[1mERROR  [0m | [36mquarry.ingest.worker[0m:[36m_handle[0m:[36m63[0m | [31m[1m[1794032372583-0] 失败 文档不存在 1e741ac1-442c-46a3-9f24-b150413b8f0b[0m
+[33m[1mTraceback (most recent call last):[0m
+  File "[32m/Users/jarvis/Desktop/大模型开发/quarry-rag/scripts/[0m[32m[1mverify_queue_recovery.py[0m", line [33m41[0m, in [35m<module>[0m
+    [35m[1mif[0m [1m__name__[0m[35m[1m==[0m[36m'__main__'[0m[1m:[0m[1masyncio[0m[35m[1m.[0m[1mrun[0m[1m([0m[1mmain[0m[1m([0m[1m)[0m[1m)[0m
+  File "/Users/jarvis/anaconda3/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+  File "/Users/jarvis/anaconda3/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+  File "/Users/jarvis/anaconda3/lib/python3.11/asyncio/base_events.py", line 640, in run_until_complete
+    self.run_forever()
+  File "/Users/jarvis/anaconda3/lib/python3.11/asyncio/base_events.py", line 607, in run_forever
+    self._run_once()
+  File "/Users/jarvis/anaconda3/lib/python3.11/asyncio/base_events.py", line 1922, in _run_once
+    handle._run()
+  File "/Users/jarvis/anaconda3/lib/python3.11/asyncio/events.py", line 80, in _run
+    self._context.run(self._callback, *self._args)
+  File "[32m/Users/jarvis/Desktop/大模型开发/quarry-rag/scripts/[0m[32m[1mverify_queue_recovery.py[0m", line [33m33[0m, in [35mmain[0m
+    [35m[1mawait[0m [1mw[0m[35m[1m.[0m[1m_handle[0m[1m([0m[1mr[0m[1m,[0m[1mbad[0m[1m,[0m[1mmessages[0m[1m[[0m[34m[1m0[0m[1m][0m[1m[[0m[34m[1m1[0m[1m][0m[1m[[0m[34m[1m0[0m[1m][0m[1m[[0m[34m[1m1[0m[1m][0m[1m)[0m
+> File "[32m/Users/jarvis/Desktop/大模型开发/quarry-rag/quarry/ingest/[0m[32m[1mworker.py[0m", line [33m59[0m, in [35m_handle[0m
+    [35m[1mawait[0m [1m_do_work[0m[1m([0m[1mdoc_id[0m[1m,[0m [1mstage[0m[1m)[0m
+  File "[32m/Users/jarvis/Desktop/大模型开发/quarry-rag/quarry/ingest/[0m[32m[1mworker.py[0m", line [33m83[0m, in [35m_do_work[0m
+    [35m[1mraise[0m [1mValueError[0m[1m([0m[36mf"文档不存在 {doc_id}"[0m[1m)[0m
+[31m[1mValueError[0m:[1m 文档不存在 1e741ac1-442c-46a3-9f24-b150413b8f0b[0m
+[32m14:19:32.512[0m | [33m[1mWARNING[0m | [36mquarry.ingest.worker[0m:[36m_claim_stale[0m:[36m126[0m | [33m[1m[1794032372583-0] 认领超时消息，这是第 2 次投递[0m
+[32m14:19:32.512[0m | [1mINFO   [0m | [36mquarry.ingest.worker[0m:[36m_handle[0m:[36m56[0m | [1m[1794032372583-0] 文档 1e741ac1-442c-46a3-9f24-b150413b8f0b 阶段 parsing[0m
+[32m14:19:32.514[0m | [31m[1mERROR  [0m | [36mquarry.ingest.worker[0m:[36m_handle[0m:[36m63[0m | [31m[1m[1794032372583-0] 失败 文档不存在 1e741ac1-442c-46a3-9f24-b150413b8f0b[0m
+[33m[1mTraceback (most recent call last):[0m
+  File "[32m/Users/jarvis/Desktop/大模型开发/quarry-rag/scripts/[0m[32m[1mverify_queue_recovery.py[0m", line [33m41[0m, in [35m<module>[0m
+    [35m[1mif[0m [1m__name__[0m[35m[1m==[0m[36m'__main__'[0m[1m:[0m[1masyncio[0m[35m[1m.[0m[1mrun[0m[1m([0m[1mmain[0m[1m([0m[1m)[0m[1m)[0m
+  File "/Users/jarvis/anaconda3/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+  File "/Users/jarvis/anaconda3/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+  File "/Users/jarvis/anaconda3/lib/python3.11/asyncio/base_events.py", line 640, in run_until_complete
+    self.run_forever()
+  File "/Users/jarvis/anaconda3/lib/python3.11/asyncio/base_events.py", line 607, in run_forever
+    self._run_once()
+  File "/Users/jarvis/anaconda3/lib/python3.11/asyncio/base_events.py", line 1922, in _run_once
+    handle._run()
+  File "/Users/jarvis/anaconda3/lib/python3.11/asyncio/events.py", line 80, in _run
+    self._context.run(self._callback, *self._args)
+  File "[32m/Users/jarvis/Desktop/大模型开发/quarry-rag/scripts/[0m[32m[1mverify_queue_recovery.py[0m", line [33m34[0m, in [35mmain[0m
+    [35m[1mfor[0m [1m_[0m [35m[1min[0m [1mrange[0m[1m([0m[34m[1m3[0m[1m)[0m[1m:[0m[35m[1mawait[0m [1mw[0m[35m[1m.[0m[1m_claim_stale[0m[1m([0m[1mr[0m[1m)[0m
+  File "[32m/Users/jarvis/Desktop/大模型开发/quarry-rag/quarry/ingest/[0m[32m[1mworker.py[0m", line [33m128[0m, in [35m_claim_stale[0m
+    [35m[1mawait[0m [1m_handle[0m[1m([0m[1mr[0m[1m,[0m [1mcid[0m[1m,[0m [1mfields[0m[1m)[0m
+> File "[32m/Users/jarvis/Desktop/大模型开发/quarry-rag/quarry/ingest/[0m[32m[1mworker.py[0m", line [33m59[0m, in [35m_handle[0m
+    [35m[1mawait[0m [1m_do_work[0m[1m([0m[1mdoc_id[0m[1m,[0m [1mstage[0m[1m)[0m
+  File "[32m/Users/jarvis/Desktop/大模型开发/quarry-rag/quarry/ingest/[0m[32m[1mworker.py[0m", line [33m83[0m, in [35m_do_work[0m
+    [35m[1mraise[0m [1mValueError[0m[1m([0m[36mf"文档不存在 {doc_id}"[0m[1m)[0m
+[31m[1mValueError[0m:[1m 文档不存在 1e741ac1-442c-46a3-9f24-b150413b8f0b[0m
+[32m14:19:32.517[0m | [33m[1mWARNING[0m | [36mquarry.ingest.worker[0m:[36m_claim_stale[0m:[36m126[0m | [33m[1m[1794032372583-0] 认领超时消息，这是第 3 次投递[0m
+[32m14:19:32.517[0m | [1mINFO   [0m | [36mquarry.ingest.worker[0m:[36m_handle[0m:[36m56[0m | [1m[1794032372583-0] 文档 1e741ac1-442c-46a3-9f24-b150413b8f0b 阶段 parsing[0m
+[32m14:19:32.520[0m | [31m[1mERROR  [0m | [36mquarry.ingest.worker[0m:[36m_handle[0m:[36m63[0m | [31m[1m[1794032372583-0] 失败 文档不存在 1e741ac1-442c-46a3-9f24-b150413b8f0b[0m
+[33m[1mTraceback (most recent call last):[0m
+  File "[32m/Users/jarvis/Desktop/大模型开发/quarry-rag/scripts/[0m[32m[1mverify_queue_recovery.py[0m", line [33m41[0m, in [35m<module>[0m
+    [35m[1mif[0m [1m__name__[0m[35m[1m==[0m[36m'__main__'[0m[1m:[0m[1masyncio[0m[35m[1m.[0m[1mrun[0m[1m([0m[1mmain[0m[1m([0m[1m)[0m[1m)[0m
+  File "/Users/jarvis/anaconda3/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+  File "/Users/jarvis/anaconda3/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+  File "/Users/jarvis/anaconda3/lib/python3.11/asyncio/base_events.py", line 640, in run_until_complete
+    self.run_forever()
+  File "/Users/jarvis/anaconda3/lib/python3.11/asyncio/base_events.py", line 607, in run_forever
+    self._run_once()
+  File "/Users/jarvis/anaconda3/lib/python3.11/asyncio/base_events.py", line 1922, in _run_once
+    handle._run()
+  File "/Users/jarvis/anaconda3/lib/python3.11/asyncio/events.py", line 80, in _run
+    self._context.run(self._callback, *self._args)
+  File "[32m/Users/jarvis/Desktop/大模型开发/quarry-rag/scripts/[0m[32m[1mverify_queue_recovery.py[0m", line [33m34[0m, in [35mmain[0m
+    [35m[1mfor[0m [1m_[0m [35m[1min[0m [1mrange[0m[1m([0m[34m[1m3[0m[1m)[0m[1m:[0m[35m[1mawait[0m [1mw[0m[35m[1m.[0m[1m_claim_stale[0m[1m([0m[1mr[0m[1m)[0m
+  File "[32m/Users/jarvis/Desktop/大模型开发/quarry-rag/quarry/ingest/[0m[32m[1mworker.py[0m", line [33m128[0m, in [35m_claim_stale[0m
+    [35m[1mawait[0m [1m_handle[0m[1m([0m[1mr[0m[1m,[0m [1mcid[0m[1m,[0m [1mfields[0m[1m)[0m
+> File "[32m/Users/jarvis/Desktop/大模型开发/quarry-rag/quarry/ingest/[0m[32m[1mworker.py[0m", line [33m59[0m, in [35m_handle[0m
+    [35m[1mawait[0m [1m_do_work[0m[1m([0m[1mdoc_id[0m[1m,[0m [1mstage[0m[1m)[0m
+  File "[32m/Users/jarvis/Desktop/大模型开发/quarry-rag/quarry/ingest/[0m[32m[1mworker.py[0m", line [33m83[0m, in [35m_do_work[0m
+    [35m[1mraise[0m [1mValueError[0m[1m([0m[36mf"文档不存在 {doc_id}"[0m[1m)[0m
+[31m[1mValueError[0m:[1m 文档不存在 1e741ac1-442c-46a3-9f24-b150413b8f0b[0m
+[32m14:19:32.523[0m | [31m[1mERROR  [0m | [36mquarry.ingest.worker[0m:[36m_claim_stale[0m:[36m113[0m | [31m[1m[1794032372583-0] 投递 3 次仍失败，转死信[0m
+{"killed_reader_then_real_ingest_claim_ack": true, "three_deliveries_dead_letter": true, "dead_letter": {"origin_id": "1794032372583-0", "document_id": "1e741ac1-442c-46a3-9f24-b150413b8f0b", "times_delivered": "3"}, "victim_exitcode": -9}

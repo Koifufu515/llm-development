@@ -1,0 +1,21 @@
+{
+  "city": "上海",
+  "title": "上海景点资料 · Shanghai/Putuo",
+  "source_url": "https://en.wikivoyage.org/wiki/Shanghai/Putuo",
+  "text": "资料城市：上海。本文是历史开放景点资料，不提供实时开放时间或价格；出行前需要核实。\n\nJade Buddha Temple\nFounded in 1882 with two Jade statues of the Buddha imported from Burma. There are restaurant facilities with steamed dumplings. This is a bit of a hike from Jing'an temple, so consider taking a taxi or at the very least the Metro up to nearby Changshou Road Station.\n\nChangfeng Park\nIt is a park like most others except it also has a mini-amusement park and aquarium within. Worth a visit if you are staying nearby as it is less crowded than Zhongshan or Century Parks.\n\nStampede Karting\nSupposedly the largest go-kart track in Asia, it's not bad, though the price leaves a little to be desired.",
+  "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+  "license": "CC BY-SA 3.0",
+  "attribution": "Wikivoyage contributors; https://en.wikivoyage.org/wiki/Shanghai/Putuo",
+  "sha256": "31f7d5047054fefe510e79f806cc97b2f0d02430a9f8c67fd92320c7e0da9991",
+  "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+  "poi_count": 3,
+  "source_dataset": "https://github.com/wikivoyage/wikivoyage.github.io",
+  "excluded_fields": [
+    "price",
+    "hours",
+    "phone",
+    "email",
+    "hotel",
+    "restaurant"
+  ]
+}

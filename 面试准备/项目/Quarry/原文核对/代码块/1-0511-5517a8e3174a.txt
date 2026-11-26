@@ -1,0 +1,6 @@
+SELECT query, count(*) AS times
+FROM query_logs
+WHERE status = 200 AND abstain AND created_at > now() - interval '7 days'
+GROUP BY query
+ORDER BY times DESC
+LIMIT 20;

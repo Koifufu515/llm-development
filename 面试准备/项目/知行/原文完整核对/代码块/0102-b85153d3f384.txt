@@ -1,0 +1,32 @@
+# 顶部 import 加一行
+from app.tools.router_query import query_destination_info
+
+# destination_recommendation 步骤的 tools 里加入 query_destination_info
+"destination_recommendation": {
+    ...
+    "tools": [
+        select_destination_tool,
+        go_back_to_requirement,
+        query_destination_info,     # ← 本章新增：Advanced RAG 目的地知识查询
+        *search_tools,              # 第 06 章的 Tavily 搜索仍保留（互补）
+        *weather_tools,
+        update_travel_style_tool,
+        add_travel_record_tool,
+        check_current_progress,
+    ],
+    ...
+},
+
+# itinerary_generation 步骤同样加入
+"itinerary_generation": {
+    ...
+    "tools": [
+        generate_itinerary_tool,
+        go_back_to_food,
+        ...
+        query_destination_info,     # ← 本章新增
+        *search_tools,
+        check_current_progress,
+    ],
+    ...
+},

@@ -1,0 +1,14 @@
+"""parse_ticket_rows 演示：12306 原始返回 → 每趟车一条记录（纯函数，无需密钥）"""
+from app.tools.mcp_tools import parse_ticket_rows
+
+RAW = """G1234 北京南(telecode:VNP) -> 上海虹桥(telecode:AOH) 08:00 -> 12:28 历时：04:28
+- 二等座: 有票 662.0元
+- 一等座: 5张 1060.0元
+G7 北京南(telecode:VNP) -> 上海(telecode:SHH) 07:00 -> 11:35 历时：04:35
+- 商务座: 无票 2318.0元
+- 二等座: 候补 669.0元
+K51 北京(telecode:BJP) -> 上海(telecode:SHH) 06:15 -> 21:40 历时：15:25
+- 硬卧: 有票 304.5元"""
+for row in parse_ticket_rows(RAW):
+    print(row)
+print("MCP 返回 content blocks 列表也能解析：", len(parse_ticket_rows([{"type": "text", "text": RAW}])), "趟")

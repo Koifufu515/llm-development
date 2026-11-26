@@ -1,0 +1,91 @@
+def validate_driving_submission(
+    payload: DrivingSubmitPayload, cache_key: Optional[str] = None
+) -> DrivingSubmitResult:
+    """只读确认：校验 segment_id 是否存在、段是否覆盖完整；不做任何时间/路线校验"""
+    cached = get_cached_payload(cache_key)
+    if cached is None:                          # 没查过路线就提交：拦下，避免写进不存在的段
+        return DrivingSubmitResult(
+            ok=False, code="NO_PAYLOAD",
+            msg="后端尚无自驾候选路线记录，请先在交通步重新查询路线后再提交",
+        )
+    items = payload.segments
+    if not items:
+        return DrivingSubmitResult(
+            ok=False, code="EMPTY_SELECTION", msg="提交内容为空，至少要确认一段自驾路线",
+        )
+    by_id = {seg.segment_id: seg for seg in cached.segments}
+    unknown = [item.segment_id for item in items if item.segment_id not in by_id]
+    if unknown:
+        return DrivingSubmitResult(
+            ok=False, code="SEGMENT_NOT_FOUND",
+            msg=f"不存在的行程段：{'、'.join(unknown)}；合法段为 {'、'.join(by_id)}",
+        )
+    chosen = {item.segment_id for item in items}
+    # ★ 实时无候选（ok 为空/查询失败、卡片里置灰）的段不算"漏选"——否则该段无从选择、
+    #   用户永远凑不齐全部段而卡在交通步。只有"有候选却没选"的段才判 INCOMPLETE。
+    missing = [seg.segment_id for seg in cached.segments
+               if seg.segment_id not in chosen and seg.ok]
+    if missing:
+        return DrivingSubmitResult(
+            ok=False, code="INCOMPLETE",
+            msg=f"以下行程段尚未确认路线：{'、'.join(missing)}",
+        )
+    return DrivingSubmitResult(
+        ok=True, code="OK",
+        msg=f"已收到 {len(items)} 段自驾路线确认，基础合法性校验通过（未做任何时间/路线校验）",
+        accepted=items,
+    )
+
+# ==================== Agent 可调用的两个 Tool ====================
+
+@tool
+async def query_driving_multi_segment_tool(legs: list[dict]) -> str:
+    """并行查询多段自驾路线，返回可直接下发前端的 driving_multi_segment skill payload。
+
+    适用于「多目的地行程」需要一次性给出各段驾车路线的场景。段与段之间**并发查询**，
+    总耗时≈最慢一段，段数由 legs 长度决定。每段只返回一条**默认策略的最优路线**。
+
+    Args:
+        legs: 行程段列表，按时间顺序排列。每项含 from（出发城市）、to（到达城市）、
+            travel_date（该段出行日期 YYYY-MM-DD，自驾可不填）。
+
+    Returns:
+        JSON 文本 {"skill_name":"driving_multi_segment","segments":[...]}。
+        **请原样下发给前端 UI Skill**：不要改写字段名、不要增删 segments、不要自己再校验；
+        某些段查不到路线时该段 ok=false，如实告知用户即可。
+    """
+    payload = await build_driving_multi_segment_payload(legs)
+    app_logger.info(f"🚗 driving_multi_segment 出参：{len(payload.segments)} 段")
+    return payload.model_dump_json(by_alias=True)
+
+@tool
+async def submit_driving_multi_segment_tool(segments: list[dict]) -> str:
+    """接收前端一次性回传的全部段确认（只读确认，无路线策略可选），只做基础合法性校验。
+
+    **不做任何时间/路线校验**。
+
+    Args:
+        segments: 前端 onSubmit 抛回的数组，每项为 {"segment_id": "s1"}。
+
+    Returns:
+        JSON 文本 {"ok": bool, "code": str, "msg": str, "accepted": [...]}。
+        ok 为 false 时把 msg 原样告知用户，并请其在界面上重新确认后提交；
+        ok 为 true 表示已确认全部段路线（未做任何校验）。
+    """
+    try:
+        payload = DrivingSubmitPayload.model_validate({"segments": segments})
+    except Exception as exc:                  # 结构缺失也走确定性回执，不抛错
+        return DrivingSubmitResult(
+            ok=False, code="INVALID_PAYLOAD", msg=f"提交数据结构不合法：{exc}"
+        ).model_dump_json()
+    result = validate_driving_submission(payload)
+    app_logger.info(f"🚗 driving_multi_segment 提交校验：{result.code} / {result.msg}")
+    return result.model_dump_json()
+
+__all__ = [
+    "build_driving_multi_segment_payload",
+    "get_cached_payload",
+    "validate_driving_submission",
+    "query_driving_multi_segment_tool",
+    "submit_driving_multi_segment_tool",
+]

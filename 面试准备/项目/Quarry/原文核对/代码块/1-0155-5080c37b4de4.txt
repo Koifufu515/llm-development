@@ -1,0 +1,2 @@
+# macOS / Linux
+head -30 corpus/travel-guide/西安.md

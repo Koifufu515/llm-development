@@ -1,0 +1,9 @@
+from langchain.agents import create_agent
+
+agent = create_agent(
+    model=llm,               # 大脑：一个 ChatModel 实例
+    tools=[tool_a, tool_b],  # 手脚：一组带 @tool 装饰器的函数
+    prompt="你是...",         # 人设：System Prompt
+    state_schema=TravelState,# 记忆的形状：第 02 章定义的 State
+    checkpointer=cp,         # 持久化：第 02 章的 Checkpointer
+)

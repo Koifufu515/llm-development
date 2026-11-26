@@ -1,0 +1,43 @@
+一次性加载vs按服务隔离
+MCP 多服务连接策略对比 — 为什么选择按服务隔离
+X有坑
+一次性加载
+V 本项目做法
+按服务隔离
+所有9个服务塞进一个
+每个服务一个独立客户端
+MultiServerMCPCLient
+并行 gather（）收集结果
+它内部用
+TaskGroup
+，跑
+V
+服务A
+在线
+【任一服务失败】
+X
+服务B
+」
+超时
+warning
+空列表
+VS
+服务C
+在线
+TaskGroup
+会连锁抛
+X 服务D
+」
+挂了
+warning
+空列表
+V
+服务E
+在线
+最终一个工具都拿不到
+最终能用 3个服务（其他跳过）
+全军覆没，整个 Agent 不可用
+降级而不崩溃，Agent仍然可用
+-IIIII1II
+关键区别：MultiServerMCPClient + TaskGroup 任一服务失败即全部崩溃；按服务隔离后每个服务独立客户端+gather（）并行加
+载，失败只记warning返回空列表——实现优雅降级。

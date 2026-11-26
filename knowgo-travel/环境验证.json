@@ -1,0 +1,78 @@
+{
+  "verified_at": "2026-10-24T18:28:13.193909+08:00",
+  "stage": "需求收集、确认回退、真实城市/天气MCP",
+  "project_path": "/Users/jarvis/Desktop/大模型开发/knowgo-travel",
+  "python": "Python 3.13.17",
+  "uv": "uv 0.13.5 (46776a95d 2026-10-21 aarch64-apple-darwin)",
+  "api_url": "http://127.0.0.1:8001/",
+  "docs_url": "http://127.0.0.1:8001/docs",
+  "http_checks": {
+    "/": 200,
+    "/docs": 200,
+    "/openapi.json": 200,
+    "/missing": 404
+  },
+  "lock_check": "passed",
+  "docker": {
+    "runtime": "Colima knowgo / VZ",
+    "cli": "Docker version 29.9.2, build a82e528901",
+    "compose": "Docker Compose version 5.6.1",
+    "server": "29.5.2 / aarch64",
+    "hello_world": "passed; exit 0",
+    "registry_pull": "passed; official hello-world:latest",
+    "proxy": "uses existing host proxy 127.0.0.1:7897 through VM gateway",
+    "dns_repair": "persisted in profile system provision"
+  },
+  "student_exercise": "pending",
+  "day1": {
+    "real_model": "deepseek-flash: passed",
+    "database": "PostgreSQL dedicated compose: healthy",
+    "real_two_turns": "passed; see 真实模型验证.json",
+    "server_reload_restore": "passed",
+    "new_session_isolation": "passed",
+    "learn_page_http": 200,
+    "contract_errors": [
+      404,
+      422
+    ],
+    "user_understanding": "pending",
+    "user_acceptance": "passed by user"
+  },
+  "confirmation_module": {
+    "live_confirm_change_reconfirm": "passed; see 确认回退真实验证.json",
+    "tests": "22 passed",
+    "downstream_cleanup": "passed with seeded test data; live travel queries not implemented",
+    "user_acceptance": "passed by user"
+  },
+  "weather_mcp": {
+    "verified_at": "2026-10-26T20:30:25.523508+08:00",
+    "transport": "stdio MCP",
+    "tools": [
+      "get_city_location",
+      "get_weather_forecast"
+    ],
+    "real_mcp_queries": "passed; MCP真实验证.json",
+    "real_agent_mcp": "passed; MCP聊天真实验证.json",
+    "tests": "29 passed",
+    "ui_http": 200,
+    "ui_javascript": "syntax passed",
+    "user_acceptance": "用户报告测试完成",
+    "source": "Open-Meteo / GeoNames; not Amap"
+  },
+  "rail_module": {
+    "verified_at": "2026-10-26T21:33:54.677893+08:00",
+    "npm_package": "12306-mcp 0.3.10; package-lock.json present",
+    "real_chat": "passed; 交通聊天真实验证.json",
+    "real_result_compaction": "563 options -> 12; 351616 original characters",
+    "guards": "confirmed route/date, past/out-of-window rejection, local trip rejection",
+    "tests": "40 passed",
+    "services": {
+      "weather": "ready",
+      "rail": "ready"
+    },
+    "ui_http": 200,
+    "ui_javascript": "syntax passed",
+    "user_acceptance": "pending",
+    "scope": "去程高铁/动车查询；尚无选票/订票/住宿推进"
+  }
+}

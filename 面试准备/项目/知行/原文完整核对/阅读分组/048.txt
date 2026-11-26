@@ -1,0 +1,483 @@
+
+
+===== block 557 5d6b4adf70de lines 1-108 source 知行旅行助手-v2#559 =====
+@router.post("/hotel_multi_segment/submit")
+async def submit_hotel_multi_segment(
+        req: HotelSubmitRequest,
+        user: User = Depends(get_current_user),
+        db: AsyncSession = Depends(get_db),
+):
+    """多段住宿提交：基础合法性校验（**不做任何日期校验**）→ 落库推进 → SSE 续跑餐饮/行程步"""
+    conv = await get_owned_conversation(db, req.conversation_id, user.id)
+    if not conv:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="会话不存在")
+
+    async def event_generator():
+        result = await apply_hotel_selection(req.conversation_id, req.payload)
+        if not result.ok:
+            # 校验未过：只在流内如实告知（前端渲染为一条助手气泡，卡片保持展开供用户重选）
+            yield _sse(make_event(ROLE_ERROR, result.msg))
+            yield _sse(make_event(ROLE_DONE, "finish", code=400))
+            return
+        # 提交态 + 选中账本写回卡片帧消息（切会话/刷新后卡片仍为已提交锁定态）
+        await mark_skill_ui_submitted(db, conv.id, HOTEL_MULTI_SEGMENT_SKILL, req.payload)
+        app_logger.info(f"🏨 住宿卡片提交成功，SSE 续跑后续步骤：已确认 {len(result.texts)} 站")
+        # 先在对话里回显用户已选定的住宿（门店或品牌，按站顺序），再续跑下一步
+        yield _sse(make_event(ROLE_ASSISTANT, _confirmed_content("住宿（按行程站顺序）", result.texts)))
+        stream = await run_chat_turn(
+            db, str(user.id), req.conversation_id, _hotel_resume_content(result),
+            force_planning=True,  # 续跑必须成立：不走概率性意图路由，由代码指定进规划状态机
+            persist_user=False,   # 合成发言不落库：历史里不该冒出用户没打过的句子
+            # 反馈文案按落库后实际推进到的步骤取（住宿已确认 → 正在生成行程报告）
+            resume_stage=result.next_step or None,
+        )
+        async for event in stream:
+            yield _sse(event)
+
+    return StreamingResponse(
+        event_generator(), media_type="text/event-stream", headers=_SSE_HEADERS
+    )
+
+@router.post("/flight_multi_segment/submit")
+async def submit_flight_multi_segment(
+        req: FlightSubmitRequest,
+        user: User = Depends(get_current_user),
+        db: AsyncSession = Depends(get_db),
+):
+    """多段航班提交：基础合法性校验（**不做任何航班时间校验**）→ 落库推进 → SSE 续跑住宿步"""
+    conv = await get_owned_conversation(db, req.conversation_id, user.id)
+    if not conv:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="会话不存在")
+
+    async def event_generator():
+        result = await apply_flight_selection(req.conversation_id, req.payload)
+        if not result.ok:
+            # 校验未过：只在流内如实告知（前端渲染为一条助手气泡，卡片保持展开供用户重选）
+            yield _sse(make_event(ROLE_ERROR, result.msg))
+            yield _sse(make_event(ROLE_DONE, "finish", code=400))
+            return
+        # 提交态 + 选中账本写回卡片帧消息（切会话/刷新后卡片仍为已提交锁定态）
+        await mark_skill_ui_submitted(db, conv.id, FLIGHT_MULTI_SEGMENT_SKILL, req.payload)
+        app_logger.info(f"✈️ 航班卡片提交成功，SSE 续跑后续步骤：已确认 {len(result.texts)} 段")
+        # 先在对话里回显用户已选定的航班（按行程段顺序），再续跑下一步
+        yield _sse(make_event(ROLE_ASSISTANT, _confirmed_content("航班（按行程段顺序）", result.texts)))
+        stream = await run_chat_turn(
+            db, str(user.id), req.conversation_id, _flight_resume_content(result),
+            force_planning=True,  # 续跑必须成立：不走概率性意图路由，由代码指定进规划状态机
+            persist_user=False,   # 合成发言不落库：历史里不该冒出用户没打过的句子
+            resume_stage="accommodation_planning",  # 反馈文案：航班已确认 → 正在规划住宿
+        )
+        async for event in stream:
+            yield _sse(event)
+
+    return StreamingResponse(
+        event_generator(), media_type="text/event-stream", headers=_SSE_HEADERS
+    )
+
+@router.post("/driving_multi_segment/submit")
+async def submit_driving_multi_segment(
+        req: DrivingSubmitRequest,
+        user: User = Depends(get_current_user),
+        db: AsyncSession = Depends(get_db),
+):
+    """多段自驾提交：基础合法性校验（**不做任何时间/路线校验**）→ 落库推进 → SSE 续跑住宿步"""
+    conv = await get_owned_conversation(db, req.conversation_id, user.id)
+    if not conv:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="会话不存在")
+
+    async def event_generator():
+        result = await apply_driving_selection(req.conversation_id, req.payload)
+        if not result.ok:
+            # 校验未过：只在流内如实告知（前端渲染为一条助手气泡，卡片保持展开供用户重试）
+            yield _sse(make_event(ROLE_ERROR, result.msg))
+            yield _sse(make_event(ROLE_DONE, "finish", code=400))
+            return
+        # 提交态 + 选中账本写回卡片帧消息（切会话/刷新后卡片仍为已提交锁定态）
+        await mark_skill_ui_submitted(db, conv.id, DRIVING_MULTI_SEGMENT_SKILL, req.payload)
+        app_logger.info(f"🚗 自驾卡片提交成功，SSE 续跑后续步骤：已确认 {len(result.texts)} 段")
+        # 先在对话里回显用户已确认的自驾路线（按行程段顺序），再续跑下一步
+        yield _sse(make_event(ROLE_ASSISTANT, _confirmed_content("自驾路线（按行程段顺序）", result.texts)))
+        stream = await run_chat_turn(
+            db, str(user.id), req.conversation_id, _driving_resume_content(result),
+            force_planning=True,  # 续跑必须成立：不走概率性意图路由，由代码指定进规划状态机
+            persist_user=False,   # 合成发言不落库：历史里不该冒出用户没打过的句子
+            resume_stage="accommodation_planning",  # 反馈文案：自驾已确认 → 正在规划住宿
+        )
+        async for event in stream:
+            yield _sse(event)
+
+    return StreamingResponse(
+        event_generator(), media_type="text/event-stream", headers=_SSE_HEADERS
+    )
+
+
+===== block 558 9697d508a80b lines 1-30 source 知行旅行助手-v2#560 =====
+"""
+行程清单 API（资源式）
+
+- GET /api/v1/itinerary-plans/{plan_id} → data 直接为 TravelItinerary JSON
+
+归属校验下沉到服务层 get_owned_plan（join 会话表），路径不再需要 sessionId；
+响应体由 wrap_json_middleware 统一包成 {code,msg,data}。
+"""
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models.base import get_db
+from app.models.user import User
+from app.api.dependencies import get_current_user
+from app.services.itinerary_plan_service import get_owned_plan
+
+router = APIRouter(prefix="/itinerary-plans", tags=["行程清单"])
+
+@router.get("/{plan_id}")
+async def get_itinerary_plan(
+        plan_id: str,
+        user: User = Depends(get_current_user),  # type: ignore
+        db: AsyncSession = Depends(get_db),
+):
+    """行程清单：data 直接为 TravelItinerary JSON（前端按 res.data 渲染清单页）"""
+    # ★ 归属校验下沉在服务层（join 会话表）：别人猜到 plan_id 也读不走
+    plan = await get_owned_plan(db, plan_id, user.id)
+    if not plan:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="行程清单不存在")
+    return plan.plan_data
+
+
+===== block 559 eeff304ca31c lines 1-4 source 知行旅行助手-v2#561 =====
+from app.api.v1 import users, cities, conversations, messages, itinerary_plans, skills   # ★ 新增两个
+
+app.include_router(itinerary_plans.router, prefix="/api/v1")   # 行程清单
+app.include_router(skills.router, prefix="/api/v1")            # 卡片提交回口
+
+
+===== block 560 16ee482690ee lines 1-23 source 知行旅行助手-v2#562 =====
+chat_contract_service._produce（环节 10）
+ ├─ try_direct_ticket_query(content, stream, conv_id) ── 命中返回文本 / 不命中返回 None
+ │    ├─ _parse_city_pair / _parse_query_date             起讫城市、日期
+ │    ├─ _flight_table → _render_flight_table             航班支线
+ │    └─ 12306 → _rows_to_seg → _render_ticket_table      高铁班次表
+ │
+ └─ execute_turn(user_id, conv_id, content, planning, stream) → (text, state_step, committed, body)
+      ├─ planning=False ─┬─ 识别到交通查询意图 → _query_fallback_text（确定性澄清，零 LLM）
+      │                  └─ 其余闲聊 → _stream_plain ─────── get_llm().astream 直连
+      └─ planning=True
+           ├─ create_travel_agent() + aget_state()          预读当前步骤 → 决定 buffer_all
+           ├─ apply_transport_switch(...)                   交通步前处理：对话内改选先落库（16.17）
+           ├─ _stream_agent(...)                            astream_events 流式跑一轮
+           │     └─ _is_protocol_leak / _chunk_has_tool_call / _scrub_leak_text
+           │        / _fold_restatements / _dedupe_texts
+           ├─ aget_state()                                  回合末快照 → state_step / committed / body
+           └─ 七处后处理（改 text，必要时推进状态机）
+                 ① 去确认轮 _covers_all_days       ② 零段直通 _zero_leg_guard
+                 ③ 住宿降级 _match_hotel_choice / _build_hotel_fallback
+                 ④ 多段住宿卡片（第 9 章 capability）
+                 ⑤ 目的地天气 _strip_model_weather / _queried_cities / _weather_paragraph
+                 ⑥ 交通清单 _ticket_table_from_tail / _strip_transport_lists（+ 第 9 章三类卡片；航班结构性不可查先降级高铁）
+                 ⑦ 行程正文 _render_itinerary_body / _push_rendered
+
+
+===== block 561 6f03e9ae5df7 lines 1-13 source 知行旅行助手-v2#563 =====
+"""对话流式执行器：LangGraph 框架流式"""
+import asyncio
+import json
+import re
+from datetime import date, timedelta
+
+from langchain_core.messages import HumanMessage
+
+from app.core.events import make_event, ROLE_ASSISTANT, ROLE_ASSISTANT_RESET
+from app.core.intent import detect_intent
+from app.core.event_stream import EventStream
+from app.agents.handoffs.travel_agent import create_travel_agent, get_llm
+from app.utils.logger import app_logger
+
+
+===== block 562 635dda4bdb2b lines 1-8 source 知行旅行助手-v2#564 =====
+async def _stream_plain(content: str, stream: EventStream) -> str:
+    """闲聊路径：直连 LLM 流式，不走规划 Agent"""
+    chunks: list[str] = []
+    async for chunk in get_llm().astream([HumanMessage(content=content)]):
+        if chunk.content:
+            chunks.append(chunk.content)
+            stream.push(make_event(ROLE_ASSISTANT, chunk.content))
+    return "".join(chunks)
+
+
+===== block 563 8584172b59f1 lines 1-21 source 知行旅行助手-v2#565 =====
+"""闲聊直连演示：import 真实 _stream_plain，喂一句闲聊，看它一帧帧 push（需 .env 配 DashScope 密钥）"""
+import asyncio
+
+from app.core.event_stream import EventStream
+from app.services.chat_stream_executor import _stream_plain
+
+async def main():
+    stream = EventStream()
+
+    async def consume():                                 # 消费者：把每一帧打印出来
+        async for ev in stream:
+            print(ev)                                    # {'role': 'assistant', 'content': '…', 'code': None}
+
+    task = asyncio.create_task(consume())
+    text = await _stream_plain("用一句话讲个冷笑话", stream)   # 生产者：边生边 push
+    stream.close()                                       # 生产完宣告结束，消费者随之停
+    await task
+    print("\n聚合全文：", text)                            # push 出去的是流，return 回来的是整段
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+
+===== block 564 f7a5dfc3519d lines 1-38 source 知行旅行助手-v2#566 =====
+# 交通步骤权威班次清单——由代码直出，不由模型自由生成
+_TICKET_SEG_LIMIT = 10
+_TICKET_SEAT_ORDER = ("二等座", "硬座", "一等座", "硬卧", "软卧", "无座")
+# 高铁/动车车次前缀（G 高铁 / C 城际 / D 动车），用于剔除段内混入的普速
+_HS_PREFIX = ("G", "C", "D")
+
+def _row_seat_label(row: dict) -> str:
+    """取一行班次的票价文案：紧凑行直接用；原始行从席别字典里按常用度挑一个"""
+    if row.get("seat"):
+        return row["seat"]
+    seats = row.get("seats") or {}
+    for k in _TICKET_SEAT_ORDER:
+        if k in seats:
+            status, price = seats[k]
+            return f"{k} {status} {price:g}元"
+    return "票价未返回"
+
+def _rows_to_seg(rows: list, seg: dict | None = None) -> dict:
+    """ 把一趟查询的班次行归成 {车次: (发车, 车次, 到达, 历时, 票价文案)}
+
+    从 _ticket_table_from_tail 抽出的公共归并逻辑（同车次只留发车最早的一条），
+    供"本轮工具返回"与"直查通道的单次 12306 返回"共用，避免两处去重口径分叉；
+    seg 传入时按同一规则合并进去（多段/多轮查询共用一张表）
+    """
+    seg = {} if seg is None else seg
+    for r in rows:
+        prev = seg.get(r["code"])
+        # ★ 同车次只留发车最早的一条（直查与交通步共用这一处去重口径）
+        if prev and prev[0] <= r["dep"]:
+            continue
+        seg[r["code"]] = (r["dep"], r["code"], r["arr"], r["dur"], _row_seat_label(r))
+    return seg
+
+def _hs_only(seg: dict) -> dict:
+    """ 段内出现 G/C/D 即剔除混入的普速（K/T/Z/纯数字）；整段只有普速则原样保留"""
+    if any(v[1][:1] in _HS_PREFIX for v in seg.values()):
+        return {k: v for k, v in seg.items() if v[1][:1] in _HS_PREFIX}
+    return seg
+
+
+===== block 565 0254d77b492d lines 1-11 source 知行旅行助手-v2#567 =====
+"""_rows_to_seg 演示：同车次只留发车最早的一条；票价文案按常用席别挑（纯函数，无需密钥）"""
+from app.services.chat_stream_executor import _rows_to_seg
+
+rows = [   # 第 9 章 parse_compact_rows / parse_ticket_rows 解析出的两种行
+    {"code": "G1650", "dep": "08:12", "arr": "12:30", "dur": "4:18", "seat": "二等座 有 356元"},   # 紧凑行
+    {"code": "G1650", "dep": "09:40", "arr": "13:58", "dur": "4:18", "seat": "二等座 有 356元"},   # 同车次更晚 → 丢
+    {"code": "D3135", "dep": "07:05", "arr": "13:02", "dur": "5:57",
+     "seats": {"一等座": ("有", 452.0), "二等座": ("无", 283.0)}},                                  # 原始行：席别字典
+]
+for code, item in _rows_to_seg(rows).items():
+    print(code, "→", item)            # (发车, 车次, 到达, 历时, 票价文案)：元组第一位是发车时刻，排序就按它
+
+
+===== block 566 9403bb6d1cb5 lines 1-2 source 知行旅行助手-v2#568 =====
+G1650 → ('08:12', 'G1650', '12:30', '4:18', '二等座 有 356元')
+D3135 → ('07:05', 'D3135', '13:02', '5:57', '二等座 无 283元')
+
+
+===== block 567 a5d80dbc73f0 lines 1-53 source 知行旅行助手-v2#569 =====
+def _render_ticket_table(segs: dict, only_leg: str = "", header: str = "", tail: str = "") -> str:
+    """把「段 → 班次」渲染成 Markdown 表，经过普速过滤和段筛选；无数据返回空串。
+    header/tail 可自定义表头与结尾文案。直查通道面向用户时，可替换原本给模型的约束提示，避免内部提示展示在前端。
+    """
+    segs = {k: _hs_only(v) for k, v in segs.items()}
+    if only_leg and "→" in only_leg:
+        a, b = only_leg.split("→")
+        segs = {
+            (f, t): v for (f, t), v in segs.items()
+            if (a in f or f in a) and (b in t or b in t)
+        }
+    if not segs:
+        return ""
+    lines = [
+        "\n\n---\n",
+        header or "**以下为系统直出的 12306 真实班次（每段以本表为准，表外车次为无效信息，请勿采纳）**\n",
+    ]
+    total = 0
+    for (frm, to), seg in segs.items():
+        items = sorted(seg.values())[:_TICKET_SEG_LIMIT]
+        lines.append(f"\n### {frm} → {to}\n\n")
+        lines.append("| 车次 | 出发→到达 | 历时 | 票价 |\n|---|---|---|---|\n")
+        for dep, code, arr, dur, seat in items:
+            lines.append(f"| {code} | {dep}→{arr} | {dur} | {seat} |\n")
+        total += len(items)
+    if tail:
+        lines.append(tail)
+    elif only_leg:
+        lines.append(f"\n请从以上**真实班次**中选择「{only_leg}」这一段的班次。\n")
+    else:
+        lines.append("\n请从以上**真实班次**中选择各段班次。\n")
+    app_logger.info(f"✅ 直出真实班次清单：{len(segs)} 段 / {total} 趟（表外车次均视为编造）")
+    return "".join(lines)
+
+def _ticket_table_from_tail(tail: list, only_leg: str = "") -> str:
+    """将本轮查询得到的真实班次按路段分组生成Markdown表格，查询几段就输出几张表。
+    兼容12306原始返回格式，起到双保险作用。
+    无真实数据返回空字符串，不编造车次。
+    only_leg不为空时，仅渲染当前待确认路段；城市名采用宽容匹配，支持站名带有北站/西站等后缀场景。
+    """
+    from app.tools.mcp_tools import parse_compact_rows, parse_ticket_rows
+
+    segs: dict[tuple, dict] = {}
+    for m in tail:
+        if getattr(m, "type", None) != "tool":
+            continue
+        content = getattr(m, "content", "")
+        rows = parse_compact_rows(content) or parse_ticket_rows(content)
+        if not rows:
+            continue
+        # 一次工具调用对应一个路段，按首趟车次起讫站分组；同路段多次查询自动合并去重
+        _rows_to_seg(rows, segs.setdefault((rows[0]["from"], rows[0]["to"]), {}))
+    return _render_ticket_table(segs, only_leg)
+
+
+===== block 568 29a26cf6fb60 lines 1-13 source 知行旅行助手-v2#570 =====
+"""_render_ticket_table 演示：普速过滤、按段筛选、面向用户的表头（纯函数，无需密钥）"""
+from app.services.chat_stream_executor import _render_ticket_table, _rows_to_seg
+
+seg1 = _rows_to_seg([
+    {"code": "G1650", "dep": "08:12", "arr": "12:30", "dur": "4:18", "seat": "二等座 有 356元"},
+    {"code": "K1086", "dep": "06:30", "arr": "19:45", "dur": "13:15", "seat": "硬座 有 128元"},   # 段内有 G → 普速被剔
+])
+seg2 = _rows_to_seg([{"code": "G7512", "dep": "09:05", "arr": "10:02", "dur": "0:57", "seat": "二等座 有 73元"}])
+segs = {("福州", "杭州东"): seg1, ("杭州东", "上海虹桥"): seg2}
+
+print(_render_ticket_table(segs))                               # 默认表头：写给模型看的自约束
+print(_render_ticket_table(segs, only_leg="杭州→上海"))          # 多目的地段级循环：只出当前段
+print(_render_ticket_table(segs, header="**12306 实时班次**\n", tail="\n以上为查询结果。\n")[:60], "…")
+
+
+===== block 569 6afa4a0656a7 lines 1-1 source 知行旅行助手-v2#571 =====
+默认版的输出（K1086 因为同段有 G 字头车次被剔掉了）：
+
+
+===== block 570 f709d0c3a115 lines 1-16 source 知行旅行助手-v2#572 =====
+---
+**以下为系统直出的 12306 真实班次（每段以本表为准，表外车次为无效信息，请勿采纳）**
+
+### 福州 → 杭州东
+
+| 车次 | 出发→到达 | 历时 | 票价 |
+|---|---|---|---|
+| G1650 | 08:12→12:30 | 4:18 | 二等座 有 356元 |
+
+### 杭州东 → 上海虹桥
+
+| 车次 | 出发→到达 | 历时 | 票价 |
+|---|---|---|---|
+| G7512 | 09:05→10:02 | 0:57 | 二等座 有 73元 |
+
+请从以上**真实班次**中选择各段班次。
+
+
+===== block 571 c520c119c534 lines 1-14 source 知行旅行助手-v2#573 =====
+"""_ticket_table_from_tail 演示：从本轮工具消息里解析真实班次，查了几段就出几张表（纯函数，无需密钥）"""
+from langchain_core.messages import AIMessage, ToolMessage
+
+from app.services.chat_stream_executor import _ticket_table_from_tail
+
+tail = [   # execute_turn 里的 tail：最后一条用户消息之后的所有消息
+    AIMessage(content="我来查一下两段高铁"),
+    ToolMessage(tool_call_id="t1", content="G1650|福州→杭州东|08:12→12:30|4:18|二等座 有 356元\n"
+                                           "G1654|福州→杭州东|10:20→14:41|4:21|二等座 有 356元"),
+    ToolMessage(tool_call_id="t2", content="G7512|杭州东→上海虹桥|09:05→10:02|0:57|二等座 有 73元"),
+    ToolMessage(tool_call_id="t3", content="今天是 2026-09-26"),     # 不是班次 → 跳过
+]
+print(_ticket_table_from_tail(tail))
+print(repr(_ticket_table_from_tail([AIMessage(content="G1234 08:00 出发")])))   # 模型嘴上说的不算 → 空串
+
+
+===== block 572 0f770ae2474a lines 1-68 source 知行旅行助手-v2#574 =====
+# ===== 旅行域纯查询直通：单点事实查询不走状态机 =====
+# 用于识别单独查高铁/航班的请求，直接调用MCP工具并由代码渲染班次表，不读写状态机
+from app.core.intent import DAY_OFFSET as _DAY_OFFSET
+
+_FLIGHT_LIMIT = 10
+
+def _render_flight_table(rows: list[dict], header: str = "", tail: str = "") -> str:
+    """航班清单渲染：仅渲染解析出的真实航班，禁止模型编造"""
+    if not rows:
+        return ""
+    lines = [
+        "\n\n---\n",
+        header or "**以下为系统直出的实时航班（每班以本表为准，表外航班为无效信息）**\n", "\n",
+        "| 航班 | 出发→到达 | 航司 | 准点率 | 航站楼 | 价格 |\n|---|---|---|---|---|---|\n"
+    ]
+    for r in rows[:_FLIGHT_LIMIT]:
+        stop = f"（经停{r['stop']}）" if r.get("stop") else ""
+        # 仅使用航班号匹配到的真实票价，无匹配则显示占位符
+        price = f"{r['price']:.0f}元" if r.get("price") else "—"
+        lines.append(
+            f"| {r['code']}{stop} | {r['dep']}→{r['arr']} | {r['airline'][:8]} | "
+            f"{r['ontime'] or '—'} | {r['terminal'] or '—'} | {price} |\n"
+        )
+    lines.append(tail or "\n以上为实时航班时刻，票价与余座以航空公司官方渠道为准。\n")
+    app_logger.info(f"✅ 直出真实航班清单：{len(rows)} 班（表外航班均视为编造）")
+    return "".join(lines)
+
+async def _flight_table(frm: str, to: str, day: str) -> str:
+    """航班直查：城市→机场编码→调用VariFlight工具，代码渲染表格。无数据返回空串，不编造航班"""
+    from app.tools.mcp_tools import (_CITY_AIRPORT, _CITY_IATA, flight_price_args,
+                                     get_flight_tools, parse_flight_prices, parse_flight_rows)
+    # 时刻表使用机场码，票价接口使用城市码，两套编码不可混用
+    dep, arr = _CITY_AIRPORT.get(frm), _CITY_AIRPORT.get(to)
+    if not dep or not arr:
+        return ""
+
+    tools = await get_flight_tools()
+    tool = next((t for t in tools if t.name.lower() == "searchflightsbydeparr"), None)
+    if tool is None:
+        return ""
+
+    ptool = next((t for t in tools if t.name.lower() == "getflightpricebycities"), None)
+    cdep, carr = _CITY_IATA.get(frm), _CITY_IATA.get(to)
+
+    async def _prices() -> str:
+        """单独查询票价，票价失败仅价格列置空，不影响航班基础信息"""
+        if ptool is None or not (cdep and carr):
+            app_logger.info(f"[直查] 航班票价跳过：ptool={bool(ptool)} 城市码={cdep}/{carr}")
+            return ""
+        try:
+            return await ptool.ainvoke(flight_price_args(ptool, day, cdep, carr))
+        except Exception:
+            app_logger.warning("[直查] 航班票价查询失败，本次表内价格留空", exc_info=True)
+            return ""
+
+    try:
+        raw, price_raw = await asyncio.gather(
+            tool.ainvoke({"date": day, "dep": dep, "arr": arr}), _prices())
+    except Exception:
+        app_logger.warning("[直查] 航班查询失败", exc_info=True)
+        return ""
+
+    rows = parse_flight_rows(raw)
+    # 按航班号匹配票价，航线最低价不可直接当作单班票价
+    by_flight = parse_flight_prices(price_raw)[0] if price_raw else {}
+    for r in rows:
+        r["price"] = float(by_flight.get(str(r.get("code", "")).upper()) or 0)
+    return _render_flight_table(rows) if rows else ""
+
+
+===== block 573 73b5ee5f47e9 lines 1-9 source 知行旅行助手-v2#575 =====
+"""_render_flight_table 演示：航班清单归代码，只渲染解析出来的真实航班（纯函数，无需密钥）"""
+from app.services.chat_stream_executor import _render_flight_table
+
+rows = [   # 第 9 章 parse_flight_rows 的产物形态
+    {"code": "MF8101", "dep": "07:30", "arr": "09:05", "airline": "厦门航空", "ontime": "92%", "terminal": "T2", "stop": ""},
+    {"code": "ZH9502", "dep": "12:10", "arr": "13:50", "airline": "深圳航空", "ontime": "", "terminal": "", "stop": "赣州"},
+]
+print(_render_flight_table(rows))
+print(repr(_render_flight_table([])))    # 没数据 → 空串，由调用方决定兜底，绝不编造

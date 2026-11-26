@@ -1,0 +1,4 @@
+# macOS / Linux
+uv init quarry-rag --python 3.13
+cd quarry-rag
+rm main.py

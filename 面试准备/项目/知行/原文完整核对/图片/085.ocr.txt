@@ -1,0 +1,3 @@
+（knowgo_travel_backend） PS E：\knowgo_travel_backend> uv add asyncpg email-validator
+Resolved 220 packages in 9.21s
+Checked 196 packages in 77ms

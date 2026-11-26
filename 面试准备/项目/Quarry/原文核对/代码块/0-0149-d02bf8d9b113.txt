@@ -1,0 +1,2 @@
+# macOS / Linux
+mkdir -p corpus/travel-guide corpus/corp-policy corpus/internal-notes corpus/_manifest

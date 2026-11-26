@@ -1,0 +1,24 @@
+Agent 运行时：State / Checkpointer / Store
+Agent 运行时
+• State（内存）
+messages：
+［...］
+current_step：
+"requirement
+_collection"
+user_requirement：
+｛...｝
+user_id：
+“user_001"
+| 每轮结束
+| 业务代码显式调用
+K
+o Checkpointer
+圖 store
+按 thread_id 存
+按 user_id 存
+快照整个 State
+存偏好/历史
+（
+PostgreSQL （Docker）
+第01章已就绪

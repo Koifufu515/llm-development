@@ -1,0 +1,21 @@
+所有步骤：
+  [1] 需求收集       user_requirement
+  [2] 目的地推荐     selected_destination, destination_options
+  [3] 交通规划       selected_transport, transport_options     ← target_step
+  [4] 住宿规划       selected_accommodation_types, accommodation_options
+  [5] 餐饮规划       selected_food_types, food_options
+  [6] 行程生成       itinerary, itinerary_body
+  [7] 预算汇总       budget
+  [8] 报告生成       report
+
+调用 go_back_to_step(target_step="transport_planning") 后：
+  [1] 保留         user_requirement                           ← 上游产物不动
+  [2] 保留         selected_destination                       ← 上游产物不动
+  [3] 清空 ✅      selected_transport, transport_options       ← target 本身
+  [4] 清空 ✅      selected_accommodation_types, ...           ← 下游全清
+  [5] 清空 ✅      selected_food_types, ...
+  [6] 清空 ✅      itinerary, itinerary_body
+  [7] 清空 ✅      budget
+  [8] 清空 ✅      report
+
+current_step 设为 "transport_planning"

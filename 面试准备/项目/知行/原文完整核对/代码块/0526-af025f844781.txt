@@ -1,0 +1,147 @@
+# 步骤4：单次LLM生成结构化行程，拼接预算模板
+# 快速通道只调用一次大模型输出完整行程，不再多轮交互；生成后交给代码渲染页面
+
+_ITIN_PROMPT = (
+    "你是行程规划专家。根据已锁定的信息生成逐日行程，这是全流程唯一的长输出。\n"
+    "已锁定信息：\n{info}\n\n"
+    "硬规则：\n"
+    "1. 全程正好 {days} 天，day 字段从 1 连续编号到 {days}，不重不漏\n"
+    "2. 每天四个时段 morning / noon / afternoon / evening 都要有内容，每段 1~2 条，"
+    "每条 50~80 字：时间/地点 + 怎么玩或看点 + 价格或耗时 + 交通接驳\n"
+    "3. 每天至少 1 条 tips（预约/门票/交通接驳/避坑），每条同样 50~60 字\n"
+    "4. 最后一天的 evening 必须包含返程安排\n"
+    "5. 餐饮遵循偏好：{food}；多类型每类都体现，特色美食给具体店名\n"
+    "6. [多目的地] 若 {cities} 有多个城市，city 字段写当天所在城市，"
+    "按已锁定的交通路段在对应日期标明转场；不得漏掉任一城市\n"
+    "7. 严禁散文描写、历史科普、客套话\n"
+    "8. **只按 schema 提交结构化数据**：正文由系统按你提交的结构渲染，"
+    "不要自己写 Markdown 正文、不要写预算表、不要写开场白"
+)
+
+def _day_cities(req: ExpressRequirement) -> list[str]:
+    # 生成逐日对应的城市列表，和住宿分配、路段日期使用同一套逻辑
+    nodes = _plan_cities(req)
+    # 空城市或者天数非法，直接返回空数组
+    if not nodes or req.travel_days <= 0:
+        return []
+    out: list[str] = []
+    # 按每个城市住宿晚数，重复填充城市到每日列表
+    for node, night in zip(nodes, _stay_nights(req.travel_days, len(nodes))):
+        out.extend([node] * night)
+    return out
+
+from pydantic import ValidationError
+
+async def _generate_itinerary(req: ExpressRequirement, sel: dict, stream) -> list[dict] | None:
+    # 快速通道唯一一次LLM长调用，输出结构化逐日行程
+    # 输出会经过模型校验；结构不合规返回None，上层逻辑切回旧状态机
+    # 游玩城市以计划城市为主，同时合并酒店里的城市，防止酒店查询失败丢城市信息
+    plan_cities = _plan_cities(req)
+    if not sel["hotels"]:
+        cities = _plan_cities(req)
+    else:
+        # dict.fromkeys用来去重，合并酒店所在城市和原始计划城市
+        cities = list(dict.fromkeys([h["city"] for h in sel["hotels"]] + plan_cities))
+
+    # 拼接交通信息：使用全部路段（包含查询失败的路段）
+    # 旧版本只拼查询成功的路段，缺失路段会让AI脑补班次，造成路线错乱
+    leg_results = sel.get("leg_results")
+    if leg_results:
+        parts = []
+        for kind, src, dst, pk in leg_results:
+            if kind == "ok":
+                # 火车取车次，航班取航班号
+                code = pk["no"] if pk["type"] == "train" else pk.get("flight_no", "")
+                parts.append(f"{src}→{dst}{code}")
+            else:
+                # 该路段实时数据没查到，标记出来让模型按常识规划
+                parts.append(f"{src}→{dst}(实时班次未查到，按常识安排该段)")
+        transport_line = "；".join(parts)
+    elif sel["transports"]:
+        # 兜底：使用已经筛选好的交通列表拼接
+        transport_line = "；".join(
+            f"{tr['src']}→{tr['dst']}{tr['no'] if tr['type']=='train' else tr.get('flight_no','')}"
+            for tr in sel["transports"])
+    else:
+        transport_line = "未查询到实时班次，按常识安排往返交通"
+
+    # 拼接酒店信息：城市、酒店名称、每晚价格
+    if sel["hotels"]:
+        hotel_line = "；".join(
+            f"{h['city']}:{h['name']}({h['price']:.0f}元/晚)" for h in sel["hotels"])
+    else:
+        hotel_line = "未查询到实时酒店，按经济型预算合理安排（到店再定）"
+
+    # 拼接天气信息
+    weather_line = "；".join(f"{c}:{w}" for c, w in sel["weathers"].items()) or "未知"
+
+    # 组装传给大模型的基础信息文本
+    info = (
+        f"- 目的地：{req.destination}｜出发：{req.departure_date}｜{req.travel_days}天｜"
+        f"{req.adult_count}成人{req.children_count}儿童｜预算人均≤{req.budget_max or '不限'}元\n"
+        f"- 交通：{transport_line}\n"
+        f"- 酒店：{hotel_line}\n"
+        f"- 天气：{weather_line}｜风格：{req.travel_styles}"
+    )
+    city_seq = "、".join(cities) if len(cities) > 1 else "无（单一目的地）"
+
+    # 转换餐饮偏好中文，填充prompt
+    food_map = {"specialty": "特色美食", "chain": "连锁快餐", "local": "本地小吃"}
+    food_text = "、".join(food_map[f] for f in sel["food"])
+    prompt = _ITIN_PROMPT.format(
+        info=info, days=req.travel_days, cities=city_seq, food=food_text
+    )
+
+    # 初始化通义大模型
+    llm = ChatTongyi(
+        model=settings.qwen_model_name,
+        api_key=settings.dashscope_api_key,
+        temperature=settings.qwen_temperature,
+    )
+    # 向前端推送消息，告知用户正在生成行程
+    stream.push(make_event(ROLE_ASSISTANT, "\n📝 正在生成逐日行程…\n"))
+
+    # 导入行程Schema和归一函数
+    # 快速通道和老状态机共用同一套ItineraryBody结构，保证两边输出格式统一
+    from app.tools.state_transition import ItineraryBody, _normalize_itinerary_days
+
+    # 绑定工具调用，强制模型输出ItineraryBody结构
+    bound = llm.bind_tools(
+        [ItineraryBody],
+        tool_choice={"type": "function", "function": {"name": "ItineraryBody"}},
+    )
+    try:
+        res = await bound.ainvoke(prompt)
+        # 取出tool_call里的days数组
+        raw_days = list((res.tool_calls[0]["args"] if res.tool_calls else {}).get("days") or [])
+    except Exception:
+        app_logger.warning("[express] 逐日行程结构化调用失败", exc_info=True)
+        return None
+
+    # 模型没返回days数据，直接降级
+    if not raw_days:
+        app_logger.warning("[express] 模型未返回逐日行程结构（无 tool_calls）")
+        return None
+
+    # 调用归一函数：自动修复天数、补最后一天返程文案，校正每日所属城市
+    back_text = f"傍晚按已确认的交通班次返程回到{req.departure_city}"
+    fixed, fixes = _normalize_itinerary_days(
+        raw_days, req.travel_days, back_text=back, cities=_day_cities(req))
+
+    # Pydantic二次校验，归一修复后依然不满足规则，就切回状态机
+    try:
+        body = ItineraryBody.model_validate(
+            {"days": fixed}, context={"travel_days": req.travel_days})
+    except ValidationError as exc:
+        app_logger.warning(f"[express] 逐日行程归一后仍未通过校验：{exc.errors()[:2]}")
+        return None
+
+    # 记录本次自动修复了多少处问题
+    if fixes:
+        app_logger.warning(
+            f"[express] 已按 {req.travel_days} 天规范化 {len(fixes)} 处：{'；'.join(fixes[:6])}")
+
+    # 转为字典列表返回给上层
+    days_out = [d.model_dump() for d in body.days]
+    app_logger.info(f"[express] 逐日行程结构就绪：{len(days_out)} 天（末日含返程）")
+    return days_out

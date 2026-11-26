@@ -1,0 +1,21 @@
+{
+  "city": "大连",
+  "title": "大连景点资料 · Dalian",
+  "source_url": "https://en.wikivoyage.org/wiki/Dalian",
+  "text": "资料城市：大连。本文是历史开放景点资料，不提供实时开放时间或价格；出行前需要核实。\n\nLáodòng (Labour) Park\nYou can walk up or use a seat-lift to reach the peak of the mountain. When you arrive there, you have the possibility to go up the Reach Sightseeing Tower to have a even higher panoramic view. On a beautiful day it is worthy a trip and the gorgeous view will pay off. To get back down you can take the \"First Land Sled\" which is a really fun experience. Besides looking at probably one of the biggest footballs in the World, you can do skiing or ice-skating in winter-time.  Especially for children a lots of fun rides are offered, however take care as operators sometimes cheat, such as inflated orices. If you get in such situations call the police (110)..\n\nXinghai Bay Beach\nThe beach is located in the Shahekou District of Dalian Xinghai international business center zone of south coast, adjacent to the square and park, is China's largest artificial seawater baths.\n\nDalian Beer Festival\nThousands of visitors. Day-time folks tend to go for the food and music acts, night-time goers for the beer and music acts. Domestic and regional vendors, some selling beer from Germany and the U.S.\n\nDalian Shide\nAmong the reasons Dalian is known for in China, having won the Chinese league 8 times (most recently in 2005), but the team is not as strong as it once was. They have produced a number of stars who have played abroad, including Sun Jihai (Manchester City) and Dong Fangzuo (Manchester United). Home matches are played on alternate weekends from early Mar-Nov.  Ticket prices vary according to the quality of the opposition, with the biggest games costing around &yen;20 while entry to matches against lesser teams can sometimes cost nothing if you're willing to wait until just before kick-off.",
+  "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+  "license": "CC BY-SA 3.0",
+  "attribution": "Wikivoyage contributors; https://en.wikivoyage.org/wiki/Dalian",
+  "sha256": "894fe18b108598a7e62ae353932652270423edb22b347eb1c23b64077b5f16dc",
+  "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+  "poi_count": 4,
+  "source_dataset": "https://github.com/wikivoyage/wikivoyage.github.io",
+  "excluded_fields": [
+    "price",
+    "hours",
+    "phone",
+    "email",
+    "hotel",
+    "restaurant"
+  ]
+}

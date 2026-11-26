@@ -1,0 +1,2 @@
+# macOS / Linux
+mkdir -p tests/redlines tests/contract

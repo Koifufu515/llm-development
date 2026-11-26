@@ -1,0 +1,257 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________________ test_upstream_search_key_cannot_write_corpus _________________
+
+    @pytest.mark.asyncio
+    async def test_upstream_search_key_cannot_write_corpus():
+     app.dependency_overrides[require_caller]=lambda:Caller('test','knowgo-travel',['public'],['travel-guide'],60)
+     try:
+      async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),base_url='http://test')as c:
+>      r=await c.post('/v1/documents',params={'collection_slug':'travel-guide'},files={'file':('a.md',b'fixture')})
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/unit/test_upload_permissions.py:10: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.11/site-packages/httpx/_client.py:1859: in post
+    return await self.request(
+.venv/lib/python3.11/site-packages/httpx/_client.py:1540: in request
+    return await self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/httpx/_client.py:1629: in send
+    response = await self._send_handling_auth(
+.venv/lib/python3.11/site-packages/httpx/_client.py:1657: in _send_handling_auth
+    response = await self._send_handling_redirects(
+.venv/lib/python3.11/site-packages/httpx/_client.py:1694: in _send_handling_redirects
+    response = await self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/httpx/_client.py:1730: in _send_single_request
+    response = await transport.handle_async_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/httpx/_transports/asgi.py:170: in handle_async_request
+    await self.app(scope, receive, send)
+.venv/lib/python3.11/site-packages/fastapi/applications.py:1194: in __call__
+    await super().__call__(scope, receive, send)
+.venv/lib/python3.11/site-packages/starlette/applications.py:96: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.11/site-packages/starlette/middleware/errors.py:186: in __call__
+    raise exc
+.venv/lib/python3.11/site-packages/starlette/middleware/errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+.venv/lib/python3.11/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.11/site-packages/starlette/middleware/base.py:203: in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+quarry/api/app.py:51: in attach_request_id
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/starlette/middleware/base.py:179: in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+.venv/lib/python3.11/site-packages/starlette/middleware/base.py:149: in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+.venv/lib/python3.11/site-packages/starlette/middleware/exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+.venv/lib/python3.11/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.11/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.11/site-packages/starlette/routing.py:683: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.11/site-packages/fastapi/routing.py:2811: in app
+    await route.handle(scope, receive, send)
+.venv/lib/python3.11/site-packages/fastapi/routing.py:1839: in handle
+    await self.original_router.handle(scope, receive, send)
+.venv/lib/python3.11/site-packages/fastapi/routing.py:2894: in handle
+    await included_router._handle_selected(scope, receive, send)
+.venv/lib/python3.11/site-packages/fastapi/routing.py:1865: in _handle_selected
+    await original_route.handle(scope, receive, send)
+.venv/lib/python3.11/site-packages/fastapi/routing.py:1328: in handle
+    await effective_context.app(scope, receive, send)
+.venv/lib/python3.11/site-packages/fastapi/routing.py:166: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+.venv/lib/python3.11/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.11/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.11/site-packages/fastapi/routing.py:152: in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/fastapi/routing.py:745: in app
+    raw_response = await run_endpoint_function(
+.venv/lib/python3.11/site-packages/fastapi/routing.py:372: in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+quarry/api/routers/ingest.py:24: in upload
+    async with acquire() as conn:
+../../../anaconda3/lib/python3.11/contextlib.py:204: in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+quarry/infra/db.py:49: in acquire
+    async with get_pool().acquire() as conn:
+               ^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def get_pool() -> asyncpg.Pool:
+        """取连接池。没初始化就报错，不隐式创建。"""
+        if _pool is None:
+>           raise RuntimeError("连接池未初始化，先在应用启动钩子里 await init_pool()")
+E           RuntimeError: 连接池未初始化，先在应用启动钩子里 await init_pool()
+
+quarry/infra/db.py:36: RuntimeError
+----------------------------- Captured stdout call -----------------------------
+[32m14:34:10.435[0m | [31m[1mERROR  [0m | [36mquarry.api.app[0m:[36mon_unhandled[0m:[36m76[0m | [31m[1m未处理的异常 edd2943a-e6e5-4a8b-b24b-d62a13e92200：RuntimeError('连接池未初始化，先在应用启动钩子里 await init_pool()')[0m
+[33m[1mTraceback (most recent call last):[0m
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/pytest/__main__.py", line 9, in <module>
+    raise SystemExit(_console_main())
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/_pytest/config/__init__.py", line 286, in _console_main
+    code = _main(prog=_get_prog_name(sys.argv))
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/_pytest/config/__init__.py", line 262, in _main
+    ret: ExitCode | int = config.hook.pytest_cmdline_main(config=config)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/pluggy/_caller.py", line 197, in __call__
+    return self._hookexec(
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/pluggy/_manager.py", line 183, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/pluggy/_execution.py", line 147, in _multicall
+    res = hook_impl.function(*args)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/_pytest/main.py", line 380, in pytest_cmdline_main
+    return wrap_session(config, _main)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/_pytest/main.py", line 333, in wrap_session
+    session.exitstatus = doit(config, session) or 0
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/_pytest/main.py", line 387, in _main
+    config.hook.pytest_runtestloop(session=session)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/pluggy/_caller.py", line 197, in __call__
+    return self._hookexec(
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/pluggy/_manager.py", line 183, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/pluggy/_execution.py", line 147, in _multicall
+    res = hook_impl.function(*args)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/_pytest/main.py", line 411, in pytest_runtestloop
+    item.config.hook.pytest_runtest_protocol(item=item, nextitem=nextitem)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/pluggy/_caller.py", line 197, in __call__
+    return self._hookexec(
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/pluggy/_manager.py", line 183, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/pluggy/_execution.py", line 147, in _multicall
+    res = hook_impl.function(*args)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/_pytest/runner.py", line 118, in pytest_runtest_protocol
+    runtestprotocol(item, nextitem=nextitem)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/_pytest/runner.py", line 139, in runtestprotocol
+    reports.append(call_and_report(item, "call", log))
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/_pytest/runner.py", line 249, in call_and_report
+    call = CallInfo.from_call(
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/_pytest/runner.py", line 361, in from_call
+    result: TResult | None = func()
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/_pytest/runner.py", line 250, in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/pluggy/_caller.py", line 197, in __call__
+    return self._hookexec(
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/pluggy/_manager.py", line 183, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/pluggy/_execution.py", line 147, in _multicall
+    res = hook_impl.function(*args)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/_pytest/runner.py", line 184, in pytest_runtest_call
+    item.runtest()
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py", line 570, in runtest
+    super().runtest()
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/_pytest/python.py", line 1798, in runtest
+    self.ihook.pytest_pyfunc_call(pyfuncitem=self)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/pluggy/_caller.py", line 197, in __call__
+    return self._hookexec(
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/pluggy/_manager.py", line 183, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/pluggy/_execution.py", line 147, in _multicall
+    res = hook_impl.function(*args)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/_pytest/python.py", line 187, in pytest_pyfunc_call
+    result = testfunction(**testargs)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/pytest_asyncio/plugin.py", line 906, in inner
+    runner.run(coro, context=context)
+  File "/Users/jarvis/anaconda3/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+  File "/Users/jarvis/anaconda3/lib/python3.11/asyncio/base_events.py", line 640, in run_until_complete
+    self.run_forever()
+  File "/Users/jarvis/anaconda3/lib/python3.11/asyncio/base_events.py", line 607, in run_forever
+    self._run_once()
+  File "/Users/jarvis/anaconda3/lib/python3.11/asyncio/base_events.py", line 1922, in _run_once
+    handle._run()
+  File "/Users/jarvis/anaconda3/lib/python3.11/asyncio/events.py", line 80, in _run
+    self._context.run(self._callback, *self._args)
+  File "[32m/Users/jarvis/Desktop/大模型开发/quarry-rag/tests/unit/[0m[32m[1mtest_upload_permissions.py[0m", line [33m10[0m, in [35mtest_upstream_search_key_cannot_write_corpus[0m
+    [1mr[0m[35m[1m=[0m[35m[1mawait[0m [1mc[0m[35m[1m.[0m[1mpost[0m[1m([0m[36m'/v1/documents'[0m[1m,[0m[1mparams[0m[35m[1m=[0m[1m{[0m[36m'collection_slug'[0m[1m:[0m[36m'travel-guide'[0m[1m}[0m[1m,[0m[1mfiles[0m[35m[1m=[0m[1m{[0m[36m'file'[0m[1m:[0m[1m([0m[36m'a.md'[0m[1m,[0m[36mb'fixture'[0m[1m)[0m[1m}[0m[1m)[0m
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/httpx/_client.py", line 1859, in post
+    return await self.request(
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/httpx/_client.py", line 1540, in request
+    return await self.send(request, auth=auth, follow_redirects=follow_redirects)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/httpx/_client.py", line 1629, in send
+    response = await self._send_handling_auth(
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/httpx/_client.py", line 1657, in _send_handling_auth
+    response = await self._send_handling_redirects(
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/httpx/_client.py", line 1694, in _send_handling_redirects
+    response = await self._send_single_request(request)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/httpx/_client.py", line 1730, in _send_single_request
+    response = await transport.handle_async_request(request)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/httpx/_transports/asgi.py", line 170, in handle_async_request
+    await self.app(scope, receive, send)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/fastapi/applications.py", line 1194, in __call__
+    await super().__call__(scope, receive, send)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/starlette/applications.py", line 96, in __call__
+    await self.middleware_stack(scope, receive, send)
+> File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/fastapi/telemetry/_asgi.py", line 151, in __call__
+    await self.app(scope, receive, send)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/starlette/middleware/base.py", line 203, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "[32m/Users/jarvis/Desktop/大模型开发/quarry-rag/quarry/api/[0m[32m[1mapp.py[0m", line [33m51[0m, in [35mattach_request_id[0m
+    [1mresponse[0m [35m[1m=[0m [35m[1mawait[0m [1mcall_next[0m[1m([0m[1mrequest[0m[1m)[0m
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/starlette/middleware/base.py", line 179, in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/starlette/middleware/base.py", line 149, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/starlette/routing.py", line 683, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/fastapi/routing.py", line 2811, in app
+    await route.handle(scope, receive, send)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/fastapi/routing.py", line 1839, in handle
+    await self.original_router.handle(scope, receive, send)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/fastapi/routing.py", line 2894, in handle
+    await included_router._handle_selected(scope, receive, send)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/fastapi/routing.py", line 1865, in _handle_selected
+    await original_route.handle(scope, receive, send)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/fastapi/routing.py", line 1328, in handle
+    await effective_context.app(scope, receive, send)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/fastapi/routing.py", line 166, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/fastapi/routing.py", line 152, in app
+    response = await f(request)
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/fastapi/routing.py", line 745, in app
+    raw_response = await run_endpoint_function(
+  File "/Users/jarvis/Desktop/大模型开发/quarry-rag/.venv/lib/python3.11/site-packages/fastapi/routing.py", line 372, in run_endpoint_function
+    return await dependant.call(**values)
+  File "[32m/Users/jarvis/Desktop/大模型开发/quarry-rag/quarry/api/routers/[0m[32m[1mingest.py[0m", line [33m24[0m, in [35mupload[0m
+    [35m[1masync[0m [35m[1mwith[0m [1macquire[0m[1m([0m[1m)[0m [35m[1mas[0m [1mconn[0m[1m:[0m
+  File "/Users/jarvis/anaconda3/lib/python3.11/contextlib.py", line 204, in __aenter__
+    return await anext(self.gen)
+  File "[32m/Users/jarvis/Desktop/大模型开发/quarry-rag/quarry/infra/[0m[32m[1mdb.py[0m", line [33m49[0m, in [35macquire[0m
+    [35m[1masync[0m [35m[1mwith[0m [1mget_pool[0m[1m([0m[1m)[0m[35m[1m.[0m[1macquire[0m[1m([0m[1m)[0m [35m[1mas[0m [1mconn[0m[1m:[0m
+  File "[32m/Users/jarvis/Desktop/大模型开发/quarry-rag/quarry/infra/[0m[32m[1mdb.py[0m", line [33m36[0m, in [35mget_pool[0m
+    [35m[1mraise[0m [1mRuntimeError[0m[1m([0m[36m"连接池未初始化，先在应用启动钩子里 await init_pool()"[0m[1m)[0m
+[31m[1mRuntimeError[0m:[1m 连接池未初始化，先在应用启动钩子里 await init_pool()[0m
+=========================== short test summary info ============================
+FAILED tests/unit/test_upload_permissions.py::test_upstream_search_key_cannot_write_corpus
+1 failed in 0.47s

@@ -1,0 +1,1 @@
+../../../../../../wenshu-project/backend/wenshu_backend.egg-info/top_level.txt

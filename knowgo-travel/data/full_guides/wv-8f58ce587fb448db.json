@@ -1,0 +1,21 @@
+{
+  "city": "北京",
+  "title": "北京景点资料 · Beijing/Shijingshan",
+  "source_url": "https://en.wikivoyage.org/wiki/Beijing/Shijingshan",
+  "text": "资料城市：北京。本文是历史开放景点资料，不提供实时开放时间或价格；出行前需要核实。\n\nBadachu\nBadachu is comprised of eight Buddhist temples and monasteries at the foot of the Western Hills. Restored in the 1980s, the whole area is now a park and popular tourist destination for Beijingers wishing to escape city life.\n\nFahai Temple\nThis fifteenth century temple has some of the best-preserved and extensive Ming frescoes to be found.\n\nTianyi's Tomb\nThis is the most extensive and well-preserved Ming dynasty tomb of an eunuch. There is a '''Eunuch Culture Museum''' (¥8 entrance fee) at the same site.\n\nCheng'en Temple\nThis is another temple with a history of at least five hundred years.\n\nChina Quaternary Glacier Museum\nThis museum was founded in 1992 and offers an introduction to geology, geography, and glaciers.\n\nBeijing International Sculpture Park\nOpened in 2002, this park places sculpture from around the world in an attractive, green setting.\n\nBabaoshan Revolutionary Cemetery\nOriginally a temple, this was made into the chief cemetery for Communist Party figures. Buried here are artist Xu Feihong, writer Lao She, and many of the most important CCP leaders.\n\nCishan Temple\nThis is also known as Tiantai Temple. You will be lucky to see this one: the temple only opens March 15-17 of every year.\n\nTake a tour of Capital Steel\nSince 2001, Capital Steel has been offering tours of its facilities and explanations of how steel is made. Get a Chinese-speaker to call find out when the tours are running.",
+  "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+  "license": "CC BY-SA 3.0",
+  "attribution": "Wikivoyage contributors; https://en.wikivoyage.org/wiki/Beijing/Shijingshan",
+  "sha256": "fd49e56e88027b2d6873f15f86d15f60313217a7e6c6aacc9a2e498124475974",
+  "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+  "poi_count": 9,
+  "source_dataset": "https://github.com/wikivoyage/wikivoyage.github.io",
+  "excluded_fields": [
+    "price",
+    "hours",
+    "phone",
+    "email",
+    "hotel",
+    "restaurant"
+  ]
+}

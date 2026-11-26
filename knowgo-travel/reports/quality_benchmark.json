@@ -1,0 +1,1363 @@
+{
+  "rag": {
+    "corpus": {
+      "parents": 23,
+      "children": 23,
+      "version": "4125bed992f414ccf2309453c77c3fdf1d7c3367e6454aa3fdb947bb2f70669a"
+    },
+    "sample_count": 23,
+    "labeling": "助手按父段人工标注，未经过用户独立复核；小型遗产摘要集，不能外推旅行知识问答准确率",
+    "retrieval": {
+      "no_rerank": {
+        "recall_at_5": 1.0,
+        "mrr_at_5": 0.8913043478260869,
+        "p95_seconds": 0.0021790419705212116,
+        "rows": [
+          {
+            "query": "想看缩小版自然山水，苏州园子有什么设计特点",
+            "expected_parent_id": "b633c6141f750a86",
+            "rank": 1,
+            "seconds": 0.2705413750372827
+          },
+          {
+            "query": "苏州列入世界遗产的园子有哪些名字",
+            "expected_parent_id": "bbfe1604b7389143",
+            "rank": 1,
+            "seconds": 0.0021688751876354218
+          },
+          {
+            "query": "园林旁的老街和水道也需要保护吗",
+            "expected_parent_id": "2e2e2a057334d4d9",
+            "rank": 2,
+            "seconds": 0.0020883753895759583
+          },
+          {
+            "query": "杭州那个湖周边有什么类型的人文景观",
+            "expected_parent_id": "f9c973144603b426",
+            "rank": 1,
+            "seconds": 0.002099457662552595
+          },
+          {
+            "query": "为什么西湖经常出现在诗词绘画中",
+            "expected_parent_id": "eca7a4d3e7af4ee9",
+            "rank": 1,
+            "seconds": 0.0020329169929027557
+          },
+          {
+            "query": "杭州的湖对日韩园林有影响吗",
+            "expected_parent_id": "6f5072c3bf94bc55",
+            "rank": 1,
+            "seconds": 0.0019972501322627068
+          },
+          {
+            "query": "想了解皇帝的宫廷生活，北京去哪看",
+            "expected_parent_id": "7ae0c15afb49acfe",
+            "rank": 1,
+            "seconds": 0.00205175019800663
+          },
+          {
+            "query": "北京和沈阳故宫能一天在同城逛完吗",
+            "expected_parent_id": "b8bd7c040136f766",
+            "rank": 1,
+            "seconds": 0.0020531248301267624
+          },
+          {
+            "query": "皇宫的预约和票价在这份资料里有吗",
+            "expected_parent_id": "120e50e94366e3fc",
+            "rank": 1,
+            "seconds": 0.0020490833558142185
+          },
+          {
+            "query": "北京哪里能看皇家湖山园林",
+            "expected_parent_id": "9497608c4cd97f89",
+            "rank": 1,
+            "seconds": 0.0019600000232458115
+          },
+          {
+            "query": "颐和园和故宫是一个景区吗",
+            "expected_parent_id": "054ae6ed5b96671d",
+            "rank": 1,
+            "seconds": 0.001957166939973831
+          },
+          {
+            "query": "古代皇帝祭天的地方有什么文化含义",
+            "expected_parent_id": "f208fde6f828df4c",
+            "rank": 2,
+            "seconds": 0.0020247502252459526
+          },
+          {
+            "query": "天坛的用途和皇宫住宅有什么区别",
+            "expected_parent_id": "5e9b1555b2883dc4",
+            "rank": 2,
+            "seconds": 0.00206858292222023
+          },
+          {
+            "query": "哪里可以了解秦代军队的陶制雕像",
+            "expected_parent_id": "bc3175c8d4383997",
+            "rank": 1,
+            "seconds": 0.002057208213955164
+          },
+          {
+            "query": "兵马俑可以作为西安市中心步行路线吗",
+            "expected_parent_id": "0eff810ac4fc58d5",
+            "rank": 1,
+            "seconds": 0.002068541944026947
+          },
+          {
+            "query": "南京哪个皇家陵墓与山林结合",
+            "expected_parent_id": "1efe100650a02b9d",
+            "rank": 1,
+            "seconds": 0.002046249806880951
+          },
+          {
+            "query": "明清皇家陵寝是不是全在南京一个公园里",
+            "expected_parent_id": "c8ac93376a01cd5a",
+            "rank": 1,
+            "seconds": 0.0021790419705212116
+          },
+          {
+            "query": "四川大熊猫世界遗产具体包含哪些山区",
+            "expected_parent_id": "2f530cc8ad421e1f",
+            "rank": 2,
+            "seconds": 0.002118042204529047
+          },
+          {
+            "query": "成都市里的熊猫基地等于世界遗产保护区吗",
+            "expected_parent_id": "2776aec51d4d7f15",
+            "rank": 1,
+            "seconds": 0.002120000310242176
+          },
+          {
+            "query": "看花岗岩奇峰和云海适合去哪儿",
+            "expected_parent_id": "49b66fe3437d7b5f",
+            "rank": 1,
+            "seconds": 0.0020300420001149178
+          },
+          {
+            "query": "黄山游览为什么要考虑体力和山地天气",
+            "expected_parent_id": "01ae76aa2b7bf490",
+            "rank": 2,
+            "seconds": 0.002039541956037283
+          },
+          {
+            "query": "南北运输粮食的巨大人工水道是什么",
+            "expected_parent_id": "477b919c4ab68f84",
+            "rank": 1,
+            "seconds": 0.0020311670377850533
+          },
+          {
+            "query": "大运河是不是可以一天逛完的单一景区",
+            "expected_parent_id": "d7d1ad5632223d25",
+            "rank": 1,
+            "seconds": 0.002109333872795105
+          }
+        ]
+      },
+      "rerank": {
+        "recall_at_5": 1.0,
+        "mrr_at_5": 0.8913043478260869,
+        "p95_seconds": 0.002248457632958889,
+        "rows": [
+          {
+            "query": "想看缩小版自然山水，苏州园子有什么设计特点",
+            "expected_parent_id": "b633c6141f750a86",
+            "rank": 1,
+            "seconds": 0.0022858339361846447
+          },
+          {
+            "query": "苏州列入世界遗产的园子有哪些名字",
+            "expected_parent_id": "bbfe1604b7389143",
+            "rank": 1,
+            "seconds": 0.0022017089650034904
+          },
+          {
+            "query": "园林旁的老街和水道也需要保护吗",
+            "expected_parent_id": "2e2e2a057334d4d9",
+            "rank": 2,
+            "seconds": 0.0021098749712109566
+          },
+          {
+            "query": "杭州那个湖周边有什么类型的人文景观",
+            "expected_parent_id": "f9c973144603b426",
+            "rank": 1,
+            "seconds": 0.0021800827234983444
+          },
+          {
+            "query": "为什么西湖经常出现在诗词绘画中",
+            "expected_parent_id": "eca7a4d3e7af4ee9",
+            "rank": 1,
+            "seconds": 0.002123208250850439
+          },
+          {
+            "query": "杭州的湖对日韩园林有影响吗",
+            "expected_parent_id": "6f5072c3bf94bc55",
+            "rank": 1,
+            "seconds": 0.002084167208522558
+          },
+          {
+            "query": "想了解皇帝的宫廷生活，北京去哪看",
+            "expected_parent_id": "7ae0c15afb49acfe",
+            "rank": 1,
+            "seconds": 0.0021039582788944244
+          },
+          {
+            "query": "北京和沈阳故宫能一天在同城逛完吗",
+            "expected_parent_id": "b8bd7c040136f766",
+            "rank": 1,
+            "seconds": 0.0021326662972569466
+          },
+          {
+            "query": "皇宫的预约和票价在这份资料里有吗",
+            "expected_parent_id": "120e50e94366e3fc",
+            "rank": 1,
+            "seconds": 0.00221845880150795
+          },
+          {
+            "query": "北京哪里能看皇家湖山园林",
+            "expected_parent_id": "9497608c4cd97f89",
+            "rank": 1,
+            "seconds": 0.002127791289240122
+          },
+          {
+            "query": "颐和园和故宫是一个景区吗",
+            "expected_parent_id": "054ae6ed5b96671d",
+            "rank": 1,
+            "seconds": 0.0020556659437716007
+          },
+          {
+            "query": "古代皇帝祭天的地方有什么文化含义",
+            "expected_parent_id": "f208fde6f828df4c",
+            "rank": 2,
+            "seconds": 0.0021242909133434296
+          },
+          {
+            "query": "天坛的用途和皇宫住宅有什么区别",
+            "expected_parent_id": "5e9b1555b2883dc4",
+            "rank": 2,
+            "seconds": 0.0020870412699878216
+          },
+          {
+            "query": "哪里可以了解秦代军队的陶制雕像",
+            "expected_parent_id": "bc3175c8d4383997",
+            "rank": 1,
+            "seconds": 0.0020826668478548527
+          },
+          {
+            "query": "兵马俑可以作为西安市中心步行路线吗",
+            "expected_parent_id": "0eff810ac4fc58d5",
+            "rank": 1,
+            "seconds": 0.0021413746289908886
+          },
+          {
+            "query": "南京哪个皇家陵墓与山林结合",
+            "expected_parent_id": "1efe100650a02b9d",
+            "rank": 1,
+            "seconds": 0.002058667130768299
+          },
+          {
+            "query": "明清皇家陵寝是不是全在南京一个公园里",
+            "expected_parent_id": "c8ac93376a01cd5a",
+            "rank": 1,
+            "seconds": 0.002248457632958889
+          },
+          {
+            "query": "四川大熊猫世界遗产具体包含哪些山区",
+            "expected_parent_id": "2f530cc8ad421e1f",
+            "rank": 2,
+            "seconds": 0.002197165973484516
+          },
+          {
+            "query": "成都市里的熊猫基地等于世界遗产保护区吗",
+            "expected_parent_id": "2776aec51d4d7f15",
+            "rank": 1,
+            "seconds": 0.0021632909774780273
+          },
+          {
+            "query": "看花岗岩奇峰和云海适合去哪儿",
+            "expected_parent_id": "49b66fe3437d7b5f",
+            "rank": 1,
+            "seconds": 0.0020888326689600945
+          },
+          {
+            "query": "黄山游览为什么要考虑体力和山地天气",
+            "expected_parent_id": "01ae76aa2b7bf490",
+            "rank": 2,
+            "seconds": 0.0021130829118192196
+          },
+          {
+            "query": "南北运输粮食的巨大人工水道是什么",
+            "expected_parent_id": "477b919c4ab68f84",
+            "rank": 1,
+            "seconds": 0.002088666893541813
+          },
+          {
+            "query": "大运河是不是可以一天逛完的单一景区",
+            "expected_parent_id": "d7d1ad5632223d25",
+            "rank": 1,
+            "seconds": 0.0020977919921278954
+          }
+        ]
+      }
+    },
+    "cache": {
+      "cold_seconds": 0.0021955417469143867,
+      "warm_median_seconds": 2.9103830456733704e-07,
+      "rows": [
+        {
+          "cache_hit": false,
+          "seconds": 0.0021955417469143867
+        },
+        {
+          "cache_hit": true,
+          "seconds": 2.541113644838333e-06
+        },
+        {
+          "cache_hit": true,
+          "seconds": 1.2079253792762756e-06
+        },
+        {
+          "cache_hit": true,
+          "seconds": 4.577450454235077e-07
+        },
+        {
+          "cache_hit": true,
+          "seconds": 3.343448042869568e-07
+        },
+        {
+          "cache_hit": true,
+          "seconds": 3.3294782042503357e-07
+        },
+        {
+          "cache_hit": true,
+          "seconds": 2.9103830456733704e-07
+        },
+        {
+          "cache_hit": true,
+          "seconds": 3.3294782042503357e-07
+        },
+        {
+          "cache_hit": true,
+          "seconds": 2.50060111284256e-07
+        },
+        {
+          "cache_hit": true,
+          "seconds": 2.50060111284256e-07
+        },
+        {
+          "cache_hit": true,
+          "seconds": 2.919696271419525e-07
+        },
+        {
+          "cache_hit": true,
+          "seconds": 2.9103830456733704e-07
+        },
+        {
+          "cache_hit": true,
+          "seconds": 2.919696271419525e-07
+        },
+        {
+          "cache_hit": true,
+          "seconds": 2.50060111284256e-07
+        },
+        {
+          "cache_hit": true,
+          "seconds": 2.50060111284256e-07
+        },
+        {
+          "cache_hit": true,
+          "seconds": 2.9103830456733704e-07
+        },
+        {
+          "cache_hit": true,
+          "seconds": 2.0815059542655945e-07
+        },
+        {
+          "cache_hit": true,
+          "seconds": 2.919696271419525e-07
+        },
+        {
+          "cache_hit": true,
+          "seconds": 2.0908191800117493e-07
+        },
+        {
+          "cache_hit": true,
+          "seconds": 2.4959444999694824e-07
+        },
+        {
+          "cache_hit": true,
+          "seconds": 2.4959444999694824e-07
+        }
+      ]
+    }
+  },
+  "routing": {
+    "sample_count": 32,
+    "concurrency": 4,
+    "correct": 31,
+    "accuracy": 0.96875,
+    "keyword_baseline_accuracy": 0.4375,
+    "p95_seconds": 1.6195687921717763,
+    "rows": [
+      {
+        "input": "苏州明天天气怎么样",
+        "expected": [
+          "direct",
+          "weather"
+        ],
+        "actual": [
+          "direct",
+          "weather"
+        ],
+        "correct": true,
+        "baseline": [
+          "direct",
+          "weather"
+        ],
+        "baseline_correct": true,
+        "seconds": 1.358247541822493,
+        "error": null,
+        "usage": {
+          "request_id": "09fbb5ab-df7c-459f-ad6e-2bcfe61d8d3d",
+          "status": "ok",
+          "elapsed_seconds": 1.3583,
+          "llm_calls": 1,
+          "llm_errors": 0,
+          "usage_reported_calls": 1,
+          "input_tokens": 194,
+          "output_tokens": 35,
+          "usage_complete": true
+        }
+      },
+      {
+        "input": "帮我查北京后天的气温",
+        "expected": [
+          "direct",
+          "weather"
+        ],
+        "actual": [
+          "direct",
+          "weather"
+        ],
+        "correct": true,
+        "baseline": [
+          "direct",
+          "weather"
+        ],
+        "baseline_correct": true,
+        "seconds": 1.2295926250517368,
+        "error": null,
+        "usage": {
+          "request_id": "9d3ce96d-ab0a-4397-ad01-8a6a05bfd39c",
+          "status": "ok",
+          "elapsed_seconds": 1.2296,
+          "llm_calls": 1,
+          "llm_errors": 0,
+          "usage_reported_calls": 1,
+          "input_tokens": 197,
+          "output_tokens": 35,
+          "usage_complete": true
+        }
+      },
+      {
+        "input": "杭州这几天会下雨吗",
+        "expected": [
+          "direct",
+          "weather"
+        ],
+        "actual": [
+          "direct",
+          "weather"
+        ],
+        "correct": true,
+        "baseline": [
+          "direct",
+          "weather"
+        ],
+        "baseline_correct": true,
+        "seconds": 1.0415209578350186,
+        "error": null,
+        "usage": {
+          "request_id": "6e4e34b2-40a0-46bc-885b-f3473615b139",
+          "status": "ok",
+          "elapsed_seconds": 1.0415,
+          "llm_calls": 1,
+          "llm_errors": 0,
+          "usage_reported_calls": 1,
+          "input_tokens": 195,
+          "output_tokens": 26,
+          "usage_complete": true
+        }
+      },
+      {
+        "input": "明天上海到苏州的高铁有哪些",
+        "expected": [
+          "direct",
+          "rail"
+        ],
+        "actual": [
+          "direct",
+          "rail"
+        ],
+        "correct": true,
+        "baseline": [
+          "direct",
+          "rail"
+        ],
+        "baseline_correct": true,
+        "seconds": 1.6195687921717763,
+        "error": null,
+        "usage": {
+          "request_id": "b626d9ba-e14a-41bf-babd-48b3b9cbf36c",
+          "status": "ok",
+          "elapsed_seconds": 1.6196,
+          "llm_calls": 1,
+          "llm_errors": 0,
+          "usage_reported_calls": 1,
+          "input_tokens": 197,
+          "output_tokens": 53,
+          "usage_complete": true
+        }
+      },
+      {
+        "input": "查一下北京去天津的车票",
+        "expected": [
+          "direct",
+          "rail"
+        ],
+        "actual": [
+          "direct",
+          "rail"
+        ],
+        "correct": true,
+        "baseline": [
+          "direct",
+          "rail"
+        ],
+        "baseline_correct": true,
+        "seconds": 1.2788950828835368,
+        "error": null,
+        "usage": {
+          "request_id": "dc234894-54c9-47c9-be2b-7a480aee86c8",
+          "status": "ok",
+          "elapsed_seconds": 1.2789,
+          "llm_calls": 1,
+          "llm_errors": 0,
+          "usage_reported_calls": 1,
+          "input_tokens": 198,
+          "output_tokens": 43,
+          "usage_complete": true
+        }
+      },
+      {
+        "input": "杭州到南京明天的动车",
+        "expected": [
+          "direct",
+          "rail"
+        ],
+        "actual": [
+          "direct",
+          "rail"
+        ],
+        "correct": true,
+        "baseline": [
+          "direct",
+          "rail"
+        ],
+        "baseline_correct": true,
+        "seconds": 1.5465797088108957,
+        "error": null,
+        "usage": {
+          "request_id": "7416b82c-add9-4363-aab5-79cc46be7d68",
+          "status": "ok",
+          "elapsed_seconds": 1.5466,
+          "llm_calls": 1,
+          "llm_errors": 0,
+          "usage_reported_calls": 1,
+          "input_tokens": 197,
+          "output_tokens": 53,
+          "usage_complete": true
+        }
+      },
+      {
+        "input": "帮我规划苏州三日游",
+        "expected": [
+          "interactive",
+          "planning"
+        ],
+        "actual": [
+          "interactive",
+          "planning"
+        ],
+        "correct": true,
+        "baseline": [
+          "interactive",
+          "planning"
+        ],
+        "baseline_correct": true,
+        "seconds": 0.9702439592219889,
+        "error": null,
+        "usage": {
+          "request_id": "a7d03a6a-cec4-4371-bfe6-53673fae47df",
+          "status": "ok",
+          "elapsed_seconds": 0.9702,
+          "llm_calls": 1,
+          "llm_errors": 0,
+          "usage_reported_calls": 1,
+          "input_tokens": 196,
+          "output_tokens": 27,
+          "usage_complete": true
+        }
+      },
+      {
+        "input": "从上海出发去苏州玩两天，人均2000",
+        "expected": [
+          "interactive",
+          "planning"
+        ],
+        "actual": [
+          "interactive",
+          "planning"
+        ],
+        "correct": true,
+        "baseline": [
+          "chat",
+          "other"
+        ],
+        "baseline_correct": false,
+        "seconds": 1.8702045842073858,
+        "error": null,
+        "usage": {
+          "request_id": "7640a9ee-b009-4e37-8246-1fc1c55629b9",
+          "status": "ok",
+          "elapsed_seconds": 1.8702,
+          "llm_calls": 1,
+          "llm_errors": 0,
+          "usage_reported_calls": 1,
+          "input_tokens": 203,
+          "output_tokens": 45,
+          "usage_complete": true
+        }
+      },
+      {
+        "input": "把目的地换成北京",
+        "expected": [
+          "interactive",
+          "planning"
+        ],
+        "actual": [
+          "interactive",
+          "planning"
+        ],
+        "correct": true,
+        "baseline": [
+          "chat",
+          "other"
+        ],
+        "baseline_correct": false,
+        "seconds": 1.2270832499489188,
+        "error": null,
+        "usage": {
+          "request_id": "c0985b50-9b69-4dbf-a8b1-722fad030e88",
+          "status": "ok",
+          "elapsed_seconds": 1.2271,
+          "llm_calls": 1,
+          "llm_errors": 0,
+          "usage_reported_calls": 1,
+          "input_tokens": 194,
+          "output_tokens": 43,
+          "usage_complete": true
+        }
+      },
+      {
+        "input": "还是明天出发吧",
+        "expected": [
+          "interactive",
+          "planning"
+        ],
+        "actual": [
+          "interactive",
+          "planning"
+        ],
+        "correct": true,
+        "baseline": [
+          "chat",
+          "other"
+        ],
+        "baseline_correct": false,
+        "seconds": 1.5580195407383144,
+        "error": null,
+        "usage": {
+          "request_id": "915b997f-2fda-47a7-af18-6ec791807af4",
+          "status": "ok",
+          "elapsed_seconds": 1.558,
+          "llm_calls": 1,
+          "llm_errors": 0,
+          "usage_reported_calls": 1,
+          "input_tokens": 194,
+          "output_tokens": 52,
+          "usage_complete": true
+        }
+      },
+      {
+        "input": "我们两个人，没有小孩",
+        "expected": [
+          "interactive",
+          "planning"
+        ],
+        "actual": [
+          "chat",
+          "other"
+        ],
+        "correct": false,
+        "baseline": [
+          "chat",
+          "other"
+        ],
+        "baseline_correct": false,
+        "seconds": 0.9796047918498516,
+        "error": null,
+        "usage": {
+          "request_id": "c217e607-74bb-4e6e-8688-f122ac9b8526",
+          "status": "ok",
+          "elapsed_seconds": 0.9796,
+          "llm_calls": 1,
+          "llm_errors": 0,
+          "usage_reported_calls": 1,
+          "input_tokens": 195,
+          "output_tokens": 26,
+          "usage_complete": true
+        }
+      },
+      {
+        "input": "预算每人三千",
+        "expected": [
+          "interactive",
+          "planning"
+        ],
+        "actual": [
+          "interactive",
+          "planning"
+        ],
+        "correct": true,
+        "baseline": [
+          "chat",
+          "other"
+        ],
+        "baseline_correct": false,
+        "seconds": 1.24477104190737,
+        "error": null,
+        "usage": {
+          "request_id": "a0dd9d7e-b188-4c62-ad7e-8f6739f3ea89",
+          "status": "ok",
+          "elapsed_seconds": 1.2448,
+          "llm_calls": 1,
+          "llm_errors": 0,
+          "usage_reported_calls": 1,
+          "input_tokens": 193,
+          "output_tokens": 42,
+          "usage_complete": true
+        }
+      },
+      {
+        "input": "确认",
+        "expected": [
+          "interactive",
+          "planning"
+        ],
+        "actual": [
+          "interactive",
+          "planning"
+        ],
+        "correct": true,
+        "baseline": [
+          "interactive",
+          "planning"
+        ],
+        "baseline_correct": true,
+        "seconds": 0.8720501251518726,
+        "error": null,
+        "usage": {
+          "request_id": "408f3f1e-3ff8-495f-bd79-4d30f73b1c3e",
+          "status": "ok",
+          "elapsed_seconds": 0.8721,
+          "llm_calls": 1,
+          "llm_errors": 0,
+          "usage_reported_calls": 1,
+          "input_tokens": 191,
+          "output_tokens": 27,
+          "usage_complete": true
+        }
+      },
+      {
+        "input": "不要确认，我想改日期",
+        "expected": [
+          "interactive",
+          "planning"
+        ],
+        "actual": [
+          "interactive",
+          "planning"
+        ],
+        "correct": true,
+        "baseline": [
+          "interactive",
+          "planning"
+        ],
+        "baseline_correct": true,
+        "seconds": 1.2561977081932127,
+        "error": null,
+        "usage": {
+          "request_id": "143b3e77-3d3a-410d-8823-09ecdd0ec54c",
+          "status": "ok",
+          "elapsed_seconds": 1.2562,
+          "llm_calls": 1,
+          "llm_errors": 0,
+          "usage_reported_calls": 1,
+          "input_tokens": 196,
+          "output_tokens": 42,
+          "usage_complete": true
+        }
+      },
+      {
+        "input": "先不查高铁，帮我规划杭州三天",
+        "expected": [
+          "interactive",
+          "planning"
+        ],
+        "actual": [
+          "interactive",
+          "planning"
+        ],
+        "correct": true,
+        "baseline": [
+          "direct",
+          "rail"
+        ],
+        "baseline_correct": false,
+        "seconds": 1.3759523341432214,
+        "error": null,
+        "usage": {
+          "request_id": "8ae932ef-870d-4a13-b75e-c11a42399849",
+          "status": "ok",
+          "elapsed_seconds": 1.376,
+          "llm_calls": 1,
+          "llm_errors": 0,
+          "usage_reported_calls": 1,
+          "input_tokens": 199,
+          "output_tokens": 43,
+          "usage_complete": true
+        }
+      },
+      {
+        "input": "不用查天气，先把目的地换成南京",
+        "expected": [
+          "interactive",
+          "planning"
+        ],
+        "actual": [
+          "interactive",
+          "planning"
+        ],
+        "correct": true,
+        "baseline": [
+          "direct",
+          "weather"
+        ],
+        "baseline_correct": false,
+        "seconds": 1.3389408332295716,
+        "error": null,
+        "usage": {
+          "request_id": "18975190-95f8-4cf5-a4ee-90c8dbdcfb97",
+          "status": "ok",
+          "elapsed_seconds": 1.3389,
+          "llm_calls": 1,
+          "llm_errors": 0,
+          "usage_reported_calls": 1,
+          "input_tokens": 198,
+          "output_tokens": 44,
+          "usage_complete": true
+        }
+      },
+      {
+        "input": "如果下雨，把行程改成室内",
+        "expected": [
+          "interactive",
+          "planning"
+        ],
+        "actual": [
+          "interactive",
+          "planning"
+        ],
+        "correct": true,
+        "baseline": [
+          "direct",
+          "weather"
+        ],
+        "baseline_correct": false,
+        "seconds": 1.2441002079285681,
+        "error": null,
+        "usage": {
+          "request_id": "e6bd2185-c2c7-4758-9faf-d2e12d313b42",
+          "status": "ok",
+          "elapsed_seconds": 1.2441,
+          "llm_calls": 1,
+          "llm_errors": 0,
+          "usage_reported_calls": 1,
+          "input_tokens": 197,
+          "output_tokens": 42,
+          "usage_complete": true
+        }
+      },
+      {
+        "input": "我要去苏州和杭州各玩两天",
+        "expected": [
+          "interactive",
+          "planning"
+        ],
+        "actual": [
+          "interactive",
+          "planning"
+        ],
+        "correct": true,
+        "baseline": [
+          "chat",
+          "other"
+        ],
+        "baseline_correct": false,
+        "seconds": 1.240538917016238,
+        "error": null,
+        "usage": {
+          "request_id": "59eb1382-e5d7-4641-8199-38bf456e424b",
+          "status": "ok",
+          "elapsed_seconds": 1.2405,
+          "llm_calls": 1,
+          "llm_errors": 0,
+          "usage_reported_calls": 1,
+          "input_tokens": 198,
+          "output_tokens": 42,
+          "usage_complete": true
+        }
+      },
+      {
+        "input": "酒店太贵，换便宜一点的方案",
+        "expected": [
+          "interactive",
+          "planning"
+        ],
+        "actual": [
+          "interactive",
+          "planning"
+        ],
+        "correct": true,
+        "baseline": [
+          "chat",
+          "other"
+        ],
+        "baseline_correct": false,
+        "seconds": 1.385505750309676,
+        "error": null,
+        "usage": {
+          "request_id": "c8a9c498-58cc-4c97-9fd6-5d8085a6adb9",
+          "status": "ok",
+          "elapsed_seconds": 1.3855,
+          "llm_calls": 1,
+          "llm_errors": 0,
+          "usage_reported_calls": 1,
+          "input_tokens": 199,
+          "output_tokens": 42,
+          "usage_complete": true
+        }
+      },
+      {
+        "input": "第一天安排太满，帮我减少两个景点",
+        "expected": [
+          "interactive",
+          "planning"
+        ],
+        "actual": [
+          "interactive",
+          "planning"
+        ],
+        "correct": true,
+        "baseline": [
+          "chat",
+          "other"
+        ],
+        "baseline_correct": false,
+        "seconds": 1.430764333344996,
+        "error": null,
+        "usage": {
+          "request_id": "6cfadec6-f743-4a94-ada0-882ab469a132",
+          "status": "ok",
+          "elapsed_seconds": 1.4308,
+          "llm_calls": 1,
+          "llm_errors": 0,
+          "usage_reported_calls": 1,
+          "input_tokens": 199,
+          "output_tokens": 42,
+          "usage_complete": true
+        }
+      },
+      {
+        "input": "记住我以后旅行都不吃辣",
+        "expected": [
+          "interactive",
+          "preference"
+        ],
+        "actual": [
+          "interactive",
+          "preference"
+        ],
+        "correct": true,
+        "baseline": [
+          "chat",
+          "other"
+        ],
+        "baseline_correct": false,
+        "seconds": 1.255823082756251,
+        "error": null,
+        "usage": {
+          "request_id": "219ad46a-19f6-46b7-b427-9472a09b60ed",
+          "status": "ok",
+          "elapsed_seconds": 1.2558,
+          "llm_calls": 1,
+          "llm_errors": 0,
+          "usage_reported_calls": 1,
+          "input_tokens": 197,
+          "output_tokens": 42,
+          "usage_complete": true
+        }
+      },
+      {
+        "input": "把我的长期住宿偏好改为经济型",
+        "expected": [
+          "interactive",
+          "preference"
+        ],
+        "actual": [
+          "interactive",
+          "preference"
+        ],
+        "correct": true,
+        "baseline": [
+          "chat",
+          "other"
+        ],
+        "baseline_correct": false,
+        "seconds": 1.2405241248197854,
+        "error": null,
+        "usage": {
+          "request_id": "c6a7bb0c-d807-4b57-90fa-c9888ef7f91b",
+          "status": "ok",
+          "elapsed_seconds": 1.2405,
+          "llm_calls": 1,
+          "llm_errors": 0,
+          "usage_reported_calls": 1,
+          "input_tokens": 198,
+          "output_tokens": 42,
+          "usage_complete": true
+        }
+      },
+      {
+        "input": "记住我偏爱轻松的行程节奏",
+        "expected": [
+          "interactive",
+          "preference"
+        ],
+        "actual": [
+          "interactive",
+          "preference"
+        ],
+        "correct": true,
+        "baseline": [
+          "interactive",
+          "planning"
+        ],
+        "baseline_correct": false,
+        "seconds": 1.1990045001730323,
+        "error": null,
+        "usage": {
+          "request_id": "908a6edf-7d43-407d-a0b4-319384cb0d8a",
+          "status": "ok",
+          "elapsed_seconds": 1.199,
+          "llm_calls": 1,
+          "llm_errors": 0,
+          "usage_reported_calls": 1,
+          "input_tokens": 198,
+          "output_tokens": 42,
+          "usage_complete": true
+        }
+      },
+      {
+        "input": "以后推荐酒店优先考虑青旅，请记住",
+        "expected": [
+          "interactive",
+          "preference"
+        ],
+        "actual": [
+          "interactive",
+          "preference"
+        ],
+        "correct": true,
+        "baseline": [
+          "chat",
+          "other"
+        ],
+        "baseline_correct": false,
+        "seconds": 0.9344943747855723,
+        "error": null,
+        "usage": {
+          "request_id": "fe33e5ff-aa50-45d5-ad5c-94f86245a4d9",
+          "status": "ok",
+          "elapsed_seconds": 0.9345,
+          "llm_calls": 1,
+          "llm_errors": 0,
+          "usage_reported_calls": 1,
+          "input_tokens": 199,
+          "output_tokens": 27,
+          "usage_complete": true
+        }
+      },
+      {
+        "input": "你好",
+        "expected": [
+          "chat",
+          "other"
+        ],
+        "actual": [
+          "chat",
+          "other"
+        ],
+        "correct": true,
+        "baseline": [
+          "chat",
+          "other"
+        ],
+        "baseline_correct": true,
+        "seconds": 0.8892246251925826,
+        "error": null,
+        "usage": {
+          "request_id": "a4331975-725d-4dba-99ee-db83750c7366",
+          "status": "ok",
+          "elapsed_seconds": 0.8892,
+          "llm_calls": 1,
+          "llm_errors": 0,
+          "usage_reported_calls": 1,
+          "input_tokens": 191,
+          "output_tokens": 26,
+          "usage_complete": true
+        }
+      },
+      {
+        "input": "谢谢你",
+        "expected": [
+          "chat",
+          "other"
+        ],
+        "actual": [
+          "chat",
+          "other"
+        ],
+        "correct": true,
+        "baseline": [
+          "chat",
+          "other"
+        ],
+        "baseline_correct": true,
+        "seconds": 0.8718510000035167,
+        "error": null,
+        "usage": {
+          "request_id": "c738c18e-4758-48b0-9200-2b922cda9836",
+          "status": "ok",
+          "elapsed_seconds": 0.8719,
+          "llm_calls": 1,
+          "llm_errors": 0,
+          "usage_reported_calls": 1,
+          "input_tokens": 191,
+          "output_tokens": 26,
+          "usage_complete": true
+        }
+      },
+      {
+        "input": "你是谁",
+        "expected": [
+          "chat",
+          "other"
+        ],
+        "actual": [
+          "chat",
+          "other"
+        ],
+        "correct": true,
+        "baseline": [
+          "chat",
+          "other"
+        ],
+        "baseline_correct": true,
+        "seconds": 0.8973265830427408,
+        "error": null,
+        "usage": {
+          "request_id": "19dd1ec3-d766-41e5-a1f5-b9288ed208d9",
+          "status": "ok",
+          "elapsed_seconds": 0.8973,
+          "llm_calls": 1,
+          "llm_errors": 0,
+          "usage_reported_calls": 1,
+          "input_tokens": 192,
+          "output_tokens": 26,
+          "usage_complete": true
+        }
+      },
+      {
+        "input": "给我讲个笑话",
+        "expected": [
+          "chat",
+          "other"
+        ],
+        "actual": [
+          "chat",
+          "other"
+        ],
+        "correct": true,
+        "baseline": [
+          "chat",
+          "other"
+        ],
+        "baseline_correct": true,
+        "seconds": 1.0548150828108191,
+        "error": null,
+        "usage": {
+          "request_id": "b173f899-da5a-48fb-bcbd-94bc2074b957",
+          "status": "ok",
+          "elapsed_seconds": 1.0548,
+          "llm_calls": 1,
+          "llm_errors": 0,
+          "usage_reported_calls": 1,
+          "input_tokens": 194,
+          "output_tokens": 26,
+          "usage_complete": true
+        }
+      },
+      {
+        "input": "天气这个词用英语怎么说",
+        "expected": [
+          "chat",
+          "other"
+        ],
+        "actual": [
+          "chat",
+          "other"
+        ],
+        "correct": true,
+        "baseline": [
+          "direct",
+          "weather"
+        ],
+        "baseline_correct": false,
+        "seconds": 0.8715859996154904,
+        "error": null,
+        "usage": {
+          "request_id": "99b2472e-0101-4c60-9ba2-9dac2d9fcc72",
+          "status": "ok",
+          "elapsed_seconds": 0.8716,
+          "llm_calls": 1,
+          "llm_errors": 0,
+          "usage_reported_calls": 1,
+          "input_tokens": 195,
+          "output_tokens": 26,
+          "usage_complete": true
+        }
+      },
+      {
+        "input": "高铁为什么比普通火车快",
+        "expected": [
+          "chat",
+          "other"
+        ],
+        "actual": [
+          "chat",
+          "other"
+        ],
+        "correct": true,
+        "baseline": [
+          "direct",
+          "rail"
+        ],
+        "baseline_correct": false,
+        "seconds": 0.8890954577364028,
+        "error": null,
+        "usage": {
+          "request_id": "88937f5a-e405-41f6-9109-5cb0cf281ccd",
+          "status": "ok",
+          "elapsed_seconds": 0.8891,
+          "llm_calls": 1,
+          "llm_errors": 0,
+          "usage_reported_calls": 1,
+          "input_tokens": 196,
+          "output_tokens": 26,
+          "usage_complete": true
+        }
+      },
+      {
+        "input": "什么是旅行规划",
+        "expected": [
+          "chat",
+          "other"
+        ],
+        "actual": [
+          "chat",
+          "other"
+        ],
+        "correct": true,
+        "baseline": [
+          "interactive",
+          "planning"
+        ],
+        "baseline_correct": false,
+        "seconds": 1.0411409172229469,
+        "error": null,
+        "usage": {
+          "request_id": "031e0fe5-2c8f-48e2-83ed-9ed44cc37425",
+          "status": "ok",
+          "elapsed_seconds": 1.0411,
+          "llm_calls": 1,
+          "llm_errors": 0,
+          "usage_reported_calls": 1,
+          "input_tokens": 193,
+          "output_tokens": 26,
+          "usage_complete": true
+        }
+      },
+      {
+        "input": "不用安排旅行，陪我聊聊天",
+        "expected": [
+          "chat",
+          "other"
+        ],
+        "actual": [
+          "chat",
+          "other"
+        ],
+        "correct": true,
+        "baseline": [
+          "chat",
+          "other"
+        ],
+        "baseline_correct": true,
+        "seconds": 0.8752310839481652,
+        "error": null,
+        "usage": {
+          "request_id": "1550cd8d-8c78-4348-adfc-6f00dafa730f",
+          "status": "ok",
+          "elapsed_seconds": 0.8752,
+          "llm_calls": 1,
+          "llm_errors": 0,
+          "usage_reported_calls": 1,
+          "input_tokens": 198,
+          "output_tokens": 26,
+          "usage_complete": true
+        }
+      }
+    ]
+  }
+}

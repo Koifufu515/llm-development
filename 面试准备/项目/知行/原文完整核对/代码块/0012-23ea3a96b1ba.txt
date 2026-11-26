@@ -1,0 +1,5 @@
+for d in app app/agents app/api app/capabilities app/core app/mcp_core \
+app/models app/rag app/schemas app/services app/tools app/utils app/scripts; do
+  mkdir -p "$d" && touch "$d/__init__.py"
+done
+mkdir -p app/data data evaluation logs scripts

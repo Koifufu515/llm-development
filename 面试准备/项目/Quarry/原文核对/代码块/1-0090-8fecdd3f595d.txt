@@ -1,0 +1,1 @@
+UNIQUE (collection_id, source_uri, version)

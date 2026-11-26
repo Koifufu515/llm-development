@@ -1,0 +1,1 @@
+../../../../../knowgo-travel/scripts/import_open_pois.py

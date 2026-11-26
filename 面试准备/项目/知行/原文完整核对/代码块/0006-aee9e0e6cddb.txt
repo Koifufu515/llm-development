@@ -1,0 +1,8 @@
+uv init knowgo_travel_backend
+cd knowgo_travel_backend
+uv venv --python 3.13
+
+# 激活（macOS / Linux）
+source .venv/bin/activate
+# 激活（Windows PowerShell）
+.venv\Scripts\Activate.ps1

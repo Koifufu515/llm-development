@@ -1,0 +1,5 @@
+"""_stay_nights 演示：首站 1 晚，剩下的天数在后面几站均分，前几站多担（纯函数，无需密钥）"""
+from app.services.express_planning_service import _stay_nights
+
+for days, stations in [(5, 1), (5, 2), (5, 3), (6, 3), (2, 3), (0, 2)]:
+    print(f"{days} 天 / {stations} 站 → 每站晚数 {_stay_nights(days, stations)}")

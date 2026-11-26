@@ -1,0 +1,2 @@
+CREATE TABLE chunks (...) PARTITION BY LIST (collection_id);
+CREATE TABLE chunks_travel_guide PARTITION OF chunks FOR VALUES IN ('...');

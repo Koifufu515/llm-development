@@ -1,0 +1,538 @@
+
+
+===== block 471 cab2b9708786 lines 1-21 source 知行旅行助手-v2#473 =====
+@router.post("")
+async def send_message(
+        req: MessageSendRequest,
+        user: User = Depends(get_current_user),
+        db: AsyncSession = Depends(get_db),
+):
+    """发消息：JWT 走标准 Authorization 头（fetch 实现，非原生 EventSource），返回 SSE 流"""
+    conv = await get_owned_conversation(db, req.conversation_id, user.id)
+    if not conv:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="会话不存在")
+
+    async def event_generator():
+        # ★ run_chat_turn 立即返回 EventStream（编排在后台跑），这里马上就能开始读
+        stream = await run_chat_turn(db, str(user.id), req.conversation_id, req.content)
+        async for event in stream:
+            # ★ 每 yield 一帧，StreamingResponse 就立刻写进响应体推给浏览器
+            yield _sse(event)
+
+    return StreamingResponse(
+        event_generator(), media_type="text/event-stream", headers=_SSE_HEADERS
+    )
+
+
+===== block 472 2fdd467314bb lines 1-18 source 知行旅行助手-v2#474 =====
+@router.get("")
+async def list_messages(
+        conversation_id: str = Query(..., min_length=1, description="会话 id"),
+        user: User = Depends(get_current_user),
+        db: AsyncSession = Depends(get_db),
+):
+    """历史消息：{conversation, messages}（assistant 全文/清单回放存于 message.extra_info）"""
+    conv = await get_owned_conversation(db, conversation_id, user.id)
+    if not conv:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="会话不存在")
+
+    result = await db.execute(
+        select(Message)
+        .where(Message.conversation_id == conv.id)
+        .order_by(Message.created_at)
+    )
+    messages = result.scalars().all()
+    return {"conversation": conv.to_dict(), "messages": [m.to_dict() for m in messages]}
+
+
+===== block 473 f8ac769ab457 lines 1-19 source 知行旅行助手-v2#475 =====
+const resp = await fetch("/api/v1/messages", {
+  method: "POST",
+  headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+  body: JSON.stringify({ conversation_id, content }),
+});
+const reader = resp.body.getReader();
+const decoder = new TextDecoder();
+let buffer = "";
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+  buffer += decoder.decode(value, { stream: true });    // stream:true 防多字节中文被切两半
+  let idx;
+  while ((idx = buffer.indexOf("\n\n")) !== -1) {       // 按空行切帧：一次 read 可能多帧，也可能半帧
+    const frame = buffer.slice(0, idx);
+    buffer = buffer.slice(idx + 2);
+    if (frame.startsWith("data: ")) dispatchByRole(JSON.parse(frame.slice(6)));   // 按 role 分派渲染
+  }
+}
+
+
+===== block 474 3135b9a86d19 lines 1-3 source 知行旅行助手-v2#476 =====
+from app.api.v1 import users, cities, conversations, messages   # ★ 新增 messages
+
+app.include_router(messages.router, prefix="/api/v1")          # 发消息（SSE）+ 历史消息
+
+
+===== block 475 1a211387fe24 lines 1-30 source 知行旅行助手-v2#477 =====
+"""用 Python 读一次 SSE 流：注册 → 建会话 → POST /messages，逐帧打印（需服务已启动 + PG）
+
+相当于前端 fetch + getReader 读流那段代码的 Python 版。挂上 wrap_json_middleware 之后，
+普通 JSON 接口的业务数据都在 data 字段里；SSE 流不受包裹影响，原样一帧帧到达。
+"""
+import json
+import uuid
+
+import httpx
+
+BASE = "http://localhost:8000/api/v1"
+sfx = uuid.uuid4().hex[:6]
+
+with httpx.Client(base_url=BASE, timeout=180) as c:
+    r = c.post("/users/register", json={"username": f"sse_{sfx}", "email": f"sse_{sfx}@example.com",
+                                        "password": "secret123"})
+    token = r.json()["data"]["access_token"]            # 包裹后，业务数据在 data 里
+    H = {"Authorization": f"Bearer {token}"}
+    conv_id = c.post("/conversations", headers=H, json={}).json()["data"]["id"]
+
+    with c.stream("POST", "/messages", headers=H,
+                  json={"conversation_id": conv_id, "content": "你好"}) as resp:
+        print("content-type:", resp.headers["content-type"])
+        buf = ""
+        for chunk in resp.iter_text():                  # 一个 chunk 可能含多帧，也可能只有半帧
+            buf += chunk
+            while "\n\n" in buf:                        # 按空行切帧
+                frame, buf = buf.split("\n\n", 1)
+                if frame.startswith("data: "):
+                    print(json.loads(frame[6:]))
+
+
+===== block 476 504041d36c18 lines 1-33 source 知行旅行助手-v2#478 =====
+"""
+意图路由
+
+早期实现：非流式调用 + 正则抠 JSON + try/except 容错。
+现在：ChatTongyi.with_structured_output 强类型输出，无解析容错负担。
+路由结果仅用于：① 前端 skills 状态帧 ② 是否走规划 Agent 的分流。
+"""
+from pydantic import BaseModel, Field
+from langchain_community.chat_models import ChatTongyi
+
+from app.config import settings
+from app.utils.logger import app_logger
+
+# 技能目录（= 前端 skills 帧的可选值，与 travel agent 的工具能力对应）
+SKILL_CATALOG = [
+    "search_destination_guide(目的地攻略)", "flight_query(航班查询)",
+    "train_query(高铁查询)", "hotel_query(酒店住宿)",
+    "food_recommendation(美食推荐)", "weather_query(天气查询)",
+    "map_navigation(地图导航)", "itinerary_planning(行程规划)",
+]
+
+class SelectedSkill(BaseModel):
+    """前端 skills 帧的单项结构（契约字段，不得改名）"""
+    skill_name: str = Field(description="技能唯一标识，取自技能目录括号前的英文名")
+    title: str = Field(description="技能展示标题，中文")
+    desc: str = Field(description="一句话说明本轮用该技能做什么，中文")
+
+class RouterResult(BaseModel):
+    """路由结果（强类型，替代原手写 JSON）"""
+    # ★ description 会被塞进 prompt：它是写给 LLM 的判定指令，不是写给人看的注释
+    is_itinerary_planning: bool = Field(description="用户是否在请求生成/修改行程规划")
+    inference_log: str = Field(description="意图判断的推导过程，中文，供前端展示")
+    skills: list[SelectedSkill] = Field(description="本轮预计用到的技能，闲聊时为空列表")
+
+
+===== block 477 4d7fa9fa1017 lines 1-16 source 知行旅行助手-v2#479 =====
+"""RouterResult 的 schema 演示：with_structured_output 会把这些 description 一起塞进 prompt（纯逻辑，无需密钥）"""
+import json
+
+from app.agents.routers.chat_router import SKILL_CATALOG, RouterResult
+
+print("技能目录（LLM 的候选池 = 前端的技能名单）：")
+for item in SKILL_CATALOG:
+    print("  -", item)
+
+schema = RouterResult.model_json_schema()
+print("\nRouterResult 字段 → description（写给 LLM 的判定指令）：")
+for name, prop in schema["properties"].items():
+    print(f"  {name:22s} {prop.get('description')}")
+print("\nSelectedSkill 字段：",
+      json.dumps({k: v.get("description") for k, v in schema["$defs"]["SelectedSkill"]["properties"].items()},
+                 ensure_ascii=False))
+
+
+===== block 478 fe7e83b1165c lines 1-4 source 知行旅行助手-v2#480 =====
+RouterResult 字段 → description（写给 LLM 的判定指令）：
+  is_itinerary_planning  用户是否在请求生成/修改行程规划
+  inference_log          意图判断的推导过程，中文，供前端展示
+  skills                 本轮预计用到的技能，闲聊时为空列表
+
+
+===== block 479 a8e1715f9838 lines 1-31 source 知行旅行助手-v2#481 =====
+_ROUTER_PROMPT = (
+    "你是旅行助手的意图路由器。判断用户消息是否为行程规划请求，"
+    "并从技能目录中选出本轮预计用到的技能。\n"
+    f"技能目录：{'、'.join(SKILL_CATALOG)}\n"
+    "注意：闲聊、问候不算行程规划，技能列表留空；"
+    "但对正在收集需求/制定行程的对话中的回答（如确认、补充信息、"
+    "选择目的地等），必须视为行程规划的延续，is_itinerary_planning 应为 true。"
+)
+
+async def chat_route(content: str, history: list[str] | None = None) -> dict | BaseModel:
+    """路由阶段：意图判断 + 技能预选
+
+    history：最近几轮对话文本（含用户/助手），供短回答（"确认"等）续上
+    需求收集流程。此前只看单条消息，导致需求收集被路由到无上下文的闲聊通道。
+    """
+    prompt = _ROUTER_PROMPT
+    if history:
+        # ★ 带上最近几条对话：短回答（"确认"）才能被判成规划的延续
+        prompt += "\n\n最近对话记录（供上下文参考）：\n" + "\n".join(history)
+    prompt += f"\n\n用户消息：{content}"
+
+    llm = ChatTongyi(
+        model=settings.qwen_model_name,
+        api_key=settings.dashscope_api_key,
+        temperature=0,
+    )
+    # ★ 一行顶四步：schema 进 prompt → 函数调用格式返回 → 自动校验成 RouterResult
+    structured = llm.with_structured_output(RouterResult)
+    result = await structured.ainvoke(prompt)
+    app_logger.info(f"路由结果: planning={result.is_itinerary_planning}, skills={[s.skill_name for s in result.skills]}")
+    return result
+
+
+===== block 480 ba45ba30f27a lines 1-2 source 知行旅行助手-v2#482 =====
+无历史：  "确认"                         → 像闲聊 → 走闲聊通道 → 需求收集流程断了
+有历史：  上一轮问"是否确认选择杭州？" + "确认" → 规划的延续 → 继续走状态机
+
+
+===== block 481 6ddf3a02a01e lines 1-20 source 知行旅行助手-v2#483 =====
+"""chat_route 演示：同一句"确认"，带不带历史，判定完全不同（需 .env 配 DashScope 密钥）"""
+import asyncio
+
+from app.agents.routers.chat_router import chat_route
+
+HISTORY = [
+    "user: 我想10月1号从福州去杭州玩",
+    "assistant: 好的！请问您计划玩几天？预算大概多少？",
+    "user: 3天，人均3000",
+    "assistant: 为您推荐杭州：西湖、灵隐寺……请问是否确认选择杭州作为目的地？",
+]
+
+async def main():
+    for label, hist in [("无历史", None), ("带 4 条历史", HISTORY)]:
+        r = await chat_route("确认", history=hist)
+        print(f"[{label}] planning={r.is_itinerary_planning} skills={[s.skill_name for s in r.skills]}")
+        print(f"            推导：{r.inference_log[:60]}…")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+
+===== block 482 68f745a04dd7 lines 1-10 source 知行旅行助手-v2#484 =====
+"""行程质量在线质检服务
+
+【最小桩】清单落库后本该顺手起个后台任务给行程打分，但打分要用的
+Qwen 裁判 + 三维度 GEval 是第 13 章的内容。这里放个空实现，让 itinerary_plan_service
+能 import 通过、清单落库流程整条跑起来；第 13 章整份替换成真正的质检。
+"""
+
+def schedule_quality_check(plan_data: dict) -> None:
+    """【最小桩】占位：什么都不做（第 13 章换成"起后台任务跑三维度打分"）"""
+    return None
+
+
+===== block 483 f80f6d8f36d2 lines 1-34 source 知行旅行助手-v2#485 =====
+"""
+行程清单模型
+存储结构化行程 JSON，供前端"行程清单已生成，点击查看"拉取渲染
+"""
+import uuid
+from datetime import datetime
+from sqlalchemy import String, DateTime, JSON, ForeignKey, func
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.dialects.postgresql import UUID
+from app.models.base import Base
+
+class ItineraryPlan(Base):
+    """行程清单表"""
+
+    __tablename__ = "itinerary_plans"
+
+    # 业务层生成的 plan_id（UUID 字符串），前端在 itinerary_plans 帧中拿到后回传查询
+    # ★ plan_id 由业务层 str(uuid4()) 显式生成：落库后要立刻 return 给前端
+    plan_id: Mapped[str] = mapped_column(String(36), primary_key=True, index=True)
+
+    # 所属会话（对应前端契约的 sessionId，即 LangGraph 的 thread_id）
+    conversation_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("conversation.id", ondelete="CASCADE"),
+        index=True,
+    )
+
+    # 完整结构化行程数据（前端 TravelItinerary：title + itinerary_list，含经纬度/图片）
+    plan_data: Mapped[dict] = mapped_column(JSON)
+
+    # 生成状态：1 成功，2 失败
+    status: Mapped[int] = mapped_column(default=1)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now())
+
+
+===== block 484 59452edcfc2f lines 1-10 source 知行旅行助手-v2#486 =====
+"""
+数据库模型
+"""
+from app.models.base import Base
+from app.models.user import User
+from app.models.conversation import Conversation
+from app.models.message import Message
+from app.models.itinerary_plan import ItineraryPlan  # ★ 本章新增的第四张表：不登记就建不出来
+
+__all__ = ["Base", "User", "Conversation", "Message", "ItineraryPlan"]
+
+
+===== block 485 da998acada97 lines 1-25 source 知行旅行助手-v2#487 =====
+"""建表脚本（幂等，可反复跑）：uv run python scripts/Chapter_Twelve/12_init_db.py
+
+在第 10 章三张表的基础上，把本章新增的 ItineraryPlan 一并建出来。
+create_all 只补缺的表——已存在的 users / conversation / message 原样不动。
+"""
+import os
+import sys
+import asyncio
+
+if sys.platform.startswith("win"):
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# ★ 从 app.models 顶层 import 会触发 models/__init__.py，把四张表都注册进 Base.metadata
+from app.models import User, Conversation, Message, ItineraryPlan  # noqa: F401
+from app.models.base import init_db
+
+async def main():
+    print("[init_db] 开始建表...")
+    await init_db()
+    print("[init_db] 完成：user, conversation, message, itinerary_plans")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+
+===== block 486 f70b9a8f28a8 lines 1-39 source 知行旅行助手-v2#488 =====
+"""行程清单生成服务：DeepSeek 结构化提炼"""
+import asyncio
+import re
+import uuid
+import httpx
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession  # 类型注解仍被 get_plan/generate_plan 使用
+from pydantic import BaseModel, Field
+
+from app.config import settings
+from app.models.itinerary_plan import ItineraryPlan
+from app.models.conversation import Conversation  # 归属校验用（join 会话表）
+from app.utils.llm_factory import get_deepseek_llm
+from app.utils.logger import app_logger
+from app.services.quality_check_service import schedule_quality_check  # 在线质检
+
+async def get_plan(db: AsyncSession, plan_id: str, conversation_id: uuid.UUID) -> ItineraryPlan | None:
+    """REST 查询：按 planId + 会话查行程清单"""
+    result = await db.execute(
+        select(ItineraryPlan).where(
+            ItineraryPlan.plan_id == plan_id,
+            ItineraryPlan.conversation_id == conversation_id,
+        )
+    )
+    return result.scalar_one_or_none()
+
+async def get_owned_plan(db: AsyncSession, plan_id: str, user_id: uuid.UUID) -> ItineraryPlan | None:
+    """REST 查询：按 planId 查清单并校验归属
+
+    资源式路径 /api/v1/itinerary-plans/{plan_id} 不再传 sessionId，故改为
+    join conversation 表校验 user_id——单次查询同时完成"查到 + 防横向越权"。
+    """
+    result = await db.execute(
+        select(ItineraryPlan)
+        # ★ 清单表没有 user_id：顺着"清单 → 会话 → 用户"join，一条 SQL 同时"查到 + 防越权"
+        .join(Conversation, Conversation.id == ItineraryPlan.conversation_id)
+        .where(ItineraryPlan.plan_id == plan_id, Conversation.user_id == user_id)
+    )
+    return result.scalar_one_or_none()
+
+
+===== block 487 d9fc6e190500 lines 1-28 source 知行旅行助手-v2#489 =====
+# ============== 前端 TravelItinerary 契约结构（字段名与网页端严格一致） ==============
+
+class ScenicSpot(BaseModel):
+    """景点"""
+    toponym: str = Field(description="景点名称")
+    toponym_desc: str = Field(description="景点介绍，50-100字")
+    toponym_image: str = Field(description="封面图 URL，无则空字符串")
+    toponym_image_list: list[str] = Field(description="图片列表，无则空数组")
+    longitude: float | None = Field(default=None, description="经度")
+    latitude: float | None = Field(default=None, description="纬度")
+
+class ItineraryItem(BaseModel):
+    """时段安排"""
+    time: str = Field(description="时段，如：上午/下午/晚上")
+    scenic_spots_list: list[ScenicSpot]
+
+class ItineraryDay(BaseModel):
+    """一天"""
+    id: str = Field(description="唯一标识，随机字符串")
+    day: str = Field(description="第几天，如：第一天")
+    itinerary: list[ItineraryItem]
+    route_polylines: list[list[float]] = Field(default_factory=list)  # 每段驾车路线平铺坐标 [lat,lng,...]（高德方向API）
+
+# ★ 四层嵌套对着前端组件层级；字段名与前端 TSX 逐字一致，改一个前端就崩
+class TravelItinerary(BaseModel):
+    """行程清单（前端渲染契约）"""
+    title: str = Field(description="行程标题")
+    itinerary_list: list[ItineraryDay]
+
+
+===== block 488 e2ff36d9650c lines 1-15 source 知行旅行助手-v2#490 =====
+"""bind_tools 送给 DeepSeek 的是什么：把 TravelItinerary 转成工具 schema 看一眼（纯逻辑，无需密钥）"""
+import json
+
+from langchain_core.utils.function_calling import convert_to_openai_tool
+
+from app.services.itinerary_plan_service import TravelItinerary
+
+tool = convert_to_openai_tool(TravelItinerary)          # bind_tools 内部做的就是这一步
+print("工具名：", tool["function"]["name"])
+params = tool["function"]["parameters"]
+spot = (params["properties"]["itinerary_list"]["items"]["properties"]["itinerary"]["items"]
+        ["properties"]["scenic_spots_list"]["items"]["properties"])     # 四层嵌套：清单→天→时段→景点
+for name, prop in spot.items():
+    print(f"  ScenicSpot.{name:20s} {prop.get('description')}")   # Field description 原样进了工具说明
+print(json.dumps(tool, ensure_ascii=False)[:120], "…")
+
+
+===== block 489 968ebc966bc6 lines 1-7 source 知行旅行助手-v2#491 =====
+工具名： TravelItinerary
+  ScenicSpot.toponym              景点名称
+  ScenicSpot.toponym_desc         景点介绍，50-100字
+  ScenicSpot.toponym_image        封面图 URL，无则空字符串
+  ScenicSpot.toponym_image_list   图片列表，无则空数组
+  ScenicSpot.longitude            经度
+  ScenicSpot.latitude             纬度
+
+
+===== block 490 38511fd79313 lines 1-51 source 知行旅行助手-v2#492 =====
+# 清单"必定生成"的代码兜底。LLM 提炼环节有多种失败可能（DeepSeek 欠费/
+# 思考模式偶发不返回 tool_calls/返回体不合 schema），任一失败都会让用户拿不到清单——但此时
+# 状态机里的 itinerary_body 已是 Pydantic 校验过的结构，信息完整，可直接由代码构造清单。
+# 故提炼只作为"增强手段"，不再是单点依赖。
+_SLOT_TIME_LABELS = (
+    ("morning", "上午"), ("noon", "中午"), ("afternoon", "下午"), ("evening", "晚上"),
+)
+
+_LEAD_TIME_RE = re.compile(r"^\s*\d{1,2}[:：]\d{2}(\s*[-~—]\s*\d{1,2}[:：]\d{2})?\s*(前后|左右)?\s*")
+
+def _spot_from_text(text: str) -> ScenicSpot:
+    """兜底清单的景点条目：条目首段作为景点名，整条作为介绍（图片/坐标留空，由增强补齐）
+
+    ★ 必须先剥掉开头时刻：按冒号切分会把 "09:00 天安门广场观升旗" 切成 "09"，
+      随后高德 POI 拿 "09" 去搜坐标与封面，整份兜底清单既没坐标也没图
+    """
+    text = text.strip()
+    head = re.split(r"[，,。；;：:\s（(]", _LEAD_TIME_RE.sub("", text), maxsplit=1)[0][:24]
+    return ScenicSpot(
+        toponym=head or text[:24], toponym_desc=text,
+        toponym_image="", toponym_image_list=[],
+    )
+
+def _fallback_title(markdown: str, days: int) -> str:
+    """兜底标题：优先取源料首个标题行，否则用"N 天行程规划" """
+    for line in (markdown or "").splitlines():
+        head = line.strip().lstrip("#＊* ").strip()
+        if head:
+            return head[:30]
+    return f"{days} 天行程规划"
+
+def _plan_from_structure(days: list[dict], markdown: str = "") -> TravelItinerary:
+    """用已过校验的 itinerary_body 直接构造行程清单（不依赖任何 LLM 提炼）"""
+    out: list[ItineraryDay] = []
+    for d in days or []:
+        if not isinstance(d, dict):
+            continue
+        items = [
+            ItineraryItem(
+                time=label,
+                scenic_spots_list=[_spot_from_text(str(t)) for t in (d.get(key) or []) if str(t).strip()],
+            )
+            for key, label in _SLOT_TIME_LABELS if d.get(key)
+        ]
+        out.append(ItineraryDay(
+            id=uuid.uuid4().hex[:12],
+            day=f"第{d.get('day')}天",
+            itinerary=items,
+        ))
+    # ★ 全程不经 LLM：用已过 Pydantic 校验的 itinerary_body 直接拼出一份合法清单
+    return TravelItinerary(title=_fallback_title(markdown, len(out)), itinerary_list=out)
+
+
+===== block 491 2d9ef08bf94c lines 1-16 source 知行旅行助手-v2#493 =====
+"""_plan_from_structure 演示：不经任何 LLM，用已校验的逐日结构直接拼出前端清单（纯函数，无需密钥）"""
+import json
+
+from app.services.itinerary_plan_service import _plan_from_structure
+
+days = [   # 形如状态机里的 itinerary_body（第 11 章 submit_itinerary_body_tool 校验通过后写入）
+    {"day": 1, "city": "杭州", "morning": ["西湖断桥，沿白堤慢慢走"], "noon": ["知味观，尝片儿川"],
+     "afternoon": ["灵隐寺（需提前预约）"], "evening": ["河坊街夜市"]},
+    {"day": 2, "city": "杭州", "morning": ["西溪湿地摇橹船"], "afternoon": ["中国茶叶博物馆"],
+     "evening": ["返程：杭州东站 G1653"]},
+]
+plan = _plan_from_structure(days, "### 杭州 2 日轻松游\n……")
+print("标题：", plan.title)
+for d in plan.itinerary_list:
+    print(d.day, [(i.time, [s.toponym for s in i.scenic_spots_list]) for i in d.itinerary])
+print(json.dumps(plan.model_dump()["itinerary_list"][0]["itinerary"][0], ensure_ascii=False))
+
+
+===== block 492 a5a46f32b39e lines 1-4 source 知行旅行助手-v2#494 =====
+标题： 杭州 2 日轻松游
+第1天 [('上午', ['西湖断桥']), ('中午', ['知味观']), ('下午', ['灵隐寺']), ('晚上', ['河坊街夜市'])]
+第2天 [('上午', ['西溪湿地摇橹船']), ('下午', ['中国茶叶博物馆']), ('晚上', ['返程'])]
+{"time": "上午", "scenic_spots_list": [{"toponym": "西湖断桥", "toponym_desc": "西湖断桥，沿白堤慢慢走", "toponym_image": "", "toponym_image_list": [], "longitude": null, "latitude": null}]}
+
+
+===== block 493 270e3bcb0974 lines 1-18 source 知行旅行助手-v2#495 =====
+_JSON_PROMPT = (
+    "从下面的行程规划内容中提取结构化行程。要求：\n"
+    "1. 严格按工具的 schema 传参，字段名不得改动\n"
+    "2. 景点经纬度从原文提取，缺失填 null\n"
+    "3. 图片 URL 从原文提取，缺失用空字符串/空数组\n"
+    "4. toponym_desc 为 50-100 字景点介绍：原文有描述则提炼总结；"
+    "原文只有一句话时，根据该景点的公开常识补全介绍（地理位置/特色/游玩方式），"
+    "确保清单信息量充足——但门票价格/营业数据等事实数字严禁编造，原文没有就留空相关表述\n"
+    "5. 必须通过工具调用提交结果\n\n"
+    "行程内容：\n"
+)
+
+def _clean_keyword(name: str) -> str:
+    """ 清洗模型提取的景点名：去序号前缀（"1."/"2、"）与括号注解（"（返程）"），
+    提升高德 POI 关键词命中率（原名如"1.杭州东站（返程）"会直接搜空）"""
+    name = re.sub(r"^\s*\d+\s*[.、．:：]\s*", "", name)
+    name = re.sub(r"[（(][^（）()]*[)）]", "", name)
+    return name.strip()
+
+
+===== block 494 9416ba92a1a0 lines 1-5 source 知行旅行助手-v2#496 =====
+"""_clean_keyword 演示：剥掉序号前缀和括号注解，提高高德 POI 关键词命中率（纯函数，无需密钥）"""
+from app.services.itinerary_plan_service import _clean_keyword
+
+for raw in ["1.杭州东站（返程）", "2、灵隐寺(需预约)", "  3：西湖断桥 ", "河坊街"]:
+    print(f"{raw!r:24} → {_clean_keyword(raw)!r}")
+
+
+===== block 495 ad2d5cba2299 lines 1-4 source 知行旅行助手-v2#497 =====
+'1.杭州东站（返程）'             → '杭州东站'
+'2、灵隐寺(需预约)'             → '灵隐寺'
+'  3：西湖断桥 '              → '西湖断桥'
+'河坊街'                    → '河坊街'

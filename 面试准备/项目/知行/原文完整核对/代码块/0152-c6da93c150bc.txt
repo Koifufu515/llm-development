@@ -1,0 +1,14 @@
+"""compact_ticket_text 演示：几千字的原始返回压成"一行一趟"，按发车时间排、只留前几趟（纯函数，无需密钥）"""
+from app.tools.mcp_tools import compact_ticket_text
+
+RAW = """G1234 北京南(telecode:VNP) -> 上海虹桥(telecode:AOH) 08:00 -> 12:28 历时：04:28
+- 二等座: 有票 662.0元
+- 一等座: 5张 1060.0元
+G7 北京南(telecode:VNP) -> 上海(telecode:SHH) 07:00 -> 11:35 历时：04:35
+- 商务座: 无票 2318.0元
+- 二等座: 候补 669.0元
+K51 北京(telecode:BJP) -> 上海(telecode:SHH) 06:15 -> 21:40 历时：15:25
+- 硬卧: 有票 304.5元"""
+print(compact_ticket_text(RAW, limit=2))
+print("---- 解析不出班次时，截断原文降级返回：")
+print(compact_ticket_text("12306 服务繁忙，请稍后再试"))

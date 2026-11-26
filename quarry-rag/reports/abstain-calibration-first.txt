@@ -1,0 +1,19 @@
+Building prefix dict from the default dictionary ...
+Loading model from cache /var/folders/rk/qtxh2ds10vd6_cdg09pdzrbm0000gn/T/jieba.cache
+Loading model cost 0.220 seconds.
+Prefix dict has been built successfully.
+分组      融合分   余弦分   查询
+有答案    0.0154   0.656   兵马俑的门票多少钱
+有答案    0.0160   0.637   从机场到市区怎么走
+有答案    0.0159   0.677   有什么本地小吃
+有答案    0.0155   0.549   景区几点开门
+有答案    0.0163   0.659   推荐住在哪个区域
+有答案    0.0140   0.584   当地气候怎么样
+没答案    0.0145   0.273   量子色动力学的渐近自由
+没答案    0.0082   0.266   如何配置 Kubernetes 的 Ingress
+没答案    0.0082   0.325   房贷利率怎么换算
+没答案    0.0148   0.278   小狗拉肚子吃什么药
+没答案    0.0082   0.318   asdkjfh qwoieur
+
+有答案最低 0.549，没答案最高 0.325，建议阈值 0.44
+已写入 travel-guide 的 abstain_config

@@ -1,0 +1,116 @@
+# ============== 预算汇总工具 ==============
+@tool
+def summarize_budget_tool(
+        attraction_tickets: list[dict] = None,
+        transport_price_per_person: float = None,
+        hotel_price_per_night: float = None,
+        hotel_rooms: int = None,
+        travel_days: int = None,
+        budget_max: float = None,
+        runtime: ToolRuntime[None, TravelState] = None
+) -> Command:
+    """
+    汇总各项费用，生成预算明细。订单环节已移除，预算汇总后流程即完成。
+    Args:
+        attraction_tickets: 真实门票列表，格式 [{"name": "景点名", "price": 单人票价(元)}]；
+                            提取不到真实票价时可省略，门票项回退人均估算法。
+        transport_price_per_person: 真实人均交通价（元，取自已选定班次）；
+                                    省略时回退 500 元/人估算。
+        hotel_price_per_night: 真实每晚房价（元，取自已选定酒店）；
+                               省略时回退 300 元/晚估算。
+        hotel_rooms: 房间数；省略时按每间2人自动折算（ceil(总人数/2)）。
+        travel_days: 覆盖天数；用户调整行程天数时必传，省略则使用状态机记录的travel_days。
+        budget_max: 覆盖人均预算上限；用户调整预算时必传，省略则使用状态机记录的budget_max。
+    预算明细包含：交通费用、住宿费用、餐饮费用、景点门票、其他杂费
+    """
+    app_logger.info("开始计算预算...")
+    state = runtime.state
+
+    def _legs_price_per_person() -> float | None:
+        """各已确认段票价之和（人均一趟）；账本为空返回 None"""
+        booked = [float(v) for v in (state.get("leg_prices") or {}).values() if float(v) > 0]
+        return sum(booked) if booked else None
+
+    def _hotel_price_per_night_from_book() -> float | None:
+        """各城已确认酒店元/晚均价；账本为空返回 None"""
+        booked = [float(v) for v in (state.get("stay_prices") or {}).values() if float(v) > 0]
+        return (sum(booked) / len(booked)) if booked else None
+
+    requirement = state["user_requirement"]
+    total_people = requirement["adult_count"] + requirement["children_count"]
+
+    travel_days = (travel_days if isinstance(travel_days, int) and travel_days > 0
+                   else requirement["travel_days"])
+
+    import math
+    nights = max(travel_days - 1, 1)
+    rooms = hotel_rooms if isinstance(hotel_rooms, int) and hotel_rooms > 0 \
+        else max(math.ceil(total_people / 2), 1)
+
+    # 三级优先级：入参传入值 -> 账本真实价格 -> 估算兜底
+    _transport_pp = (transport_price_per_person
+                     if isinstance(transport_price_per_person, (int, float)) and transport_price_per_person > 0
+                     else _legs_price_per_person())
+    _hotel_pn = (hotel_price_per_night
+                 if isinstance(hotel_price_per_night, (int, float)) and hotel_price_per_night > 0
+                 else _hotel_price_per_night_from_book())
+
+    transport_cost = (_transport_pp if _transport_pp and _transport_pp > 0 else 500) * total_people
+    accommodation_cost = (_hotel_pn if _hotel_pn and _hotel_pn > 0 else 300) * nights * rooms
+    food_cost = 150 * travel_days * total_people
+
+    real_tickets = [
+        t for t in (attraction_tickets or [])
+        if isinstance(t, dict) and t.get("name") and isinstance(t.get("price"), (int, float)) and t["price"] >= 0
+    ]
+    if real_tickets:
+        attractions_cost = sum(float(t["price"]) for t in real_tickets) * total_people
+        ticket_desc = "、".join(f"{t['name']} {t['price']:.0f}元" for t in real_tickets)
+    else:
+        attractions_cost = 200 * travel_days * total_people
+        ticket_desc = f"按 {200}元/人/天 估算"
+
+    misc_cost = 100 * travel_days * total_people
+    total_cost = transport_cost + accommodation_cost + food_cost + attractions_cost + misc_cost
+    per_person = total_cost / total_people if total_people else total_cost
+
+    budget_max_eff = (budget_max if isinstance(budget_max, (int, float)) and budget_max > 0
+                      else requirement.get("budget_max"))
+    if isinstance(budget_max_eff, (int, float)) and budget_max_eff > 0:
+        verdict = "人均未超预算" if per_person <= budget_max_eff else f"人均超预算（建议下调住宿档位或减天数）"
+    else:
+        verdict = "未提供预算上限，仅作参考"
+
+    budget_breakdown = {
+        "transport": transport_cost,
+        "accommodation": accommodation_cost,
+        "food": food_cost,
+        "attractions": attractions_cost,
+        "attractions_source": "real" if real_tickets else "estimated",
+        "misc": misc_cost,
+        "total": total_cost
+    }
+
+    requirement = dict(requirement)
+    requirement["travel_days"] = travel_days
+    if isinstance(budget_max_eff, (int, float)) and budget_max_eff > 0:
+        requirement["budget_max"] = budget_max_eff
+
+    return Command(update={
+        "messages": [
+            ToolMessage(
+                content=f"预算汇总完成（{total_people} 人 / {nights} 晚 / {rooms} 间房）！\n"
+                        f"   - 交通：{transport_cost:.2f} 元（人均 {transport_cost/total_people:.0f}）\n"
+                        f"   - 住宿：{accommodation_cost:.2f} 元（{rooms} 间 × {nights} 晚）\n"
+                        f"   - 餐饮：{food_cost:.2f} 元（{150}元/人/天）\n"
+                        f"   - 门票：{attractions_cost:.2f} 元（{ticket_desc}）\n"
+                        f"   - 其他：{misc_cost:.2f} 元\n"
+                        f"总计：{total_cost:.2f} 元（{total_people} 人总价）\n"
+                        f"人均：{per_person:.2f} 元\n"
+                        f"预算结论：{verdict}",
+                tool_call_id=runtime.tool_call_id
+            )
+        ],
+        "budget": budget_breakdown,
+        "user_requirement": requirement,
+    })

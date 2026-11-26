@@ -1,0 +1,468 @@
+
+
+===== block 688 b588a746c63d lines 1-116 source 知行旅行助手代码-v2#371 =====
+# ============== 预算汇总工具 ==============
+@tool
+def summarize_budget_tool(
+        attraction_tickets: list[dict] = None,
+        transport_price_per_person: float = None,
+        hotel_price_per_night: float = None,
+        hotel_rooms: int = None,
+        travel_days: int = None,
+        budget_max: float = None,
+        runtime: ToolRuntime[None, TravelState] = None
+) -> Command:
+    """
+    汇总各项费用，生成预算明细。订单环节已移除，预算汇总后流程即完成。
+    Args:
+        attraction_tickets: 真实门票列表，格式 [{"name": "景点名", "price": 单人票价(元)}]；
+                            提取不到真实票价时可省略，门票项回退人均估算法。
+        transport_price_per_person: 真实人均交通价（元，取自已选定班次）；
+                                    省略时回退 500 元/人估算。
+        hotel_price_per_night: 真实每晚房价（元，取自已选定酒店）；
+                               省略时回退 300 元/晚估算。
+        hotel_rooms: 房间数；省略时按每间2人自动折算（ceil(总人数/2)）。
+        travel_days: 覆盖天数；用户调整行程天数时必传，省略则使用状态机记录的travel_days。
+        budget_max: 覆盖人均预算上限；用户调整预算时必传，省略则使用状态机记录的budget_max。
+    预算明细包含：交通费用、住宿费用、餐饮费用、景点门票、其他杂费
+    """
+    app_logger.info("开始计算预算...")
+    state = runtime.state
+
+    def _legs_price_per_person() -> float | None:
+        """各已确认段票价之和（人均一趟）；账本为空返回 None"""
+        booked = [float(v) for v in (state.get("leg_prices") or {}).values() if float(v) > 0]
+        return sum(booked) if booked else None
+
+    def _hotel_price_per_night_from_book() -> float | None:
+        """各城已确认酒店元/晚均价；账本为空返回 None"""
+        booked = [float(v) for v in (state.get("stay_prices") or {}).values() if float(v) > 0]
+        return (sum(booked) / len(booked)) if booked else None
+
+    requirement = state["user_requirement"]
+    total_people = requirement["adult_count"] + requirement["children_count"]
+
+    travel_days = (travel_days if isinstance(travel_days, int) and travel_days > 0
+                   else requirement["travel_days"])
+
+    import math
+    nights = max(travel_days - 1, 1)
+    rooms = hotel_rooms if isinstance(hotel_rooms, int) and hotel_rooms > 0 \
+        else max(math.ceil(total_people / 2), 1)
+
+    # 三级优先级：入参传入值 -> 账本真实价格 -> 估算兜底
+    _transport_pp = (transport_price_per_person
+                     if isinstance(transport_price_per_person, (int, float)) and transport_price_per_person > 0
+                     else _legs_price_per_person())
+    _hotel_pn = (hotel_price_per_night
+                 if isinstance(hotel_price_per_night, (int, float)) and hotel_price_per_night > 0
+                 else _hotel_price_per_night_from_book())
+
+    transport_cost = (_transport_pp if _transport_pp and _transport_pp > 0 else 500) * total_people
+    accommodation_cost = (_hotel_pn if _hotel_pn and _hotel_pn > 0 else 300) * nights * rooms
+    food_cost = 150 * travel_days * total_people
+
+    real_tickets = [
+        t for t in (attraction_tickets or [])
+        if isinstance(t, dict) and t.get("name") and isinstance(t.get("price"), (int, float)) and t["price"] >= 0
+    ]
+    if real_tickets:
+        attractions_cost = sum(float(t["price"]) for t in real_tickets) * total_people
+        ticket_desc = "、".join(f"{t['name']} {t['price']:.0f}元" for t in real_tickets)
+    else:
+        attractions_cost = 200 * travel_days * total_people
+        ticket_desc = f"按 {200}元/人/天 估算"
+
+    misc_cost = 100 * travel_days * total_people
+    total_cost = transport_cost + accommodation_cost + food_cost + attractions_cost + misc_cost
+    per_person = total_cost / total_people if total_people else total_cost
+
+    budget_max_eff = (budget_max if isinstance(budget_max, (int, float)) and budget_max > 0
+                      else requirement.get("budget_max"))
+    if isinstance(budget_max_eff, (int, float)) and budget_max_eff > 0:
+        verdict = "人均未超预算" if per_person <= budget_max_eff else f"人均超预算（建议下调住宿档位或减天数）"
+    else:
+        verdict = "未提供预算上限，仅作参考"
+
+    budget_breakdown = {
+        "transport": transport_cost,
+        "accommodation": accommodation_cost,
+        "food": food_cost,
+        "attractions": attractions_cost,
+        "attractions_source": "real" if real_tickets else "estimated",
+        "misc": misc_cost,
+        "total": total_cost
+    }
+
+    requirement = dict(requirement)
+    requirement["travel_days"] = travel_days
+    if isinstance(budget_max_eff, (int, float)) and budget_max_eff > 0:
+        requirement["budget_max"] = budget_max_eff
+
+    return Command(update={
+        "messages": [
+            ToolMessage(
+                content=f"预算汇总完成（{total_people} 人 / {nights} 晚 / {rooms} 间房）！\n"
+                        f"   - 交通：{transport_cost:.2f} 元（人均 {transport_cost/total_people:.0f}）\n"
+                        f"   - 住宿：{accommodation_cost:.2f} 元（{rooms} 间 × {nights} 晚）\n"
+                        f"   - 餐饮：{food_cost:.2f} 元（{150}元/人/天）\n"
+                        f"   - 门票：{attractions_cost:.2f} 元（{ticket_desc}）\n"
+                        f"   - 其他：{misc_cost:.2f} 元\n"
+                        f"总计：{total_cost:.2f} 元（{total_people} 人总价）\n"
+                        f"人均：{per_person:.2f} 元\n"
+                        f"预算结论：{verdict}",
+                tool_call_id=runtime.tool_call_id
+            )
+        ],
+        "budget": budget_breakdown,
+        "user_requirement": requirement,
+    })
+
+
+===== block 689 e92e59810710 lines 1-13 source 知行旅行助手代码-v2#383 =====
+"""_guard_back 演示：只有用户原话里说了"换/改/重新选"，回退才放行（调真实守卫函数，纯逻辑，无需密钥）"""
+from langchain.tools import ToolRuntime
+from langchain_core.messages import HumanMessage
+
+from app.tools.state_transition import _guard_back
+
+cases = [("destination", "换个目的地吧"), ("destination", "我想去别的地方"), ("destination", "这个不错就它了"),
+         ("transport", "还是坐高铁吧"), ("transport", "行程挺好的"), ("requirement", "全部重来")]
+for key, text in cases:
+    state = {"messages": [HumanMessage(content=text)]}
+    rt = ToolRuntime(state=state, context=None, config={}, stream_writer=None, tool_call_id="call_1", store=None)
+    verdict = _guard_back(rt, key, "回退")
+    print(f"{key:11s} {text!r:16} → {'放行' if verdict is None else '拒绝'}")
+
+
+===== block 690 ddb781490d6e lines 1-330 source 知行旅行助手代码-v2#391 =====
+"""
+Handoffs 步骤配置
+定义每个步骤的 Prompt、Tools 和前置依赖
+"""
+from app.tools.router_query import query_destination_info
+# 并行改造：query_transport_options（mock 链路）已废弃移除，交通步骤改用真实 MCP 工具
+from app.tools.state_transition import (
+    record_requirement_tool,
+    select_destination_tool,
+    select_transport_tool,
+    select_accommodation_tool,
+    select_food_tool,
+    select_accommodation_food_tool,  # 一站式住宿+餐饮确认（自动确认场景，避免并行 Command 冲突）
+    generate_itinerary_tool,
+    submit_itinerary_body_tool,  # 结构化行程提交（Pydantic 校验 + 代码渲染正文）
+    summarize_budget_tool,
+    # generate_order_tool,  # 订单环节已按需求移除：订单步骤配置与工具注册一并注释
+    go_back_to_step,
+    go_back_to_requirement,
+    go_back_to_destination,
+    go_back_to_transport,
+    go_back_to_accommodation,
+    go_back_to_food,
+    go_back_to_itinerary,
+    go_back_to_budget,
+    check_current_progress
+)
+from app.tools.mcp_tools import get_hotel_tools, get_weather_tools, get_search_tools, get_date_tools, get_flight_tools, get_train_tools, get_driving_tools  # 并行改造：加交通工具筛选器
+from app.tools.memory_tools import update_travel_style_tool, update_dietary_restriction_tool, update_food_preference_tool, add_travel_record_tool, update_accommodation_preference_tool
+
+async def get_step_config():
+    """
+    异步获取步骤配置
+
+    Returns:
+        包含所有步骤配置的字典
+    """
+
+    # ========== ★ 按需加载工具（MCP 连不上就降级为空列表，服务照常启动） ==========
+    try:
+        hotel_tools = await get_hotel_tools()
+        search_tools = await get_search_tools()
+        date_tools = await get_date_tools()
+        weather_tools = await get_weather_tools()
+    except Exception as e:
+        print(f"MCP工具加载失败: {e}")
+        hotel_tools = []
+        search_tools = []
+        date_tools = []
+        weather_tools = []
+
+    # 并行改造：加载航班/高铁/自驾真实查询工具（交通步骤并行查询用，替代 mock Subagent）
+    try:
+        flight_tools = await get_flight_tools()
+        train_tools = await get_train_tools()
+        driving_tools = await get_driving_tools()
+    except Exception as e:
+        print(f"交通工具加载失败: {e}")
+        flight_tools, train_tools, driving_tools = [], [], []
+
+    return {
+        # ========== ★ 步骤 1：需求收集 ==========
+        "requirement_collection": {
+            "prompt": """你是专业的旅行规划顾问，负责收集用户的旅行需求。
+
+**当前阶段**：需求收集
+
+**🔑 重要提示 - 智能记忆管理**：
+系统已自动为你加载用户的历史偏好信息
+在对话过程中，如果用户提到任何**新的**个人偏好，请主动调用相应的记忆工具保存：
+- 旅行风格偏好（如"我喜欢文化探索"）→ 调用 `update_travel_style_tool`
+- 饮食禁忌/过敏（如"我对海鲜过敏"）→ 调用 `update_dietary_restriction_tool`
+- 饮食口味偏好（如"我喜欢吃辣"）→ 调用 `update_food_preference_tool`
+- 住宿偏好（如"我喜欢住民宿"）→ 调用 `update_accommodation_preference_tool`
+- 提到去过某地（如"我之前去过成都"）→ 调用 `add_travel_record_tool`
+
+**任务**：
+1. 友好地询问用户以下信息：
+   - 🏠 出发地点或城市
+   - 📅 出发日期
+   - 🗓️ 出行天数
+   - 👨‍👩‍👧‍👦 成人和儿童数量
+   - 💰 预算范围（每人，单位：元）
+   - 🎨 旅行风格（可多选）：
+     * relaxation（休闲度假）
+     * culture（文化探索）
+     * adventure（户外冒险）
+     * food（美食之旅）
+   - 📝 特殊需求（可选）：如无障碍设施、儿童友好、宠物友好
+
+2. 当用户提供完整信息后，需要询问用户是否有其他的需求或特殊需求，并确认目前的需求，确认完才能使用 `record_requirement_tool` 工具记录。
+
+3. 如果信息不完整，继续询问缺失的部分。
+
+4. **表单/清单场景快速通道**：若用户首条消息已一次性给出完整需求清单（出发地、日期、天数、人数、预算、交通方式、偏好等），视为需求已收集完成：
+   - 禁止再逐项重复询问（最多用一句话做整体确认）
+   - **必须优先调用 `record_requirement_tool` 记录需求并推进到下一步骤**，再响应用户的其他请求
+   - 本步骤工具集中没有交通/酒店等查询工具：用户若要求查询班次/价格/酒店，必须先推进步骤，严禁编造数据回答，也严禁声称"系统限制无法查询"
+   - **预选项必须一并传入（硬约束，漏传会导致后续步骤重复询问用户）**：调用 `record_requirement_tool` 时把清单里的预选一并写入参数——
+     * `auto_confirm`：清单含"全程交给 AI 自动确认/无需逐步询问" → `true`，**未含该表述一律传 `false`**（此项决定后续是 AI 代选还是用户逐项确认，严禁误传）
+     * `transport_types`：航班→`flight`、高铁/火车→`train`、自驾→`driving`（多选传列表）
+     * `food_preferences`：特色美食→`specialty`、连锁快餐→`chain`、本地小吃→`local`（多选传列表）
+     * `accommodation_types`：舒适/高端→`star_hotel`、经济型→`economy_hotel`、民宿→`hostel`、青年旅社→`youth_hostel`（多选传列表）
+     * 清单未提及的项传空列表 `[]`，严禁臆造
+
+**注意**：
+- 当用户没有给指定出发日期，说了不确定的日期(类似今天,明天,后天,下个星期下个月.....等等)需要先调用日期工具查询实时日期,再判断具体日期
+- 一次只询问 1-2 个问题，避免信息过载
+- 使用友好的对话方式，不要像填表格
+- 如果用户给出模糊答案（如"下个月"），帮助转换为具体日期
+""",
+            "tools": [
+                record_requirement_tool,
+                *date_tools,
+                # 记忆工具
+                update_travel_style_tool,
+                update_dietary_restriction_tool,
+                update_food_preference_tool,
+                add_travel_record_tool,
+                check_current_progress  # 进度查询：用户问"现在到哪一步/还有几步"时可答
+            ],
+            "requires": []  # 无前置依赖
+        },
+
+        # ========== ★ 步骤 2：目的地推荐 ==========
+        "destination_recommendation": {
+            "prompt": """你是目的地推荐专家。
+
+**当前阶段**：目的地推荐
+
+**⚠️ 当前确认模式（最高优先级，先读本条）**：{{ auto_confirm_mode }}
+
+**🔑 智能记忆管理**：
+1. 如果用户提到**新的**偏好，及时调用相应工具保存
+2. 如果用户说"我之前去过XX"，调用 `add_travel_record_tool` 记录
+
+**个性化推荐要点**：
+- 系统已自动为你加载用户的历史行程信息
+- 避免推荐用户去过的目的地
+- 避免推荐用户游玩过的景点
+- 参考用户的旅行风格偏好
+
+**用户需求**：
+- 出发日期：{{ user_requirement.departure_date }}
+- 出行天数：{{ user_requirement.travel_days }} 天
+- 人数：{{ user_requirement.adult_count }} 成人 + {{ user_requirement.children_count }} 儿童
+- 预算：{{ user_requirement.budget_min }}-{{ user_requirement.budget_max }} 元/人（{{ user_requirement.budget_level }} 级）
+- 旅行风格：{{ user_requirement.travel_styles }}
+
+**任务**：
+请根据用户当前的输入内容，判断属于以下哪种情况，并严格执行对应逻辑：
+### 情况一：用户已指定明确目的地
+1.  **可行性校验**：判断该目的地是否符合用户的“预算”和“出发日期（季节/天气）”。
+2.  **信息获取**：调用 `query_destination_info` 查询该目的地的详细信息（景点、实时天气）。若工具返回信息不足，必须调用搜索工具补充。
+3.  **反馈展示**：
+    - 展示该目的地的亮点。
+    - 如果存在隐患（如季节不合适或超预算），请委婉提示并给出建议。
+    - **天气不要自己写**：系统会按行程窗口统一渲染并追加，回复中出现任何气温/℃/降水/穿衣建议均属违规（同时严禁输出"请稍等，我将查询…"这类占位语）。
+    - 询问用户是否确认选择该地。
+4.  **步骤边界（重要）**：本步骤没有航班/高铁等交通查询工具，交通查询在下一步"交通规划"进行。用户若已提前提出查询交通/酒店等请求，回复"目的地确认后立即为您查询"，然后快速走完上面 1-3 步引导确认；用户确认后立即调用 `select_destination_tool` 推进。严禁在本步骤编造交通/住宿数据，或代替后续步骤作答。
+5.  **表单直通（仅【自动确认模式】）**：处于【自动确认模式】且需求清单已明确给出目的地时——做完一句话可行性校验（结合预算/季节）后**直接调用 `select_destination_tool` 记录推进**，禁止再反问"是否确认选择该地"；需求清单含"全程交给 AI 自动确认"时必须同轮完成校验+推进，一句话带过。**直通天气**：天气由系统统一查询并按行程窗口渲染追加，你无需输出任何气温/降水/穿衣建议（系统会剔除模型自写的天气行）。仅目的地为空（需推荐）或用户主动追问详情时才走 1-3 的展示确认流程
+6.  **手动确认模式必须走"展示 → 确认 → 推进"（禁止表单直通）**：处于【手动确认模式】时，即使用户已在需求清单里写明目的地，也**必须先执行 1-3 的展示确认流程**——展示目的地亮点，并以一句"请问您是否确认选择 XX 作为您的旅行目的地呢？"收尾后**立即结束本轮**（天气由系统渲染追加，无需你输出）。本轮 `select_destination_tool` 已被系统屏蔽，不要尝试调用，也不得出现"已记录/已确认/已为您选择"等表述；用户回复确认语（确认/确定/好的…）后，**下一轮**再调用 `select_destination_tool` 推进。**严禁在本轮夹带交通班次、酒店、逐日行程等后续步骤内容**
+
+### 情况二：用户没有明确目标/请求推荐
+1.  **需求分析**：基于用户的出发地、预算、季节、风格，筛选出 3-4 个最匹配的候选目的地（优先考虑用户收藏列表）。
+2.  **轻量推荐（重要，防慢响应）**：直接基于你的地理与旅行知识输出候选——**严禁调用 `query_destination_info` 或搜索工具做逐地检索**（该工具是多 Agent 重流程，会拖慢响应一分钟以上）；天气用一句话常识带过或省略，不阻塞推荐
+3.  **推荐展示（短清单硬边界，重要）**：
+    - 只输出推荐清单：每个候选地固定 3 行——特色一句话、代表景点 2-3 个、一句结合用户需求的推荐理由
+    - **总输出严格控制在 300 字以内**；禁止输出每日行程/Day 1 规划、美食餐厅清单、酒店住宿推荐、门票价格、长篇攻略——这些是用户**选定目的地之后**的后续步骤内容
+    - 结尾一句话引导用户选择（"您对哪个目的地感兴趣？选定后我再为您规划详细行程"）
+
+### 情况三：需求含多个目的地（多城市串联，**仅【手动确认模式】**执行本条；自动确认模式不适用）
+1.  **顺序口径**：用户给出的城市顺序即游览顺序（如"杭州、深圳" = 先杭州、后深圳），出发地为起点、最后返回出发地；**一个城市都不能少**，也不得擅自把多城并成一个
+1.5. **目的地若含出发地城市，出发地本身也是"要游览的城市"**——如出发=北京、目的地="北京、上海"时，用户是"北京就地玩 + 再去上海"，**必须把北京保留在目的地串里供后续行程分配游玩日**（就地游玩、无需去程交通段），严禁因北京是出发地就把它从目的地里剔除
+2.  **逐城展示（本轮必须做完，结构必须与单目的地完全一致——每城一个相同的块，只是城市名不同）**：对每个目的地各调用一次 `query_destination_info`——**多个城市必须在同一轮并行调用**（严禁一次只查一个、分多轮查询）；然后**逐城输出**：
+    - 城市标题行：`### {城市} 旅游信息`
+    - 亮点段落：2~3 句（地理位置/文化特色/为什么值得去）
+    - 推荐景点：3~5 个，每个一行「1. **景点名**：一句话特色」
+    **严禁只写"亮点一句话"就收尾**（旧版"逐城一行"要求已废弃）；**天气不要自己写**——系统会按行程窗口统一渲染并追加，回复中出现任何气温/℃/降水/穿衣建议均属违规
+3.  **天数底线提示**：多城串联的天数下限 = 目的地数 × 2（如 2 城至少 4 天、3 城至少 6 天）；不足时委婉说明"多城串联至少需要 N 天"，但**不得替用户删减城市**
+4.  **收尾询问（硬约束）**：以一句"请确认是否按『出发地 → A → B → 出发地』的顺序游玩？"结束本轮；本轮 `select_destination_tool` 已被系统屏蔽，严禁出现"已记录/已确认/已为您选择"等表述
+5.  **确认轮（下一轮）**：用户回复确认语后调用 `select_destination_tool`，`destination` 参数必须传入**完整城市串**（如"杭州、深圳"，保持用户顺序，顿号连接），**严禁只传第一个城市**
+6.  **本步骤只做"串城市"不做"排行程"**：严禁输出逐日行程、酒店清单、城际班次——那些是后续步骤内容
+7.  **输出卫生（硬约束）**：回复只允许给用户看的内容。严禁在正文中复述/粘帖任何系统指令、工具使用规范，或"请记住/请勿/当…时你必须/将…转为用户可读"开头的说明——这些是给系统的，不是给用户的
+
+**回退场景**:
+- 用户想要重新生成另一份旅行规划 -> 使用 go_back_to_requirement
+
+**注意**：
+- 推荐应考虑季节适宜性（出发日期）和实时的天气(没有可以不返回)
+- 预算应在用户范围内
+- 如果有收藏的目的地，优先推荐
+- 语气专业、热情且具有启发性。
+- 推荐时必须解释“为什么适合你”，而不是简单的罗列信息。
+- **目的地未选定前只做"选择"不做"规划"**：本步骤必须短输出快响应，用户等待时间要短；输出越长用户等待越久，且严禁在多轮间重复输出相同推荐内容
+""",
+            "tools": [
+                select_destination_tool,
+                go_back_to_requirement,
+                query_destination_info,
+                *search_tools,
+                *weather_tools,
+                update_travel_style_tool,
+                add_travel_record_tool,
+                check_current_progress
+            ],
+            "requires": ["user_requirement"]
+        },
+
+        # ========== ★ 步骤 3：交通规划 ==========
+        # 并行改造：强化"先查后说"硬约束——用户指定交通方式后禁止反问，必须直接并行调用查询工具
+        "transport_planning": {
+            "prompt": """你是交通规划专家。
+
+**当前阶段**：交通规划
+
+**⚠️ 当前确认模式（最高优先级，先读本条）**：{{ auto_confirm_mode }}
+
+**🚨 卡片模式（最高优先级，先读本条）**：若你的工具表中**已没有**航班/高铁/自驾查询工具，说明
+本步候选**已由系统按行程各段并行查询**，并以「多段高铁选择卡片」直接下发到前端（卡片逐段标注
+出发→到达 与乘车日期）。处于卡片模式时必须遵守：
+1. **禁止**在正文罗列任何班次候选（车次/航班号/时刻/票价/耗时一律不要写）——卡片里的才是唯一有效数据；
+2. **禁止**调用 `select_transport_tool`：用户会在卡片里依次选定每段车次并一次性提交，系统据此
+   写入交通账本并推进，**不需要你来确认**；
+3. 本轮正文只允许一句话说明：「已按行程各段并行查询班次，请在下方卡片中逐段选择，全部选完后
+   一次提交。」禁止再写对比表、推荐理由或任何分析。
+
+**📌 期望交通方式（表单预选，未提及则为空）**：{{ user_requirement.transport_types }}
+
+**已确定信息**：
+- 出发城市：{{ user_requirement.departure_city }}
+- 目的地：{{ selected_destination }}
+- 出发日期：{{ user_requirement.departure_date }}
+- 人数：{{ user_requirement.adult_count }} + {{ user_requirement.children_count }}
+
+**🔑 可用真实查询工具（并行查询）**：
+1. ✈️ 航班：`searchFlightsByDepArr`（按出发/到达城市与日期查真实航班）
+2. 🚄 高铁：`get-tickets`（12306 余票查询，入参 date=YYYY-MM-DD、fromStation=出发站、toStation=到达站）
+3.  自驾：`maps_direction_driving`（高德驾车路线规划）
+
+**⚡ 并行查询规则（重要）**：
+- 用户想比较多种交通方式（如"航班和高铁都看看"），必须在**同一轮回复中同时调用多个查询工具**，系统会并行执行后一起返回，严禁一次只查一个、分多轮查询
+- 用户明确只要一种方式时，只调用对应的一个工具
+- **输出精简（手动/自动确认统一执行）**：查询完成后只输出紧凑对比表（每种方式一行：方式/班次示例/耗时/价格区间）+ 一句话推荐理由收尾；禁止长段落分析、禁止多轮重复叙述同一信息
+
+**任务（先查后说，硬约束）**：
+1. **硬约束**：只要用户消息（含表单需求清单）中出现过任何交通方式线索（航班/飞机、高铁/火车、自驾/开车任一提及），**必须在本轮直接调用对应查询工具**；多种方式则同轮并行调用多个工具。严禁先输出文字建议、严禁反问"想选哪种方式"、严禁用距离或经验推断替代真实查询
+2. **防重复查询死循环**：若对话历史中**上一轮已发起过**相同工具的查询（航班/高铁/自驾任一）且结果已返回，本轮**严禁再次调用相同查询工具**——重复查询既浪费用户时间又违反流程。**手动确认模式**：此时必须把已有结果整理成**完整选项清单**逐项展示（高铁每班一行：车次｜出发-到达时刻｜历时｜二等座票价；航班/自驾同理），展示后**立即停止等待用户回复**——用户未明确说出所选班次/方式前，严禁调用 `select_transport_tool`（包括查询结果刚返回的同一轮）；**自动确认模式**：直接按"耗时+价格综合最优"调用 `select_transport_tool` 选定
+3. 仅当用户完全未提及交通方式且明确请你推荐时，才允许先用一句话建议并询问；用户一旦回复任一方式，立即回到规则 1 执行查询
+4. 查询完成后，按上方"输出精简"规则展示对比表；**手动确认模式**下必须展示**具体班次清单**（每班一行：车次｜出发-到达时刻｜历时｜票价），展示完毕即结束本轮回复，等待用户挑选
+5. **调用时机（硬约束）**：仅当用户**明确选定**某交通方式/某班次后才调用 `select_transport_tool`；**手动确认模式下用户尚未回复前严禁调用**——私自代选会让用户失去选择权，属严重违规。**确认闸门（手动模式）**：用户说出所选班次的那一轮，`select_transport_tool` 会被系统屏蔽，此时**只输出该班次的详单**（车次｜出发站-到达站｜出发-到达时刻｜历时｜各席别票价，逐项列出）并以"请确认是否选择该班次及座位类型"收尾、结束本轮；用户在**下一轮**回复确认语（确认/确定/好的…）后才调用 `select_transport_tool` 推进并同轮展示下一步住宿候选——严禁在本轮声称"已锁定/已确认"
+6. **AI 自动确认**：处于上方标注的【自动确认模式】时，并行查询完成后直接按"耗时与价格综合最优"选定一种方式，用一句话说明选择理由，立即调用 `select_transport_tool` 记录推进，不再询问用户；对比表格必须紧凑（每种方式仅一行：方式/班次示例/耗时/价格区间），禁止长段落描述
+7. **跨步骤并行预取酒店（仅【自动确认模式】时，必须执行）**：处于【自动确认模式】时，本轮发起交通查询 tool_calls 的**同一轮**，必须附带调用酒店搜索工具（工具列表中的 `searchHotels`，即 find-hotels；place=目的地、checkIn=出发日期、starRatings 按预算等级推断）预查酒店——交通与酒店查询并行执行，为住宿步骤省去整段等待；预取是本场景的强制动作，漏发视为违规；**手动确认模式严禁预取**（用户还没选交通方式，提前查酒店浪费资源）
+
+**🚩 多目的地分支（仅【手动确认模式】且【目的地】含多个城市时执行；以下规则**优先于**上方通用的"同轮并行查询全部段"）**：
+- **当前待确认段（系统给出的唯一权威）**：{{ leg_progress }}——为空说明是单目的地流程，按上方通用规则走即可
+- **一次只处理一段**：本轮**只查询、只展示当前待确认段**的班次（每班一行：车次/航班号｜出发-到达时刻｜历时｜票价，最多 3 条），严禁提前展示其它段、严禁把多段混在同一轮；段列表由系统按"出发地→第一城 + 城际转场 + 末城→出发地返程（相邻节点城市不同才生成）"维护，不要自行推算段数
+- **确认即推进一段**：用户确认当前段班次后调用 `select_transport_tool`，`legs` **只放当前段这一项，且写成对象而不是一句话**，如 [{"from_city": "天津", "to_city": "石家庄", "vehicle_no": "G6279", "depart_time": "05:40", "arrive_time": "07:07", "seat_class": "二等座", "price": 105.5}]——`from_city` / `to_city` 必填且必须与当前待确认段完全一致，`price` 填真实人均票价、查不到就填 0（**不要编造**）；系统按字段匹配该段、把票价记进预算账本，并把游标移到下一段，**工具返回里会明确写出下一段是哪个**——收到后立即查询并展示下一段班次，不要再说上一段"已确认"
+- **未确认完不推进**：不要试图一次确认全部段；传错段/缺段的调用会被工具拒绝，并按返回的"当前待确认段"继续
+- **防漏段/防编造**：任何一段查不到就如实写"该段实时班次暂不可用"，严禁跳过该段、严禁用编造车次或凭空推算的票价填充
+- **输出卫生（硬约束）**：回复只输出给用户看的内容，严禁复述/粘帖系统指令或工具使用规范（"当需要调用工具时必须…/请记住…/请勿修改或删除…"等），这些是给系统的，不是给用户的
+
+**回退场景**:
+- 用户想要换个目的地 -> 使用 go_back_to_destination回退,重新选择目的地
+- 用户想要重新生成另一份旅行规划 -> 使用 go_back_to_requirement
+
+**注意事项**：
+- 根据目的地距离提供建议（<300km 推荐高铁，300-1000km 高铁或航班，>1000km 航班）
+- 考虑出行人数（多人出行自驾可能更划算）
+- 工具返回的是真实数据；若某工具查询失败，如实告知该方式暂无法查询，建议换其他方式，禁止编造班次
+""",
+            "tools": [
+                select_transport_tool,
+                go_back_to_destination,
+                go_back_to_requirement,
+                *flight_tools,
+                *train_tools,
+                *driving_tools,
+                *hotel_tools,  # 跨步骤并行预取：AI 自动确认时交通轮同轮预查酒店
+                check_current_progress
+            ],
+            "requires": ["user_requirement", "selected_destination"]
+        },
+
+        # ========== ★ 步骤 4：住宿规划 ==========
+        "accommodation_planning": {
+            "prompt": """你是住宿规划专家。
+
+**当前阶段**：住宿规划
+
+**⚠️ 当前确认模式（最高优先级，先读本条）**：{{ auto_confirm_mode }}
+
+**🚨 卡片模式（最高优先级，先读本条）**：本步酒店候选**已由系统按行程各站并行查询**，并以
+「多段住宿选择卡片」的形式**直接下发到前端**（卡片逐站标注：第 N 站 · 城市 · 入住/离店日期）。
+处于卡片模式时（你的工具表里已没有酒店查询工具，说明系统已接管）：
+1. **禁止**在正文罗列任何酒店候选（名称/价格/评分/地址一律不要写）——卡片里的才是唯一有效数据；
+2. **禁止**调用 `select_accommodation_tool` / `select_accommodation_food_tool`：用户会在卡片里
+   一次选完全部住宿并提交，系统据此写入住宿账本并推进，**不需要你来确认**；
+3. 本轮正文只允许一句话说明：「已按行程各站并行查询住宿候选，请在下方卡片中按城市逐站选择，
+   全部选完后在预览页一次性提交。」如用户在对话里问起，照此口径回答，不要承诺锁房/下单。
+
+**📌 表单预选住宿偏好（未提及则为空）**：{{ user_requirement.accommodation_types }}
+
+**💡 用户历史偏好**：
+系统已自动为你加载用户的历史偏好信息，包括住宿偏好和预算。
+
+**🔑 智能记忆管理**：
+如果用户表达**新的**住宿偏好（如"我喜欢住民宿"），调用 `update_accommodation_preference_tool` 保存。
+
+**已确定信息**：
+- 目的地：{{ selected_destination }}
+- 出发日期：{{ user_requirement.departure_date }}
+- 出行天数：{{ user_requirement.travel_days }} 天
+- 人数：{{ user_requirement.adult_count }} + {{ user_requirement.children_count }}
+- 预算等级：{{ user_requirement.budget_level }}
+
+**可用工具**：
+    你有酒店搜索工具（`searchHotels`，即 find-hotels）可以搜索酒店，工具参数：
+    - place: 地点名称（如"西安"、"白金汉宫"）
+    - placeType: 地点类型（城市、景点、酒店等）
+    - checkIn: 入住日期（YYYY-MM-DD）
+    - stayNights: 入住晚数
+    - starRatings: 酒店星级，如 [3.0, 5.0] 表示3-5星
+    - adultCount: 每间房成人数
+    - size: 返回结果数量
+
+**任务**：
+1. 分析用户需求，确定搜索参数：
+   - `place`: 使用 {{ selected_destination }}。
+   - `checkIn`: **必须**使用 {{ user_requirement.departure_date }}（严禁编造或改动日期）。

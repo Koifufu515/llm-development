@@ -1,0 +1,21 @@
+{
+  "city": "上海",
+  "title": "上海景点资料 · Shanghai/Jiading",
+  "source_url": "https://en.wikivoyage.org/wiki/Shanghai/Jiading",
+  "text": "资料城市：上海。本文是历史开放景点资料，不提供实时开放时间或价格；出行前需要核实。\n\nConfucius Temple\nLarge and well preserved temple built in 1219.  Also home to the municipal museum of Jiading.\n\nYunxiang Temple\nOriginally established in AD505, later destroyed, and reconstructed in 2000.\n\nShanghai International Circuit\nMotor racing venue where the Shanghai Grand Prix Formula One race is held. Special buses run from Shanghai Stadium metro stop (line 1) and a few others around the city. They cost ¥50 return and leave every few minutes when they fill up. On Friday and Saturday it takes an hour or so each way (so if you are staying somewhere in the centre of Shanghai budget two hours door to door), on Sunday it is significantly quicker. They also drop you as far away from the main stand as it is possible to get, so budget on another 20-30 minutes to get to your seats depending on where your seats are. On the way back, you are better off just to jump on any bus as they all take you back to a metro station and your door to door travel time should be about the same.",
+  "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+  "license": "CC BY-SA 3.0",
+  "attribution": "Wikivoyage contributors; https://en.wikivoyage.org/wiki/Shanghai/Jiading",
+  "sha256": "73ad6e2d13ed3f898e4948d929902cad9aee219858c23041062a42e6d42e2862",
+  "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+  "poi_count": 3,
+  "source_dataset": "https://github.com/wikivoyage/wikivoyage.github.io",
+  "excluded_fields": [
+    "price",
+    "hours",
+    "phone",
+    "email",
+    "hotel",
+    "restaurant"
+  ]
+}

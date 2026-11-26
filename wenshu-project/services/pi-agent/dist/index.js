@@ -1,0 +1,19 @@
+/**
+ * pi-agent 服务入口。
+ */
+import { loadConfig } from "./config.js";
+import { buildRuntime } from "./runtime.js";
+import { buildApp } from "./server.js";
+async function main() {
+    const config = loadConfig();
+    const runtime = buildRuntime(config);
+    const app = buildApp(config, runtime);
+    await app.listen({ port: config.port, host: config.host });
+    console.log(`[pi-agent] listening on http://${config.host}:${config.port}`);
+    console.log(`[pi-agent] backend -> ${config.backendUrl}`);
+}
+main().catch((err) => {
+    console.error("[pi-agent] 启动失败:", err);
+    process.exit(1);
+});
+//# sourceMappingURL=index.js.map

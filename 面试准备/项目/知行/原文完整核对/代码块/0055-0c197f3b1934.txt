@@ -1,0 +1,96 @@
+╔══════════════════════════════════════════════════════════╗
+║       第 04 章 · Middleware 驱动 8 步流程冒烟             ║
+╚══════════════════════════════════════════════════════════╝
+
+开始对话，每一轮打印 current_step 变化...
+
+────────────────────────────────────────────────────────────
+[第 1 轮]
+  用户: 我想在 10 月 1 日从北京出发，去武汉玩 4 天，两个人，预算大约每人 5000 元，喜欢文化探索和美食。
+  Agent: 我已经了解了您的需求：北京出发 → 武汉，10 月 1 日出发，4 天，两位成人...
+         请问是否需要我为您正式记录这些需求？
+  📌 步骤保持: requirement_collection
+
+────────────────────────────────────────────────────────────
+[第 2 轮]
+  用户: 确认，就按这个来。
+    🔧 record_requirement_tool(['departure_city', 'departure_date', ...])
+  🛠️ ✅ 需求已记录！...
+  📌 步骤推进: requirement_collection → destination_recommendation
+
+────────────────────────────────────────────────────────────
+[第 3 轮]
+  用户: 确认，选武汉。
+    🔧 select_destination_tool(['destination'])
+  🛠️ ✅ 目的地已确认：武汉
+  📌 步骤推进: destination_recommendation → transport_planning
+
+────────────────────────────────────────────────────────────
+[第 4 轮]
+  用户: 选高铁吧。
+    🔧 select_transport_tool(['transport_type'])
+  🛠️ ✅ 交通方式已确认：train
+  📌 步骤推进: transport_planning → accommodation_planning
+
+────────────────────────────────────────────────────────────
+[第 5 轮]
+  用户: 选经济酒店。
+    🔧 select_accommodation_tool(['accommodation_types'])
+  🛠️ ✅ 住宿偏好已确认：economy_hotel
+  📌 步骤推进: accommodation_planning → food_planning
+
+────────────────────────────────────────────────────────────
+[第 6 轮]
+  用户: 特色美食和本地小吃都要。
+    🔧 select_food_tool(['food_types'])
+  🛠️ ✅ 餐饮偏好已确认: specialty, local
+  📌 步骤推进: food_planning → itinerary_generation
+
+────────────────────────────────────────────────────────────
+[第 7 轮]
+  用户: 帮我把每天安排排出来。
+    🔧 generate_itinerary_tool(['activities_by_day'])
+  🛠️ ✅ 已生成 4 天行程，共 12 项活动
+  📌 步骤推进: itinerary_generation → budget_summarization
+
+────────────────────────────────────────────────────────────
+[第 8 轮]
+  用户: 汇总下预算吧。
+    🔧 summarize_budget_tool(['transport_cost', 'accommodation_cost', ...])
+  🛠️ ✅ 预算已汇总（人均全程）：
+        交通 550 + 住宿 900 + 餐饮 600 + 景点 200 + 其他 100
+        合计 2350 元/人
+  📌 步骤推进: budget_summarization → report_generation
+
+────────────────────────────────────────────────────────────
+[第 9 轮]
+  用户: 给我一份完整的旅行报告。
+  Agent: # 北京 → 武汉 4 天旅行报告
+
+         ## 概览
+         这是一次以文化探索和美食为主的...
+
+         ## 逐日行程
+         | 天数 | 主要活动 |
+         | ---- | -------- |
+         | Day 1 | 抵达武汉、汉口江滩、户部巷小吃 |
+         | Day 2 | 黄鹤楼、湖北省博物馆 |
+         ...
+
+  📌 步骤保持: report_generation
+
+============================================================
+ 最终 State 概览
+============================================================
+  current_step: report_generation
+  user_requirement: {'departure_city': '北京', ...}
+  selected_destination: 武汉
+  selected_transport: train
+  selected_accommodation_types: ['economy_hotel']
+  selected_food_types: ['specialty', 'local']
+  itinerary: [{'day_number': 1, ...}, {'day_number': 2, ...}, ...]
+  budget: {'transport': 550.0, 'accommodation': 900.0, ...}
+
+🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉
+  第 04 章冒烟完成！
+🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉

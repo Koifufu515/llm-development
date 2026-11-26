@@ -1,0 +1,3 @@
+14:30:15.432 | INFO    | quarry.ingest.worker:_handle:50 | [1727356215432-0] 文档 8f3c... 阶段 parsing
+14:30:15.440 | INFO    | quarry.scripts.ingest_corpus:ingest_file:76 | travel-guide/上海.md: 内容未变，跳过整条管道
+14:30:15.441 | INFO    | quarry.ingest.worker:_handle:55 | [1727356215432-0] 完成

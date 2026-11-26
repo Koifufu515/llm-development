@@ -1,0 +1,19 @@
+"""_classify_arg / _price_args 演示：按票价工具自己声明的参数名组装入参，认不出就不盲调（纯逻辑，无需密钥）"""
+from app.capabilities.flight_multi_segment.flight_agent_tool import _classify_arg, _price_args
+
+class FakePriceTool:          # 测试驱动：只提供 name 与 args_schema
+    def __init__(self, props, required):
+        self.name = "getFlightPriceByCities"
+        self.args_schema = {"type": "object",
+                            "properties": {p: {"type": "string"} for p in props},
+                            "required": required}
+
+for p in ["depDate", "depCityCode", "arrCityCode", "toCity", "fromCity", "cabin"]:
+    print(f"{p:<12} → {_classify_arg(p) or '认不出'}")
+
+print()
+ok = FakePriceTool(["depCityCode", "arrCityCode", "depDate"],
+                   ["depCityCode", "arrCityCode", "depDate"])
+print("参数名认得出：", _price_args(ok, "2026-10-01", "BJS", "SHA"))
+bad = FakePriceTool(["routeKey", "depDate"], ["routeKey", "depDate"])
+print("必填认不出  ：", _price_args(bad, "2026-10-01", "BJS", "SHA"))

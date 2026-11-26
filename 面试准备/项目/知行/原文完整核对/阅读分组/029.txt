@@ -1,0 +1,300 @@
+
+
+===== block 318 31ebf0476d19 lines 1-297 source 知行旅行助手-v2#318 =====
+class StepConfigMiddleware(AgentMiddleware):
+    """
+    步骤配置中间件 - 根据 current_step 动态配置 Agent
+    """
+
+    def __init__(self, step_config: dict):
+        """
+        初始化中间件
+
+        Args:
+            step_config: 预加载的步骤配置字典
+        """
+        self._step_config = step_config
+
+    async def awrap_model_call(
+            self,
+            request: ModelRequest,
+            handler: Callable[[ModelRequest], ModelResponse]
+    ) -> ModelResponse:
+        """
+        根据 current_step 动态配置 Agent
+        """
+        # 获取当前步骤
+        state: TravelState = request.state
+        # 首先state里面判断有没有items属性，有和没有都转为字典
+        state_dict = dict(state) if hasattr(state, "items") else {}
+        # ★ 看点①：读状态——当前步骤、用户；表单多选字段先规整成列表，模板渲染要用
+        current_step = state.get("current_step", "requirement_collection")
+        user_id = state.get("user_id")
+
+        # 兼容历史 checkpoint：早期记录的需求里没有预选字段，
+        # 模板中 {{ user_requirement.xxx }} 取不到值会抛 UndefinedError，此处补齐默认空列表
+        _req = state_dict.get("user_requirement")
+        if isinstance(_req, dict):
+            _req = dict(_req)
+            for _k in ("transport_types", "food_preferences", "accommodation_types"):
+                _req.setdefault(_k, [])
+            state_dict["user_requirement"] = _req
+
+        app_logger.info(f"📋 用户ID: {user_id}")
+        app_logger.info(f"📍 当前步骤: {current_step}")
+
+        if current_step not in self._step_config:
+            app_logger.error(f"❌ 未知步骤: {current_step}")
+            raise ValueError(f"未知步骤: {current_step}")
+
+        # ★ 看点②：取本步配置并校验前置字段（第 4 章的骨架）
+        step_config = self._step_config[current_step]
+
+        # ========== 验证前置依赖 ==========
+        for required_field in step_config["requires"]:
+            if required_field not in state or state[required_field] is None:
+                error_msg = f"步骤 {current_step} 需要完整状态: {required_field} 未设置"
+                app_logger.error(f"❌ {error_msg}")
+                raise ValueError(error_msg)
+
+        # ========== 🔑 核心：注入长期记忆 ==========
+        # ★ 看点③：长期记忆注入（第 5 章）
+        memory_prompt = ""
+        if user_id:
+            try:
+                service = await get_user_memory_service()
+                memory_prompt = await service.format_memory_for_prompt(user_id)
+                if memory_prompt:
+                    app_logger.info(f"💾 已加载用户长期记忆: {user_id}")
+                else:
+                    app_logger.info(f"📝 用户首次使用，暂无历史记忆: {user_id}")
+            except Exception as e:
+                app_logger.warning(f"⚠️ 加载长期记忆失败: {e}")
+
+        # ========== 动态填充提示词变量 ==========
+        try:
+            state_dict["user_memory"] = memory_prompt  # 将记忆注入到模板变量
+            # 注入确认模式语义变量：把状态里的 auto_confirm 渲染成人可读的强约束文案。
+            # 此前各步骤用"需求清单含『全程交给 AI 自动确认』时…"做条件判断——模型对"缺失"不可靠，
+            # 实测手动模式仍被自动选定交通/住宿/餐饮；改为状态驱动后模式恒定明确
+            # ★ 看点④：确认模式三选一（自动确认 / 产出步骤 / 手动确认），渲染进步骤 prompt
+            if state.get("auto_confirm"):
+                # 自动模式文案抽为模块级常量，并补"同一回合只输出一次
+                # 完整正文 + 一次预算表"硬约束（详见 _AUTO_CONFIRM_MODE 处注释）
+                state_dict["auto_confirm_mode"] = _AUTO_CONFIRM_MODE
+            elif current_step in _PRODUCE_STEPS:
+                # 产出型步骤改用专用文案——这两个步骤没有 select_* 工具，
+                # 通用文案的"尚未选择 → 只许展示不许推进"会让模型把产出轮误判成等待轮，
+                # 表现为输出完"正文 + 预算表"就反问「请确认」并停轮（清单因此要拖到下一轮才生成）
+                state_dict["auto_confirm_mode"] = _MANUAL_PRODUCE_MODE
+            else:
+                # 通用手动文案升级为"一轮一步 + 确认闸门"三态契约
+                state_dict["auto_confirm_mode"] = _MANUAL_STEP_MODE
+            # 段级循环进度注入（多目的地 → "第 i/n 段：A→B"；单城为空串）。
+            # 让模型只展示"当前待确认的那一段"，流程账本由段游标（代码）维护，不交给模型
+            # ★ 看点⑤：进度提示——交通步告诉模型"第几段"，住宿步告诉它"第几城"
+            leg_progress = ""
+            if current_step == "transport_planning":
+                from app.tools.state_transition import _expected_legs
+                _legs = _expected_legs(state)
+                if _legs:
+                    _cur = max(0, min(int(state.get("leg_cursor") or 0), len(_legs) - 1))
+                    leg_progress = (
+                        f"第 {_cur + 1}/{len(_legs)} 段：{_legs[_cur]}"
+                        f"（共 {len(_legs)} 段，含返程；本轮只展示并确认这一段）"
+                    )
+            state_dict["leg_progress"] = leg_progress
+            # 住宿逐城循环进度（与交通段级循环对称）
+            stay_progress = ""
+            if current_step == "accommodation_planning":
+                from app.tools.state_transition import _multi_city_names
+                _cities = _multi_city_names(state)
+                if _cities:
+                    _sc = max(0, min(int(state.get("stay_cursor") or 0), len(_cities) - 1))
+                    stay_progress = (
+                        f"第 {_sc + 1}/{len(_cities)} 城：{_cities[_sc]}"
+                        f"（共 {len(_cities)} 城；本轮只查询并展示这一城的酒店）"
+                    )
+            state_dict["stay_progress"] = stay_progress
+            template = Template(step_config["prompt"])
+            system_prompt = template.render(**state_dict)
+            #**state_dict 的作用：这里的 ** 是 Python 的解包操作，
+            #它告诉 Jinja2：“把这个字典里的所有 Key 都当作变量名，Value 都当作变量值去替换模板里的内容。”
+
+            # 如果有长期记忆，追加到提示词末尾
+            if memory_prompt:
+                system_prompt = f"{system_prompt}\n\n{memory_prompt}"
+
+        except KeyError as e:
+            app_logger.warning(f"⚠️ 提示词变量缺失: {e}, 使用原始模板")
+            system_prompt = step_config["prompt"]
+
+        # ========== 手动模式硬闸门：用户未发言时屏蔽 select_* 推进工具 ==========
+        # 问题：单轮内 Agent 会连续"查询→展示→推进"一路跑完全流程，仅靠 prompt 约束无效
+        #（实测手动模式仍未询问就自动选定高铁/酒店）。改为确定性拦截：
+        # 把拦截口径从"用户刚发言就放行"收紧为"用户刚回复纯确认语才放行"——
+        # 用户说"G1630吧"这类**选择语**时同样屏蔽，迫使模型先输出"详单 + 请确认"，
+        # 等用户下一轮回确认语（确认/确定/好的…）才放行推进，实现参考会话的确认闸门节奏
+        # ★ 看点⑥：从这里开始按条件裁剪工具表，并决定要不要强推某个工具
+        tools = step_config["tools"]
+        forced_tool_choice: Any | None = None
+
+        # ========== 行程步"正文必须落库"（确定性强制，模式无关） ==========
+        # 实测缺陷：住宿卡片提交后进入行程步，模型只调 summarize_budget_tool 就收尾，
+        # submit_itinerary_body_tool 从未被调用 → itinerary_body 为空 → 正文与"查看行程清单"
+        # 按钮都出不来（用户以为选完酒店就没反应了）。prompt 约束不可靠，改为确定性拦截：
+        # 本步未落库正文前，强制 tool_choice=submit_itinerary_body_tool（预算由该工具就地补算，
+        # 见）；同一回合已尝试过提交（无论成败）即不再强推，避免校验失败时反复重试打转
+        # ★ 看点⑦：行程步还没交结构化数据 → 强推 submit_itinerary_body_tool
+        if current_step == "itinerary_generation" and not state.get("itinerary_body"):
+            _submitted = False
+            for _m in reversed(state.get("messages") or []):
+                if getattr(_m, "type", None) == "human":
+                    break
+                if (getattr(_m, "type", None) == "tool"
+                        and getattr(_m, "name", "") == "submit_itinerary_body_tool"):
+                    _submitted = True
+                    break
+            if (not _submitted
+                    and any(getattr(t, "name", "") == "submit_itinerary_body_tool"
+                            for t in tools)):
+                forced_tool_choice = "submit_itinerary_body_tool"
+                app_logger.info("🔒 行程步：强制调用 submit_itinerary_body_tool 落库正文")
+
+        # ★ 看点⑧：手动确认闸门——用户没说"确认"就摘掉 select_* 推进工具；查询轮数封顶
+        if not state.get("auto_confirm"):
+            msgs = state.get("messages") or []
+            last_is_human = bool(msgs) and getattr(msgs[-1], "type", None) == "human"
+            last_text = str(getattr(msgs[-1], "content", "") or "") if last_is_human else ""
+            user_confirmed = _is_confirm_reply(last_text)
+            # 放行名单：仅"用户本轮回复纯确认语"时放行推进工具（=确认轮）
+            allowed_select = set()
+            if last_is_human and user_confirmed:
+                allowed_select |= {
+                    "select_destination_tool",
+                    "select_transport_tool",
+                    "select_accommodation_tool",
+                    "select_food_tool",
+                }
+            # 例外：餐饮偏好在表单已勾选 → 放行 select_food_tool（用户事先已选过，
+            # 若一并屏蔽会让流程卡在餐饮轮反复询问，正是用户反馈的重复询问缺陷）
+            if (state_dict.get("user_requirement") or {}).get("food_preferences"):
+                allowed_select.add("select_food_tool")
+            # 注意：select_accommodation_food_tool 是自动确认专用组合工具（一次性写入住宿+餐饮
+            # 并跳过餐饮轮），手动模式一律不放行，避免用户失去选择权
+            kept = [
+                t for t in tools
+                if not getattr(t, "name", "").startswith("select_")
+                or getattr(t, "name", "") in allowed_select
+            ]
+            # 轮次上限（兜底，替代不可靠的工具名屏蔽）：
+            # 模型被剥夺推进工具后会逐个换用还没用过的工具继续 churn（实测交通轮连查 6 轮、
+            # 最后把 get-tickets 参数调空仍继续），因此以"轮数"封顶，与工具名解耦。
+            # 两个关键修正：
+            #   ① 计数按步骤归零——倒序扫描遇到本地步骤切换工具（select_* 等）即停止，
+            #      避免把上一步的 select 调用算进本步骤，导致住宿轮只够调"偏好记忆"就没了工具、
+            #      进而凭空调出编造酒店列表；
+            #   ② 行程生成/预算等产出型步骤不设上限——清空工具表会破坏正文与预算产出
+            if not last_is_human and current_step not in _NO_ROUND_CAP_STEPS:
+                rounds = 0
+                for m in reversed(msgs):
+                    if getattr(m, "type", None) == "human":
+                        break
+                    if getattr(m, "type", None) == "ai" and getattr(m, "tool_calls", None):
+                        names = {tc.get("name") for tc in m.tool_calls}
+                        if names & _LOCAL_STEP_TOOLS:
+                            break  # 该轮为步骤切换，之前的轮次属于上一步骤，不计入
+                        rounds += 1
+                if rounds >= _MANUAL_MAX_QUERY_ROUNDS:
+                    app_logger.info(
+                        f"🔒 手动模式闸门：{current_step} 已调用 {rounds} 轮查询工具，"
+                        f"清空工具表强制输出清单收尾"
+                    )
+                    kept = []
+            if len(kept) != len(tools):
+                app_logger.info(
+                    f"🔒 手动模式闸门：用户尚未确认，最终可用 {len(kept)}/{len(tools)} 个工具，等待选择"
+                )
+            tools = kept
+
+            # ========== 确认轮强制推进 ==========
+            # 用户明确回复确认语（确认/确定/好的…）时，确定性调用本步骤的 select_* 工具，
+            # 避免模型只回一句"已确认"却不动状态机、把会话卡在本步骤（与同源问题：
+            # prompt 要求"确认后调用工具"不可靠，改由代码兜底）
+            forced_name = _MANUAL_STEP_SELECT.get(current_step)
+            if (last_is_human and user_confirmed and forced_name
+                    and any(getattr(t, "name", "") == forced_name for t in tools)):
+                forced_tool_choice = forced_name
+                app_logger.info(f"🔒 手动模式确认轮：强制调用 {forced_name} 推进到下一步")
+
+            # ========== 手动模式"确认轮"强制调用落库工具 ==========
+            # 问题：行程轮规则 5/6 要求"用户回复满意后必须调用 generate_itinerary_tool 落库"，
+            # 但实测模型会只回一句"好的，已按此方案生成行程清单…"而不真正调用工具（日志实证：
+            # 用户说"满意"的那轮工具未被调用，状态停在 itinerary_generation，清单门禁不放行，
+            # 用户永远拿不到清单；追问"然后呢？"时模型才补调工具）。prompt 约束不可靠，
+            # 改为确定性拦截：手动模式 + 行程生成步 + 用户刚发言且是纯确认语 + 历史已展示过
+            # 逐日正文 + 工具表里确有落库工具 → 本轮强制 tool_choice=generate_itinerary_tool，
+            # 保证状态机必然推进到 budget_summarization（清单门禁随即可放行）
+            if (current_step == "itinerary_generation"
+                    and last_is_human
+                    and _is_confirm_reply(
+                        str(getattr(msgs[-1], "content", "") or "")
+                    )
+                    and _history_has_itinerary(msgs)
+                    and any(getattr(t, "name", "") == "generate_itinerary_tool"
+                            for t in tools)):
+                forced_tool_choice = "generate_itinerary_tool"
+                app_logger.info("🔒 手动模式确认轮：强制调用 generate_itinerary_tool 落库")
+
+        # ========== 多段高铁：模型不再自查，班次改由代码并行供给 ==========
+        # 交通步走"多段高铁"路线时（手动模式前端会拿到选择卡片、自动模式由代码代选），
+        # 从工具表里摘掉 12306 查询工具：否则模型仍会照旧规则"逐段串行查"，既重复请求，
+        # 又把自编班次写进正文（同一屏出现两套互相矛盾的车次/票价）
+        # ★ 看点⑨：交通步接管——高铁 > 航班 > 自驾，走代码卡片时摘掉模型自带的查询 / 推进工具
+        if current_step == "transport_planning":
+            from app.capabilities.train_multi_segment.train_flow import multi_leg_train
+            from app.services.express_planning_service import _split_cities
+            from app.tools.state_transition import _expected_legs
+            # 零段直通——出发地与目的地同城（本地游玩）时没有任何城际段，
+            # 也把全部交通查询工具摘掉，避免模型空转查询无效班次或编造车次
+            _dep = str(((state.get("user_requirement") or {}).get("departure_city")) or "").strip()
+            _zero_leg = bool(
+                _dep and _split_cities(state.get("selected_destination") or "")
+                and not _expected_legs(state)
+            )
+            if multi_leg_train(state) or _zero_leg:
+                _marks = ("train", "ticket", "railway") + (
+                    ("flight", "driving") if _zero_leg else ()
+                )
+                _before = len(tools)
+                tools = [
+                    t for t in tools
+                    if getattr(t, "name", "") != "select_transport_tool"
+                    and not any(k in getattr(t, "name", "").lower() for k in _marks)
+                ]
+                # 强推的工具若已被摘掉（确认轮原本会强推 select_transport_tool），必须取消强推，
+                # 否则模型调用一个不在工具表里的工具 → 请求直接报错
+                if forced_tool_choice and forced_tool_choice not in {
+                    getattr(t, "name", "") for t in tools
+                }:
+                    forced_tool_choice = None
+                if len(tools) != _before:
+                    _why = ("零段直通（出发地=目的地，无城际段）" if _zero_leg
+                            else "多段高铁：班次由代码并行查询供给")
+                    app_logger.info(
+                        f"🚄 交通步：屏蔽模型自带查询/推进工具 {_before - len(tools)} 个（{_why}）"
+                    )
+            else:
+                # ========== 多段航班：模型不再自查，航班改由代码并行供给 ==========
+                # 交通步走"航班卡片"路线时（手动模式前端拿到选择卡片、自动模式由代码代选），
+                # 从工具表里摘掉航班查询工具与 select_transport_tool：否则模型仍会照旧规则
+                # 逐段查航班，既重复请求，又把自编航班写进正文（同一屏两套矛盾数据）。
+                # 用 elif 语义（放在高铁之后）：同时勾选高铁与航班时高铁优先，此处不接管
+                from app.capabilities.flight_multi_segment.flight_flow import flight_card_mode
+                if flight_card_mode(state):
+                    _before = len(tools)
+                    tools = [
+                        t for t in tools
+                        if getattr(t, "name", "") != "select_transport_tool"
+                        and "flight" not in getattr(t, "name", "").lower()
+                    ]

@@ -1,0 +1,65 @@
+async def _query_one_leg(
+    query_tool: BaseTool, segment_id: str, leg: TrainLeg, prefer_seat: str, limit: int
+) -> TrainSegment:
+    """查询单段班次（由 asyncio.gather 并行调度）；任何异常都降级为空 train_list，绝不抛出"""
+    travel_date = (leg.travel_date or "").strip()
+    try:
+        raw = await query_tool.ainvoke({
+            "date": travel_date, "fromStation": leg.from_, "toStation": leg.to,
+        })
+    except Exception as exc:                 # 单段失败不影响其它段，前端对空段置灰
+        app_logger.warning(f"⚠️ train_multi_segment {segment_id}（{leg.from_}→{leg.to}）查询异常：{exc}")
+        return TrainSegment(
+            segment_id=segment_id, from_=leg.from_, to=leg.to,
+            date=travel_date, train_list=[],
+        )
+    # ★ 原始返回解析不出，再试紧凑行（工具可能已被守卫包装过）
+    rows = parse_ticket_rows(raw) or _compact_to_rows(raw)
+    options = _rows_to_options(rows, prefer_seat, limit)
+    app_logger.info(
+        f"🚄 train_multi_segment {segment_id} {leg.from_}→{leg.to} {travel_date} "
+        f"解析 {len(rows)} 趟 → 取 {len(options)} 趟"
+    )
+    return TrainSegment(
+        segment_id=segment_id, from_=leg.from_, to=leg.to,
+        date=travel_date, train_list=options,
+    )
+
+async def build_train_multi_segment_payload(
+    legs: list[Any],
+    seat_type: str = "二等座",
+    max_options_per_leg: int = 5,
+    cache_key: Optional[str] = None,
+) -> TrainMultiSegmentPayload:
+    """核心函数（非工具）：并行查询全部段 → 组装 payload，并缓存供提交侧校验
+
+    legs 长度即段数（2/3/4 段均支持，不写死）；日期为空时原样留空由前端展示，
+    不推断时序、不校验时间先后。
+    cache_key：隔离键（调用方传 conversation_id），保证提交侧校验到的是**本会话**的候选表
+    """
+    try:
+        parsed = [leg if isinstance(leg, TrainLeg) else TrainLeg.model_validate(leg) for leg in legs]
+    except Exception as exc:
+        app_logger.warning(f"⚠️ train_multi_segment 入参不合法，已降级为空 payload：{exc}")
+        return TrainMultiSegmentPayload(segments=[])
+    if not parsed:
+        return TrainMultiSegmentPayload(segments=[])
+    query_tool = await _resolve_query_tool()
+    if query_tool is None:                   # 数据源不可用：返回空段而不是抛错，避免打断对话
+        empty = TrainMultiSegmentPayload(segments=[
+            TrainSegment(segment_id=f"s{i}", from_=leg.from_, to=leg.to,
+                         date=(leg.travel_date or "").strip(), train_list=[])
+            for i, leg in enumerate(parsed, 1)
+        ])
+        _PAYLOAD_CACHE.store(empty, cache_key)
+        return empty
+    # ★ 全部段并行查询：总耗时 ≈ 最慢的那一段
+    segments = await asyncio.gather(*[     # ← 并行并发，非串行逐段
+        _query_one_leg(query_tool, f"s{index}", leg, seat_type, max_options_per_leg)
+        for index, leg in enumerate(parsed, 1)
+    ])
+    payload = TrainMultiSegmentPayload(segments=list(segments))
+    _PAYLOAD_CACHE.store(payload, cache_key)  # 供提交工具做「是否存在」校验
+    return payload
+
+# ==================== 提交侧：只做基础合法性校验（明确不做时间校验） ====================

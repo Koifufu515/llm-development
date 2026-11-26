@@ -1,0 +1,10 @@
+{
+  "local_only": true,
+  "source": "合成扫描PDF测试件，非真实制度",
+  "ocr_pages": [
+    1
+  ],
+  "backend": "local_tesseract",
+  "text": "学校申请管理办法\n第一条 申请材料须于第八周提交 。\n第二条 每位学生提交两份纸质材料 。",
+  "passed": true
+}

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>知行旅行助手简历模板-v2</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif;
+    max-width: 820px; margin: 40px auto; padding: 0 24px; color: #1f2329; line-height: 1.7; }
+  h1,h2,h3,h4 { line-height: 1.3; margin: 1.4em 0 .6em; }
+  img { max-width: 100%; height: auto; }
+  pre { background: #f6f8fa; padding: 12px 16px; border-radius: 6px; overflow: auto; }
+  code { font-family: Consolas, Monaco, monospace; font-size: .92em; }
+  pre code { background: none; padding: 0; }
+  blockquote { margin: 1em 0; padding: .4em 1em; border-left: 4px solid #d0d7de; color: #57606a; }
+  table { border-collapse: collapse; } td,th { border: 1px solid #d0d7de; padding: 6px 12px; }
+  hr { border: none; border-top: 1px solid #e5e7eb; margin: 2em 0; }
+  @media print { body { margin: 0; max-width: none; } }
+</style>
+</head>
+<body>
+<blockquote>
+<p>🔗 原文链接： <a href="https://q0kyes8lnt5.feishu.cn/docx/Uqdwwd04ziyiJBkFLUjczgW8nAb">知行旅行助手简历模板-v2</a>
+⏰ 转存时间： 2026/11/9 11:21:07
+✂️ 本文档由 <a href="https://yifs.cn">易飞书</a> 整理生成</p>
+</blockquote>
+<hr>
+<blockquote>
+<p>两个版本，代码和数字完全一样，只是叙述角度不同：</p>
+<ul>
+<li><p><strong>版本 A：通用版</strong>。按Agent 工程平台讲，旅行规划只作为落地场景出现一句。适合投 AI 工程、后端、大模型应用开发。</p>
+</li>
+<li><p><strong>版本 B：场景包装版</strong>。把同一套架构迁移到一个具体业务域（Oncall 排障、客服工单、IT 服务台、问数 ChatBI 等）。适合投有明确业务域的岗位，<strong>前提是你真的把数据源和流程换掉重跑一遍</strong>。</p>
+</li>
+</ul>
+<p>使用说明</p>
+<ol>
+<li><p><strong>可以换项目名和项目场景。</strong> 可以自己起个别的名字或者自己换一个业务场景都是可以的：Waypoint、Relay、Stepwise、Helm、Pathfinder，取&quot;导航、接力、分步&quot;这类意象。</p>
+</li>
+<li><p><strong>每条控制在 2–3 行。</strong> 加粗前缀 4–8 个字，数字可以换个颜色或者加粗突出一些。</p>
+</li>
+<li><p><strong>条数不要太多。</strong> 大概挑 4-6 条，剩下的放进面试时口头补充就行，主要还是根据自己简历模板去定。</p>
+</li>
+<li><p><strong>数字写的话要去搞清楚怎么来的。</strong> 方括号里的是参考值，不是答案。文末有对照表，写清每个数字怎么量、正常落在什么区间。不知道怎么来的的数字不要写，面试官一定会追问你是怎么量的。</p>
+</li>
+</ol>
+<p><strong>面试口径</strong>：被问到怎么做出来的，说架构和技术取舍是自己定的、编码调试借助了 [Claude Code / Cursor]，现在坦诚使用 AI 工具基本是加分的。被问是不是课程项目，坦诚说基于课程骨架，重点讲你改了什么、重测了什么、扩展了什么。</p>
+</blockquote>
+<h2>版本 A：通用版</h2>
+<h3>[项目名] — 基于 LangGraph 的多步骤任务型 Agent</h3>
+<p><strong>技术栈</strong>：Python、LangChain 1.x、LangGraph、MCP、FastAPI、PostgreSQL、Redis、Chroma、DeepEval、pytest（模型：Qwen、DeepSeek）</p>
+<p><strong>项目介绍</strong>：基于 LangGraph 的多步骤任务型 Agent：单 Agent + 状态机驱动 7 步业务流程，意图识别把请求分到单点直查、自动确认快速通道、逐步确认三条通道；经 MCP 接入 9 个实时数据源，提供 SSE 流式接口与在线 + 离线两道质量防线。落地场景为旅行规划（需求收集 → 交通住宿 → 行程预算）。</p>
+<p><strong>技术亮点（不要全写，挑着写就行，也可以用ai再自己润色一下）</strong>：</p>
+<ul>
+<li><p><strong>两层意图识别</strong>：规则层把散落 7 处的意图词表收口为一份意图快照，确定性门禁优先拦截班次、天气等单点查询并支持多轮补槽，零 LLM 开销；LLM 层以结构化输出做强类型路由，带最近 4 条历史续接&quot;确认&quot;类短回答，路由回归用例 [13/13] 通过</p>
+</li>
+<li><p><strong>状态机驱动的单 Agent 编排</strong>：以 current_step 驱动 7 步流程，自定义 AgentMiddleware 每轮按步骤注入 Prompt 与工具子集并校验前置依赖，避开多 Agent 间的状态传递；回退工具级联清空下游字段与流程游标，会话经 PostgreSQL Checkpointer 持久化</p>
+</li>
+<li><p><strong>确定性优先</strong>：日期、晚数、预算由代码推算；班次、天气、行程正文由代码基于 Pydantic 校验后的结构化数据渲染，模型只交数据不写数字；卡片接管的步骤由中间件摘掉模型自带的查询工具，杜绝同屏出现两套矛盾数据</p>
+</li>
+<li><p><strong>MCP 多源接入</strong>：单例客户端按服务隔离加载 9 个数据源，单服务故障只降级自身、失败后自动重建连接；车票工具外挂守卫做参数别名归一、ContextVar 按会话回填缺参，并把 12306 单次 [4.5 万字] 返回裁剪为 [12] 行，避免长上下文诱发编造</p>
+</li>
+<li><p><strong>段级并行与交互卡片</strong>：多段交通、多城住宿用 asyncio.gather 并行查询，[3] 段耗时 [12 s → 4 s]，单段失败只置灰该段；候选按会话分桶缓存，SSE 下发卡片供用户一次选完，提交按 option_id 校验身份并幂等落库</p>
+</li>
+<li><p><strong>自动确认快速通道</strong>：两层门禁识别自动确认表单后绕过逐步确认，并行收集 → 纯代码打分选定 → 单次 LLM 生成结构化行程 → 代码算预算，端到端 [2 分 31 秒 → 58 秒]；结束后一次性回写状态机记忆，用户可直接续接调整</p>
+</li>
+<li><p>**质检达标率 **：DeepEval 自定义通义千问裁判 + 三维 GEval。离线用 6 条正反样本（含边界样本）校准裁判判别力，13 条路由回归用例用自定义确定性 Metric 断言。线上落库后异步质检,质检达标率 67% → 100%：</p>
+</li>
+</ul>
+<p><strong>备选亮点</strong>（可替换上面任意一条）：</p>
+<ul>
+<li><p><strong>SSE 流式编排</strong>：生产者-消费者事件管道 + 8 种帧 role 契约，编排后台执行、端点立即返回逐帧推送；按轮缓冲、回合末 reset 重推，消除首轮工具旁白闪变、协议泄漏与换措辞重复；统一响应包裹按 content-type 豁免 SSE</p>
+</li>
+<li><p><strong>Advanced RAG 子图</strong>：父子分块 + BM25 / 向量 RRF 融合 + Multi-Query + LLM 重排；LangGraph Send 动态扇出攻略检索与实时天气两个子 Agent 并行、reducer 扇入归并，重复查询 [3.2 s → 8 ms]</p>
+</li>
+<li><p><strong>长会话稳定性</strong>：模型调用前自愈残缺 tool_calls（补占位消息、丢孤立消息），根治会话 400 卡死；超 40 条消息按用户轮整轮裁剪、不拆工具配对；结构校验失败由代码归一补齐，避免&quot;拒绝—重写&quot;循环撞递归上限</p>
+</li>
+<li><p><strong>Web 服务</strong>：JWT 鉴权 + 会话所有权校验防横向越权，接口统一 {code, msg, data} 包裹；超 2000 字的长回复由 DeepSeek 压缩为 300 字摘要、全文另存，兼顾列表性能与详情完整</p>
+</li>
+</ul>
+<h2>版本 B：场景包装版</h2>
+<h3>包装的边界</h3>
+<p>这个项目的价值在于<strong>架构</strong>：意图分流、状态机编排、MCP 接入、并行取数、代码兜底、质量评测。这套架构确实是通用的，换一个业务域照样成立。但&quot;换域&quot;不是改几个名词：</p>
+<ul>
+<li><p><strong>可以</strong>：换业务域、换数据源、换流程步骤、换叙述重点，然后在新域上<strong>真的跑一遍</strong>，用新跑出的数字。</p>
+</li>
+<li><p><strong>不可以</strong>：没改代码就把旅行项目说成 Oncall 项目；编造 MTTR 下降、客诉减少、上线用户数这类业务结果。面试官问一问就穿帮，背调也可能核实。</p>
+</li>
+<li><p><strong>数据源可以是模拟的</strong>，但要说清楚。&quot;本地 kind 集群 + 演示微服务 + 故障注入&quot;和&quot;模拟订单服务&quot;都是正当的工程验证方式，简历里如实写&quot;在 XX 环境上验证&quot;。</p>
+</li>
+</ul>
+<p>没精力改造，就用版本 A，最好是不要硬套。</p>
+<h3>换域时哪些复用、哪些必须改</h3>
+<table>
+<thead>
+<tr>
+<th><strong>层</strong></th>
+<th><strong>换域怎么处理</strong></th>
+<th><strong>工作量</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>流式与服务地基</td>
+<td>原样复用</td>
+<td>无</td>
+</tr>
+<tr>
+<td>持久化与鉴权</td>
+<td>原样复用</td>
+<td>无</td>
+</tr>
+<tr>
+<td>中间件骨架</td>
+<td>骨架复用，&quot;摘工具&quot;的判定条件换成新域</td>
+<td>小</td>
+</tr>
+<tr>
+<td>意图层</td>
+<td>换词表和技能目录，实体清单从&quot;城市&quot;换成&quot;服务名 / 订单号&quot;等，重写回归用例</td>
+<td>小</td>
+</tr>
+<tr>
+<td>状态与步骤</td>
+<td>重定义状态字段、每步 Prompt 与推进工具，核心工作量在这里</td>
+<td>大</td>
+</tr>
+<tr>
+<td>数据源</td>
+<td>换 SERVER_CONFIGS；优先接社区现成的 MCP Server，找不到就照第 6 章用 fastmcp 自建 stdio 服务；守卫改成新工具的参数</td>
+<td>中</td>
+</tr>
+<tr>
+<td>并行卡片</td>
+<td>schema 换字段、agent_tool 换查询；flow 的三种模式和提交校验写法照搬</td>
+<td>中</td>
+</tr>
+<tr>
+<td>快速通道</td>
+<td>触发条件和规则选定器换成新域</td>
+<td>中</td>
+</tr>
+<tr>
+<td>知识检索</td>
+<td>换语料重建索引</td>
+<td>小</td>
+</tr>
+<tr>
+<td>评测</td>
+<td>三维度判据重写、正反样本重造，必须重跑出新数字</td>
+<td>小</td>
+</tr>
+</tbody></table>
+<h3>方向菜单</h3>
+<p>挑方向的两条原则：<strong>选你能搭出真实验证环境的</strong>（凭空编的数据源一问就露）；<strong>选和目标岗位 JD 关键词重合最多的</strong>。</p>
+<p><strong>① SRE / Oncall 排障</strong>（适合：SRE、基础架构、平台研发）</p>
+<ul>
+<li><p>流程：告警确认 → 影响面评估 → 根因排查 → 处置选择 → 执行确认 → 恢复验证 → 复盘</p>
+</li>
+<li><p>数据源：Prometheus、Loki / ES 日志、K8s API（只读）、发布记录、服务目录（自建）、Runbook 走 RAG</p>
+</li>
+<li><p>并行 + 卡片：受影响的上下游服务并行取证；处置方案卡片（回滚 / 扩容 / 限流）</p>
+</li>
+<li><p>单点直查：&quot;order-service 现在错误率多少&quot;</p>
+</li>
+<li><p>代码接管的事实：指标数值、变更时间线、受影响服务列表</p>
+</li>
+<li><p>怎么验证：kind 或 minikube 起集群 + 演示微服务 + 故障注入脚本</p>
+</li>
+</ul>
+<p><strong>② 电商售后 / 客服工单</strong>（适合：客服技术、交易中台、AI 应用）</p>
+<ul>
+<li><p>流程：问题收集 → 订单定位 → 责任判定 → 方案选择 → 执行 → 回访记录</p>
+</li>
+<li><p>数据源：订单、物流、库存、退款接口（自建模拟服务）、售后政策走 RAG</p>
+</li>
+<li><p>并行 + 卡片：一单多包裹并行查物流；补偿方案卡片（退款 / 换货 / 发券）</p>
+</li>
+<li><p>单点直查：&quot;订单 123 到哪了&quot;</p>
+</li>
+<li><p>代码接管的事实：退款金额、运费险、售后时效按规则计算</p>
+</li>
+<li><p>怎么验证：用公开电商数据集造模拟订单库，简历写&quot;模拟业务系统&quot;</p>
+</li>
+</ul>
+<p><strong>③ 企业 IT 服务台</strong>（适合：企业服务、内部平台）</p>
+<ul>
+<li><p>流程：诉求收集 → 账号 / 资产定位 → 方案匹配 → 审批路由 → 执行 → 验收</p>
+</li>
+<li><p>数据源：OpenLDAP、资产库、工单系统、审批流（自建）、IT 制度走 RAG</p>
+</li>
+<li><p>并行 + 卡片：多个系统的权限并行核查；权限申请卡片</p>
+</li>
+<li><p>单点直查：&quot;我的 VPN 账号过期了没&quot;</p>
+</li>
+<li><p>代码接管的事实：审批人、权限范围按规则算，不让模型决定</p>
+</li>
+<li><p>怎么验证：Docker 起 OpenLDAP + 模拟资产库</p>
+</li>
+</ul>
+<p><strong>④ 数据分析问数 ChatBI</strong>（适合：数据平台、BI、大模型应用）</p>
+<ul>
+<li><p>流程：需求澄清 → 指标口径确认 → 选表 → 生成 SQL → 执行校验 → 可视化 → 结论</p>
+</li>
+<li><p>数据源：只读 SQL 执行、元数据目录、指标定义、图表渲染</p>
+</li>
+<li><p>并行 + 卡片：多指标多维度并行查询；口径确认卡片</p>
+</li>
+<li><p>单点直查：&quot;昨天 GMV 多少&quot;（命中指标库直接取数）</p>
+</li>
+<li><p>代码接管的事实：所有数字只来自 SQL 执行结果，模型只写解读</p>
+</li>
+<li><p>怎么验证：TPC-H 或公开电商数据集导入 PostgreSQL</p>
+</li>
+</ul>
+<p><strong>⑤ 企业差旅与费控</strong>（改造量最小，适合：企业服务、SaaS）</p>
+<ul>
+<li><p>流程：原 7 步 + 差标校验 + 审批</p>
+</li>
+<li><p>数据源：保留 12306 / 航班 / 酒店，新增自建差标服务、审批流</p>
+</li>
+<li><p>并行 + 卡片：原样</p>
+</li>
+<li><p>单点直查：原样，外加&quot;我这个职级住宿标准多少&quot;</p>
+</li>
+<li><p>代码接管的事实：差标按职级与城市等级计算，超标自动标红</p>
+</li>
+<li><p>怎么验证：直接在现有项目上加，工作量最小，也最不怕追问</p>
+</li>
+</ul>
+<h3>完整示例：SRE / Oncall 排障 Agent</h3>
+<h3>[项目名] — 面向值班排障的多步骤 Oncall Agent</h3>
+<p><strong>技术栈</strong>：Python、LangChain 1.x、LangGraph、MCP、FastAPI、PostgreSQL、Redis、Prometheus、Loki、Kubernetes、DeepEval、pytest</p>
+<p><strong>项目介绍</strong>：针对值班排障依赖个人经验、告警 / 日志 / 变更记录散落在多个系统的问题，+做的多步骤排障 Agent。意图识别区分单点查询与完整排障；状态机引导完成告警确认 → 影响面评估 → 根因排查 → 处置选择 → 执行确认 → 恢复验证 → 复盘，经 MCP 接入 [6] 个运维数据源，在本地 [kind 集群 + 演示微服务] 上用故障注入验证。</p>
+<p><strong>技术亮点</strong>（挑 5–6 条）：</p>
+<ul>
+<li><p><strong>两层意图识别</strong>：规则层用服务名清单 + 意图词表组成确定性门禁，&quot;查下 order-service 错误率&quot;这类单点查询零 LLM 直查并支持多轮补槽；LLM 层以结构化输出区分闲聊、知识问答与完整排障，带最近 4 条历史续接短回答，回归用例 [28/30] 通过</p>
+</li>
+<li><p><strong>状态机驱动排障</strong>：以 current_step 驱动 7 步排障流程，中间件每步只开放该步工具（如根因步才开放日志检索）并校验前置依赖；根因被推翻时回退工具级联清空下游方案与执行记录，会话经 Checkpointer 持久化，交接班可续接</p>
+</li>
+<li><p><strong>数字与时间线归代码</strong>：错误率、延迟、变更时间线由代码直查并渲染，模型只提交结构化的根因假设和所引证据 ID，引用不存在的证据直接拒收，从流程上杜绝&quot;编一个看起来合理的 P99&quot;</p>
+</li>
+<li><p><strong>MCP 多源接入</strong>：单例客户端按服务隔离加载 Prometheus、Loki、K8s、发布记录、服务目录等 [6] 个数据源，单源故障只降级自身；日志工具外挂守卫做参数归一、按会话回填时间窗，并把单次 [2 万行] 日志按错误签名聚合为 [15] 行</p>
+</li>
+<li><p><strong>多服务并行取证 + 处置卡片</strong>：受影响的上下游服务用 asyncio.gather 并行拉取指标、日志与最近变更，[5] 个服务取证 [18 s → 5 s]；回滚、扩容、限流等方案以卡片下发，值班人勾选后按 option_id 校验并幂等执行</p>
+</li>
+<li><p><strong>已知告警快速通道</strong>：命中 Runbook 已收录的标准告警时跳过逐步确认，并行取证 → 规则匹配处置项 → 单次 LLM 生成处置摘要，端到端 [3 分钟 → 50 秒]；变更类动作仍强制人工确认</p>
+</li>
+<li><p><strong>质量双防线</strong>：GEval 三维度改为步骤完整性 / 告警匹配度 / 证据真实性，标尺在线离线共用；离线回放 [20] 次故障注入（Pod OOM、慢 SQL、错误配置发布等），根因命中 [17/20]；在线质检只告警不阻断</p>
+</li>
+</ul>
+<blockquote>
+<h3>换到其他方向时改写什么？</h3>
+<p>拿上面的 Oncall 示例当骨架，换方向时依次替换六处：</p>
+<ol>
+<li><p>项目介绍里的<strong>痛点句</strong>和<strong>流程链</strong>（取自方向菜单的&quot;流程&quot;）</p>
+</li>
+<li><p>意图识别条里的<strong>实体清单</strong>和<strong>单点直查例子</strong></p>
+</li>
+<li><p>事实归代码条里的<strong>易错数字</strong>（指标 → 退款金额 → 审批人 → SQL 结果）</p>
+</li>
+<li><p>MCP 条里的<strong>数据源列表</strong>和<strong>守卫裁剪的对象</strong></p>
+</li>
+<li><p>并行条里的<strong>并行对象</strong>和<strong>卡片内容</strong></p>
+</li>
+<li><p>质量条里的<strong>三维度判据</strong>和<strong>离线回放方式</strong></p>
+</li>
+</ol>
+<p>其余写法不变。</p>
+</blockquote>
+<h2>数字对照表</h2>
+<table>
+<thead>
+<tr>
+<th><strong>简历里的数字</strong></th>
+<th><strong>参考区间</strong></th>
+<th><strong>注意</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>路由回归 [13/13]</td>
+<td>11–13 / 13</td>
+<td>模型有随机性，连跑 3 次写最差的那次；自己补了用例，分母跟着改</td>
+</tr>
+<tr>
+<td>行程正反样本 [3 正 3 反]</td>
+<td>6月6日</td>
+<td>有失败先看断言里带出的裁判理由，再决定改样本还是改判据</td>
+</tr>
+<tr>
+<td>车票裁剪 [4.5 万字 → 12 行]</td>
+<td>热门干线 200–300 趟、3–5 万字；冷门线只有几千字</td>
+<td>写明是哪条线，比如&quot;京沪线&quot;</td>
+</tr>
+<tr>
+<td>并行耗时 [12 s → 4 s]</td>
+<td>单段 2–6 s；3 段串行 8–15 s，并行 3–6 s</td>
+<td>写清段数，取 3 次的中位数</td>
+</tr>
+<tr>
+<td>快速通道 [2 分 31 秒 → 58 秒]</td>
+<td>状态机 1.5–3 分钟；快速通道 40–90 s</td>
+<td>课件里的 2 分 31 秒只是参考，必须自己重测</td>
+</tr>
+<tr>
+<td>RAG 缓存 [3.2 s → 8 ms]</td>
+<td>首次 2–6 s，命中 &lt; 50 ms</td>
+<td>Redis 没起就不会命中</td>
+</tr>
+<tr>
+<td>GEval 平均分（可选）</td>
+<td>各维度 0.6–0.9</td>
+<td>写平均分要附样本数</td>
+</tr>
+<tr>
+<td>固定事实：9 个数据源、7 步、8 种帧 role、342 个城市、40 条裁窗、散落 7 处的词表</td>
+<td>—</td>
+<td>不用量，但面试要能逐个说出来</td>
+</tr>
+</tbody></table>
+<p>B 版的数字（故障注入命中率、取证耗时、日志聚合比例等）没有参考区间。</p>
+<h2>扩展亮点池</h2>
+<ol>
+<li><p><strong>意图识别评测加厚</strong>：路由用例从 13 条扩到 [60] 条，按&quot;闲聊 / 单点查询 / 规划 / 续接短回答&quot;四类统计混淆矩阵，定位到 [续接短回答] 误判最多并针对性修正，准确率 [0.85 → 0.95]</p>
+</li>
+<li><p><strong>路由降本</strong>：统计 [N] 条会话中 [x%] 的请求被规则门禁直接分流、不进 LLM；路由模型换 qwen-turbo 后准确率仅降 [0.02]，路由耗时 [x s → y s]</p>
+</li>
+<li><p><strong>可观测性</strong>：接入 LangSmith trace 并给每轮加分段计时日志，把一轮规划拆成路由 / 工具 / 生成三段，定位到 [交通步工具调用] 占总耗时 [60%]</p>
+</li>
+<li><p><strong>并发压测</strong>：用 locust 压 SSE 接口，并发 [20] 下首帧 P95 [x s]，暴露并修复 [连接池 / 进程内缓存] 问题</p>
+</li>
+<li><p><strong>数据源可用性统计</strong>：统计各 MCP 服务调用成功率与降级次数，[酒店服务] 成功率最低 [x%]，据此补上品牌兜底，住宿步卡死问题归零</p>
+</li>
+</ol>
+
+</body>
+</html>

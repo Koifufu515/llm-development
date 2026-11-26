@@ -1,0 +1,5 @@
+"""两张登记表演示：步骤顺序 ALL_STEPS + 每步产生的字段 STEP_STATE_FIELDS（纯逻辑，无需密钥）"""
+from app.tools.state_transition import ALL_STEPS, STEP_LABELS, STEP_STATE_FIELDS
+
+for i, step in enumerate(ALL_STEPS, 1):
+    print(f"[{i}] {STEP_LABELS.get(step, step):6s} {step:28s} → {STEP_STATE_FIELDS.get(step, [])}")

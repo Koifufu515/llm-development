@@ -1,0 +1,5 @@
+# macOS / Linux / Git Bash
+curl -s https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions \
+  -H "Authorization: Bearer sk-你的key" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "qwen-flash", "enable_thinking": false, "response_format": {"type": "json_object"}, "messages": [{"role": "system", "content": "从用户的话里找出景点名和门票价格，输出 JSON，包含 entity 和 value 两个字段"}, {"role": "user", "content": "兵马俑博物馆门票 120 元，8:30 开门"}]}'

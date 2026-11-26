@@ -1,0 +1,12 @@
+"""hotels_from_raw 演示：三级解析出门店候选；什么都解析不出就返回空列表，由调用方降级成品牌模式（纯函数，无需密钥）"""
+import json
+
+from app.capabilities.hotel_multi_segment.hotel_parser import hotels_from_raw
+
+RAW = json.dumps({"hotelInformationList": [
+    {"name": "如家酒店(西湖北山街店)", "price": {"message": "716CNY 共2晚 358CNY/晚"}, "starRating": 4.6, "address": "西湖区北山街 12 号"},
+    {"name": "锦江之星(Jinjiang Inn)", "price": {"message": "560CNY 共2晚 280CNY/晚"}, "starRating": 4.3, "address": "拱墅区体育场路 8 号"},
+]}, ensure_ascii=False)
+for opt in hotels_from_raw([{"type": "text", "text": RAW}], nights=2, limit=5):
+    print(opt.hotel_id, opt.hotelName, opt.pricePerNight, "元/晚 · 总价", opt.totalPrice, "·", opt.starRating, "分")
+print("解析不出：", hotels_from_raw("酒店服务繁忙，请稍后再试", nights=2, limit=5))

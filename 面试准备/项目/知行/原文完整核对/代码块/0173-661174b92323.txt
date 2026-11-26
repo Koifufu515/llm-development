@@ -1,0 +1,157 @@
+async def get_all_mcp_tools() -> List[BaseTool]:
+    """获取所有 MCP 工具"""
+    manager = await get_mcp_client()
+    tools = await manager.get_tools()
+    app_logger.info(f"📦 获取了 {len(tools)} 个 MCP 工具")
+    return tools
+
+async def get_hotel_tools() -> List[BaseTool]:
+    """
+    获取酒店相关工具
+
+    Returns:
+        酒店搜索、周边查询等工具
+    """
+    manager = await get_mcp_client()
+    all_tools = await manager.get_tools()
+
+    hotel_tools = [
+        tool for tool in all_tools
+        if any(keyword in tool.name.lower() for keyword in [
+            'find-hotels',           # 酒店搜索
+            'searchhotels',          # aigohotel-mcp 实际工具名（旧关键词匹配不到，导致漏加载）
+            # 不再纳入 maps_around_search——它属"周边 POI 搜索"，返回的是评分/晚
+            # 的地图凑数条目，与 find-hotels 的"总价+星级+地址"格式并存时，模型会在多城住宿轮
+            # 对同一城市调两种工具、各展示一批（用户实测：上海榜单一遍变两遍、标题错位）。
+            # 仅保留真实酒店源，同城每次查询结果唯一、格式统一，展示干净
+        ])
+    ]
+
+    app_logger.info(f"🏨 酒店工具: {[t.name for t in hotel_tools]}")
+    return hotel_tools
+
+async def get_flight_tools() -> List[BaseTool]:
+    """
+ 获取航班相关工具（VariFlight Aviation MCP，真实数据源）
+    供交通规划步骤使用，替代原 mock flight_subagent
+
+    Returns:
+        航班搜索、价格查询等工具
+    """
+    manager = await get_mcp_client()
+    all_tools = await manager.get_tools()
+
+    flight_tools = [
+        tool for tool in all_tools
+        if 'flight' in tool.name.lower()   # 覆盖 searchFlightsByDepArr / getFlightPriceByCities 等
+    ]
+
+    app_logger.info(f"✈️ 航班工具: {[t.name for t in flight_tools]}")
+    return flight_tools
+
+async def get_train_tools() -> List[BaseTool]:
+    """
+ 获取高铁/火车相关工具（12306 MCP，真实数据源）
+    供交通规划步骤使用，替代原 mock train_subagent
+
+    Returns:
+        车票查询、车次查询等工具
+    """
+    manager = await get_mcp_client()
+    all_tools = await manager.get_tools()
+
+    train_tools = [
+        tool for tool in all_tools
+        if any(keyword in tool.name.lower() for keyword in [
+            'train',      # 车次/列车查询
+            'ticket',     # 余票/票价查询
+            'railway',    # 铁路查询（兼容不同命名风格）
+        ])
+    ]
+    # 车票查询工具统一套入参兜底（别名归一+上下文回填+可读报错）
+    train_tools = [_guard_train_tool(t) for t in train_tools]
+
+    app_logger.info(f"🚄 高铁工具: {[t.name for t in train_tools]}")
+    return train_tools
+
+async def get_driving_tools() -> List[BaseTool]:
+    """
+ 获取自驾路线相关工具（高德 MCP，真实数据源）
+    供交通规划步骤使用，替代原 mock driving_subagent
+
+    Returns:
+        驾车路线规划工具
+    """
+    manager = await get_mcp_client()
+    all_tools = await manager.get_tools()
+
+    driving_tools = [
+        tool for tool in all_tools
+        if 'maps_direction_driving' in tool.name.lower()   # 高德驾车路线规划
+    ]
+
+    app_logger.info(f"🚗 自驾工具: {[t.name for t in driving_tools]}")
+    return driving_tools
+
+async def get_weather_tools() -> List[BaseTool]:
+    """
+    获取天气相关工具
+
+    Returns:
+        天气查询工具
+    """
+    manager = await get_mcp_client()
+    all_tools = await manager.get_tools()
+
+    weather_tools = [
+        tool for tool in all_tools
+        if any(keyword in tool.name.lower() for keyword in [
+            'get_weather_forecast',      # 自建天气服务
+        ])
+    ]
+
+    app_logger.info(f"🌤️ 天气工具: {[t.name for t in weather_tools]}")
+    return weather_tools
+
+async def get_search_tools() -> List[BaseTool]:
+    """
+    获取搜索相关工具
+
+    Returns:
+        旅游信息搜索工具
+    """
+    manager = await get_mcp_client()
+    all_tools = await manager.get_tools()
+
+    search_tools = [
+        tool for tool in all_tools
+        if any(keyword in tool.name.lower() for keyword in [
+            'search_travel_info',  # 自建搜索服务
+        ])
+    ]
+
+    app_logger.info(f"🔍 搜索工具: {[t.name for t in search_tools]}")
+    return search_tools
+
+async def get_date_tools() -> List[BaseTool]:
+    """
+    获取日期相关工具
+
+    Returns:
+        获取当前日期的工具
+    """
+    manager = await get_mcp_client()
+    all_tools = await manager.get_tools()
+    for t in all_tools:
+        print(f"当前所有的工具: ",t)
+
+    date_tools = [
+        tool for tool in all_tools
+        if any(keyword in tool.name.lower() for keyword in [
+            'get-current-date',
+            'gettodaydate',
+        ])
+    ]
+
+    app_logger.info(f"📅 日期工具: {[t.name for t in date_tools]}")
+    return date_tools

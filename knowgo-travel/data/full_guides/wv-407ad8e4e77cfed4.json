@@ -1,0 +1,21 @@
+{
+  "city": "上海",
+  "title": "上海景点资料 · Shanghai/Jing'an",
+  "source_url": "https://en.wikivoyage.org/wiki/Shanghai/Jing%27an",
+  "text": "资料城市：上海。本文是历史开放景点资料，不提供实时开放时间或价格；出行前需要核实。\n\nJing'an Temple\nThis is a large old temple that is said to have been built in 247 CE, making it over 1750 years old (with a good deal of renovation in-between of course)\n\nFormer residence of Chairman Mao Tse Tung\nSmall house in traditional style that housed Mao Tse Tung during his early days in the Chinese Communist Party. Preserved as a (very) small museum. Possibly the most interesting aspect is the fact that his once humble home is now surrounded by one of Shanghai's most expensive shopping malls full of luxury shops and hotels!\n\nJing'an Park\nNice public park with a lake and some walkways. A good place to see older Chinese people practice their dancing. If you play any Chinese board games &mdash; Chinese chess (''xiangqi'') or Go (''weiqi'') &mdash; there are often games going on in the Southeast corner of the park.\n\nJade Buddha Temple\nFounded in 1882 with two Jade statues of the Buddha imported from Burma. There are restaurant facilities with steamed dumplings. This is a bit of a hike from Jing'an temple, so consider taking a take or at the very least the metro up to nearby Changshou Road Station.\n\nShanghai Acrobatics Show\nAll the impressive acts of a Chinese circus packed into one 90 minute show. The location is easy to walk by as the theater is hidden inside a hotel. Tickets are best bought in advance, especially for weekend shows. The good acts are up right from the start, so don't be late! An alternative is the Shanghai Circus in Zhabei.",
+  "retrieved_at": "2026-10-30T11:20:29.329255+00:00",
+  "license": "CC BY-SA 3.0",
+  "attribution": "Wikivoyage contributors; https://en.wikivoyage.org/wiki/Shanghai/Jing%27an",
+  "sha256": "142621d47a548297b8b9f8090d812b90eafc11e8da008b5563c2e8d30bc20604",
+  "freshness": "历史数据快照，已知lastEdit至2016；采集时间不等于更新时间。仅作景点背景参考，出行细节需向官方核实。",
+  "poi_count": 5,
+  "source_dataset": "https://github.com/wikivoyage/wikivoyage.github.io",
+  "excluded_fields": [
+    "price",
+    "hours",
+    "phone",
+    "email",
+    "hotel",
+    "restaurant"
+  ]
+}

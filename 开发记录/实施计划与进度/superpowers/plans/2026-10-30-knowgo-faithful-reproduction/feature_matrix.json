@@ -1,0 +1,886 @@
+{
+  "scope": "按原两份技术材料全章节归组的功能验收矩阵，非函数出现率；证据文件存在不等于当版已通过。Windows仅按用户明确要求排除。 当前核对不以文件存在代替测试：每行单列专项证据与边界；线上流量/私有源码/全部用户实操不作完成承诺。",
+  "rows": [
+    {
+      "id": "01",
+      "feature": "环境/uv/Docker/macOS",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0001-aad45d54edcd.txt",
+        "知行项目学习/原文完整核对/代码块/0002-6bfb56a3a6ce.txt"
+      ],
+      "implementation": [
+        "README.md"
+      ],
+      "missing_files": [],
+      "evidence": "环境验证.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-and-verified",
+      "verification_note": "实现存在，按所列专项证据及120项回归验收；不表示穷尽所有输入或线上流量。"
+    },
+    {
+      "id": "02",
+      "feature": "PG Checkpointer短期记忆与thread恢复",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0025-c0df72bdfcb5.txt"
+      ],
+      "implementation": [
+        "app/core/checkpointer.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-restart.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-and-verified",
+      "verification_note": "实现存在，按所列专项证据及120项回归验收；不表示穷尽所有输入或线上流量。"
+    },
+    {
+      "id": "03",
+      "feature": "PG Store独立用户namespace",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0668-10d4f9f48b2d.txt"
+      ],
+      "implementation": [
+        "app/core/store.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-final-acceptance.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-and-verified",
+      "verification_note": "实现存在，按所列专项证据及120项回归验收；不表示穷尽所有输入或线上流量。"
+    },
+    {
+      "id": "04",
+      "feature": "UserProfile/TravelHistory/Record/住宿预算",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0024-e84aab8e657d.txt",
+        "知行项目学习/原文完整核对/代码块/0668-10d4f9f48b2d.txt"
+      ],
+      "implementation": [
+        "app/full/memory.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-final-acceptance.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-and-verified",
+      "verification_note": "实现存在，按所列专项证据及120项回归验收；不表示穷尽所有输入或线上流量。"
+    },
+    {
+      "id": "05",
+      "feature": "单create_agent+StepConfig动态工具/Prompt",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0690-ddb781490d6e.txt",
+        "知行项目学习/原文完整核对/代码块/0691-682e36719e03.txt"
+      ],
+      "implementation": [
+        "app/full/agent.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-final-acceptance.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-and-verified",
+      "verification_note": "实现存在，按所列专项证据及120项回归验收；不表示穷尽所有输入或线上流量。"
+    },
+    {
+      "id": "06",
+      "feature": "七步前向9工具与前置依赖",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0395-ce14dd811546.txt",
+        "知行项目学习/原文完整核对/代码块/0399-b6465f485003.txt",
+        "知行项目学习/原文完整核对/代码块/0402-cc45d86263b3.txt",
+        "知行项目学习/原文完整核对/代码块/0406-1a2d638e61a4.txt",
+        "知行项目学习/原文完整核对/代码块/0421-5c94d29abd32.txt",
+        "知行项目学习/原文完整核对/代码块/0424-840f2dfdd75b.txt"
+      ],
+      "implementation": [
+        "app/full/agent.py",
+        "app/full/completion_tools.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-final-acceptance.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-and-verified",
+      "verification_note": "实现存在，按所列专项证据及120项回归验收；不表示穷尽所有输入或线上流量。"
+    },
+    {
+      "id": "07",
+      "feature": "通用回退+7别名+级联清理",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0432-815c1f11d016.txt",
+        "知行项目学习/原文完整核对/代码块/0439-231e36446a90.txt"
+      ],
+      "implementation": [
+        "app/full/agent.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-final-acceptance.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-and-verified",
+      "verification_note": "实现存在，按所列专项证据及120项回归验收；不表示穷尽所有输入或线上流量。"
+    },
+    {
+      "id": "08",
+      "feature": "同轮多个状态Command冲突阻断",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0690-ddb781490d6e.txt"
+      ],
+      "implementation": [
+        "app/full/agent.py"
+      ],
+      "missing_files": [],
+      "evidence": "tests/test_full_integrity.py",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-and-verified",
+      "verification_note": "实现存在，按所列专项证据及120项回归验收；不表示穷尽所有输入或线上流量。"
+    },
+    {
+      "id": "09",
+      "feature": "五类记忆工具及本次/长期区分",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0691-682e36719e03.txt"
+      ],
+      "implementation": [
+        "app/full/agent.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-final-acceptance.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-and-verified",
+      "verification_note": "实现存在，按所列专项证据及120项回归验收；不表示穷尽所有输入或线上流量。"
+    },
+    {
+      "id": "10",
+      "feature": "9类MCP功能/7类原终版配置",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0672-993ad2ab4f7b.txt",
+        "知行项目学习/原文完整核对/代码块/0073-155205ca0d05.txt",
+        "知行项目学习/原文完整核对/代码块/0074-87154558b221.txt"
+      ],
+      "implementation": [
+        "app/mcp_core/client.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-final-acceptance.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-with-disclosed-boundary",
+      "verification_note": "原私有天气/图片端点缺失，以功能等价自建stdio替代；九服务发现成功，不等于每个接口每条分支均已真实通过。"
+    },
+    {
+      "id": "11",
+      "feature": "MCP隔离加载/重名/失效重建",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0672-993ad2ab4f7b.txt"
+      ],
+      "implementation": [
+        "app/mcp_core/client.py",
+        "app/services/remote.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-final-acceptance.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-with-disclosed-boundary",
+      "verification_note": "隔离加载与重建实现；九源发现和工具回归验证，不声称对每一家供应商都做了断网恢复压测。"
+    },
+    {
+      "id": "12",
+      "feature": "车票别名/ContextVar/注册守卫同对象",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0144-6198dab66ea2.txt",
+        "知行项目学习/原文完整核对/代码块/0154-d7b130cd3f45.txt"
+      ],
+      "implementation": [
+        "app/full/rail_guard.py"
+      ],
+      "missing_files": [],
+      "evidence": "tests/test_reference_toolnode.py",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-and-verified",
+      "verification_note": "实现存在，按所列专项证据及120项回归验收；不表示穷尽所有输入或线上流量。"
+    },
+    {
+      "id": "13",
+      "feature": "车票12行裁剪与原载荷口径",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0673-bb8868bfff52.txt"
+      ],
+      "implementation": [
+        "app/full/rail_guard.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-rail-benchmark.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-and-verified",
+      "verification_note": "实现存在，按所列专项证据及120项回归验收；不表示穷尽所有输入或线上流量。"
+    },
+    {
+      "id": "14",
+      "feature": "12306上车日/跨日/席别可售",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0673-bb8868bfff52.txt"
+      ],
+      "implementation": [
+        "app/core/rail.py",
+        "scripts/patch_rail_mcp.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/full_final_live.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-with-disclosed-boundary",
+      "verification_note": "包含本轮之前真实上车日期补丁验收；跨日/席别等以回归覆盖，非全部线路外部验证。"
+    },
+    {
+      "id": "15",
+      "feature": "多机场航班与同航班票价融合",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0674-8cd4b5584724.txt"
+      ],
+      "implementation": [
+        "app/full/capabilities.py",
+        "app/services/remote.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/full_multi_airport.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-with-disclosed-boundary",
+      "verification_note": "多机场时刻真实成功；同航班号票价融合实现，当前有效报价不可得，未知价保持None，未声称有价分支真实成功。"
+    },
+    {
+      "id": "16",
+      "feature": "高德驾车/坐标与油费估算区分",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0162-7833e17d4b69.txt"
+      ],
+      "implementation": [
+        "app/full/capabilities.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/full_final_live.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-with-disclosed-boundary",
+      "verification_note": "高德驾车真实成功；油费是0.65元/公里参考估算；腾讯配额失败未计成功。"
+    },
+    {
+      "id": "17",
+      "feature": "航班结构缺失降高铁/临时故障不误判无机场",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0624-70e157796316.txt"
+      ],
+      "implementation": [
+        "app/full/workflow.py"
+      ],
+      "missing_files": [],
+      "evidence": "tests/test_full_regressions.py",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-and-verified",
+      "verification_note": "实现存在，按所列专项证据及120项回归验收；不表示穷尽所有输入或线上流量。"
+    },
+    {
+      "id": "18",
+      "feature": "否定识别/裸词交通改选/旧卡失效",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0619-d2890ea7cda7.txt"
+      ],
+      "implementation": [
+        "app/full/transport_switch.py",
+        "app/full/workflow.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-final-acceptance.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-and-verified",
+      "verification_note": "实现存在，按所列专项证据及120项回归验收；不表示穷尽所有输入或线上流量。"
+    },
+    {
+      "id": "19",
+      "feature": "四类多段卡片/逐段逐城手选",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0395-ce14dd811546.txt",
+        "知行项目学习/原文完整核对/代码块/0399-b6465f485003.txt"
+      ],
+      "implementation": [
+        "app/full/capabilities.py",
+        "app/full/selection_tools.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-final-acceptance.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-and-verified",
+      "verification_note": "实现存在，按所列专项证据及120项回归验收；不表示穷尽所有输入或线上流量。"
+    },
+    {
+      "id": "20",
+      "feature": "酒店共享rank规则/异常价格/品牌降级",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0289-9ca2b2b0a1c1.txt",
+        "知行项目学习/原文完整核对/代码块/0518-47d4a7767d04.txt"
+      ],
+      "implementation": [
+        "app/full/hotel_rank.py",
+        "app/full/capabilities.py"
+      ],
+      "missing_files": [],
+      "evidence": "tests/test_reference_selection.py",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-with-disclosed-boundary",
+      "verification_note": "沿原rank规则；供应商starRating实际为酒店等级，不冒充旅客评分。"
+    },
+    {
+      "id": "21",
+      "feature": "城市顺序/首站1日/日期同源/N-1晚",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0695-b44585384ffb.txt",
+        "知行项目学习/原文完整核对/代码块/0299-d8fa35f9ef17.txt"
+      ],
+      "implementation": [
+        "app/full/domain.py"
+      ],
+      "missing_files": [],
+      "evidence": "tests/test_full_domain.py",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-and-verified",
+      "verification_note": "实现存在，按所列专项证据及120项回归验收；不表示穷尽所有输入或线上流量。"
+    },
+    {
+      "id": "22",
+      "feature": "本地游0交通/一日0住宿",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0624-70e157796316.txt"
+      ],
+      "implementation": [
+        "app/full/workflow.py",
+        "app/full/domain.py"
+      ],
+      "missing_files": [],
+      "evidence": "tests/test_full_domain.py",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-and-verified",
+      "verification_note": "实现存在，按所列专项证据及120项回归验收；不表示穷尽所有输入或线上流量。"
+    },
+    {
+      "id": "23",
+      "feature": "目的地分类Send并行/reducer/合成",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0691-682e36719e03.txt"
+      ],
+      "implementation": [
+        "app/full/destination.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-flow-final.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-with-disclosed-boundary",
+      "verification_note": "真实三天全流程覆盖子图；不是逐条对所有目的地分类都做完真实验证。"
+    },
+    {
+      "id": "24",
+      "feature": "高德主天气+备用/日期不冒充/关联行程",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0073-155205ca0d05.txt",
+        "知行项目学习/原文完整核对/代码块/0583-a5cc5dc54839.txt"
+      ],
+      "implementation": [
+        "app/full/weather.py",
+        "app/full/plans.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-providers-live.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-and-verified",
+      "verification_note": "实现存在，按所列专项证据及120项回归验收；不表示穷尽所有输入或线上流量。"
+    },
+    {
+      "id": "25",
+      "feature": "图片独立MCP搜索/地图缺图补图",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0672-993ad2ab4f7b.txt"
+      ],
+      "implementation": [
+        "app/mcp_core/servers/image_server.py",
+        "app/full/plans.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-final-acceptance.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-and-verified",
+      "verification_note": "实现存在，按所列专项证据及120项回归验收；不表示穷尽所有输入或线上流量。"
+    },
+    {
+      "id": "26",
+      "feature": "父1000/200子200/50/持久Chroma1536d",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0091-20e893a000f1.txt",
+        "知行项目学习/原文完整核对/代码块/0099-a810a883c624.txt"
+      ],
+      "implementation": [
+        "app/full/knowledge.py"
+      ],
+      "missing_files": [],
+      "evidence": "data/full_rag/manifest.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-with-disclosed-boundary",
+      "verification_note": "71份历史英文攻略、39城、404025字符；不是原作者私有数据库，3120子块索引真实存在。"
+    },
+    {
+      "id": "27",
+      "feature": "中文BM25/Dense/RRF0.4+0.6",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0094-7070deae9e96.txt"
+      ],
+      "implementation": [
+        "app/full/knowledge.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-rag-cold-warm.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-and-verified",
+      "verification_note": "实现存在，按所列专项证据及120项回归验收；不表示穷尽所有输入或线上流量。"
+    },
+    {
+      "id": "28",
+      "feature": "MultiQuery/HyDE/改写/组合",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0095-c0dbbb5e403c.txt"
+      ],
+      "implementation": [
+        "app/full/knowledge.py"
+      ],
+      "missing_files": [],
+      "evidence": "tests/test_full_regressions.py",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-with-disclosed-boundary",
+      "verification_note": "四策略均有实现；冷/热真实基准使用MultiQuery，未分别测四种策略的泛化收益。"
+    },
+    {
+      "id": "29",
+      "feature": "0-10相关评分/9到6到3/长上下文重排",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0097-3b3726b18d04.txt",
+        "知行项目学习/原文完整核对/代码块/0099-a810a883c624.txt"
+      ],
+      "implementation": [
+        "app/full/knowledge.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-rag-cold-warm.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-and-verified",
+      "verification_note": "实现存在，按所列专项证据及120项回归验收；不表示穷尽所有输入或线上流量。"
+    },
+    {
+      "id": "30",
+      "feature": "完整Redis缓存/模型配置与语料版本隔离",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0098-2694c29393b7.txt"
+      ],
+      "implementation": [
+        "app/full/knowledge.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-rag-cold-warm.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-and-verified",
+      "verification_note": "实现存在，按所列专项证据及120项回归验收；不表示穷尽所有输入或线上流量。"
+    },
+    {
+      "id": "31",
+      "feature": "342城市选择与Redis缓存",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0353-f2dec7e60148.txt"
+      ],
+      "implementation": [
+        "app/full/api.py",
+        "app/full/cities.json"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-final-acceptance.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-with-disclosed-boundary",
+      "verification_note": "城市目录和Redis实现；342是选择器，不是攻略或可实时服务覆盖率。"
+    },
+    {
+      "id": "32",
+      "feature": "统一意图词表/三通道/补槽位上下文",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0187-21625fd3b1d6.txt",
+        "知行项目学习/原文完整核对/代码块/0693-fc28c89a7921.txt"
+      ],
+      "implementation": [
+        "app/full/intents.py",
+        "app/full/routing.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-router-after.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-and-verified",
+      "verification_note": "实现存在，按所列专项证据及120项回归验收；不表示穷尽所有输入或线上流量。"
+    },
+    {
+      "id": "33",
+      "feature": "结构化路由及技能目录/历史短答",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0476-504041d36c18.txt",
+        "知行项目学习/原文完整核对/代码块/0693-fc28c89a7921.txt"
+      ],
+      "implementation": [
+        "app/full/reference_router.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-router-after.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-and-verified",
+      "verification_note": "实现存在，按所列专项证据及120项回归验收；不表示穷尽所有输入或线上流量。"
+    },
+    {
+      "id": "34",
+      "feature": "表单0模型接收/完整需求聊天抽取",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0503-e516110bf8f4.txt"
+      ],
+      "implementation": [
+        "app/full/api.py",
+        "app/full/agent.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-first-frame.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-and-verified",
+      "verification_note": "实现存在，按所列专项证据及120项回归验收；不表示穷尽所有输入或线上流量。"
+    },
+    {
+      "id": "35",
+      "feature": "自动选城/多城天数扩展并告知",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0530-22fc59e0a4a0.txt"
+      ],
+      "implementation": [
+        "app/full/workflow.py",
+        "app/full/domain.py"
+      ],
+      "missing_files": [],
+      "evidence": "tests/test_reference_express.py",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-and-verified",
+      "verification_note": "实现存在，按所列专项证据及120项回归验收；不表示穷尽所有输入或线上流量。"
+    },
+    {
+      "id": "36",
+      "feature": "Express并行收集与按偏好选择",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0698-8aa3490478b7.txt"
+      ],
+      "implementation": [
+        "app/full/workflow.py",
+        "app/full/capabilities.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-flow-final.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-with-disclosed-boundary",
+      "verification_note": "各3轮六次均完成；仍有模型错误和重试，不宣称线上成功率或稳定延迟。"
+    },
+    {
+      "id": "37",
+      "feature": "原正文60字/缺日/空时段/末日返程归一",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0409-81f97ae0c189.txt",
+        "知行项目学习/原文完整核对/代码块/0413-fffc385f2c0d.txt",
+        "知行项目学习/原文完整核对/代码块/0418-eb5e970c7777.txt"
+      ],
+      "implementation": [
+        "app/full/reference_itinerary.py"
+      ],
+      "missing_files": [],
+      "evidence": "tests/test_reference_normalization.py",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-and-verified",
+      "verification_note": "实现存在，按所列专项证据及120项回归验收；不表示穷尽所有输入或线上流量。"
+    },
+    {
+      "id": "38",
+      "feature": "结构化生成失败退标准Agent",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0526-af025f844781.txt",
+        "知行项目学习/原文完整核对/代码块/0530-22fc59e0a4a0.txt"
+      ],
+      "implementation": [
+        "app/full/workflow.py",
+        "app/full/agent.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-faults.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-with-disclosed-boundary",
+      "verification_note": "真实Graph/工具/PG故障注入，模型协议/地图回放原真实产物；不是一次新的真实Qwen故障演练。"
+    },
+    {
+      "id": "39",
+      "feature": "预算数量/人数/间夜/票价明细/估算分离",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0424-840f2dfdd75b.txt"
+      ],
+      "implementation": [
+        "app/full/domain.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-final-acceptance.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-and-verified",
+      "verification_note": "实现存在，按所列专项证据及120项回归验收；不表示穷尽所有输入或线上流量。"
+    },
+    {
+      "id": "40",
+      "feature": "八事件/队列/close哨兵/断连释放",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0692-0d370a3fdea0.txt"
+      ],
+      "implementation": [
+        "app/full/events.py",
+        "app/full/api.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-final-acceptance.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-and-verified",
+      "verification_note": "实现存在，按所列专项证据及120项回归验收；不表示穷尽所有输入或线上流量。"
+    },
+    {
+      "id": "41",
+      "feature": "真实Agent token/首轮缓冲/四出口/清洗reset",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0583-a5cc5dc54839.txt",
+        "知行项目学习/原文完整核对/代码块/0584-fa91d304fcaa.txt",
+        "知行项目学习/原文完整核对/代码块/0587-bc35ac51de70.txt",
+        "知行项目学习/原文完整核对/代码块/0708-cd4b3b1590ea.txt"
+      ],
+      "implementation": [
+        "app/full/streaming.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-stream-live.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-with-disclosed-boundary",
+      "verification_note": "真实Qwen工具轮token验证与四出口回归；结构化计划是先验证后代码分块，不冒称逐token生成。"
+    },
+    {
+      "id": "42",
+      "feature": "原48字符代码渲染块/0.025秒",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0606-02fec71c33df.txt"
+      ],
+      "implementation": [
+        "app/full/streaming.py"
+      ],
+      "missing_files": [],
+      "evidence": "tests/test_reference_streaming.py",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-and-verified",
+      "verification_note": "实现存在，按所列专项证据及120项回归验收；不表示穷尽所有输入或线上流量。"
+    },
+    {
+      "id": "43",
+      "feature": "用户名邮箱/JWT/bcrypt/注册登录/所有权",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0327-dc8932f76c81.txt",
+        "知行项目学习/原文完整核对/代码块/0337-7808d01cdb0a.txt"
+      ],
+      "implementation": [
+        "app/full/security.py",
+        "app/full/api.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-final-acceptance.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-and-verified",
+      "verification_note": "实现存在，按所列专项证据及120项回归验收；不表示穷尽所有输入或线上流量。"
+    },
+    {
+      "id": "44",
+      "feature": "ORM会话消息CRUD/软删/历史原文与摘要",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0327-dc8932f76c81.txt"
+      ],
+      "implementation": [
+        "app/full/api.py",
+        "app/full/database.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-final-acceptance.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-and-verified",
+      "verification_note": "实现存在，按所列专项证据及120项回归验收；不表示穷尽所有输入或线上流量。"
+    },
+    {
+      "id": "45",
+      "feature": "多份历史计划/同版本幂等/原四层契约",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0483-f80f6d8f36d2.txt",
+        "知行项目学习/原文完整核对/代码块/0487-d9fc6e190500.txt"
+      ],
+      "implementation": [
+        "app/full/database.py",
+        "app/full/legacy_contract.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-final-acceptance.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-and-verified",
+      "verification_note": "实现存在，按所列专项证据及120项回归验收；不表示穷尽所有输入或线上流量。"
+    },
+    {
+      "id": "46",
+      "feature": "地图真实POI/坐标转换/路线/图片",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0487-d9fc6e190500.txt"
+      ],
+      "implementation": [
+        "app/full/plans.py",
+        "app/static/travel.html"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-map-probe.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-with-disclosed-boundary",
+      "verification_note": "真实页面发现博物馆误配停车场，先两项红灯后修复，通过真实高德主体查询并修合成账号地图；真实主体查询已通过，最终截图另附。"
+    },
+    {
+      "id": "47",
+      "feature": "界面登录/需求/会话/手选/偏好/计划历史",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0487-d9fc6e190500.txt"
+      ],
+      "implementation": [
+        "app/static/travel.html"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-browser.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-with-disclosed-boundary",
+      "verification_note": "功能重建前端，非原作者缺失的React仓库；用户名登录/地图/餐饮多选/交通顺序/重命名归档恢复均浏览器验证。"
+    },
+    {
+      "id": "48",
+      "feature": "原三维GEval/0.5/异步在线/不阻断",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0632-8756c3e30517.txt",
+        "知行项目学习/原文完整核对/代码块/0633-bc4bc3388d42.txt"
+      ],
+      "implementation": [
+        "app/full/reference_quality.py",
+        "app/full/quality.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-six-cases-stable.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-with-disclosed-boundary",
+      "verification_note": "原三维0.5阈值，同语义固定步骤；六样本两轮仍有作者正样本被判低，不当作事实审计。"
+    },
+    {
+      "id": "49",
+      "feature": "原六条同构正反边界/两轮/失败保留",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0655-7789b3840391.txt"
+      ],
+      "implementation": [
+        "evaluation/itinerary_cases.py",
+        "scripts/evaluate_reference.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-six-cases.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-with-disclosed-boundary",
+      "verification_note": "原动态步骤失败保留；固定步骤结果另存，未更改样本或阈值凑100%。"
+    },
+    {
+      "id": "50",
+      "feature": "确定性RouterMetric与全部原路由样本",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0649-9fdafc798df8.txt",
+        "知行项目学习/原文完整核对/代码块/0650-db2fbdca22e2.txt"
+      ],
+      "implementation": [
+        "evaluation/router_metric.py",
+        "evaluation/router_cases.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-router-after.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-with-disclosed-boundary",
+      "verification_note": "原21条同集回归20/21；曾用此集调整提示词，不是独立测试集；仍有一例缺技能。"
+    },
+    {
+      "id": "51",
+      "feature": "同条件串并行/裁剪/完整RAG/状态机vsExpress",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0530-22fc59e0a4a0.txt",
+        "知行项目学习/原文完整核对/代码块/0673-bb8868bfff52.txt"
+      ],
+      "implementation": [
+        "scripts/benchmark_reference_flows.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-flow-final.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-with-disclosed-boundary",
+      "verification_note": "铁路/RAG各3轮与完整流程各3轮分开；流程基准生成/查询冻结，后修POI展示单独复验；全部早期超时保留。"
+    },
+    {
+      "id": "52",
+      "feature": "首业务帧与首文本分开计时",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0692-0d370a3fdea0.txt",
+        "知行项目学习/原文完整核对/代码块/0708-cd4b3b1590ea.txt"
+      ],
+      "implementation": [
+        "scripts/benchmark_reference_first_frame.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-first-frame.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-with-disclosed-boundary",
+      "verification_note": "各3轮首业务帧，不是TTFT；主动断连后6/6后续写入成功。"
+    },
+    {
+      "id": "53",
+      "feature": "故障注入/DB质量断言/重启隔离",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0627-930e54038f36.txt"
+      ],
+      "implementation": [
+        "scripts/accept_reference.py"
+      ],
+      "missing_files": [],
+      "evidence": "reports/reference-restart.json",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-with-disclosed-boundary",
+      "verification_note": "重启校验Checkpoint/Store/2历史版本SHA；故障回放范围见独立report，不冒充生产事故。"
+    },
+    {
+      "id": "54",
+      "feature": "Windows兼容排除（用户明确）",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0672-993ad2ab4f7b.txt"
+      ],
+      "implementation": [
+        "README.md"
+      ],
+      "missing_files": [],
+      "evidence": "excluded-user",
+      "evidence_exists": false,
+      "final_acceptance": "excluded-user",
+      "verification_note": "仅Windows事件循环兼容按用户明确排除；没有因此删除任何业务或数据库数据。"
+    },
+    {
+      "id": "55",
+      "feature": "来源差异/指标口径/部署脚本/打包与复盘",
+      "source_blocks": [
+        "知行项目学习/原文完整核对/代码块/0530-22fc59e0a4a0.txt"
+      ],
+      "implementation": [
+        "README.md"
+      ],
+      "missing_files": [],
+      "evidence": "reports/原方案复现对照.md",
+      "evidence_exists": true,
+      "final_acceptance": "implemented-with-disclosed-boundary",
+      "verification_note": "原文差异/指标/面经填空/部署与脱敏交付另附；61条用户实操未记为已完成。"
+    }
+  ]
+}

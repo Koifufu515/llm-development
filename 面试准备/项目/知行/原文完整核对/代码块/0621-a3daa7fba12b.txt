@@ -1,0 +1,25 @@
+① 改选意图识别
+  ✅ 「高铁吧」（当前 flight）→ train
+  ✅ 「我说我选择高铁」（当前 flight）→ train
+  ✅ 「要不高铁吧」（当前 flight）→ train
+  ✅ 「不如坐动车」（当前 flight）→ train
+  ✅ 「不坐飞机了，改高铁」（当前 flight）→ train
+  ✅ 「飞机没有的话就自驾吧」（当前 flight）→ driving
+  ✅ 「高铁太慢了，还是坐飞机吧」（当前 train）→ flight
+  ✅ 「改自驾」（当前 train）→ driving
+  ✅ 「航班」（当前 flight）→ None
+  ✅ 「确认」（当前 flight）→ None
+  ✅ 「G1234」（当前 train）→ None
+  ✅ 「我已按卡片选定全部车次：北京→苏州 G1」（当前 train）→ None
+
+② 重放故障会话：北京出发、表单只勾航班、目的地苏州
+  改选前：当前方式 flight | 航班卡片 True  | 高铁卡片 False
+  用户回「高铁吧」→ 回执「高铁」，落库 transport_types=['train']
+  改选后：当前方式 train  | 航班卡片 False | 高铁卡片 True
+
+③ 航班结构性不可查判定（决定"降级高铁"还是"提示稍后重试"）
+  ✅ 北京出发 → 苏州：结构性不可查城市 ['苏州']
+  ✅ 北京出发 → 上海：结构性不可查城市 []
+  ✅ 北京出发 → 上海、苏州：结构性不可查城市 []
+
+全部断言通过 ✅

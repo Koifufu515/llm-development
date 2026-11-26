@@ -1,0 +1,10 @@
+{
+  "killed_reader_then_real_ingest_claim_ack": true,
+  "three_deliveries_dead_letter": true,
+  "dead_letter": {
+    "origin_id": "1794035508753-0",
+    "document_id": "bc425019-843d-42c7-af96-bf266ffdd8e6",
+    "times_delivered": "3"
+  },
+  "victim_exitcode": -9
+}

@@ -1,0 +1,4 @@
+{{ variable }}                # 变量替换：把 variable 的值填进来
+{{ user.name }}               # 嵌套访问：user 是 dict/对象，取它的 name
+{% if condition %}...{% endif %}   # 条件块
+{% for x in list %}...{% endfor %} # 循环块

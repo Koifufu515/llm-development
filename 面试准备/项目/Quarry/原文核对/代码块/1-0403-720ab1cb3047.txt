@@ -1,0 +1,3 @@
+# macOS / Linux
+mkdir -p quarry/eval eval
+touch quarry/eval/__init__.py

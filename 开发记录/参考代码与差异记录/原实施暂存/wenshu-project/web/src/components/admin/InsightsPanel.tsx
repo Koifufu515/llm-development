@@ -1,0 +1,1 @@
+../../../../../../../../wenshu-project/web/src/components/admin/InsightsPanel.tsx

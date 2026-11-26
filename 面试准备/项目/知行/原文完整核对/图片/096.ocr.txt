@@ -1,0 +1,134 @@
+回退与进度•级联清空：普通字段写 None，产物字段写 CLEAR
+go_back_to_step 回退时，把目标步及之后各步登记的字段全部清空。普通字段写 None 就清掉了；itinerary、itinerary_body、
+budget 挂
+着“非空优先”合并器，None 对它的意思是“保留原值”，所以这三个字段改写 CLEAR 哨兵。已用真实的 TravelState 和 go_back_to_step 实测确
+认。
+go_back_to_step 五步
+L1245-1369；7个快捷回退最终都委托它
+②
+③
+④
+⑤
+校验目标步
+拒绝订单步
+改当前步
+级联清空
+回执
+不在 ALL_STEPS 里就只回一句"无效
+的目标步骤"
+回；该步已删除，这个分支实际不会触
+order_generation 是终点，不许
+current_step = 目标步；它的合并
+器按写入顺序取后者，往回写没问题
+目标步及之后每一步登记的字段：普通
+字段写 None，三个产物字段写
+「已回退到【X】阶段/ 原因/ 已清除后续
+CLEAR
+STEP_STATE_FIELDS ：回退时要清的字段 紅色=挂了_keep_Lastnon_none合并器，回退时改写 CLEAR
+登记的子段
+需求收集
+usel reguLrelenu
+se ected destination Oestination options
+交通规划
+selected_transport transport_options selected_transport_legs Leg_cursor leg_selections Leg_prices
+住宿规划
+selected accommodation types accommodation options selected hotels stay cursor stay prices
+餐饮规划
+seLected tood tvpes to00 options
+行程生成
+itinerary itinerary_body
+预算汇总
+budget
+订单生成（已删除）
+order_id TravelState 里没有这个字段
+这张表也被 transport_switch_service.switch_transport_mode 借用：对话里改交通方式时，按“交通规划“那一行清空旧产物。
+实测：回退后产物清干净了
+真实 Traveistate（含合并器）＋真实 go_back_to_step；先模拟行程步产出，再回退到住宿步
+# Langgraph 1.0.5• StateGraph（TravelState）
+口退印（有样步产品
+为什么产物字段要写 CLEAR
+itinerary_body = I｛'day'： 1｝1• budget = ｛'total'：3000｝
+1._keep_Last_non_none 把 None 当成"这次不改”：别的工具只写部分字段时，不会顺手把已有的
+seLected hotes=不州溶
+行程和预算冲掉。
+2.代价是 None 清不掉它们，所以回退时对这三个字段写 CLEAR，合并器见到哨兵才真正置空。
+go_back_to_step - accommodation_planning
+3. 清干净之后再回到行程步，中间件会重新强推submit_itinerary_body_tool，提交工具也会重
+current_step
+= accommodatlon_planning
+itinerary_body
+= one
+新补算预算，不会沿用旧产物（按代码）。
+itinerary
+= None
+budget
+selected hotes = None
+= None
+7个快捷回退 调用方都是模型（经TooINode）；结果都交给 go_back_to_step. invoke（-）生成的Command
+上具
+作用
+意图守卫
+出现在哪些步的工具表
+go_back_to_requzrement
+从头重新规划，清空全部
+V重新规划
+目的地、交通、住宿、餐饮、行程、预算（6步）
+go_back_to_destination
+换目的地
+/换目的地
+交通、住宿、餐饮、行程、预算（5步）
+go back to transport
+换交通方式
+丷换交通
+住宿、餐饮、行程、预算（4步）
+0o Dack to accollodatLon
+换住宿；自动模式超预算时也用它降级重选
+餐饮、行程、预算（3步）
+go_back_to_food
+以答饮偏女
+行程、预算（2步）
+go_back_to_itinerary
+重排行程
+预算（1步）
+go_back_to_budget
+里昇顶异
+预算（1步）
+为什么后4个没有守卫（推断）：预算步提示词要求自动模式超预算时由模型自己调go_back_to_accommodation降级，这时用户并没说“换住宿”，加了守卫就会把这条自动降级拦掉。
+函数卡 本组其余5个函数
+go_back_to_step ［etool
+L1245
+_guard_back @n
+L1388
+_wants_back Fn
+L138
+回退意图守卫：用户最近一句话没表达"换/改/重新选”，就
+问意图词表：这句话对某一类回退有没有意图。
+的字段全部清空（产物字段写 CLEAR）。
+拒绝回退，让模型继续当前步。
+何时调用 守卫判淅时
+何时调用 预算步里用户要回到某一步；或被快捷回退委托
+何时调用 三个带守卫的快捷回退一开头
+谁来调用 模型经 ToolNode执行（工具表：预算步）；本文件7个快
+谁采调用 本文件_guard_back
+谁来调用 本文件 go_back_to_ requirement / destination /
+捷工具用.invoke 姿元
+transport
+结果交给 True/ False；词表在 core/intent .BACK INTENT
+结果交给 Command 写 current_step +级联清空的字段＋回执
+给果父给 None=放行；拒绝时返回一个只与消息的Command
+-recent_human_text Fn
+L1372
+check_current_progress Letool
+L1637
+倒着找最近一条用户消息，取出文本。
+列出各步已完成/当前/待完成，以及已收集的需求摘要；只
+读，是全文件唯一返回字符串的工具。
+何时调用 守卫判断前
+谁来调用 本文件_guard_back
+何时调用 用户问"现在到哪一步了/还有几步"时
+结果交给 文本交给_wants_back
+谁来调用 模型经 ToolNode执行；7步的工具表都提供它
+结果交给 文本作为工具结果给模型；ALL_STEPS仍含已删除的订
+单步，会显示"订单生成待完成"
+回退要的是”清干净”：目标步之后的产物全部作废，靠 STEP_STATE_FIELDS 登记、g0_back_to_step 级联清空；普通字段写 None，挂了合并器的三个产物字段写 CLEAR。回到行程步时状态里没有
+旧正文和旧预算，中间件和提交工具都会按"第一次做“重新走一遍。

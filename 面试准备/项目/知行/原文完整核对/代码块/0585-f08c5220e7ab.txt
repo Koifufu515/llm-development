@@ -1,0 +1,14 @@
+"""_scrub_leak_text 演示：块级 + 整句剔除泄漏、删掉不可验证的承诺、改写阻塞式收尾（纯函数，无需密钥）"""
+from app.services.chat_stream_executor import _scrub_leak_text
+
+raw = """已为您汇总预算。
+我将使用以下参数调用 `summarize_budget_tool` 工具：
+- 景点门票：西湖 0 元
+- 住宿：2 晚
+总计 4128 元，人均 2064 元。请记住，只有在收集到足够信息后才能调用工具。
+行程清单已生成，您可以在下方查看。
+请确认以上行程和预算是否符合您的需求？"""
+clean = _scrub_leak_text(raw)
+print(clean)
+print("\n有变化 → 调用方据此走 reset 重推：", clean != raw)
+print("正常文本原样返回：", _scrub_leak_text("Day 1 西湖断桥。") == "Day 1 西湖断桥。")

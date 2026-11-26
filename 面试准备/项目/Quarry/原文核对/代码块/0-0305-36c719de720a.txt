@@ -1,0 +1,11 @@
+$key = "sk-你的key"
+$body = @{
+  model = "qwen3-rerank"
+  query = "兵马俑门票多少钱"
+  documents = @("量子计算是前沿领域", "兵马俑博物馆门票 120 元")
+  top_n = 2
+} | ConvertTo-Json
+Invoke-RestMethod -Method Post -Uri "https://dashscope.aliyuncs.com/compatible-api/v1/reranks" `
+  -Headers @{ Authorization = "Bearer $key" } `
+  -ContentType "application/json" `
+  -Body ([System.Text.Encoding]::UTF8.GetBytes($body)) | ConvertTo-Json -Depth 5

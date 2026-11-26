@@ -1,0 +1,13 @@
+"""_guard_back 演示：只有用户原话里说了"换/改/重新选"，回退才放行（调真实守卫函数，纯逻辑，无需密钥）"""
+from langchain.tools import ToolRuntime
+from langchain_core.messages import HumanMessage
+
+from app.tools.state_transition import _guard_back
+
+cases = [("destination", "换个目的地吧"), ("destination", "我想去别的地方"), ("destination", "这个不错就它了"),
+         ("transport", "还是坐高铁吧"), ("transport", "行程挺好的"), ("requirement", "全部重来")]
+for key, text in cases:
+    state = {"messages": [HumanMessage(content=text)]}
+    rt = ToolRuntime(state=state, context=None, config={}, stream_writer=None, tool_call_id="call_1", store=None)
+    verdict = _guard_back(rt, key, "回退")
+    print(f"{key:11s} {text!r:16} → {'放行' if verdict is None else '拒绝'}")
